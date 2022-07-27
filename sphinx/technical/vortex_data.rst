@@ -20,13 +20,13 @@ provider to decide:
   archive system, ...);
 * where it should reside on this host (e.g. on a file based mass archived
   system, in which sub-directory will the Vortex data hierarchy start). From
-  now and one, we will call this location the "*root of the data hierarchy*".
+  now and on, we will call this location the "*root of the data hierarchy*".
 
 The **namespace** attribute accepts four values:
 
 * ``vortex.cache.fr``: Data are solely stored and retrieved from the local
   machine. This *Cache* space should give a very fast access to data
-  especially if the data is requested in read-only mode (i.e by specifying
+  especially if the data is requested in read-only mode (i.e. by specifying
   the **intent** = ``"in"`` when calling :func:`vortex.toolbox.input`.
 * ``vortex.archive.fr``: Data are solely stored and retrieved from a mass
   archive system. Such *Archive* systems have a very large capacity but
@@ -35,7 +35,7 @@ The **namespace** attribute accepts four values:
 * ``vortex.multi.fr``: In that case, Vortex tries to optimally exploit the
   two worlds. When retrieving a data, the *Cache* space is looked at first. If
   the data is missing in *Cache*, it is fetched from the *Archive* and put back
-  in *Cache* (for a later use). When storing a data, both the *Cache* and
+  in *Cache* (for later use). When storing a data, both the *Cache* and
   *Archive* spaces are fed.
 * ``vortex.stack.fr``: This very special case won't be discussed here. The
   reader may refer to :ref:`nbook-VortexStacksDoc`
@@ -82,14 +82,14 @@ indicates where to look for detailed configuration. Here is an example:
     [mf-reforecast]
     generic_uri=ftp://hendrix.meteo.fr/home/m/marp/marp999/vortex/provider-vortex-free-reforecast.ini
     generic_restrict=@mf-reforecast$
-    belenos_uri=file://home/mf/dp/marp/verolive/vortex/provider-vortex-free-reforecast.ini
-    taranis_uri=file://home/mf/dp/marp/verolive/vortex/provider-vortex-free-reforecast.ini
+    belenos_uri=file:///home/mf/dp/marp/verolive/vortex/provider-vortex-free-reforecast.ini
+    taranis_uri=file:///home/mf/dp/marp/verolive/vortex/provider-vortex-free-reforecast.ini
 
 In this example, the **experiment** identifiers ending with ``@mf-reforecast``
 are declared as potential "proxy" experiments. For such experiments, the associated
 configuration file is located on ``hendrix.meteo.fr`` with exceptions for
 target hosts ``belenos`` and ``taranis`` that rely on local configuration files
-(Note: In this example, it is the maintainer responsibility to ensure that
+(Note: In this example, it is the maintainer's responsibility to ensure that
 configuration files located on ``hendrix``, ``belenos`` and ``taranis`` are
 consistent).
 
@@ -135,18 +135,19 @@ Here are some explanations on this example:
   redirection is used.
 * A match is declared positive if all of the criteria match.
 * The various sections are evaluated by decreasing priority. When a section
-  matches the evaluation process stops. Note: if two sections with equal
-  priority matches the same resource-provider pair, the result might be
+  matches, the evaluation process stops. Note: if two sections with equal
+  priority match the same resource-provider pair, the result might be
   unpredictable. Therefore, great care should be taken when writing the
   configuration file.
 
 The list of criteria:
 
 * may target the following resource-provider pair characteristics: *vapp*,
-  *vconf*, *block*, *member*, *scenario*, *date@flow* and *shortcutoff@flow*.
+  *vconf*, *block*, *member*, *scenario*, *date@flow*, *shortcutoff@flow*,
+  *radical*, *index0@src*, ..., *indexN@src*.
 * each criterion name must be suffixed by '_' and two letters. The two letters
-  designate which comparison operation is performed. The usual following usual
-  comparison operator are allowed: *eq*, *ne*, *lt*, *le*, *gt* and *ge*.
+  designate which comparison operation is performed. The usual following
+  comparison operators are allowed: *eq*, *ne*, *lt*, *le*, *gt* and *ge*.
   Additionally, *in* can be used: in such a case a list of comma-separated
   possible values should be provided.
 
@@ -168,7 +169,7 @@ The Vortex Provider's *Cache* is made of several "layers":
 * Your own writable *Cache* space is located below ``$MTOOLDIR/cache/vortex``
   (the root of the data hierarchy). This is the go-to place to retrieve and
   store data locally (*NB*: When used through ``vortex.multi.fr``, data
-  fetched from the *Archive* will be stored here even (if they have been
+  fetched from the *Archive* will be stored here (even if they have been
   produced by others). This mechanism is called "*refill*").
 * When getting data, if the lookup in ``$MTOOLDIR/cache/vortex`` fails, the
   ``$MTOOLDIR/cache/vortexbuddies`` location will also be searched. This
@@ -179,7 +180,7 @@ The Vortex Provider's *Cache* is made of several "layers":
   ``Charles_mtooldir/cache/vortex/arpege/4dvarfr/ABCD`` to
   ``$MTOOLDIR/cache/vortexbuddies/arpege/4dvarfr/ABCD``.
 * Finally, when getting data, a "*MarketPlace*" location can also be looked
-  at (if all of the two previous lookups failed). Such locations need to be
+  at (if both previous lookups failed). Such locations need to be
   configured well in advance in Vortex. This is not very flexible but allows
   a privileged user/administrator to prefetch and permanently store data that
   are frequently accessed. The :class:`~vortex.tools.storage.MarketPlaceCache`
@@ -202,14 +203,14 @@ Description of the Vortex *Archive*
 The Vortex *Archive* may be managed using a large variety of technologies.
 However, Vortex currently uses file-based archiving systems. Such systems can be
 accessed using various protocols: Vortex should be preconfigured in order to
-determine which host and protocol needs to be used.
+determine which host and protocol need to be used.
 
 If a user wants to override these preconfigured values, the **storage**
-(host name) and **storetube** attributes may added during the
+(host name) and **storetube** attributes may be added during the
 :func:`vortex.toolbox.input` or :func:`vortex.toolbox.output` calls.
 Alternatively, for a more permanent change regarding the target host, the
 ``VORTEX_DEFAULT_STORAGE`` environment variable can be set. Be aware that
-it is not guarantee to work since Vortex may lack configuration data for
+it is not guaranteed to work since Vortex may lack configuration data for
 some hosts.
 
 The Vortex Provider determines the root of the data hierarchy depending on the
@@ -226,7 +227,7 @@ The Vortex Provider determines the root of the data hierarchy depending on the
 * Otherwise, **experiment** should look like that:
   ``any_xp_identifier@location`` where ``location`` usually identifies a
   user-name on the *Archive*. In such a case, Vortex will consider that the
-  root of the data hierarchy, is the 'vortex' directory in the home-directory
+  root of the data hierarchy is the 'vortex' directory, in the home directory
   of the user identified by ``location``. This is the default behaviour that
   will be used most of the time. However, in Vortex's configuration it is
   possible to define "virtual" ``location`` attributes. This configuration-based

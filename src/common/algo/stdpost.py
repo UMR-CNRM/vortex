@@ -1157,7 +1157,7 @@ class PyEnsembleDiag(Expresso):
             timeout = dict(
                 type     = int,
                 optional = True,
-                default  = 900,
+                default  = 1200,
             ),
             refreshtime = dict(
                 type     = int,
@@ -1275,7 +1275,7 @@ class PyEnsembleDiag(Expresso):
 
                     self.system.highlight("Done with " + txt_id)
 
-                if basicmeta.has_ufo() and not basicmeta.has_pcollectable():
+                if not bm.all_done and basicmeta.has_ufo() and not basicmeta.has_pcollectable():
                     # Timeout ?
                     tmout = bm.is_timedout(self.timeout)
                     if tmout:

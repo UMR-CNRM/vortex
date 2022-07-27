@@ -15,7 +15,7 @@ import uuid
 from bronx.fancies import loggers
 import footprints
 
-from vortex.tools.env import vartrue
+from vortex.tools.env import Environment, vartrue
 from vortex.tools.targets import Target
 from vortex.tools.prestaging import PrestagingTool
 
@@ -55,7 +55,7 @@ class MeteoBullX3(Target):
 
     @contextlib.contextmanager
     def algo_run_context(self, ticket, *kmappings):
-        """Specific target hook before any componnent run."""
+        """Specific target hook before any component run."""
         with super(MeteoBullX3, self).algo_run_context(ticket, *kmappings):
             dis_boost_confkey = 'bullx3_disable_boost'
             dis_boost_cmd = ['clush', '-bw', ticket.env.SLURM_JOB_NODELIST,
@@ -246,12 +246,15 @@ class HendrixPrestagingTool(PrestagingTool):
                 remap = dict(hendrix='hendrix.meteo.fr')
             ),
             scheme = dict(),
-            stagedir = dict(
-                optional = True,
-                default = '/DemandeMig/ChargeEnEspaceRapide',
+            logname=dict(
+                optional=True
             ),
-            logname = dict(
-                optional = True
+            hendrix_stagedir = dict(
+                optional = True,
+                default = Environment(active=False).get(
+                    'vortex_hendrix_stagedir',
+                    '/DemandeMig/ChargeEnEspaceRapide',
+                ),
             )
         )
     )
@@ -260,7 +263,10 @@ class HendrixPrestagingTool(PrestagingTool):
         """Actually send the pre-staging request to Hendrix."""
         # Build the target
         request = []
+        logger.info('Prestaging to %s: requesting %d items', self.storage, len(self))
         if email is not None:
+            logger.info('Prestaging to %s: MAIL directive added (%s).',
+                        self.storage, email)
             request.append("#MAIL=" + email)
         request.extend(sorted(self.items()))
         # Send this stuff to hendrix
@@ -268,6 +274,8 @@ class HendrixPrestagingTool(PrestagingTool):
                                      'stagereq',
                                      uuid.uuid4().hex[:16],
                                      'MIG'])
+        logger.info('Prestaging to %s: Uploading %s',
+                    self.storage, self.system.path.join(self.hendrix_stagedir, request_filename))
         request_data = six.BytesIO()
         request_data.write(('\n'.join(request)).encode(encoding='utf_8'))
         request_data.seek(0)
@@ -278,7 +286,7 @@ class HendrixPrestagingTool(PrestagingTool):
             ftp = None
         if ftp:
             try:
-                rc = ftp.cd(self.stagedir)
+                rc = ftp.cd(self.hendrix_stagedir)
             except ftplib.all_errors as e:
                 logger.error('Prestaging to %s: error with "cd": %s', self.storage, str(e))
                 rc = False

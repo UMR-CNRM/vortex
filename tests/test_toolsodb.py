@@ -6,6 +6,8 @@ import unittest
 import logging
 logging.basicConfig(level=logging.ERROR)
 
+from bronx.stdtypes import date as bdate
+
 from common.tools import odb
 
 
@@ -26,6 +28,10 @@ class UtTimeSlots(unittest.TestCase):
                               '20151231223000', '20151231233000',
                               '20160101003000', '20160101013000',
                               '20160101023000', '20160101030000'])
+        self.assertListEqual(ts1.as_centers_fromstart(),
+                             [bdate.Period(p)
+                              for p in ('PT0S', 'PT1H', 'PT2H', 'PT3H',
+                                        'PT4H', 'PT5H', 'PT6H')])
         self.assertDictEqual(ts1.as_environment(),
                              {'BATOR_CENTER_LEN': 60,
                               'BATOR_SLOT_LEN': 60,
@@ -47,6 +53,10 @@ class UtTimeSlots(unittest.TestCase):
                               '20151231223000', '20151231233000',
                               '20160101003000', '20160101013000',
                               '20160101020000'])
+        self.assertListEqual(ts1.as_centers_fromstart(),
+                             [bdate.Period(p)
+                              for p in ('PT0S', 'PT1H', 'PT2H', 'PT3H',
+                                        'PT4H', 'PT5H')])
         self.assertDictEqual(ts1.as_environment(),
                              {'BATOR_CENTER_LEN': 60,
                               'BATOR_SLOT_LEN': 60,
@@ -64,6 +74,9 @@ class UtTimeSlots(unittest.TestCase):
         self.assertListEqual(ts1.as_bounds('2016010100'),
                              ['20151231210000', '20151231230000',
                               '20160101010000', '20160101030000'])
+        self.assertListEqual(ts1.as_centers_fromstart(),
+                             [bdate.Period(p)
+                              for p in ('PT1H', 'PT3H', 'PT5H')])
         self.assertDictEqual(ts1.as_environment(),
                              {'BATOR_CENTER_LEN': 0,
                               'BATOR_SLOT_LEN': 0,
@@ -82,6 +95,9 @@ class UtTimeSlots(unittest.TestCase):
         self.assertEqual(ts1.rightmargin, 180)
         self.assertListEqual(ts1.as_bounds('2016010100'),
                              ['20151231210000', '20160101030000'])
+        self.assertListEqual(ts1.as_centers_fromstart(),
+                             [bdate.Period(p)
+                              for p in ('PT3H', )])
         self.assertDictEqual(ts1.as_environment(),
                              {'BATOR_CENTER_LEN': 0,
                               'BATOR_SLOT_LEN': 0,
@@ -100,6 +116,9 @@ class UtTimeSlots(unittest.TestCase):
         self.assertEqual(ts1.rightmargin, 10)
         self.assertListEqual(ts1.as_bounds('2016010100'),
                              ['20151231234000', '20160101001000'])
+        self.assertListEqual(ts1.as_centers_fromstart(),
+                             [bdate.Period(p)
+                              for p in ('PT15M', )])
         self.assertDictEqual(ts1.as_environment(),
                              {'BATOR_CENTER_LEN': 0,
                               'BATOR_SLOT_LEN': 0,

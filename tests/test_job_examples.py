@@ -70,7 +70,7 @@ class TestJobIsolationHelper(object):
     def run_mkjob(self, args):
         cmd = [sys.executable,
                os.path.join('..', 'vortex', 'bin', 'mkjob.py'),
-               '-j', 'profile=void'] + args
+               '-j'] + args
         self._run_stuff(cmd)
 
     def run_jobscript(self, jobname):
@@ -142,19 +142,20 @@ class TestJobExamples(unittest.TestCase):
         my_appdir = os.path.join(JOBSDIR, 'arpege', 'stdpost')
         with self.isolate_job(my_appdir) as i_helper:
             i_helper.run_mkjob(['name=single_b_job', 'task=single_b_stdpost',
-                                'rundate=2020102918'])
+                                'rundate=2020102918', 'profile=void'])
             i_helper.run_jobscript('./single_b_job.py')
             self._test_jobs_stdpost_examples_assert_date(i_helper, '20201029T1800P')
         with self.isolate_job(my_appdir) as i_helper:
             i_helper.run_mkjob(['name=single_bp_multidate_job',
                                 'task=single_bp_multidate_stdpost',
-                                'rundates=2020102912-2020102918-PT6H'])
+                                'rundates=2020102912-2020102918-PT6H',
+                                'profile=void'])
             i_helper.run_jobscript('./single_bp_multidate_job.py')
             self._test_jobs_stdpost_examples_assert_date(i_helper, '20201029T1200P')
             self._test_jobs_stdpost_examples_assert_date(i_helper, '20201029T1800P')
         with self.isolate_job(my_appdir) as i_helper:
             i_helper.run_mkjob(['name=single_s_para_job', 'task=single_s_stdpost',
-                                'rundate=2020102918'])
+                                'rundate=2020102918', 'profile=void'])
             i_helper.run_jobscript('./single_s_para_job.py')
             self._test_jobs_stdpost_examples_assert_date(i_helper, '20201029T1800P')
 

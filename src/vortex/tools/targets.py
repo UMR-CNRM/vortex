@@ -257,7 +257,7 @@ class Target(fp.FootprintBase):
 
     @contextlib.contextmanager
     def algo_run_context(self, ticket, *kmappings):
-        """Specific target hook before any componnent run."""
+        """Specific target hook before any component run."""
         yield
 
     def _init_supernodes(self, main_re, rangeid='range', baseid='base',):
@@ -348,7 +348,7 @@ class Target(fp.FootprintBase):
             (e.g loginproxies). If the XXX node-type is not defined in the
             configuration file, it returns an empty list.
         * isXXXnode: Return True if the current host is of XXX node-type.
-            If the XXX node-type is note defined in the configuration file,
+            If the XXX node-type is not defined in the configuration file,
             it returns True.
 
         """
@@ -364,6 +364,13 @@ class Target(fp.FootprintBase):
                     any([self.hostname.startswith(s)
                          for s in self.specialnodes[kmatch.group(1)]]))
         raise AttributeError('The key "{:s}" does not exist.'.format(key))
+
+    @property
+    def ftraw_default(self):
+        """The default value for the System object ftraw attribute."""
+        return ('ftraw' in self.specialnodes and
+                any([self.hostname.startswith(s)
+                     for s in self.specialnodes['ftraw']]))
 
 
 class LocalTarget(Target):

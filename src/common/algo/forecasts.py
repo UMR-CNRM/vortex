@@ -636,7 +636,7 @@ class OfflineSurfex(Parallel, DrHookDecoMixin):
         rc = bmodel == 'surfex' and rh.resource.realkind == 'offline'
         if not rc:
             logger.error('Inapropriate binary provided')
-        return rc
+        return rc and super(OfflineSurfex, self).valid_executable(rh)
 
     @staticmethod
     def _fix_nam_macro(sec, macro, value):

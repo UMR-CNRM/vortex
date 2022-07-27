@@ -414,10 +414,10 @@ class DataRaw(AlmostListContent):
     Behaves mostly as a list.
     """
 
-    def __init__(self, data=None, window=0, fmt=None):
+    def __init__(self, data=None, window=0, datafmt=None):
         if not data and window:
             data = collections.deque(maxlen=window)
-        super(DataRaw, self).__init__(data=data, window=window, fmt=fmt)
+        super(DataRaw, self).__init__(data=data, window=window, datafmt=datafmt)
 
     def slurp(self, container):
         with container.preferred_decoding(byte=False):

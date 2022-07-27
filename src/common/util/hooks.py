@@ -8,7 +8,11 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import functools
 
+from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
+from bronx.stdtypes.date import Date, Period, Time
+
+from common.data.query import StaticCutoffDispenser
 
 #: No automatic export
 __all__ = []
@@ -56,6 +60,13 @@ def insert_cutoffs(t, rh, rh_cutoff_source, fuse_per_obstype=False):
     If *fuse_per_obstype* is ``True``, the latest cutoff of a given obstype
     will be used for all the occurences of this obstype.
     """
+    # rh_cutoff_source may be a list
+    if isinstance(rh_cutoff_source, list):
+        if rh_cutoff_source:
+            rh_cutoff_source = rh_cutoff_source[0]
+        else:
+            ValueError("The resource handler's list is empty.")
+    # Get the CutoffDispenser
     import vortex.tools.listings
     assert vortex.tools.listings
     if rh_cutoff_source.container.actualfmt == 'bdmbufr_listing':
@@ -69,3 +80,53 @@ def insert_cutoffs(t, rh, rh_cutoff_source, fuse_per_obstype=False):
     rh.contents.add_cutoff_info(c_disp_callback())
     # Actually save the result to file
     rh.save()
+
+
+def _new_static_cutoff_dispencer(base_date, cutoffs_def):
+
+    def x_period(p):
+        try:
+            return Period(p)
+        except ValueError:
+            return Period(Time(p))
+
+    if not isinstance(base_date, Date):
+        base_date = Date(base_date)
+    if isinstance(cutoffs_def, collections_abc.Mapping):
+        cutoffs_def = {(k if isinstance(k, Period) else x_period(k)): v
+                       for k, v in cutoffs_def.items()}
+        cutoffs = {base_date + k: v for k, v in cutoffs_def.items()}
+        c_disp = StaticCutoffDispenser(max(cutoffs.keys()), cutoffs)
+    else:
+        if not isinstance(cutoffs_def, Period):
+            cutoffs_def = x_period(cutoffs_def)
+        c_disp = StaticCutoffDispenser(base_date + cutoffs_def)
+    return c_disp
+
+
+def insert_static_cutoffs(t, rh, base_date, cutoffs_def):
+    """Compute the cutoff from *cutoffs_def* and feed them into *rh*.
+
+    :param base_date: The current analysis time
+    :param cutoffs_def: The cutoff time represented as time offset with respect
+                        to *base_date*. *cutoffs_defs* may be a single value or
+                        a dictionary. If *cutoffs_def* is a dictionary, it
+                        associates a cutoff with a list of `obstypes`.
+    """
+    # Fill the gaps in the original request
+    rh.contents.add_cutoff_info(_new_static_cutoff_dispencer(base_date, cutoffs_def))
+    # Actually save the result to files
+    rh.save()
+
+
+def arpifs_obs_error_correl_legacy2oops(t, rh):
+    """Convert a constant file that contains observation errors correlations."""
+    if rh.resource.realkind != 'correlations':
+        raise ValueError('Incompatible resource: {!s}'.format(rh))
+    if rh.contents[0].startswith("SIGMAO"):
+        logger.warning("Non conversion is needed...")
+    else:
+        rh.contents[:0] = ["SIGMAO unused\n",
+                           "1 1.2\n",
+                           "CORRELATIONS\n"]
+        rh.save()

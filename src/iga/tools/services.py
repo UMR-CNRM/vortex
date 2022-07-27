@@ -569,11 +569,11 @@ class RoutingService(Service):
             route_opts=route_opts,
             original=self._actual_filename,
             filterdefinition=self.filterdefinition.data if self.filterdefinition else None,
+            dmt_date_pivot=self.dmt_date_pivot,
         )
 
-        logger.debug('posting to jeeves with jeeves_opts:\n\t%s', pformat(jeeves_opts))
-
         # post the request to jeeves
+        logger.debug('posting to jeeves with jeeves_opts:\n%s', pformat(jeeves_opts))
         return ad.jeeves(**jeeves_opts)
 
     def __call__(self):
@@ -690,7 +690,7 @@ class BdpeService(RoutingService):
                 values   = ['bdpe'],
             ),
             soprano_target = dict(
-                values   = ['piccolo', 'piccolo-int', 'piccolo-int-sine'],
+                values   = ['piccolo', 'piccolo-sine', 'piccolo-int', 'piccolo-int-sine'],
             ),
             producer = dict(
                 optional = True,
@@ -832,6 +832,8 @@ class TransmetService(BdpeService):
         if self._filename_transmet is None:
             if self.version_header == 'TTAAII':
                 actual_transmet = self.transmet if isinstance(self.transmet, dict) else dict()
+                if 'ECHEANCE' not in actual_transmet:
+                    actual_transmet['ECHEANCE'] = self.term.fmth
                 self._filename_transmet = get_ttaaii_transmet_sh(self.sh, self.transmet_cmd,
                                                                  actual_transmet, self.filename,
                                                                  self.scriptdir, self.header_infile)
@@ -843,7 +845,10 @@ class TransmetService(BdpeService):
 
     def __call__(self):
         """Actual service execution."""
-        if self.routing_name:
+
+        # don't call property routing_name in defer mode : it makes an expensive
+        # copy of the file being routed, better left to the jeeves async context
+        if self.defer or self.routing_name:
             return super(TransmetService, self).__call__()
         return False
 
@@ -897,7 +902,7 @@ class DayfileReportService(FileReportService):
                 default  = False,
                 alias    = ['async', ],
             ),
-            jname=dict(
+            jname = dict(
                 optional = True,
                 default  = 'test',
             ),

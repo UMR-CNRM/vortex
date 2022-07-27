@@ -6,7 +6,7 @@ Resources used with MOCAGE Accident (tarfiles, txtfiles, json).
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from vortex.data.contents import JsonDictContent
+from vortex.data.contents import JsonDictContent, AlmostListContent
 from vortex.data.geometries import LonlatGeometry
 from vortex.data.outflow import ModelResource
 from vortex.data.flow import FlowResource
@@ -101,16 +101,25 @@ class CtbtoOuputs(FlowResource):
         return "ctbto_outputs"
 
 
-class MocaccDateEch(ModelResource):
-    """Various step / datetime for mocage accident suite"""
+class MocaccTableChemContent(AlmostListContent):
+    """Content of MocaccTableChem."""
+
+    @property
+    def nbpolls(self):
+        """Number of atomic release in MOCAGE.CFG."""
+        return len([line for line in self._data if "POLLUT" in line])
+
+
+class MocaccTableChem(ModelResource):
+    """Pollutants table for MOCAGE Accident run."""
 
     # fmt: off
     _footprint = [
         dict(
-            info = "Various step / datetime for mocage accident suite",
+            info = "Pollutants table for MOCAGE Accident run.",
             attr = dict(
                 kind = dict(
-                    values = ["mocacc_datech"]
+                    values = ["mocacc_table_chem"]
                 ),
                 model = dict(
                     values = ['mocage', ]
@@ -119,6 +128,10 @@ class MocaccDateEch(ModelResource):
                     values = ["ascii"],
                     default = "ascii"
                 ),
+                clscontents = dict(
+                    default = MocaccTableChemContent
+                ),
+
             ),
         )
     ]
@@ -126,7 +139,7 @@ class MocaccDateEch(ModelResource):
 
     @property
     def realkind(self):
-        return "mocacc_datech"
+        return "mocacc_table_chem"
 
 
 class ExtraConfMocaccContent(JsonDictContent):
@@ -201,8 +214,7 @@ class ExtraConfMocaccContent(JsonDictContent):
         return self._data["source_vertical_profile"]
 
     def get_hm_term_from_valid_at(self, valid_at):
-        """Calculate term from validity to find corresponding HM file.
-        """
+        """Calculate term from validity to find corresponding HM file."""
         return date.Date(valid_at) - date.Date(self.basetime_forecast)
 
     def set_mocage_geometries(self):
@@ -357,8 +369,7 @@ class ExtraConfMocaccCtbtoContent(JsonDictContent):
 
     @property
     def last_term(self):
-        """Last forecast term.
-        """
+        """Last forecast term."""
         return date.Date(self.backward_to) - date.Date(self.basetime_forecast)
 
     def get_first_basetime_forcing(self, coupling_step, couplings_delta):
@@ -368,7 +379,9 @@ class ExtraConfMocaccCtbtoContent(JsonDictContent):
         """
         basetime_forecast = date.Date(self.basetime_forecast)
         first_basetime_forcing = date.Date(
-            basetime_forecast.year, basetime_forecast.month, basetime_forecast.day,
+            basetime_forecast.year,
+            basetime_forecast.month,
+            basetime_forecast.day,
         )
 
         while (
@@ -379,8 +392,7 @@ class ExtraConfMocaccCtbtoContent(JsonDictContent):
         return first_basetime_forcing
 
     def get_basetimes_forcing(self, coupling_step, couplings_delta):
-        """Get basetimes forcing needed for forecast.
-        """
+        """Get basetimes forcing needed for forecast."""
         tmp_basetime = self.get_first_basetime_forcing(coupling_step, couplings_delta)
         basetimes_forcing = []
         backward_to = date.Date(self.backward_to)

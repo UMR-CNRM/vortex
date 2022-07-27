@@ -1,8 +1,8 @@
-:mod:`sandbox.algo` --- AlgoComponnent definitions to experiment (play ?) with Vortex
+:mod:`sandbox.algo` --- AlgoComponent definitions to experiment (play ?) with Vortex
 =====================================================================================
 
 .. automodule:: sandbox.algo
-   :synopsis: AlgoComponnent definitions to experiment (play ?) with Vortex
+   :synopsis: AlgoComponent definitions to experiment (play ?) with Vortex
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

@@ -99,14 +99,6 @@ def _mkjob_opts_detect_1(t, ** opts):
 def _mkjob_opts_detect_2(t, tplconf, jobconf, tr_opts, auto_opts, ** opts):
     """Detect options that depend on the configuration file."""
 
-    # The mkjob profile and associated conf
-    profile = opts.pop('profile', 'void')
-    p_tplconf = tplconf.get(profile, None)
-    if p_tplconf is None:
-        emsg = "Job's profile << {:s} >> not found.".format(profile)
-        logger.critical(emsg)
-        raise ValueError(emsg)
-
     # Fix the task's name
     name = re.sub(r'\.py$', '', opts.pop('name', 'autojob'))
 
@@ -144,6 +136,17 @@ def _mkjob_opts_detect_2(t, tplconf, jobconf, tr_opts, auto_opts, ** opts):
         logger.error('No job configuration for job name=%s', name)
         logger.warning('Going on with an emtpy job configuration... probably a bad idea !')
         p_jobconf = dict()
+
+    # The mkjob profile and associated conf
+    profile = opts.pop('profile',
+                       p_jobconf.get('profile_mkjob', 'test'))
+
+    # Find the appropriate config given the template
+    p_tplconf = tplconf.get(profile, None)
+    if p_tplconf is None:
+        emsg = "Job's profile << {:s} >> not found.".format(profile)
+        logger.critical(emsg)
+        raise ValueError(emsg)
 
     def opts_plus_job(what, default):
         """Function that look up in command line options, then in job's conf."""
@@ -222,7 +225,8 @@ def _mkjob_opts_detect_2(t, tplconf, jobconf, tr_opts, auto_opts, ** opts):
     tr_opts['pwd'] = opts.pop('pwd', t.sh.getcwd())
     tr_opts['home'] = opts_plus_job('home', t.env.HOME)
 
-    tr_opts['python'] = opts_plus_job_plus_tpl('python', t.sh.which('python'))
+    tr_opts['python_mkjob'] = t.sh.which('python')
+    tr_opts['python'] = opts_plus_job_plus_tpl('python', tr_opts['python_mkjob'])
     tr_opts['pyopts'] = opts_plus_job_plus_tpl('pyopts', '-u')
 
     tr_opts['task'] = opts_plus_job_plus_tpl('task', 'void')
@@ -607,7 +611,6 @@ class JobAssistant(footprints.FootprintBase):
         ftuser = self.conf.get('ftuser', None)
         if ftuser is not None:
             if isinstance(ftuser, dict):
-
                 for dest, d_ftuser in ftuser.items():
                     if not (isinstance(dest, six.string_types) and isinstance(d_ftuser, six.string_types)):
                         logger.error('Improper ftuser configuration (Destination=%s, Logname=%s)',
@@ -624,6 +627,11 @@ class JobAssistant(footprints.FootprintBase):
                 t.glove.setftuser(ftuser)
             else:
                 logger.error('Improper ftuser value %s', ftuser)
+        # Possibly setup the default hostname for file-transfers
+        fthost = self.conf.get('fthost', None)
+        if fthost is not None:
+            t.glove.default_fthost = fthost
+            self._printfmt('+ Setting the default file-transfer hostname to: {:s}', fthost)
 
     @_extendable
     def _env_setup(self, t, **kw):

@@ -105,3 +105,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: DatedBathy
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

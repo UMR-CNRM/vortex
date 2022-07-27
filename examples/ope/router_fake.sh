@@ -27,6 +27,7 @@ echo "Log file for $0: $log"
 		base_transfert_agent
 		DIAP_AGENT_NUMPROG_AGENT
 	eof
+	echo "	absolute path: $(find $PWD -name "$1")"
 	echo "	$(md5sum $1)"
 ) >> $log
 

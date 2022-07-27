@@ -130,10 +130,12 @@ class GitToolboxProvider(ToolboxProvider):
 
     _GIT_REPO_URI = 'reader066@git.cnrm-game-meteo.fr:/data/git/vortex.git'
 
-    def _gitrun(self, cmd, *kargs):
+    @staticmethod
+    def _gitrun(cmd, *kargs):
         thecmd = ['git', cmd]
         thecmd.extend(kargs)
         logger.debug('Launching: ' + ' '.join(thecmd))
+        output = ''
         try:
             output = subprocess.check_output(thecmd, stderr=subprocess.STDOUT,)
         except subprocess.CalledProcessError as e:
@@ -272,7 +274,7 @@ class ExportService(object):
     def test_and_install(self, headdir, local, tmplocation):
         """Unpack the tar file, run test and install stuff.
 
-        :param headir: The instalation headdir on the target host
+        :param headdir: The instalation headdir on the target host
         :param local: Path to the local file that was uploaded
         :param tmplocation: The temporary location of thee tar file (as returned
                             by :meth:`upload`)
@@ -407,13 +409,13 @@ class ShellAccessExportService(ExportService):
             # Move the tar file next to the destination directory
             self.sh_execute('mv {} {}'.format(tmplocation, headdir))
         finally:
-            # Remove the tmpdel directory
+            # Remove the '.tmpdel' directory
             if cleanup:
                 repl_cmd = "rm -rf {0:s}.tmpdel".format(final_dir)
                 if not self.sh_execute(repl_cmd, onerror_raise=False):
                     naptime = float(self._internals.get('sleep_retry', 2))
-                    logger.warn('Waiting %s seconds and retries the delete...',
-                                str(naptime))
+                    logger.warning('Waiting %s seconds and retries the delete...',
+                                   str(naptime))
                     time.sleep(naptime)
                     self.sh_execute(repl_cmd)
         logger.info("  The Vortex Toolbox was installed in {} on {}".format(final_dir,
@@ -501,13 +503,13 @@ class SSHExportService(ShellAccessExportService):
         stderr = self._stream_process(ssh.recv_stderr)
         # Error
         if (not status) and (not silent):
-            logger.warn("Command: {}. Exit Code={:d}.".format(cmd, exitcode))
-            logger.warn("Execution stdout: \n{}".format('\n'.join(stdout)))
-            logger.warn("Execution stderr: \n{}".format('\n'.join(stderr)))
+            logger.warning("Command: {}. Exit Code={:d}.".format(cmd, exitcode))
+            logger.warning("Execution stdout: \n{}".format('\n'.join(stdout)))
+            logger.warning("Execution stderr: \n{}".format('\n'.join(stderr)))
             if onerror_raise:
                 raise SSHExportServiceError('Execution Error')
             else:
-                logger.warn('Execution Error')
+                logger.warning('Execution Error')
         else:
             # Execution was ok
             logger.debug("Command: {}. Exit Code={:d}.".format(cmd, exitcode))
@@ -546,14 +548,16 @@ class EcAccessEcmwfExportService(ExportService):
         assert 'ecaccess_proxy' in self._internals
         assert 'ecaccess_proxy_stagingdir' in self._internals
 
-    def _local_run(self, thecmd):
+    @staticmethod
+    def _local_run(thecmd):
         logger.debug("running: " + ' '.join(thecmd))
+        output = ''
         try:
             output = subprocess.check_output(thecmd, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             if output:
-                logger.warn("process output: \n" + e.output.decode(_DEFAULT_ENCODING,
-                                                                   errors='ignore'))
+                logger.warning("process output: \n" + e.output.decode(_DEFAULT_ENCODING,
+                                                                      errors='ignore'))
             raise EcAccessEcmwfExportServiceError('The << {!s} >> command failed.'.format(thecmd))
         else:
             if output:
@@ -578,7 +582,7 @@ class EcAccessEcmwfExportService(ExportService):
     def test_and_install(self, headdir, local, tmplocation):
         """Unpack the tar file, run test and install stuff.
 
-        :param headir: The instalation headdir on the target host
+        :param headdir: The instalation headdir on the target host
         :param local: Path to the local file that was uploaded
         :param tmplocation: The temporary location of thee tar file (as returned
                             by :meth:`upload`)
@@ -690,10 +694,7 @@ class ExportTarget(object):
         return self._name
 
     def autoexport(self, local):
-        """Export the Vortex copy contained in `local`.
-
-        :param enforce_check: If False, a error on make check won't be fatal
-        """
+        """Export the Vortex copy contained in `local`."""
         remote_tgz = self._exp.upload(local)
         try:
             self._exp.test_and_install(self._headdir, local, remote_tgz)

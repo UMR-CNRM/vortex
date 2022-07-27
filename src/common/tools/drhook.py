@@ -19,9 +19,9 @@ logger = loggers.getLogger(__name__)
 
 @algo_component_deco_mixin_autodoc
 class DrHookDecoMixin(AlgoComponentDecoMixin):
-    """Handle DrHook settings in AlgoComponnents.
+    """Handle DrHook settings in AlgoComponents.
 
-    This mixin class is intended to be used with AlgoComponnent classes. It will
+    This mixin class is intended to be used with AlgoComponent classes. It will
     automatically add footprints' arguments related to DrHook (namely the
     drhookprof boolean attribute that is optional and False by default),
     and set up DrHook environment variables (:meth:`_drhook_varexport`) depending

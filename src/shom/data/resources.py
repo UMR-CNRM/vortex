@@ -6,7 +6,7 @@ Hycom3d files.
 
 from bronx.stdtypes.date import Date
 from vortex.data.flow import FlowResource
-from common.data.modelstates import Analysis, InitialCondition
+from common.data.modelstates import Analysis3D, InitialCondition
 from vortex.data.flow import GeoFlowResource
 # from vortex.data.outflow import StaticGeoResource
 from vortex.syntax.stddeco import namebuilding_append
@@ -185,7 +185,7 @@ class Hycom3dInitialCondition(InitialCondition):
 @namebuilding_append('src', lambda self: [self.filtering, self.ppdate, self.source, self.interp],
                      none_discard=True)
 @namebuilding_append('geo', lambda self: [self.area], none_discard=True)
-class Hycom3dModelOutput(Analysis):
+class Hycom3dModelOutput(Analysis3D):
     """Model output."""
 
     _footprint = dict(

@@ -117,10 +117,10 @@ class GridTarget(GenvModelGeoResource):
         dict(
             attr = dict(
                 kind = dict(
-                    values = ["interpolgrid"],
+                    values = ["interpolgrid", 'relief'],
                 ),
                 nativefmt = dict(
-                    values  = ['netcdf', 'nc'],
+                    values  = ['netcdf', 'nc', 'grib'],
                     default = 'netcdf',
                     remap   = dict(nc='netcdf'),
                 ),

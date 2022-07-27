@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Common AlgoComponnent to build model's climatology files.
+Common AlgoComponent to build model's climatology files.
 """
 
 from __future__ import absolute_import, division, print_function, unicode_literals

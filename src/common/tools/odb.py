@@ -83,6 +83,19 @@ class TimeSlots(object):
             slots = [islot, ] * self.nslot
         return slots
 
+    def as_centers_fromstart(self):
+        """Return time slots centers as a list of Period objects."""
+        slots = self.as_slots()
+        fromstart = []
+        acc = 0
+        for i in range(len(slots)):
+            fromstart.append(acc + slots[i] / 2)
+            acc += slots[i]
+        if self.center and (self.window.length // self.chunk.length != self.nslot):
+            fromstart[0] = 0
+            fromstart[-1] = self.window.length
+        return [bdate.Period(seconds=t) for t in fromstart]
+
     def as_bounds(self, date):
         """Return time slots as a list of compact date values."""
         date = bdate.Date(date)
@@ -90,7 +103,6 @@ class TimeSlots(object):
         for x in self.as_slots():
             boundlist.append(boundlist[-1] + x)
         boundlist = [x.compact() for x in boundlist]
-
         return boundlist
 
     @property
@@ -385,14 +397,14 @@ odbmix_attributes = footprints.Footprint(
 
 @algo_component_deco_mixin_autodoc
 class OdbComponentDecoMixin(AlgoComponentDecoMixin):
-    """Handle ODB settings in AlgoComponnents.
+    """Handle ODB settings in AlgoComponents.
 
-    This mixin class is intended to be used with AlgoComponnent classes. It will
+    This mixin class is intended to be used with AlgoComponent classes. It will
     automatically add footprints' arguments related to ODB
     (see :data:`odbmix_attributes`), set up generic ODB environment variables
     (:meth:`_odbobj_setup`) and provides a :attr:`odb` property that gives
     access to a properly initialised :class:`OdbDriver` object that can be used
-    directly in AlgoComponnents.
+    directly in AlgoComponents.
 
     In addition it provides directly some utility methods that can be called
     manually if needed.

@@ -9,9 +9,11 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import six
 import json
 import re
+import time
 
 from bronx.compat import random
 from bronx.fancies import loggers
+from bronx.stdtypes.date import Period
 
 from vortex import sessions
 from vortex.data.stores import FunctionStoreCallbackError
@@ -89,22 +91,62 @@ def _checkingfunction_dict(options):
         nbmin = int(options.get('min', [(0 if nbsample is None else nbsample), ]).pop())
         if nbsample is not None and nbsample < nbmin:
             logger.warning('%d resources needed, %d required: sin of gluttony ?', nbsample, nbmin)
+        # What to look for ?
         checkrole = rhdict['resource'].get('checkrole', None)
         if not checkrole:
             raise FunctionStoreCallbackError('The resource must hold a non-empty checkrole attribute')
         rolematch = re.match(r'(\w+)(?:\+(\w+))?$', checkrole)
+        cur_t = sessions.current()
         if rolematch:
-            ctx = sessions.current().context
+            ctx = cur_t.context
             checklist = [sec.rh for sec in ctx.sequence.filtered_inputs(role=rolematch.group(1))]
             mandatorylist = ([sec.rh for sec in ctx.sequence.filtered_inputs(role=rolematch.group(2))]
                              if rolematch.group(2) else [])
         else:
             raise FunctionStoreCallbackError('checkrole is not properly formatted')
-        try:
-            return helpers.colorfull_input_checker(nbmin, checklist, mandatory=mandatorylist,
-                                                   fakecheck=options.get('fakecheck', False))
-        except helpers.InputCheckerError as e:
-            raise FunctionStoreCallbackError('The input checher failed ({!s})'.format(e))
+        # Other options
+        nretries = int(options.get('nretries', [0, ]).pop())
+        retry_wait = Period(options.get('retry_wait', ['PT5M', ]).pop())
+        comp_delay = Period(options.get('comp_delay', [0, ]).pop())
+        fakecheck = options.get('fakecheck', [False, ]).pop()
+
+        def _retry_cond(the_ntries, the_acceptable_time):
+            return ((the_acceptable_time is None and
+                     the_ntries <= nretries) or
+                    (the_acceptable_time and
+                     (time.time() - the_acceptable_time) < comp_delay.total_seconds()))
+
+        # Ok let's work...
+        ntries = 0
+        acceptable_time = None
+        found = []
+        while _retry_cond(ntries, acceptable_time):
+            if ntries:
+                logger.info("Let's sleep %d sec. before the next check round...",
+                            retry_wait.total_seconds())
+                cur_t.sh.sleep(retry_wait.total_seconds())
+            ntries += 1
+            try:
+                logger.info("Starting an input check...")
+                found, candidates = helpers.colorfull_input_checker(nbmin,
+                                                                    checklist,
+                                                                    mandatory=mandatorylist,
+                                                                    fakecheck=fakecheck)
+                if acceptable_time is None and (found or nbmin == 0):
+                    acceptable_time = time.time()
+                    if comp_delay.total_seconds() and len(found) != len(candidates):
+                        logger.info("The minimum required size was reached (nbmin=%d). " +
+                                    "That's great but we are waiting a little longer " +
+                                    "(for at most %d sec.)",
+                                    nbmin, comp_delay.total_seconds())
+
+                if len(found) == len(candidates):
+                    # No need to wait any longer...
+                    break
+            except helpers.InputCheckerError as e:
+                if not _retry_cond(ntries, acceptable_time):
+                    raise FunctionStoreCallbackError('The input checher failed ({!s})'.format(e))
+        return found
     else:
         raise FunctionStoreCallbackError("no resource handler here :-(\n")
 
@@ -154,7 +196,7 @@ def unsafedrawingfunction(options):
 
     See the documentation of these two functions for more details.
     """
-    options['fakecheck'] = True
+    options['fakecheck'] = [True, ]
     checkedlist = _checkingfunction_dict(options)
     options['rhandler']['resource']['population'] = checkedlist
     return drawingfunction(options)

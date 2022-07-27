@@ -610,7 +610,12 @@ class Handler(object):
             actually fetched (no need to call :meth:`finaliseget`). Some kind of
             non-null identifier that will be used to call :meth:`finaliseget`.
         """
-        store = self.store
+        try:
+            store = self.store
+        except Exception as e:
+            logger.error("The Resource hndler was unable to create a store object (%s).",
+                         str(e))
+            store = None
         if store:
             logger.debug('Early-Get resource %s at %s from %s', self, self.lasturl, store)
             st_options = self.mkopts(dict(rhandler=self.as_dict()), extras)

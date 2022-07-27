@@ -341,7 +341,7 @@ class TntRecipe(object):
     in sight of finally merging them.
     """
 
-    _ingredient_name_re = re.compile(r'(?P<nam>[^/]+)(?:/(?P<filter>(?:-|\+)))?$')
+    _ingredient_name_re = re.compile(r'(?P<nam>.+?)(?:/(?P<filter>(?:-|\+)))?$')
     _ingredient_item_re = re.compile(r'(?P<block>[^/]+)/(?P<filter>(?:-|\+))$')
 
     def __init__(self, recipe_filename, sourcenam_directory=None):

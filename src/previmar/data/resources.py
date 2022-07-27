@@ -421,7 +421,8 @@ class Ww3IntermediateResults(GeoFlowResource):
                 values = ['ww3IntermedResult'],
             ),
             fields = dict(
-                values = ['nest', 'wind', 'restart', 'out_pnt', 'out_grd', 'restart001', 'restart002', 'restart003'],
+                values = ['nest', 'wind', 'restart', 'out_pnt', 'out_grd', 'restart001', 'restart002', 'restart003',
+                          'level', 'current'],
             ),
             model = dict(
                 values = ['ww3'],
@@ -468,10 +469,44 @@ class WW3Out(GeoFlowResource):
                     default = 'tar',
                 ),
                 fields = dict(
-                    values = ['out_pnt', 'out_grd', 'out_reg'],
+                    values = ['out_pnt', 'out_grd', 'out_grd_comp', 'out_reg'],
                 ),
                 model = dict(
                     values = ['ww3'],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'WW3Out'
+
+
+@namebuilding_append('src', lambda s: s.fields)
+class DatedBathy(GeoFlowResource):
+    """Class for bathymetry with a date.
+    """
+    _footprint = [
+        term_deco,
+        dict(
+            info = 'dated bathymetry',
+            attr = dict(
+                kind = dict(
+                    values = ['datedbathymetry'],
+                ),
+                nativefmt = dict(
+                    values  = ['grib'],
+                    default = 'grib',
+                ),
+                fields = dict(
+                    values = ['bathy', ],
+                ),
+                model = dict(
+                    values = ['ww3'],
+                ),
+                header = dict(
+                    optional = False,
                 ),
             )
         )

@@ -777,6 +777,16 @@ class Period(datetime.timedelta):
         """Absolute length in seconds."""
         return abs(int(self.total_seconds()))
 
+    @property
+    def pseconds(self):
+        """The period expressed in seconds (integer)"""
+        return int(self.total_seconds())
+
+    @property
+    def pminutes(self):
+        """The period expressed in minnutes (float)"""
+        return self.pseconds / 60
+
     def time(self):
         """Return a :class:`Time` object."""
         return Time(0, int(self.total_seconds()) // 60)
@@ -811,6 +821,19 @@ class Period(datetime.timedelta):
         if not args:
             args.append('0')
         return "%s(%s)" % (self.__class__.__name__, ', '.join(args))
+
+    _getattr_re = re.compile(r'^time_(?P<what>(?:fmt)[^_]+)$')
+
+    @secure_getattr
+    def __getattr__(self, name):
+        """Proxy to time properties."""
+        match = self._getattr_re.match(name)
+        if match is not None:
+            target = match.group('what')
+            return getattr(self.time(), target)
+        else:
+            raise AttributeError("'{}' object has no attribute '{}'".format(self.__class__.__name__,
+                                                                            name))
 
 
 class _GetattrCalculatorMixin(object):
@@ -964,7 +987,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
             >>> Date('easter') # doctest: +SKIP
             Date(2017, 4, 16, 0, 0)
 
-        Let's do some calculations on the fly::
+        Let's do some calculations while creating the object::
 
             >>> Date('20170101/PT12H')
             Date(2017, 1, 1, 12, 0)
@@ -1411,6 +1434,13 @@ class Time(_GetattrCalculatorMixin):
             >>> Time('12:00') - 'PT06H30M'
             Time(5, 30)
 
+        Let's do some calculations while creating the object::
+
+            >>> Time('12:00/PT6H')
+            Time(18, 0)
+            >>> Time('-PT12H/-P1D/PT12H')
+            Time(-24, 0)
+
         Comparison operators are all available.
 
         The :class:`Time` also have the ability to generate dynamic properties
@@ -1439,6 +1469,7 @@ class Time(_GetattrCalculatorMixin):
             raise ValueError("No initial value provided for Time")
         top = args[0]
         ld = list()
+        deltas = []
         self._hour, self._minute = None, None
         if isinstance(top, tuple) or isinstance(top, list):
             zz = Time(*top)
@@ -1453,6 +1484,9 @@ class Time(_GetattrCalculatorMixin):
         elif isinstance(top, float):
             self._hour, self._minute = int(top), int((top - int(top)) * 60)
         elif isinstance(top, six.string_types):
+            s_top = top.split('/')
+            top = s_top[0]
+            deltas = s_top[1:]
             if re.match(r'^[+-]?P', top):  # This looks like a Period string...
                 newtime = Period(top).time()
                 self._hour, self._minute = newtime.hour, newtime.minute
@@ -1476,6 +1510,11 @@ class Time(_GetattrCalculatorMixin):
             while abs(self._minute) >= 60:
                 self._hour += thesign
                 self._minute -= thesign * 60
+        # Apply deltas
+        if deltas:
+            new_time = self + sum([Period(d) for d in deltas], Period(0))
+            self._hour = new_time.hour
+            self._minute = new_time.minute
 
     @property
     def hour(self):

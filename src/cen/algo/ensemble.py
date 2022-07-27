@@ -93,7 +93,6 @@ class _S2MWorker(VortexWorkerBlindRun):
             thisdir = self.system.path.join(rundir, self.subdir)
             with self.system.cdcontext(self.subdir, create=True):
                 rdict = self._commons(rundir, thisdir, rdict, **kwargs)
-
         else:
             thisdir = rundir
             rdict = self._commons(rundir, thisdir, rdict, **kwargs)
@@ -278,9 +277,9 @@ class _SafranWorker(_S2MWorker):
             # Un-comment the following lines to run a re-analysis without observation assimilation.
             # It is also necessary to modify the safran_reanalysis task to force the execution
             # of syrpluie and prevent the execution of sypluie
-#            import glob
-#            for obs in glob.glob('S????????') + glob.glob('T????????') + glob.glob('R????????'):
-#                self.system.remove(obs)
+            # import glob
+            # for obs in glob.glob('S????????') + glob.glob('T????????') + glob.glob('R????????'):
+            #     self.system.remove(obs)
             # Add 'weather type' normals
             _OP_files_common.extend(['OPNOot', 'OPNOmt'])
         else:
@@ -323,7 +322,7 @@ class _SafranWorker(_S2MWorker):
             if not self.system.path.exists(filename):
                 # SAFRAN guess files can be named 'PYYMMDDHH' or 'EYYMMDDHH'
                 if not (filename.startswith('P') and self.system.path.exists('E' + filename[1:])):
-                    missing_files.append(filenmae)
+                    missing_files.append(filename)
         if len(missing_files) > 0:
             if self.execution not in ['reforecast', ]:
                 rdict['rc'] = InputCheckerError('The following mandatory flow resource are missing : \n' +
@@ -421,7 +420,7 @@ class _SafranWorker(_S2MWorker):
                             t = 24
                     else:
                         t = 0
-                while not self.system.path.islink(p) and (t <= 108):
+                while not self.system.path.islink(p) and (t <= 102):
                     d = date - Period(hours=t)
                     oldp = '{0:s}{1:s}_{2!s}'.format(prefix, d.yymdh, t)
                     if self.system.path.exists(oldp):
@@ -769,9 +768,22 @@ class SytistWorker(_SafranWorker):
                           'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
 
         if self.execution in ['analysis', 'reanalysis']:
-            self.system.tar('liste_obs_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h),
-                            'liste_obs*')
-        self.system.tar('listings_safran_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h), '*.out')
+            # Ensure that at least one listing file has been created, otherwise the tar command raises an
+            # ExecutionError that isn't filtered by the DelayedAlgoError mechanism and make the algo component
+            # (even other workers that were fine) crash.
+            # This issue has been identified when trying the #2079 vortex issue that should allow the task
+            # to go on until produced resources are archived even if some members have crashed.
+            if len(self.system.ffind('liste_obs*')) > 0:
+                self.system.tar('liste_obs_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h),
+                                'liste_obs*')
+        # Ensure that at least one listing file has been created, otherwise the tar command raises an
+        # ExecutionError that isn't filtered by the DelayedAlgoError mechanism and make the algo component
+        # (even other workers that were fine) crash.
+        # This issue has been identified when trying the #2079 vortex issue that should allow the task
+        # to go on until produced resources are archived even if some members have crashed.
+        if len(self.system.ffind('*.out')) > 0:
+            self.system.tar('listings_safran_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h),
+                            '*.out')
 
         super(SytistWorker, self).postfix()
 
@@ -985,7 +997,7 @@ class SurfexWorker(_S2MWorker):
 
     def _surfex_task(self, rundir, thisdir, rdict):
         # ESCROC cases: each member will need to have its own namelist
-        # meteo ensemble cases: the forcin<g modification must be applied to all members and the namelist
+        # meteo ensemble cases: the forcing modification must be applied to all members and the namelist
         # generation requires that the forcing generation has already be done. Therefore, preprocessing
         # is done in the offline algo in all these cases
         # Determinstic cases : the namelist is prepared in the preprocess algo component in order to allow
@@ -1549,7 +1561,7 @@ class S2MComponent(ParaBlindRun):
 
     def role_members_namebuilder(self):
         """
-        Defines the role of the effective inputs to take as reference te define
+        Defines the role of the effective inputs to take as reference to define
         the different members.
         """
         return 'Ebauche'
@@ -1678,7 +1690,16 @@ class S2MReforecast(S2MComponent):
         list_dates_begin = list()
         list_dates_end = list()
         for am in avail_members:
-            if am.rh.container.dirname not in subdirs:
+            # Guess files are now stored in a tar archive
+            if self.system.is_tarfile(am.rh.container.basename):
+                for fic in self.system.untar(am.rh.container.basename):
+                    # fic = YYYYMMDD00/mbXXX/PYYMMDDHH
+                    dirname = self.system.path.dirname(fic)  # YYYYMMDD00/mbXXX
+                    if dirname not in subdirs:
+                        subdirs.append(dirname)
+                        list_dates_begin.append(Date(fic.split('/')[0]) + Period(hours=6))
+                        list_dates_end.append(Date(fic.split('/')[0]) + Period(hours=6) + Period(days=4))
+            elif am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
                 # WARNING : The first ech in the corresponding footprint must correspond to 6:00 at day D
                 list_dates_begin.append(am.rh.resource.date + Period(hours=am.rh.resource.cumul.hour))

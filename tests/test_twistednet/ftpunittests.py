@@ -11,6 +11,7 @@ import tempfile
 import unittest
 
 import vortex
+from vortex import sessions
 
 from . import has_ftpservers
 from .utils import get_ftp_port_number
@@ -22,11 +23,20 @@ class FtpBasedTestCase(unittest.TestCase):
     _FTPLOGLEVEL = 'ERROR'
 
     def setUp(self):
-        self.sh = vortex.sh()
         # Temp directory
         self.tdir = tempfile.mkdtemp(prefix='ftp_testdir_')
-        self._oldpwd = self.sh.getcwd()
-        self.sh.chdir(self.tdir)
+        self.rootsh = vortex.sh()
+        self._oldpwd = self.rootsh.getcwd()
+        self.rootsh.chdir(self.tdir)
+        # Record the root session
+        self.prev_session = sessions.current()
+        # Create a new one and switch to it...
+        self.cursession = sessions.get(tag='ftp_based_unit_test',
+                                       topenv=vortex.rootenv,
+                                       glove=sessions.getglove())
+        self.cursession.rundir = self.tdir
+        self.cursession.activate()
+        self.sh = self.cursession.sh
         # Cocoon the ftp server directory
         self.udir = self.sh.path.join(self.tdir, 'testlogin')
         self.sh.mkdir(self.udir)
@@ -46,9 +56,11 @@ class FtpBasedTestCase(unittest.TestCase):
                                     self.user, self.password)
 
     def tearDown(self):
+        # Switch back to the previous session
+        self.prev_session.activate()
         # Do some cleaning
-        self.sh.chdir(self._oldpwd)
-        self.sh.rmtree(self.tdir)
+        self.rootsh.chdir(self._oldpwd)
+        self.rootsh.rmtree(self.tdir)
 
     def assertFile(self, path, content, binary=False):
         self.assertTrue(self.sh.path.exists(path),

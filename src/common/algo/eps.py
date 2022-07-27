@@ -20,6 +20,7 @@ from vortex.algo.components import BlindRun
 from vortex.layout.dataflow import intent
 from vortex.tools.grib import EcGribDecoMixin
 from .ifsroot import IFSParallel
+from .stdpost import parallel_grib_filter
 from common.tools.drhook import DrHookDecoMixin
 
 #: No automatic export
@@ -453,6 +454,11 @@ class Clustering(BlindRun, EcGribDecoMixin):
                 optional = True,
                 access = 'rwx',
             ),
+            gribfilter_tasks=dict(
+                type=int,
+                optional=True,
+                default=8,
+            ),
         )
     )
 
@@ -470,7 +476,7 @@ class Clustering(BlindRun, EcGribDecoMixin):
         if avail_json:
             population = avail_json[0].rh.contents.data['population']
             self.nbmembers = len(population)
-            fileList = list()
+            file_list = list()
             for elt in population:
                 sublist_ids = list()
                 for (i, grib) in enumerate(grib_sections):
@@ -478,14 +484,19 @@ class Clustering(BlindRun, EcGribDecoMixin):
                     if all([grib.rh.wide_key_lookup(key, exports=True) == value
                             for (key, value) in elt.items()]):
                         sublist_ids.append(i)
-                # Stack the gribs in fileList
-                fileList.extend(sorted([six.text_type(grib_sections[i].rh.container.localpath())
-                                        for i in sublist_ids]))
+                # Stack the gribs in file_list
+                file_list.extend(sorted([six.text_type(grib_sections[i].rh.container.localpath())
+                                         for i in sublist_ids]))
                 for i in reversed(sublist_ids):
                     del grib_sections[i]
         else:
-            fileList = sorted([six.text_type(grib.rh.container.localpath())
-                               for grib in grib_sections])
+            file_list = sorted([six.text_type(grib.rh.container.localpath())
+                                for grib in grib_sections])
+
+        # Deal with xGribs
+        file_list_cat = [f + '.concatenated' for f in file_list]
+        parallel_grib_filter(self.context, file_list, file_list_cat,
+                             cat=True, nthreads=self.gribfilter_tasks)
 
         if self.nbmembers is None or self.nbmembers > self.nbclust:
 
@@ -500,7 +511,7 @@ class Clustering(BlindRun, EcGribDecoMixin):
             namsec[0].rh.container.cat()
 
             with io.open(self.fileoutput, 'w') as optFile:
-                optFile.write('\n'.join(fileList))
+                optFile.write('\n'.join(file_list_cat))
 
     def execute(self, rh, opts):
         # If the number of members is big enough -> normal processing

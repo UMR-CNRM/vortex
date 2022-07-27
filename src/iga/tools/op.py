@@ -129,11 +129,8 @@ class OpJobAssistantTest(JobAssistant):
             else:
                 rundate = bronx.stdtypes.date.Date(anydate)
                 if t.env.OP_VAPP == 'mocage':
-                    if t.env.OP_VCONF in ['camsfcst', 'fcst', 'altana']:
-                        rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H')
-                    elif t.env.OP_VCONF == 'surfana':
-                        rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/-P1D')
-
+                    if t.env.OP_VCONF in ['camsfcst', 'fcst', 'altana', 'surfana']:
+                        rundate = bronx.stdtypes.date.Date(rundate.ymdh + self.conf.delta_rundate)
             t.env.OP_RUNDATE = rundate
         t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
         logger.info('Effective rundate = %s', t.env.OP_RUNDATE.ymdhm)
@@ -429,8 +426,6 @@ def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_
             kwargs['domain'] = rh.resource.geometry.area
         if hasattr(rh.resource, 'term') and 'term' not in kwargs:
             kwargs['term'] = rh.resource.term.export_dict()
-            if kwargs['transmet']:
-                kwargs['transmet']['ECHEANCE'] = rh.resource.term.fmth
 
         kwargs['rhandler_uri'] = rh.location()
 

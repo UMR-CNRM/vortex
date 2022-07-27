@@ -943,3 +943,52 @@ class EnsembleDiagScript(GnuScript):
             )
         )
     ]
+
+
+class DomeoForcing(BlackBox):
+    """Some binary that tweak forcing files for domeo use."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Some binary that tweak forcing files for domeo use',
+            attr = dict(
+                kind = dict(
+                    values   = ['domeo_forcing'],
+                ),
+                gvar = dict(
+                    default  = 'master_domeo_forcing'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'domeo_forcing'
+
+
+class DomeoScriptDataCor(Script):
+    """Class to deal with Domeo correction script."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'correction script',
+            attr = dict(
+                kind = dict(
+                    values = ['domeo_cor_script']
+                ),
+                purpose = dict(
+                    values  = ['forcing', 'crop'],
+                ),
+                gvar = dict(
+                    default = 'scr_domeo_cor_[purpose]',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'domeo_cor_script'

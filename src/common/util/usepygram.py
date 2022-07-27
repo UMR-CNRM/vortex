@@ -19,6 +19,7 @@ from bronx.syntax.externalcode import ExternalCodeImportChecker
 from footprints import proxy as fpx
 from vortex import sessions
 from vortex.data.contents import MetaDataReader
+from vortex.data.handlers import Handler
 
 logger = loggers.getLogger(__name__)
 
@@ -457,3 +458,54 @@ def add_poles_to_reglonlat_file(filename):
             # get initial compression
             write_args = dict(compression=rin.fieldscompression[fld.fid['FA']])
         rout.writefield(fld, **write_args)
+
+
+def split_errgrib_on_shortname(t, rh):
+    """Split a Background Error GRIB file into pieces (based on the GRIB shortName)."""
+    # Sanity checks
+    if rh.resource.realkind != 'bgstderr' or getattr(rh.resource, 'variable', None) is not None:
+        raise ValueError('Incompatible resource: {!s}'.format(rh))
+
+    def create_section(sn):
+        """Create a new section object for a given shortName (**sn**)."""
+        sn_r = fpx.resource(variable=sn, ** rh.resource.footprint_as_shallow_dict())
+        sn_p = fpx.provider(magic='magic:///')
+        sn_c = fpx.container(filename=rh.container.localpath() + sn,
+                             format='grib', mode='ab+')
+        secs = t.context.sequence.input(rh=Handler(dict(resource=sn_r,
+                                                        provider=sn_p,
+                                                        container=sn_c)),
+                                        role='BackgroundStdError')
+        secs[0].get()
+        return secs[0]
+
+    # Iterate over the GRIB messages
+    gribs = rh.contents.data
+    sections = dict()
+    try:
+        grb = gribs.iter_messages(headers_only=False)
+        while grb is not None:
+            # Find the ShortName
+            for grib_v in ('GRIB1', 'GRIB2'):
+                sn = grb.genfid()[grib_v].get('shortName', None)
+                if sn is not None:
+                    break
+            if sn is None:
+                raise IOError('No ShortName was found')
+            # Set up the appropriate section
+            if sn not in sections:
+                sections[sn] = create_section(sn)
+            # Write the field
+            grb.write_to_file(sections[sn].rh.container.iodesc())
+            # Next field (if any)
+            grb = gribs.iter_messages(headers_only=False)
+    finally:
+        for sec in sections.values():
+            sec.rh.container.close()
+
+    # Summary
+    if sections:
+        logger.info('%d new sections created. See details below:', len(sections))
+        for i, sec in enumerate(sorted(sections.values(),
+                                       key=lambda s: s.rh.resource.variable)):
+            sec.rh.quickview(nb=i)

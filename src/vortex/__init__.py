@@ -24,7 +24,7 @@ strongly advised.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-__version__ = '1.8.2'
+__version__ = '1.8.3'
 __prompt__ = 'Vortex v-' + __version__ + ':'
 
 __nextversion__ = '1.8.3'

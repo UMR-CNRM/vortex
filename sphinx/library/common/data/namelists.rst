@@ -24,6 +24,11 @@ Exceptions
 Classes
 -------
 
+.. autoclass:: NamelistPack
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: NamelistContent
    :show-inheritance:
    :members:

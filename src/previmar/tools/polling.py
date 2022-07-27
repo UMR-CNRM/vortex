@@ -68,13 +68,14 @@ class IO_Poll_Marine(addons.Addon):
         # Cumulative results
         return rawout
 
-    def iopoll_ww3(self, prefix, datpivot, stepout=3):
+    def iopoll_ww3(self, prefix, datpivot, stepout=3, anaterm=6):
         """Do the actual job of polling files prefixed by ``prefix``."""
         logger.info("Execution IOPOLL WW3")
 
         cmd = ['--logout', prefix]
         cmd.extend(['--datpivot', datpivot])
         cmd.extend(['--stepout', stepout])
+        cmd.extend(['--anaterm', anaterm])
         logger.info("cmd: %s", cmd)
         rawout = self._spawn(cmd)
         return rawout

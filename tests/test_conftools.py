@@ -779,6 +779,10 @@ class ArpIfsForecastTermConfToolTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self._basic_wtools(extra_fp_terms_def=dict(assim=dict(default=0)))
         with self.assertRaises(ValueError):
+            self._basic_wtools(secondary_diag_terms_def=dict(diag=1))
+        with self.assertRaises(ValueError):
+            self._basic_wtools(secondary_diag_terms_def=dict(assim=dict(default=0)))
+        with self.assertRaises(ValueError):
             self._basic_wtools(hist_terms_def=dict(assim=0))
         with self.assertRaises(ValueError):
             self._basic_wtools(hist_terms_def=dict(bling={"default": None, 0: "1:30,3,6"},
@@ -817,6 +821,26 @@ class ArpIfsForecastTermConfToolTest(unittest.TestCase):
                          wtool.fpoff_items('production', 0))
         self.assertEqual([0, 2, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48],
                          wtool.fpoff_terms('production', 0))
+        wtool = self._basic_wtools(
+            secondary_diag_terms_def=dict(
+                labo=dict(production=dict(default='0-12-3')),
+            ))
+        self.assertEqual(wtool.inline_terms('production', 0),
+                         wtool.no_inline.diag_terms('production', 0))
+        self.assertEqual([],
+                         wtool.no_inline.inline_terms('production', 0))
+        self.assertEqual(rangex("0-47-3,48-102:00-6"),
+                         wtool.inline_terms('production', 0))
+        wtool = self._basic_wtools(
+            secondary_diag_terms_def=dict(
+                labo=dict(production=dict(default='0-6-1')),
+            ))
+        self.assertEqual(wtool.inline_terms('production', 0),
+                         wtool.no_inline.diag_terms('production', 0))
+        self.assertEqual([],
+                         wtool.no_inline.inline_terms('production', 0))
+        self.assertEqual(rangex("0-5-1,6-47-3,48-102:00-6"),
+                         wtool.inline_terms('production', 0))
         wtool = self._basic_wtools(norm_terms_def=None, fcterm_unit='timestep')
         self.assertTrue(isinstance(wtool.fcterm('production', 0), int))
 

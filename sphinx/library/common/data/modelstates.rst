@@ -17,7 +17,17 @@ Package
 Classes
 -------
 
-.. autoclass:: Analysis
+.. autoclass:: AbstractAnalysis
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Analysis3D
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Analysis4D
    :show-inheritance:
    :members:
    :member-order: alphabetical

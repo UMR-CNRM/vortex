@@ -29,7 +29,12 @@ Abstract AlgoComponents
 Real-Life AlgoComponents
 ************************
 
-.. autoclass:: OOPSMinim
+.. autoclass:: OOPSAnalysis
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OOPSAnalysisWithScreening
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -37,12 +42,35 @@ Real-Life AlgoComponents
 AlgoComponents' mixin classes
 *****************************
 
-.. autoclass:: OOPSMemberDetectDecoMixin
+.. autoclass:: OOPSMemberDecoMixin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OOPSMembersTermsDetectDecoMixin
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
 .. autoclass:: OOPSMembersTermsDecoMixin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OOPSTimestepDecoMixin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OOPSIncrementalDecoMixin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+Utility classes
+***************
+
+.. autoclass:: OOPSMemberInfos
    :show-inheritance:
    :members:
    :member-order: alphabetical

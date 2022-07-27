@@ -107,6 +107,41 @@ class BDCPQuery(Query):
         return 'bdcp_query'
 
 
+class StaticCutoffDispenser(object):
+    """
+    From a dictionary of cutoff times, for a given *obstype*, find the
+    best suited cutoff time.
+
+    The __call__ method takes a unique *obstype* argument. It will return the
+    best suited cutoff time for this particular *obstype*. N.B: If no exact
+    match is found, the default cutoff time will be used.
+    """
+
+    def __init__(self, default_cutoff, obstype_cutoffs=None):
+        self._default_cutoff = default_cutoff
+        if obstype_cutoffs:
+            self._cutoffs = {k: {o.lower() for o in v}
+                             for k, v in obstype_cutoffs.items()}
+        else:
+            self._cutoffs = {}
+
+    @property
+    def max_cutoff(self):
+        return self._default_cutoff
+
+    def __call__(self, obstype):
+        """Find the best suited cutoff time for *obstype*."""
+        obstype = obstype.lower()
+        found = None
+        for k, v in self._cutoffs.items():
+            if obstype in v:
+                found = k
+        if found:
+            return found
+        else:
+            return self._default_cutoff
+
+
 class BDMQueryContent(AlmostListContent):
     """Read the content of BDM query file."""
 
@@ -114,8 +149,9 @@ class BDMQueryContent(AlmostListContent):
 
     def add_cutoff_info(self, cutoffs_dispenser):
         """
-        Using a :class:`vortex.tools.listings.CutoffDispenser` object, add the
-        cutoff related information in the BDM query.
+        Using a :class:`vortex.tools.listings.ListBasedCutoffDispenser` or
+        :class:`StaticCutoffDispenser` object, add the cutoff related
+        information in the BDM query.
         """
         if cutoffs_dispenser.max_cutoff is None:
             logger.warning("The cutoffs_dispenser is empty. No cutoff data can be retrieved")

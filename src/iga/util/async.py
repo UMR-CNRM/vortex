@@ -73,7 +73,6 @@ def system_route(pnum, ask, config, logger, **opts):
     Removes the source on success (should be a hidden copy).
     """
     logger.info('System', todo=ask.todo, pnum=pnum, opts=opts)
-    return_value = dict(rpool='error')
 
     # options from the jeeves .ini configuration
     nossh = opts.get('nossh', False)
@@ -130,7 +129,7 @@ def system_route(pnum, ask, config, logger, **opts):
                     if len(filtered) != 1:
                         logger.error('Should have 1 file in gribfilter output, got: %s',
                                      str(filtered))
-                        logger.error('Nothing will be routed, please fix the script.')
+                        logger.error('Nothing will be routed, please fix the calling script.')
                         return pnum, False, dict(rpool='error')
                     route_source = filtered[0]
                 else:
@@ -143,6 +142,11 @@ def system_route(pnum, ask, config, logger, **opts):
                 if route_source != outfile:
                     sh.cp(data.source, outfile, intent="in", fmt='grib')
                     route_source = outfile
+
+            # put the mandatory variable(s) back in the async environment
+            if 'dmt_date_pivot' in data:
+                e = vwork.session.env
+                e.dmt_date_pivot = data.dmt_date_pivot
 
             # activate services or not according to jeeves' configuration
             if route_on:

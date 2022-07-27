@@ -36,6 +36,43 @@ KNOWN_NAMELIST_MACROS = set(['NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
                              'LLARO', 'LLVRP', 'LLCAN'])
 
 
+class NamelistPack(ModelResource):
+    """
+    Class for all kinds of namelists
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info = 'A whole Namelist pack',
+            attr = dict(
+                kind = dict(
+                    values   = ['namelistpack']
+                ),
+                gvar = dict(
+                    values   = ['NAMELIST_' + x.upper() for x in binaries],
+                    default  = 'namelist_[binary]'
+                ),
+                model = dict(
+                    optional = True,
+                ),
+                binary = dict(
+                    optional = True,
+                    values   = binaries,
+                    default  = '[model]',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'namelistpack'
+
+    def gget_urlquery(self):
+        """GGET specific query : ``dir_extract``."""
+        return 'dir_extract=1'
+
+
 class NamelistContentError(ValueError):
     pass
 

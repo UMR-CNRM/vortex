@@ -11,7 +11,7 @@ import sys
 
 from . import util, norms, jo_tables, listings
 
-__version__ = '1.1.4'
+__version__ = '1.1.5'
 
 
 def compare_files(file_test, file_ref,

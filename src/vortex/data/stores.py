@@ -229,7 +229,14 @@ class Finder(Store):
         if (isinstance(local, six.string_types) and self.system.path.isfile(local) and
                 self.system.is_tarfile(local)):
             destdir = self.system.path.dirname(self.system.path.realpath(local))
-            self.system.smartuntar(local, destdir)
+            try:
+                self.system.smartuntar(local, destdir)
+            except ExecutionError:
+                if not self.system.is_tarname(local):
+                    logger.warning("An automatic untar was attempted but it failed. " +
+                                   "Maybe the system's is_tarfile got it wrong ?")
+                else:
+                    raise
 
     def filecheck(self, remote, options):
         """Returns a stat-like object if the ``remote`` exists on the ``system`` provided."""

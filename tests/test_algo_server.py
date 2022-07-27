@@ -37,7 +37,7 @@ class ServerSyncToolQuick(serversynctools.ServerSyncSimpleSocket):
 
 
 class ExpressoServer(components.Expresso):
-    """Just a fake algo componnent that simulate some crashes."""
+    """Just a fake algo component that simulate some crashes."""
     _footprint = dict(
         attr = dict(
             server_run = dict(
