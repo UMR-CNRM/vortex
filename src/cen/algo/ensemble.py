@@ -1790,7 +1790,7 @@ class SurfexComponent(S2MComponent):
                 # Therefore it is necessary to reduce subdirs to 1 single element for each member
                 subdirs = list(set(map(self.system.path.dirname, subdirs)))
 
-            return subdirs
+        return subdirs
 
     def role_members_namebuilder(self):
         return 'Forcing'
