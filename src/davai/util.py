@@ -150,6 +150,19 @@ def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
                 raise DavaiException('HTTP post failed')
 
 
+def set_env4git():
+    """Configure environment to have git available, from target config."""
+    t = sessions.current()
+    target = t.sh.target()
+    git_installdir = target.config.get('git', 'git_installdir')
+    if git_installdir not in ('', None):
+        logger.info("Loading git from:", git_installdir)
+        t.env.setbinpath(t.sh.path.join(git_installdir, 'bin'), 0)
+        t.env['GIT_EXEC_PATH'] = t.sh.path.join(git_installdir,
+                                                'libexec',
+                                                'git-core')
+
+
 class SummariesStack(object):
 
     summaries_stack_dir = 'summaries_stack'

@@ -15,6 +15,7 @@ from vortex.algo.components import (AlgoComponent, AlgoComponentDecoMixin,
                                     algo_component_deco_mixin_autodoc)
 
 from .mixins import _CrashWitnessDecoMixin
+from davai.util import set_env4git
 
 
 #: No automatic export
@@ -110,12 +111,7 @@ class GitDecoMixin(AlgoComponentDecoMixin):
     ),)
 
     def _set_git(self, rh, opts):  # @UnusedVariable
-        git_installdir = self.target.config.get('git', 'git_installdir')
-        if git_installdir not in ('', None):
-            self.env.setbinpath(self.system.path.join(git_installdir, 'bin'), 0)
-            self.env['GIT_EXEC_PATH'] = self.system.path.join(git_installdir,
-                                                              'libexec',
-                                                              'git-core')
+        set_env4git()
 
     _MIXIN_PREPARE_HOOKS = (_set_git, )
 
