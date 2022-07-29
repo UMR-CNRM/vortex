@@ -18,9 +18,9 @@ For now, only the SSH export service is implemented.
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import contextlib
 import logging
 import os
-import shutil
 import re
 import tempfile
 import time
@@ -227,7 +227,7 @@ class ExportService(object):
     launching commands on it.
     """
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, tmpdir, **kwargs):
         """
         :param **kwargs: parameters read from the configuration file.
         """
@@ -240,6 +240,7 @@ class ExportService(object):
         assert 'python27' in self._internals or 'python3' in self._internals
         self._stagedir = None
         self._name = name
+        self._tmpdir = tmpdir
 
     def __del__(self):
         self.clean_stagedir()
@@ -308,6 +309,14 @@ class ShellAccessExportService(ExportService):
         """
         raise NotImplementedError()
 
+    def raw_upload(self, local, destination):
+        """Upload **local** to **destination**.
+
+        :param local: the file that will be uploaded
+        :param destination: the remote target for the file
+        """
+        raise NotImplementedError()
+
     def py_execute(self, cmd, pythonpath=(), onerror_raise=True, silent=False,
                    catch_output=False, prefered_py=None):
         """Execute a python command on the remote host.
@@ -369,8 +378,7 @@ class ShellAccessExportService(ExportService):
         self._stagedir = self.sh_execute('mktemp -d --tmpdir={}'.format(self._internals['stagingdir']),
                                          catch_output=True)[0]
         destination = os.path.join(self._stagedir, os.path.basename(local))
-        sftp = self._client.open_sftp()
-        sftp.put(local, destination)
+        self.raw_upload(local, destination)
         return destination
 
     def test_and_install(self, headdir, local, tmplocation):
@@ -460,11 +468,43 @@ class SSHExportService(ShellAccessExportService):
     the public methods.
     """
 
-    def __init__(self, name, **kwargs):
-        super(SSHExportService, self).__init__(name, **kwargs)
+    def __init__(self, name, tmpdir, **kwargs):
+        super(SSHExportService, self).__init__(name, tmpdir, **kwargs)
         assert 'hostname' in self._internals
         assert 'username' in self._internals
         self.__theclient = None
+
+    @contextlib.contextmanager
+    def paramiko_flex_auth(self, certificates='cert_filename', keys='key_filename', disalgo='disable_alg'):
+        key_extras = dict()
+        dis_algo_dict = dict()
+        for k, algos in self._internals.items():
+            if k.startswith(disalgo + '_'):
+                subk = k[len(disalgo + '_'):]
+                dis_algo_dict[subk] = algos.split(',')
+        if dis_algo_dict:
+            key_extras['disabled_algorithms'] = dis_algo_dict
+            logger.debug('disabled_algorithms during authentication: %s.', dis_algo_dict)
+        if certificates in self._internals and keys in self._internals:
+            with tempfile.TemporaryDirectory(prefix="paramiko_cert_workaround_", dir=self._tmpdir) as cdir:
+                key_extras['key_filename'] = []
+                for i, (certificate, key) in enumerate(zip(self._internals[certificates].split(','),
+                                                           self._internals[keys].split(','))):
+                    new_cert = os.path.join(cdir, 'xxx{:d}-cert.pub'.format(i))
+                    new_key = os.path.join(cdir, 'xxx{:d}'.format(i))
+                    os.symlink(certificate, new_cert)
+                    os.symlink(key, new_key)
+                    logger.debug('paramiko certificate specification workaround. new cert is %s.', new_cert)
+                    key_extras['key_filename'].append(new_cert)
+                    yield key_extras
+        elif certificates in self._internals:
+            key_extras['key_filename'] = self._internals[certificates].split(',')
+            yield key_extras
+        elif keys in self._internals:
+            key_extras['key_filename'] = self._internals[keys].split(',')
+            yield key_extras
+        else:
+            yield key_extras
 
     @property
     def _client(self):
@@ -473,14 +513,16 @@ class SSHExportService(ShellAccessExportService):
             import paramiko
             self.__theclient = paramiko.client.SSHClient()
             self.__theclient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            extras = dict()
-            if 'keyfile' in self._internals:
-                extras['key_filename'] = self._internals['keyfile']
-            if 'port' in self._internals:
-                extras['port'] = int(self._internals['port'])
-            self.__theclient.connect(self._internals['hostname'],
-                                     username=self._internals['username'],
-                                     **extras)
+            with self.paramiko_flex_auth() as extras:
+                if 'port' in self._internals:
+                    extras['port'] = int(self._internals['port'])
+                logger.debug('Connecting to: %s (username: %s, extras: %s)',
+                             self._internals['hostname'],
+                             self._internals['username'],
+                             extras)
+                self.__theclient.connect(self._internals['hostname'],
+                                         username=self._internals['username'],
+                                         **extras)
         return self.__theclient
 
     @staticmethod
@@ -520,6 +562,68 @@ class SSHExportService(ShellAccessExportService):
         else:
             return status
 
+    def raw_upload(self, local, destination):
+        sftp = self._client.open_sftp()
+        sftp.put(local, destination)
+
+
+class SSHJumpExportService(SSHExportService):
+    """Export service based on SSH (using the paramiko package).
+
+    The user will refer to the parent class documentation for a description of
+    the public methods.
+    """
+
+    def __init__(self, name, tmpdir, **kwargs):
+        super(SSHJumpExportService, self).__init__(name, tmpdir, **kwargs)
+        assert 'jump_hostname' in self._internals
+        assert 'jump_username' in self._internals
+        self.__theclient = None
+
+    @property
+    def _client(self):
+        """Returns a valid SSH client (with an ative connection)."""
+        if self.__theclient is None:
+            import paramiko
+            # First connect to the gateway
+            self.__thegwclient = paramiko.client.SSHClient()
+            self.__thegwclient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            with self.paramiko_flex_auth('jump_cert_filename', 'jump_key_filename', 'jump_disable_alg') as extras:
+                if 'jump_port' in self._internals:
+                    extras['port'] = int(self._internals['jump_port'])
+                logger.debug('Connecting to jump server: %s (username: %s, extras: %s)',
+                             self._internals['jump_hostname'],
+                             self._internals['jump_username'],
+                             extras)
+                self.__thegwclient.connect(
+                    self._internals['jump_hostname'],
+                    username=self._internals['jump_username'],
+                    **extras
+                )
+            # Open the stream to the final destination
+            logger.debug('Openning a transport/channel to: %s',
+                         self._internals['hostname'])
+            thgwsock = self.__thegwclient.get_transport().open_channel(
+                'direct-tcpip',
+                (self._internals['hostname'], self._internals.get('port', 22)),
+                ('', 0)
+            )
+            # Authenticate
+            self.__theclient = paramiko.client.SSHClient()
+            self.__theclient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            with self.paramiko_flex_auth('jump_cert_filename', 'jump_key_filename') as extras:
+                if 'port' in self._internals:
+                    extras['port'] = int(self._internals['port'])
+                logger.debug('Connecting to: %s (username: %s, extras: %s)',
+                             self._internals['hostname'],
+                             self._internals['username'],
+                             extras)
+                self.__theclient.connect(self._internals['hostname'],
+                                         username=self._internals['username'],
+                                         sock=thgwsock,
+                                         **extras)
+        return self.__theclient
+
 
 class ScriptTemplate(string.Template):
     """A template that will substitute %{var} stuff (instead of ${var})."""
@@ -540,10 +644,10 @@ class EcAccessEcmwfExportService(ExportService):
 
     _TEMPLATE_ID = None
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, tmpdir, **kwargs):
         if self._TEMPLATE_ID is None:
             raise NotImplementedError()
-        super(EcAccessEcmwfExportService, self).__init__(name, **kwargs)
+        super(EcAccessEcmwfExportService, self).__init__(name, tmpdir, **kwargs)
         assert 'hostname' in self._internals
         assert 'ecaccess_proxy' in self._internals
         assert 'ecaccess_proxy_stagingdir' in self._internals
@@ -668,13 +772,15 @@ class EcmwfV1ExportService(EcAccessEcmwfExportService):
 class ExportTarget(object):
     """Defines a Target where Vortex is installed."""
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, tmpdir, **kwargs):
         """
         :param name: A nickname for this target.
+        :param tmpdir: Path to the temporary directory
         :param **kwargs: Parameters read from the configuration file.
         """
 
         self._name = name
+        self._tmpdir = tmpdir
 
         if 'headdir' not in kwargs:
             raise ValueError('The headdir configuration key is missing.')
@@ -684,7 +790,7 @@ class ExportTarget(object):
 
         # Instantiate the export service
         exp_service_kind = kwargs.pop('export_service', 'SSH')
-        self._exp = globals()[exp_service_kind + 'ExportService'](self._name, **kwargs)
+        self._exp = globals()[exp_service_kind + 'ExportService'](self._name, self._tmpdir, **kwargs)
         logger.info("Target {}: Using the {} export service.".format(self._name,
                                                                      exp_service_kind))
         logger.debug("Target {}: Export service is: \n{!s}".format(self._name, self._exp))
@@ -755,21 +861,19 @@ def main():
     miko_logs = logging.getLogger('paramiko')
     miko_logs.setLevel(mylog_levels[1])
 
-    # Load the configuration file and create the targets
-    targets = dict()
-    cparser = ConfigParser()
-    cparser.read(args.conf)
-    for section in cparser.sections():
-        if ((len(args.targets) == 0 and
-                not (cparser.has_option(section, 'disabled') and
-                     cparser.getboolean(section, 'disabled'))) or
-                section in args.targets):
-            targets[section] = ExportTarget(section, ** dict(cparser.items(section)))
-
     # Just in case we need a temp directory
-    thedir = tempfile.mkdtemp(prefix='tmp_vortex_export_', dir=args.tmpdir)
+    with tempfile.TemporaryDirectory(prefix='tmp_vortex_export_', dir=args.tmpdir) as thedir:
 
-    try:
+        # Load the configuration file and create the targets
+        targets = dict()
+        cparser = ConfigParser()
+        cparser.read(args.conf)
+        for section in cparser.sections():
+            if ((len(args.targets) == 0 and
+                 not (cparser.has_option(section, 'disabled') and
+                      cparser.getboolean(section, 'disabled'))) or
+                    section in args.targets):
+                targets[section] = ExportTarget(section, thedir, **dict(cparser.items(section)))
 
         # We do not need to generate a Tar if only a link is needed
         if not (args.link or args.stable):
@@ -805,11 +909,6 @@ def main():
                 logger.info("We are done with %s !\n", dest.name)
         if failed_list:
             logger.error("Some of the exports failed: %s", ",".join(failed_list))
-
-    finally:
-        # Destroy the tmp dir
-        logger.debug("Deleting the tmp directory on the local host: " + thedir)
-        shutil.rmtree(thedir)
 
 
 if __name__ == "__main__":
