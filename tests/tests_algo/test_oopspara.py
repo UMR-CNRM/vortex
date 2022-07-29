@@ -68,7 +68,7 @@ class TestOopsParallel(unittest.TestCase):
                         r_effterms=None,
                         **kwargs):
         md = OOPSMembersTermsDetectDecoMixin._stateless_members_detect
-        ms, mds, mos, ts, lms, rms, rts = md(kwargs, Date('2019010106'), lambda s: s.stage == 'get')
+        ms, mds, mos, ts, lms, _, rms, rts = md(kwargs, Date('2019010106'), lambda s: s.stage == 'get')
         self.assertEqual(ms, members)
         self.assertEqual(ts, [Time(t) for t in terms])
         self.assertEqual(lms, lagged)
@@ -91,8 +91,8 @@ class TestOopsParallel(unittest.TestCase):
                           r_members=None, r_effterms=None,
                           **kwargs):
         md = OOPSMembersTermsDetectDecoMixin._stateless_members_detect
-        ms, _, _, ts, lms, rms, rts = md(kwargs, Date('2019010106'), lambda s: s.stage == 'get',
-                                         ensminsize=minsize, utest=True)
+        ms, _, _, ts, lms, _, rms, rts = md(kwargs, Date('2019010106'), lambda s: s.stage == 'get',
+                                            ensminsize=minsize, utest=True)
         self.assertEqual(ms, members)
         self.assertEqual(ts, [Time(t) for t in terms])
         self.assertEqual(lms, lagged)

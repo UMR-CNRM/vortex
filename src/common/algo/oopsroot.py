@@ -32,6 +32,22 @@ logger = footprints.loggers.getLogger(__name__)
 OOPSMemberInfos = namedtuple('OOPSMemberInfos', ('member', 'date'))
 
 
+class EnsSizeAlgoComponentError(AlgoComponentError):
+    """Exception raised when the ensemble is too small."""
+
+    def __init__(self, nominal_ens_size, actual_ens_size, min_ens_size):
+        self.nominal_ens_size = nominal_ens_size
+        self.actual_ens_size = actual_ens_size
+        self.min_ens_size = min_ens_size
+        super(EnsSizeAlgoComponentError, self).__init__('{:d} found ({:d} required)'
+                                                        .format(actual_ens_size, min_ens_size))
+
+    def __reduce__(self):
+        red = list(super(EnsSizeAlgoComponentError, self).__reduce__())
+        red[1] = (self.nominal_ens_size, self.actual_ens_size, self.min_ens_size)
+        return tuple(red)
+
+
 @algo_component_deco_mixin_autodoc
 class OOPSMemberDecoMixin(AlgoComponentDecoMixin):
     """Add a member footprints' attribute and use it in the configuration files."""
@@ -81,6 +97,10 @@ class OOPSMembersTermsDetectDecoMixin(AlgoComponentDecoMixin):
                 info="For a multi-member algocomponent, the minimum of the ensemble.",
                 optional=True,
                 type=int
+            ),
+            ens_failure_conf_objects=dict(
+                info="For a multi-member algocomponent, alternative config file when the ensemble is too small.",
+                optional=True,
             ),
             strict_mbdetect=dict(
                 info="Performs a strict members/terms detection",
@@ -221,10 +241,9 @@ class OOPSMembersTermsDetectDecoMixin(AlgoComponentDecoMixin):
                     eff_members.add(mb)
             # Sanity checks depending on ensminsize
             if ensminsize is None and len(eff_members) != nominal_ens_size:
-                raise AlgoComponentError('Some members are missing')
+                raise EnsSizeAlgoComponentError(nominal_ens_size, len(eff_members), nominal_ens_size)
             elif ensminsize is not None and len(eff_members) < ensminsize:
-                raise AlgoComponentError('The ensemble size is too small ({:d} < {:d}).'
-                                         .format(len(eff_members), ensminsize))
+                raise EnsSizeAlgoComponentError(nominal_ens_size, len(eff_members), ensminsize)
 
             members = eff_members
 
@@ -234,7 +253,7 @@ class OOPSMembersTermsDetectDecoMixin(AlgoComponentDecoMixin):
                        for m in sorted(members)]
 
         return (l_members, l_members_d, l_members_o, l_effterms,
-                lagged, r_members, r_effterms)
+                lagged, nominal_ens_size, r_members, r_effterms)
 
     def members_detect(self):
         """Detect the members/terms list and update the substitution dictionary."""
@@ -246,12 +265,13 @@ class OOPSMembersTermsDetectDecoMixin(AlgoComponentDecoMixin):
              self._ens_members_offset,
              self._ens_effterms,
              self._ens_is_lagged,
+             self._ens_nominal_size,
              _, _) = self._stateless_members_detect(sectionsmap,
                                                     self.date,
                                                     self.context.sequence.is_somehow_viable,
                                                     self.ens_minsize)
-        except AlgoComponentError as e:
-            if self.strict_mbdetect:
+        except EnsSizeAlgoComponentError as e:
+            if self.strict_mbdetect and self.ens_failure_conf_objects is None:
                 raise
             else:
                 logger.warning("Members detection failed: %s", str(e))
@@ -261,17 +281,43 @@ class OOPSMembersTermsDetectDecoMixin(AlgoComponentDecoMixin):
                 self._ens_members_offset = []
                 self._ens_is_lagged = False
                 self._ens_effterms = []
-        if self._ens_members_num:
-            self._generic_config_subs['ens_members_num'] = self._ens_members_num
-            self._generic_config_subs['ens_members_date'] = self._ens_members_date
-            self._generic_config_subs['ens_members_offset'] = self._ens_members_offset
-            self._generic_config_subs['ens_is_lagged'] = self._ens_is_lagged
-            # Legacy:
-            self._generic_config_subs['members'] = self._ens_members_num
-        if self._ens_effterms:
-            self._generic_config_subs['ens_effterms'] = self._ens_effterms
-            # Legacy:
-            self._generic_config_subs['effterms'] = self._ens_effterms
+                self._ens_nominal_size = e.nominal_ens_size
+                if self.ens_failure_conf_objects:
+                    # Find the new configuration object
+                    main_conf = None
+                    for sconf, ssub in self._individual_config_subs.items():
+                        if getattr(sconf.rh.resource, 'objects', '') == self.ens_failure_conf_objects:
+                            main_conf = sconf
+                            main_conf_sub = ssub
+                            break
+                    if main_conf is None:
+                        raise AlgoComponentError('Alternative configuration file was not found')
+                    # Update the config ordered dictionary
+                    del self._individual_config_subs[main_conf]
+                    new_individual_config_subs = OrderedDict()
+                    new_individual_config_subs[main_conf] = main_conf_sub
+                    for sconf, ssub in self._individual_config_subs.items():
+                        new_individual_config_subs[sconf] = ssub
+                    self._individual_config_subs = new_individual_config_subs
+                    logger.info("Using an alternative configuration file (objects=%s, role=%s)",
+                                self.ens_failure_conf_objects, main_conf.role)
+
+        self._generic_config_subs['ens_members_num'] = self._ens_members_num
+        self._generic_config_subs['ens_members_date'] = self._ens_members_date
+        self._generic_config_subs['ens_members_offset'] = self._ens_members_offset
+        self._generic_config_subs['ens_is_lagged'] = self._ens_is_lagged
+        # Legacy:
+        self._generic_config_subs['members'] = self._ens_members_num
+        # Namelist stuff
+        for namrh in self.updatable_namelists:
+            namrh.contents.setmacro('ENS_MEMBERS', len(self._ens_members_num))
+            if self._ens_members_num:
+                namrh.contents.setmacro('ENS_AUTO_NSTRIN', len(self._ens_members_num))
+            else:
+                namrh.contents.setmacro('ENS_AUTO_NSTRIN', self._ens_nominal_size)
+        self._generic_config_subs['ens_effterms'] = self._ens_effterms
+        # Legacy:
+        self._generic_config_subs['effterms'] = self._ens_effterms
 
     def _membersd_setup(self, rh, opts):  # @UnusedVariable
         """Set up the members/terms detection."""
@@ -494,6 +540,7 @@ class OOPSParallel(Parallel,
 
     def do_config_rendering(self):
         """Render registered configuration files using the bronx' templating system."""
+        l_first = True
         for sconf, sdict in self._individual_config_subs.items():
             self.system.subtitle('Configuration file rendering for: {:s}'
                                  .format(sconf.rh.container.localpath()))
@@ -513,10 +560,12 @@ class OOPSParallel(Parallel,
                                  lightdump(l_subs))
                     raise
                 self._last_l_subs[sconf] = l_subs
-                print(fulldump(sconf.rh.contents.data))
+                if l_first:
+                    print(fulldump(sconf.rh.contents.data))
                 sconf.rh.save()
             else:
                 logger.info("It's not necessary to update the file (no changes).")
+            l_first = False
 
     def do_namelist_rendering(self):
         todo = [r for r in self.updatable_namelists if r.contents.dumps_needs_update]

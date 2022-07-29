@@ -13,6 +13,14 @@
 Classes
 -------
 
+Exceptions
+**********
+
+.. autoclass:: EnsSizeAlgoComponentError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Abstract AlgoComponents
 ***********************
 
