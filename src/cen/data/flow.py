@@ -345,7 +345,10 @@ class Snowobs_1date(SnowObs):
     ]
 
 
-class PfSample(SurfaceIO):
+@namebuilding_delete('src')
+@namebuilding_delete('geo')
+@namebuilding_insert('cen_period', lambda self: [self.dateassim.ymdh, ])
+class PfSample(GeoFlowResource):
     """
     @author : B. Cluzet
     (SODA): Class for Particle filter files text files (at each assim step)
@@ -361,21 +364,21 @@ class PfSample(SurfaceIO):
                 cutoff = dict(
                     optional = True
                 ),
-                model = dict(
+                kind = dict(
                     values = ['PART', 'BG_CORR', 'IMASK', 'ALPHA']
+                ),
+                model =  dict(
+                    values = ['soda']
                 ),
                 dateassim = dict(
                     info = "date of the analysis",
                     type = Date,
+                    default='[date]',
                 ),
             )
         )
     ]
     _extension_remap = dict(netcdf='.txt')  # BC to check this shit
-
-    @property
-    def realkind(self):
-        return str(self.model) + '_' + self.dateassim.ymdh + '.txt'
 
 
 class ScoresSnow(SurfaceIO):
