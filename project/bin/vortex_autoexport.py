@@ -18,21 +18,21 @@ For now, only the SSH export service is implemented.
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from configparser import ConfigParser
 import contextlib
+from functools import wraps
+import io
 import logging
 import os
-import re
-import tempfile
-import time
-import subprocess
-import traceback
-from six.moves.configparser import ConfigParser
 import pprint
+import re
 import socket
 import string
+import subprocess
 import sys
+import tempfile
+import time
 import uuid
-import io
 
 argparse_epilog = '''
 
@@ -461,6 +461,18 @@ class SSHExportServiceError(ExportServiceError):
     pass
 
 
+def ssh_export_service_error_wrap(func):
+    import paramiko.ssh_exception
+
+    @wraps(func)
+    def wrapper(* kargs, ** kwargs):
+        try:
+            return func(* kargs, ** kwargs)
+        except (paramiko.ssh_exception.SSHException, socket.error):
+            raise SSHExportServiceError()
+    return wrapper
+
+
 class SSHExportService(ShellAccessExportService):
     """Export service based on SSH (using the paramiko package).
 
@@ -536,6 +548,7 @@ class SSHExportService(ShellAccessExportService):
         tmpstr = tmpstr.rstrip("\n")
         return tmpstr.split("\n")
 
+    @ssh_export_service_error_wrap
     def sh_execute(self, cmd, onerror_raise=True, silent=False, catch_output=False):
         ssh = self._client.get_transport().open_session()
         ssh.exec_command(cmd)
@@ -562,6 +575,7 @@ class SSHExportService(ShellAccessExportService):
         else:
             return status
 
+    @ssh_export_service_error_wrap
     def raw_upload(self, local, destination):
         sftp = self._client.open_sftp()
         sftp.put(local, destination)
@@ -901,9 +915,8 @@ def main():
                 else:
                     logger.info("Exporting the Vortex Toolbox to {}".format(dest.name))
                     dest.autoexport(thetgz)
-            except (ExportServiceError, socket.error) as e:
-                logger.error("Export failed for < %s >: %s. %s",
-                             dest.name, str(e), traceback.format_exc())
+            except ExportServiceError:
+                logger.exception("Export failed for < %s >.", dest.name)
                 failed_list.append(dest.name)
             else:
                 logger.info("We are done with %s !\n", dest.name)
