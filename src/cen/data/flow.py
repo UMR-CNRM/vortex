@@ -367,6 +367,11 @@ class PfSample(GeoFlowResource):
                 kind = dict(
                     values = ['PART', 'BG_CORR', 'IMASK', 'ALPHA']
                 ),
+                nativefmt=dict(
+                    values=['ascii', 'netcdf', 'nc'],
+                    default='ascii',
+                    remap=dict(nc='netcdf'),
+                ),
                 model =  dict(
                     values = ['soda']
                 ),
@@ -378,8 +383,12 @@ class PfSample(GeoFlowResource):
             )
         )
     ]
-    _extension_remap = dict(netcdf='.txt')  # BC to check this shit
 
+    _extension_remap = dict(ascii='txt', netcdf='nc')
+
+    @property
+    def realkind(self):
+        return self.kind
 
 class ScoresSnow(SurfaceIO):
     """Class for the safrane output files."""
