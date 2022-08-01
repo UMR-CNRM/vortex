@@ -42,7 +42,10 @@ class ECMWFInterface(object):
     def actual_command(self, command=None):
         """Return the command header used in the command line"""
         if command is None:
-            return self.command
+            config_cmd = self.system.default_target.get(
+                'ecmwf:{:s}_command'.format(self.command),
+                None)
+            return self.command if config_cmd is None else config_cmd
         else:
             return command
 

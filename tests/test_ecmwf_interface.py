@@ -88,6 +88,11 @@ class TestBuildCommandLine(TestCase):
         command_line = interface.build_command_line(command, list_args, dict_args, list_options)
         self.assertEqual(command_line, "ecmwf toto.txt titi.txt -value titi1 titi2 -u -verbose -r")
 
+    def test_actual_command(self):
+        interface = ECMWFInterface(system=sh, command="ecmwf", command_interface=True)
+        self.assertEqual(interface.actual_command('toto'), 'toto')
+        self.assertEqual(interface.actual_command(), 'ecmwf')
+
 
 if __name__ == "main":
     main(verbosity=2)

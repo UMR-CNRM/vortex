@@ -75,3 +75,40 @@ class CCB(ECMWFCrayXC):
             hostname = footprints.FPRegex(r'ccb(?:(?:-login|ppn|mom)?\d+|-batch)(?:\.|$)')
         ),
     )
+
+
+class ECMWFSequana1(Target):
+    """Atos Sequana Computer."""
+
+    _abstract = True
+    _footprint = dict(
+        info = 'Atos Sequana Supercomputers at ECMWF',
+        attr = dict(
+            sysname = dict(
+                values = ['Linux', ]
+            ),
+            inifile = dict(
+                default = '@target-[inetname].ini',
+            )
+        ),
+        priority = dict(
+            level = footprints.priorities.top.TOOLBOX
+        )
+    )
+
+
+class EcmwfAA(ECMWFSequana1):
+    """CCA Computer at ECMWF."""
+
+    _footprint = dict(
+        info = 'Atos Sequana AA Supercomputer at ECMWF',
+        attr = dict(
+            inetname = dict(
+                default = 'aa',
+                values  = ['aa']
+            ),
+        ),
+        only = dict(
+            hostname = footprints.FPRegex(r'aa\d+-\d+')
+        ),
+    )
