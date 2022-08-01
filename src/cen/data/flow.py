@@ -15,15 +15,9 @@ import footprints
 from footprints.util import rangex
 from vortex.data.flow import GeoFlowResource
 from vortex.data.geometries import UnstructuredGeometry, HorizontalGeometry
-from vortex.data.resources import Resource
 from vortex.syntax.stdattrs import a_date
 from vortex.syntax.stddeco import namebuilding_append, namebuilding_delete, namebuilding_insert
 
-from common.data.modelstates import InitialCondition
-from common.data.obs         import ObsRaw
-
-from vortex.syntax.stdattrs import a_date
-from cen.syntax.stdattrs     import cendateperiod_deco
 
 #: No automatic export
 __all__ = []
