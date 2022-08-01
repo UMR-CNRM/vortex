@@ -9,6 +9,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from vortex.data.outflow import StaticResource
 from gco.syntax.stdattrs import gvar
 from vortex.data.contents import JsonDictContent, DataRaw
+from vortex.syntax.stddeco import namebuilding_append
 
 #: No automatic export
 __all__ = []
@@ -58,6 +59,19 @@ class AsciiConfig(GenericConfig):
             ),
             clscontents = dict(
                 default  = DataRaw
+            ),
+        )
+    )
+
+
+@namebuilding_append('src', lambda self: [self.scope, self.source])
+class IniConfig(GenericConfig):
+    """Generic class to access a ini configuration file (e.g. for mkjob)."""
+    _footprint = dict(
+        info = 'Ini configuration file',
+        attr = dict(
+            nativefmt = dict(
+                values = ['ini', ]
             ),
         )
     )
