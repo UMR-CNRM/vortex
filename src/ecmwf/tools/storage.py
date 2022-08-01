@@ -78,7 +78,7 @@ class EcfsArchive(Archive):
         info='Default archive description from ECMWF',
         attr=dict(
             storage=dict(
-                values = ['ecgate.ecmwf.int'],
+                values = ['ecgate.ecmwf.int', 'ecfs.ecmwf.int'],
             ),
             tube=dict(
                 values=['ecfs'],
@@ -89,7 +89,8 @@ class EcfsArchive(Archive):
     def _ecfsfullpath(self, item, **kwargs):
         """Actual _fullpath using ecfs"""
         actual_fullpath = {
-            'ecgate.ecmwf.int': "ec:{item!s}"
+            'ecgate.ecmwf.int': "ec:{item!s}",
+            'ecfs.ecmwf.int': "ec:{item!s}"
         }.get(self.storage, None)
         if actual_fullpath is None:
             raise NotImplementedError

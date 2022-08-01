@@ -28,3 +28,13 @@ Cray XC targets
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: ECMWFSequana1
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: EcmwfAA
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
