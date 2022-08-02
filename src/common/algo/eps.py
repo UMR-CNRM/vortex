@@ -13,6 +13,7 @@ import re
 
 import footprints
 import six
+from bronx.compat.itertools import pairwise
 from bronx.fancies import loggers
 from common.tools.drhook import DrHookDecoMixin
 from vortex.algo.components import BlindRun
@@ -475,10 +476,25 @@ class Clustering(BlindRun, EcGribDecoMixin):
 
         # If no population file is here, just do a sort on the file list,
         # otherwise use the population list
+
+        # PLPL doit aller dans la branche "else" du "if avail_json"
+        #      mais mis ici temporairement pour tester le "cas not avail_json"
+        terms = sorted({grib.rh.resource.term for grib in grib_sections})
+        delta = {last - first for first, last in pairwise(terms)}
+        if len(delta) != 1:
+            logger.error('Terms are not evenly spaced. What should we do ?')
+            logger.error('Terms=' + str(terms) + 'delta=' + str(delta))
+        clustdeb = terms[0].hour
+        clustfin = terms[-1].hour
+        cluststep = delta.pop().hour
+        print('PLPL not avail_json: {}/{} by {}'.format(clustdeb, clustfin, cluststep))
+        # PLPL fin du test 'if avail_json'
+
         if avail_json:
             population = avail_json[0].rh.contents.data['population']
             self.nbmembers = len(population)
             file_list = list()
+            terms_info = list()
             for elt in population:
                 sublist_ids = list()
                 for (i, grib) in enumerate(grib_sections):
@@ -489,8 +505,25 @@ class Clustering(BlindRun, EcGribDecoMixin):
                 # Stack the gribs in file_list
                 file_list.extend(sorted([six.text_type(grib_sections[i].rh.container.localpath())
                                          for i in sublist_ids]))
+                terms_info.append((elt, sorted([grib_sections[i].rh.resource.term for i in sublist_ids])))
                 for i in reversed(sublist_ids):
                     del grib_sections[i]
+
+            term_minis = {min(terms) for elt, terms in terms_info}
+            term_maxis = {max(terms) for elt, terms in terms_info}
+            term_diffs = {last - first
+                          for first, last in pairwise(sorted(terms))
+                          for elt, terms in terms_info}
+            if len(term_minis) != 1 or len(term_maxis) != 1 or len(term_diffs) != 1:
+                logger.error('Terms are consistent. What should we do ?')
+                logger.error('\n\n'.join([
+                    str(elt) + ' terms=' + str(terms) for elt, terms in terms_info
+                ]))
+            clustdeb = term_minis.pop().hour
+            clustfin = term_maxis.pop().hour
+            cluststep = term_diffs.pop().hour
+            print('PLPL case avail_json: {}/{} by {}'.format(clustdeb, clustfin, cluststep))
+
         else:
             file_list = sorted([six.text_type(grib.rh.container.localpath())
                                 for grib in grib_sections])
@@ -509,6 +542,11 @@ class Clustering(BlindRun, EcGribDecoMixin):
             if self.nbmembers is not None:
                 logger.info("NBRMB added to NAMCLUST namelist entry: %d", self.nbmembers)
                 namsec[0].rh.contents['NAMCLUST']['NBRMB'] = self.nbmembers
+            logger.info('Setting namelist macros ECHDEB=%d ECHFIN=%d ECHSTEP=%d',
+                        clustdeb, clustfin, cluststep)
+            namsec[0].rh.contents.setmacro('ECHDEB', clustdeb)
+            namsec[0].rh.contents.setmacro('ECHFIN', clustfin)
+            namsec[0].rh.contents.setmacro('ECHSTEP', cluststep)
             namsec[0].rh.save()
             namsec[0].rh.container.cat()
 
