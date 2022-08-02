@@ -265,7 +265,7 @@ class Prep(InitialCondition):
 
 
 class SnowObs(GeoFlowResource):
-
+    """Any snow observations in netcdf format"""
     _footprint = [
         dict(
             info = 'Observations of snow',
@@ -307,7 +307,9 @@ class SnowObs(GeoFlowResource):
 
 
 @namebuilding_insert('cen_period', lambda self: [self.datebegin.y, self.dateend.y])
-class Snowobs_Period(SnowObs):
+class SnowObs_Period(SnowObs):
+    """Snow observations covering a time period in netcdf format"""
+
     _footprint = [
         cendateperiod_deco,
         dict(
@@ -315,15 +317,12 @@ class Snowobs_Period(SnowObs):
         )
     ]
 
+
 @namebuilding_delete('src')
 @namebuilding_delete('geo')
 @namebuilding_insert('cen_period', lambda self: [self.datevalidity.ymdh, ])
-class Snowobs_1date(SnowObs):
-    """
-    @author : B. Cluzet
-    Class for snow obs. (any geom, any sensor) at one date.
-    For that, enforce stage = 1date and set datebegin/dateend to the same value, the date of observation.
-    """
+class SnowObs_1date(SnowObs):
+    """Snow observations covering at a given date in netcdf format"""
 
     _footprint = [
         dict(
@@ -344,10 +343,8 @@ class Snowobs_1date(SnowObs):
 @namebuilding_insert('cen_period', lambda self: [self.dateassim.ymdh, ])
 class PfSample(GeoFlowResource):
     """
+    Class for SODA particle filter outputs (text files at each assim step)
     @author : B. Cluzet
-    (SODA): Class for Particle filter files text files (at each assim step)
-    either distributed (bound to a geom) or semi-distrib (no point dependency)
-    in any case, child of Resource makes it much more simple to handle
     """
 
     _footprint = [
@@ -366,7 +363,7 @@ class PfSample(GeoFlowResource):
                     default='ascii',
                     remap=dict(nc='netcdf'),
                 ),
-                model =  dict(
+                model = dict(
                     values = ['soda']
                 ),
                 dateassim = dict(
@@ -384,8 +381,9 @@ class PfSample(GeoFlowResource):
     def realkind(self):
         return self.kind
 
+
 class ScoresSnow(SurfaceIO):
-    """Class for the safrane output files."""
+    """Class for scores of snow simulations."""
 
     _footprint = [
         dict(

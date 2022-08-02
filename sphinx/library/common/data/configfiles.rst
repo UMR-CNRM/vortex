@@ -24,6 +24,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: IniConfig
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: JsonConfig
    :show-inheritance:
    :members:

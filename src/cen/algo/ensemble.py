@@ -890,7 +890,8 @@ class SurfexWorker(_S2MWorker):
             dateend   = a_date,
             dateinit  = a_date,
             kind = dict(
-                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteonodet', 'ensmeteo+sytron', 'ensmeteo+escroc', 'croco'],
+                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteonodet', 'ensmeteo+sytron', 'ensmeteo+escroc',
+                          'croco'],
             ),
             threshold = dict(
                 info = "Threshold to initialise snowdepth",
@@ -1721,7 +1722,8 @@ class SurfexComponent(S2MComponent):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['escroc', 'ensmeteo', 'ensmeteonodet', 'ensmeteo+sytron', 'croco', 'ensmeteo+escroc', 'prepareforcing']
+                values = ['escroc', 'ensmeteo', 'ensmeteonodet', 'ensmeteo+sytron', 'croco', 'ensmeteo+escroc',
+                          'prepareforcing']
             ),
             dateinit = dict(
                 info = "The initialization date if different from the starting date.",
@@ -1742,7 +1744,8 @@ class SurfexComponent(S2MComponent):
             ),
             subensemble = dict(
                 info = "Name of the escroc subensemble (define which physical options are used)",
-                values = ["E1", "E2", "Crocus", "E1tartes", "E1notartes", "E2open", "E2MIP", "E2tartes", "E2MIPtartes", "E2B21", "E2MIPB21"],
+                values = ["E1", "E2", "Crocus", "E1tartes", "E1notartes", "E2open", "E2MIP", "E2tartes", "E2MIPtartes",
+                          "E2B21", "E2MIPB21"],
                 optional = True,
             ),
             geometry_in=dict(
@@ -1803,7 +1806,7 @@ class SurfexComponent(S2MComponent):
     def get_subdirs(self, rh, opts):
         if self.kind == "escroc":
             subdirs = ['mb{0:04d}'.format(m) for m in self.members]
-        elif self.kind == 'croco':  # in croco case, self. members is a (sometimes random) subselection of members but we don't want fancy subdirs
+        elif self.kind == 'croco':
             subdirs = ['mb{0:04d}'.format(m) for m in range(self.startmbnode, self.startmbnode + len(self.members))]
         else:
             subdirs = super(SurfexComponent, self).get_subdirs(rh, opts)

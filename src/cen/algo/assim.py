@@ -19,6 +19,7 @@ echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
     from snowtools.tools.update_namelist import update_namelist_object_nmembers
 
+
 class SodaWorker(Parallel):
     """
     worker for a SODA run (designed for Particle filtering for snow)
@@ -98,8 +99,7 @@ class SodaWorker(Parallel):
             self.system.mv('IMASK', 'IMASK_' + self.dateassim.ymdh + '.txt')
         if self.system.path.isfile('ALPHA'):
             self.system.mv('ALPHA', 'ALPHA_' + self.dateassim.ymdh + '.txt')
-        else:
-            print('no part file')
+
 
 @echecker.disabled_if_unavailable
 class Soda_PreProcess(AlgoComponent):
