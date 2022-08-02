@@ -137,7 +137,7 @@ class Soda_PreProcess(AlgoComponent):
             # Location taken in the FORCING file.
             newcontent = update_namelist_object_nmembers(
                 namelist.contents,
-                nmembers = len(self.members)
+                nmembers=len(self.members)
             )
             newnam = footprints.proxy.container(filename=namelist.container.basename)
             newcontent.rewrite(newnam)
