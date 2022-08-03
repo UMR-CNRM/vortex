@@ -90,6 +90,7 @@ class ToolboxProvider(object):
     _ALLOWED_VERSIONS = [re.compile(r'master$'),
                          re.compile(r'olive-(?:dev|ecmwf|lf)$'),
                          re.compile(r'cen[_-](?:dev|assim)$'),
+                         re.compile(r'davai-(?:dev|ecmwf|lf|alex)$'),
                          re.compile(r'\d+\.\d+\.\d+$')]
 
     def __init__(self, tmpdir, wantedversion):
