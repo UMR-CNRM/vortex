@@ -53,7 +53,7 @@ knownfmt = set([
     'bufr', 'hdf5', 'obsoul', 'odb', 'ecma', 'ccma',
     'bullx', 'sx', 'ddhpack', 'tar', 'tgz', 'rawfiles', 'binary', 'bin',
     'obslocationpack', 'obsfirepack', 'wbcpack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr',
-    'yml', 'yaml'
+    'yml', 'yaml', 'ini'
 ])
 
 #: Default attributes excluded from `repr` display

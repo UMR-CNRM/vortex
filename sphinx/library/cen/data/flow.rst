@@ -58,6 +58,21 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: SnowObs_Period
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SnowObs_1date
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: PfSample
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ScoresSnow
    :show-inheritance:
    :members:
