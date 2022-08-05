@@ -464,8 +464,13 @@ class SafranPackedFiles(GeoFlowResource):
                 values  = ['safran'],
             ),
             nativefmt = dict(
-                values = ['tar', 'tar.gz'],
+                values  = ['tar', 'tar.gz'],
                 default = 'tar'
+            ),
+            source = dict(
+                values   = ['arpege', 'cep', 'surfaceobs', 'neb'],
+                default  = None,
+                optional = True,
             ),
             begindate = a_date,
             enddate   = a_date,
@@ -475,3 +480,21 @@ class SafranPackedFiles(GeoFlowResource):
     @property
     def realkind(self):
         return self.kind
+
+    def reanalysis_basename(self):
+        """
+        Basename of input files for SAFRAN reanalysis.
+        Since v1.8.3 and the introduction of SafranPackedFiles resources,
+        the reanalysis also use this type of resources.
+        """
+        if self.source == 'arpege':
+            return 'p' + self.begindate.yy + self.enddate.yy + '.' + self.nativefmt
+        elif self.source == 'cep':
+            return 'cep_' + self.begindate.yy + self.enddate.yy
+        elif self.source == 'surfaceobs':
+            return 'rs' + self.begindate.yy + self.enddate.yy + '.' + self.nativefmt
+        elif self.source == 'neb':
+            return 'n' + self.begindate.yy + self.enddate.yy + '.' + self.nativefmt
+        else:
+            print('ERROR : Missing "source" information to build resource file name')
+
