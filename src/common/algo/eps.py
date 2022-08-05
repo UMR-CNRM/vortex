@@ -233,9 +233,7 @@ class CombiSVnorm(CombiSV):
         attr = dict(
             kind = dict(
                 values = ['sv2normedpert', 'optim', 'combi_optim', ],
-                remap = dict(
-                    remap=dict(autoremap='first'),
-                ),
+                remap  = dict(autoremap='first'),
             ),
         )
     )
@@ -367,9 +365,7 @@ class CombiBreeding(CombiPert):
         attr = dict(
             kind = dict(
                 values = ['fc2bredpert', 'breeding', 'combi_breeding', ],
-                remap = dict(
-                    remap=dict(autoremap='first'),
-                ),
+                remap  = dict(autoremap='first'),
             ),
         )
     )
