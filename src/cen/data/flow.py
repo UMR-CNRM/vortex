@@ -265,14 +265,12 @@ class Prep(InitialCondition):
 
 
 class SnowObs(GeoFlowResource):
-    """Any snow observations in netcdf format"""
+    """Abstract class for snow observations in netcdf format (unknown time management)"""
+    _abstract = True
     _footprint = [
         dict(
             info = 'Observations of snow',
             attr = dict(
-                kind = dict(
-                    values = ['SnowObservations'],
-                ),
                 model = dict(
                     values = ['obs']
                 ),
@@ -315,6 +313,9 @@ class SnowObs_Period(SnowObs):
         dict(
             info = 'Time series of snow observations of snow for model evaluation',
             attr = dict(
+                kind=dict(
+                    values=['SnowObservations'],
+                ),
                 datebegin=dict(
                     info="First date of the observation file",
                     type=Date,
@@ -338,6 +339,9 @@ class SnowObs_1date(SnowObs):
         dict(
             info='Instantaneous snow observations for assimilation',
             attr=dict(
+                kind=dict(
+                    values=['SnowObservations'],
+                ),
                 datevalidity=dict(
                     info="Validity date of the observation file",
                     type=Date,
