@@ -83,8 +83,10 @@ class Surfex_PreProcess(AlgoComponent):
 
 @echecker.disabled_if_unavailable
 class Generate_Clim_TG(AlgoComponent):
-    """Algocomponent that generates a file of initial temperature to initialize the soil
-       from surfex meteorological forcing files"""
+    """
+    Algocomponent that generates a file of initial temperature to initialize the soil
+    from surfex meteorological forcing files
+    """
 
     _footprint = dict(
         attr = dict(

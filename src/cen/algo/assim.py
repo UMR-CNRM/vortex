@@ -251,6 +251,8 @@ class PerturbForcingComponent(TaylorRun):
         self._default_post_execute(rh, opts)
 
     def get_subdirs(self, rh, opts):
-        """ In this algo component, the number of members is defined by the user,
-         as there is only 1 single deterministic input"""
+        """
+        In this algo component, the number of members is defined by the user,
+        as there is only 1 single deterministic input
+        """
         return ['mb{0:04d}'.format(member) for member in self.members]

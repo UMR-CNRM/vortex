@@ -314,6 +314,16 @@ class SnowObs_Period(SnowObs):
         cendateperiod_deco,
         dict(
             info = 'Time series of snow observations of snow for model evaluation',
+            attr = dict(
+                datebegin=dict(
+                    info="First date of the observation file",
+                    type=Date,
+                ),
+                dateend=dict(
+                    info="Last date of the observation file",
+                    type=Date,
+                ),
+            )
         )
     ]
 
@@ -497,4 +507,3 @@ class SafranPackedFiles(GeoFlowResource):
             return 'n' + self.begindate.yy + self.enddate.yy + '.' + self.nativefmt
         else:
             print('ERROR : Missing "source" information to build resource file name')
-
