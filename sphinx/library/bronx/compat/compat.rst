@@ -15,6 +15,7 @@ Sub-modules
 -----------
 
 * :mod:`bronx.compat.functools`
+* :mod:`bronx.compat.itertools`
 * :mod:`bronx.compat.random`
 * :mod:`bronx.compat.moves`
 
