@@ -10,11 +10,10 @@ The real thing is used from 3.10 and on.
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import itertools
-import sys
 
 import six
 
-if six.PY2 or (sys.version_info.major == 3 and sys.version_info.major < 10):
+if six.PY2 or (six.sys.version_info.major == 3 and six.sys.version_info.major < 10):
 
     def pairwise(iterable):
         """Return successive overlapping pairs taken from the input iterable.
@@ -32,24 +31,3 @@ if six.PY2 or (sys.version_info.major == 3 and sys.version_info.major < 10):
 else:
 
     pairwise = itertools.pairwise
-
-
-def _pairwise_doctest():
-    """The doctests should pass whatever the real version of the function
-
-    >>> list(pairwise([1, 2, 3, 4]))
-    [(1, 2), (2, 3), (3, 4)]
-
-    >>> list(pairwise([1,]))
-    []
-
-    >>> list(pairwise([]))
-    []
-    """
-    pass
-
-
-if __name__ == '__main__':
-    import doctest
-    print('using python', sys.version)
-    doctest.testmod()
