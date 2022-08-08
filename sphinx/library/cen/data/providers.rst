@@ -1,8 +1,8 @@
-:mod:`cen.data.providers` --- TODO Module Header
-================================================
+:mod:`cen.data.providers` --- Providers specific to CEN
+=======================================================
 
 .. automodule:: cen.data.providers
-   :synopsis: TODO Module Synopsis
+   :synopsis: Providers specific to CEN
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

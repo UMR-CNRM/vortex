@@ -1,8 +1,8 @@
-:mod:`cen.algo` --- TODO Module Header
-======================================
+:mod:`cen.algo` --- 'Algo components developed by CEN'
+=======================================================
 
 .. automodule:: cen.algo
-   :synopsis: TODO Module Synopsis
+   :synopsis: Algo components developed by CEN for operational and research S2M simulations
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -18,4 +18,5 @@ Included Modules
 
 * :mod:`cen.algo.deterministic`
 * :mod:`cen.algo.ensemble`
+* :mod:`cen.algo.assim`
 * :mod:`cen.algo.scores`

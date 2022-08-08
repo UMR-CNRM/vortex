@@ -1,5 +1,5 @@
-:mod:`cen` --- TODO Module Header
-=================================
+:mod:`cen` --- Modules of CEN VORTEX extension
+==============================================
 
 .. automodule:: cen
    :synopsis: TODO Module Synopsis

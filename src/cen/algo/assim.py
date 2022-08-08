@@ -11,9 +11,9 @@ from bronx.stdtypes.date import Date
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 
 import footprints
-from vortex.algo.components import Parallel, AlgoComponent
+from vortex.algo.components import Parallel, AlgoComponent, TaylorRun
 from vortex.syntax.stdattrs import a_date
-from cen.algo.ensemble import PrepareForcingWorker, PrepareForcingComponent
+from cen.algo.ensemble import PrepareForcingWorker
 
 logger = loggers.getLogger(__name__)
 
@@ -198,11 +198,14 @@ class PerturbForcingWorker(PrepareForcingWorker):
 
 
 @echecker.disabled_if_unavailable
-class PerturbForcingComponent(PrepareForcingComponent):
+class PerturbForcingComponent(TaylorRun):
     """
     Algo compent that creates an ensemble of forcing files by stochastic perturbations
     of a time series of deterministic input forcing files
     (worker for 1 member).
+    Can not inherit from ensemble.PrepareForcingComponent because datebegin and dateend are dates, not lists.
+    Can not inherit from ensemble.S2MComponent because there is not any binary to run
+    (inheritance from TaylorRun, not ParaBlindRun)
     """
     _footprint = dict(
         info = 'AlgoComponent that build an ensemble of perturbed forcings from deterministic forcing files',
@@ -210,17 +213,35 @@ class PerturbForcingComponent(PrepareForcingComponent):
             kind = dict(
                 values = ['perturbforcing']
             ),
+            engine=dict(
+                values=['s2m']
+            ),
+            datebegin = a_date,
+            dateend   = a_date,
             members = dict(
                 info = "The list of members for output",
                 type = footprints.stdtypes.FPList,
             ),
-            datebegin = a_date,
-            dateend = a_date,
         )
     )
 
+    def prepare(self, rh, opts):
+        """Set some variables according to target definition."""
+        super(PerturbForcingComponent, self).prepare(rh, opts)
+        self.env.DR_HOOK_NOT_MPI = 1
+
+    def _default_common_instructions(self, rh, opts):
+        """Create a common instruction dictionary that will be used by the workers."""
+        ddict = super(PerturbForcingComponent, self)._default_common_instructions(rh, opts)
+        for attribute in self.footprint_attributes:
+            ddict[attribute] = getattr(self, attribute)
+        return ddict
+
+    def postfix(self, rh, opts):
+        pass
+
     def execute(self, rh, opts):
-        """Loop on the various initial conditions provided."""
+        """Loop on the output members requested to apply stochastic perturbations."""
         self._default_pre_execute(rh, opts)
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)
@@ -230,6 +251,6 @@ class PerturbForcingComponent(PrepareForcingComponent):
         self._default_post_execute(rh, opts)
 
     def get_subdirs(self, rh, opts):
-        # In this algo component, the number of members is defined by the user,
-        # as there is only 1 single deterministic input
+        """ In this algo component, the number of members is defined by the user,
+         as there is only 1 single deterministic input"""
         return ['mb{0:04d}'.format(member) for member in self.members]
