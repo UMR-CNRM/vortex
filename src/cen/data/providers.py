@@ -85,14 +85,17 @@ class S2MReanalysisProvider(Provider):
         info['level_two'] = ''
         suffix = map_suffix[info['level_one']]
         season = resource.date.nivologyseason
-        if resource.realkind == 'packedobs':
-            info['level_two'] = 'obs'
-        elif resource.realkind == 'packedguess':
-            if resource.source == 'cep':
+        if resource.realkind == 'observations':
+            if resource.part in ['synop', 'precipitation', 'hourlyobs']:
+                info['level_two'] = 'obs/rs' + season + suffix
+            elif resource.part == 'nebulosity':
+                info['level_two'] = 'neb/n' + season + suffix
+        elif resource.realkind == 'guess':
+            if resource.source_conf == 'era40':
                 info['level_one'] = 'cep'
                 info['level_two'] = ''
-            elif resource.source == 'arpege':
-                info['level_two'] = 'guess'
+            else:
+                info['level_two'] = 'guess/p' + season + suffix
 
         self.config.setall(info)
         return self.config.resolvedpath(resource, self.vapp, self.vconf, self.realkind)
