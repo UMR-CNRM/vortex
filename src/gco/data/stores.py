@@ -287,7 +287,7 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
         """Gateway to :meth:`incachelocate`."""
         cache_list = self.incachelist(remote, options)
         return ([i for i in cache_list
-                 if not(i.endswith('.index') or i.endswith('.autoextract'))]
+                 if not (i.endswith('.index') or i.endswith('.autoextract'))]
                 if isinstance(cache_list, list) else cache_list)
 
     @contextlib.contextmanager

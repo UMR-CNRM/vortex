@@ -310,8 +310,8 @@ class ManualInputMonitor(_StateFullMembersList):
 
         # Stop if we are asked to or if there is nothing more to do
         while (not self._mpquit.is_set() and
-               not(len(self._members[EntrySt.expected]) == 0 and
-                   len(self._members[EntrySt.ufo]) == 0)):
+               not (len(self._members[EntrySt.expected]) == 0 and
+                    len(self._members[EntrySt.ufo]) == 0)):
 
             # Tweak the caching_frequency
             if (len(self._members[EntrySt.ufo]) and
@@ -546,7 +546,7 @@ class BasicInputMonitor(ManualInputMonitor):
         """
         self._role = role
         self._kind = kind
-        assert(not(self._role is None and self._kind is None))
+        assert not (self._role is None and self._kind is None)
         ManualInputMonitor.__init__(self, context,
                                     [InputMonitorEntry(x)
                                      for x in context.sequence.filtered_inputs(role=self._role,

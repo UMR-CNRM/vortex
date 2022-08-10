@@ -252,7 +252,7 @@ class Worker(FootprintBase):
 
     def _set_messenger(self, messenger):
         """Connect to some Queue."""
-        assert(callable(messenger.put))
+        assert callable(messenger.put)
         self._messenger = messenger
 
     messenger = property(_get_messenger, _set_messenger)

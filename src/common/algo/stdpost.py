@@ -957,7 +957,7 @@ class _DiagPIDecoMixin(AlgoComponentDecoMixin):
             self.grab(sec, comment='diagpi source')
             if outsec:
                 out = outsec.pop(0)
-                assert(out.rh.resource.term == sec.rh.resource.term)
+                assert out.rh.resource.term == sec.rh.resource.term
                 if out.rh.is_expected():
                     cat_list_out.append(out)
                 self.grab(out, comment='diagpi output')

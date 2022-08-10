@@ -279,7 +279,7 @@ def expand(desc):
                 if isinstance(v, dict):
                     for dk in [x for x in v.keys() if x in d]:
                         dv = d[dk]
-                        if not(isinstance(dv, list) or isinstance(dv, tuple) or isinstance(dv, set)):
+                        if not (isinstance(dv, list) or isinstance(dv, tuple) or isinstance(dv, set)):
                             newld.append(inplace(d, k, v[dk][six.text_type(dv)], globalindex=globalindex))
                             globalindex += 1
                             somechanges = True

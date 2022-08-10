@@ -411,8 +411,8 @@ class FullPosServer(IFSParallel):
     @cached_property
     def _i_fmt(self):
         """The input files format (as expected by the c903)."""
-        return('{:s}' + '{:s}+'.format(self.xpname) +
-               '{:0' + str(self.inputs.actual_suffixlen()) + 'd}')
+        return ('{:s}' + '{:s}+'.format(self.xpname) +
+                '{:0' + str(self.inputs.actual_suffixlen()) + 'd}')
 
     @cached_property
     def _o_raw_fmt(self):

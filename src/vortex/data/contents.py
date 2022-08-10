@@ -288,10 +288,10 @@ class AlmostListContent(DataContent):
             self._data = list()
 
     def __delitem__(self, idx):
-        del(self.data[idx])
+        del self.data[idx]
 
     def __delslice__(self, istart, iend):
-        del(self.data[istart:iend])
+        del self.data[istart:iend]
 
     def __setitem__(self, idx, value):
         self.data[idx] = value

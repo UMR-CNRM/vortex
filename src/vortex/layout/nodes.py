@@ -1017,7 +1017,7 @@ class WorkshareFamily(Family):
             # Find the population sizes and workshares size/number
             populations = [self.conf.get(lc) for lc in self._workshareconf]
             n_population = set([len(p) for p in populations])
-            if not(len(n_population) == 1):
+            if not (len(n_population) == 1):
                 raise RuntimeError('Inconsistent sizes in "workshareconf" lists')
             n_population = n_population.pop()
             # Number of workshares if worksharesize alone is considered
