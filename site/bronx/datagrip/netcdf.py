@@ -51,10 +51,7 @@ Create a NetCDF dataset and display its structure:
     ...                           'ncattrs': {},
     ...                           'variables': {'T': {'datatype': np.float32,
     ...                                               'dimensions': ('X', 'Y'),
-    ...                                               'filters': {'complevel': 0,
-    ...                                                           'fletcher32': False,
-    ...                                                           'shuffle': False,
-    ...                                                           'zlib': False},
+    ...                                               'filters': {'complevel': 0, },
     ...                                               'ncattrs': {'unit': 'Kelvin'},
     ...                                               'shape': (5, 2)}}},
     ...                'group2': {'dimensions': {'Z': {'size': 2, 'unlimited': True}},
@@ -62,17 +59,13 @@ Create a NetCDF dataset and display its structure:
     ...                           'ncattrs': {},
     ...                           'variables': {'T': {'datatype': np.float32,
     ...                                               'dimensions': ('X', 'Y', 'Z'),
-    ...                                               'filters': {'complevel': 0,
-    ...                                                           'fletcher32': False,
-    ...                                                           'shuffle': False,
-    ...                                                           'zlib': False},
+    ...                                               'filters': {'complevel': 0, },
     ...                                               'ncattrs': {'unit': 'Kelvin'},
     ...                                               'shape': (5, 2, 2)}}}},
     ...     'ncattrs': {'title': 'NetCDF Demo Data'},
     ...     'variables': {'x': {'datatype': np.float64,
     ...                         'dimensions': ('X',),
     ...                         'filters': {'complevel': 4,
-    ...                                     'fletcher32': False,
     ...                                     'shuffle': True,
     ...                                     'zlib': True},
     ...                         'ncattrs': {},
@@ -80,7 +73,6 @@ Create a NetCDF dataset and display its structure:
     ...                   'y': {'datatype': np.float64,
     ...                         'dimensions': ('Y',),
     ...                         'filters': {'complevel': 4,
-    ...                                     'fletcher32': False,
     ...                                     'shuffle': True,
     ...                                     'zlib': True},
     ...                         'ncattrs': {},
@@ -201,7 +193,8 @@ class NetCDF4VariableStructure(dict):
         self['dimensions'] = netcdf4_obj.dimensions
         self['shape'] = netcdf4_obj.shape
         self['ncattrs'] = {k: netcdf4_obj.getncattr(k) for k in netcdf4_obj.ncattrs()}
-        self['filters'] = netcdf4_obj.filters()
+        self['filters'] = {k: v for k, v in netcdf4_obj.filters().items()
+                           if not (v is None or v is False)}
 
 
 def netcdf_dataset_structure(netcdf4_obj):
