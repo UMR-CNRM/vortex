@@ -28,6 +28,8 @@ Interface
 
 .. autofunction:: clearall
 
+.. autofunction:: config
+
 .. autofunction:: contents
 
 .. autofunction:: cycles
