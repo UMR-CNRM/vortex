@@ -237,8 +237,8 @@ class Context(getbytag.GetByTag, observer.Observer):
         Register a new section in void active context with the resource handler ``item``.
         """
         if self.active:
-            logger.debug('Notified %s new item %s', self, item)
-            if (self._record and info['observerboard'] == _RHANDLERS_OBSBOARD):
+            logger.debug('Notified %s new item of class %s and id %s', self, item.__class__, id(item))
+            if self._record and info['observerboard'] == _RHANDLERS_OBSBOARD:
                 self._sequence.section(rh=item, stage='load')
 
     def updobsitem(self, item, info):

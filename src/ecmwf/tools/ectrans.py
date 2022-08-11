@@ -156,7 +156,7 @@ class ECtransTools(addons.Addon):
         :param gateway: gateway used by ECtrans
         :param remote: remote used by ECtrans
         :param bool sync: If False, allow asynchronous transfers.
-        :return: return code and additional attributes used
+        :return: return code
         """
         ectrans = ECtrans(system=self.sh)
         list_args, list_options, dict_args = self.ectrans_defaults_init(sync=sync,
@@ -172,9 +172,7 @@ class ECtransTools(addons.Addon):
             list_options=list_options,
             dict_args=dict_args
         )
-        del dict_args["source"]
-        del dict_args["target"]
-        return rc, dict_args
+        return rc
 
     @fmtshcmd
     def ectransput(self, source, target, gateway=None, remote=None,
@@ -189,30 +187,30 @@ class ECtransTools(addons.Addon):
         :param remote: remote used by ECtrans
         :param cpipeline: compression pipeline used if provided
         :param bool sync: If False, allow asynchronous transfers.
-        :return: return code and additional attributes used
+        :return: return code
         """
         if self.sh.is_iofile(source):
             if cpipeline is None:
-                rc, dict_args = self.raw_ectransput(source=source,
-                                                    target=target,
-                                                    gateway=gateway,
-                                                    remote=remote,
-                                                    sync=sync)
+                rc = self.raw_ectransput(source=source,
+                                         target=target,
+                                         gateway=gateway,
+                                         remote=remote,
+                                         sync=sync)
             else:
                 csource = source + self.sh.safe_filesuffix()
                 try:
                     cpipeline.compress2file(source=source,
                                             destination=csource)
-                    rc, dict_args = self.raw_ectransput(source=csource,
-                                                        target=target,
-                                                        gateway=gateway,
-                                                        remote=remote,
-                                                        sync=sync)
+                    rc = self.raw_ectransput(source=csource,
+                                             target=target,
+                                             gateway=gateway,
+                                             remote=remote,
+                                             sync=sync)
                 finally:
                     self.sh.rm(csource)
         else:
             raise IOError('No such file or directory: {!r}'.format(source))
-        return rc, dict_args
+        return rc
 
     def raw_ectransget(self, source, target, gateway, remote):
         """Get a resource using ECtrans (default class).
@@ -221,7 +219,7 @@ class ECtransTools(addons.Addon):
         :param target: target file
         :param gateway: gateway used by ECtrans
         :param remote: remote used by ECtrans
-        :return: return code and additional attributes used
+        :return: return code
         """
         ectrans = ECtrans(system=self.sh)
         list_args, list_options, dict_args = self.ectrans_defaults_init()
@@ -235,9 +233,7 @@ class ECtransTools(addons.Addon):
             list_options=list_options,
             dict_args=dict_args
         )
-        del dict_args["source"]
-        del dict_args["target"]
-        return rc, dict_args
+        return rc
 
     @fmtshcmd
     def ectransget(self, source, target, gateway=None, remote=None, cpipeline=None):
@@ -250,24 +246,24 @@ class ECtransTools(addons.Addon):
         :param gateway: gateway used by ECtrans
         :param remote: remote used by ECtrans
         :param cpipeline: compression pipeline to be used if provided
-        :return: return code and additional attributes used
+        :return: return code
         """
         if isinstance(target, six.string_types):
             self.sh.rm(target)
         if cpipeline is None:
-            rc, dict_args = self.raw_ectransget(source=source,
-                                                target=target,
-                                                gateway=gateway,
-                                                remote=remote)
+            rc = self.raw_ectransget(source=source,
+                                     target=target,
+                                     gateway=gateway,
+                                     remote=remote)
         else:
             ctarget = target + self.sh.safe_filesuffix()
             try:
-                rc, dict_args = self.raw_ectransget(source=source,
-                                                    target=ctarget,
-                                                    gateway=gateway,
-                                                    remote=remote)
+                rc = self.raw_ectransget(source=source,
+                                         target=ctarget,
+                                         gateway=gateway,
+                                         remote=remote)
                 rc = rc and cpipeline.file2uncompress(source=ctarget,
                                                       destination=target)
             finally:
                 self.sh.rm(ctarget)
-        return rc, dict_args
+        return rc

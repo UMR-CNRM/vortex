@@ -86,7 +86,7 @@ class TestBuildCommandLine(TestCase):
         dict_args = {"value": ["titi1", "titi2"]}
         list_options = ["u", "verbose", "r"]
         command_line = interface.build_command_line(command, list_args, dict_args, list_options)
-        self.assertEqual(command_line, "ecmwf toto.txt titi.txt -value titi1 titi2 -u -verbose -r")
+        self.assertEqual(command_line, "ecmwf -value titi1 titi2 -u -verbose -r toto.txt titi.txt")
 
     def test_actual_command(self):
         interface = ECMWFInterface(system=sh, command="ecmwf", command_interface=True)
