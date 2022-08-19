@@ -28,7 +28,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Ch4SurfEmissions
+.. autoclass:: ElmtEmissions
    :show-inheritance:
    :members:
    :member-order: alphabetical
