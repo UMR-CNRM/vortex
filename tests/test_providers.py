@@ -177,13 +177,70 @@ class TestProviderVortexStd(unittest.TestCase):
         self.assertEqual(pr.uri(self.t_res),
                          'vortex://toto@' + self.fp_defaults['namespace'] +
                          '/arpege/4dvar/VOID/20000101T0000A/dummy/dummyres')
-        # set aside ?
-        pr = fp.proxy.provider(set_aside='dict(VOID:OPER)', **self.fp_defaults)
+        # set aside in various styles ?
+        pr = fp.proxy.provider(vortex_set_aside=fp.stdtypes.FPDict(VOID='OPER'),
+                               **self.fp_defaults)
         self.assertEqual(uriparse(pr.uri(self.t_res)),
                          uriparse('vortex://' + self.fp_defaults['namespace'] +
                                   '/arpege/4dvar/VOID/20000101T0000A/dummy/dummyres' +
                                   '?setaside_n=vsop.cache.fr' +
                                   '&setaside_p=arpege%2F4dvar%2FOPER%2F20000101T0000A%2Fdummy%2Fdummyres'))
+        pr = fp.proxy.provider(vortex_set_aside=fp.stdtypes.FPDict(VOID=fp.stdtypes.FPDict(experiment='OPER')),
+                               **self.fp_defaults)
+        self.assertEqual(uriparse(pr.uri(self.t_res)),
+                         uriparse('vortex://' + self.fp_defaults['namespace'] +
+                                  '/arpege/4dvar/VOID/20000101T0000A/dummy/dummyres' +
+                                  '?setaside_n=vsop.cache.fr' +
+                                  '&setaside_p=arpege%2F4dvar%2FOPER%2F20000101T0000A%2Fdummy%2Fdummyres'))
+        pr = fp.proxy.provider(
+            vortex_set_aside=fp.stdtypes.FPDict(
+                defaults=fp.stdtypes.FPDict(storage='toto.bucket.localhost'),
+                edits=fp.stdtypes.FPDict(VOID=fp.stdtypes.FPDict(experiment='OPER')),
+            ), **self.fp_defaults)
+        self.assertEqual(uriparse(pr.uri(self.t_res)),
+                         uriparse('vortex://' + self.fp_defaults['namespace'] +
+                                  '/arpege/4dvar/VOID/20000101T0000A/dummy/dummyres' +
+                                  '?setaside_args_storage=toto.bucket.localhost'
+                                  '&setaside_n=vsop.cache.fr' +
+                                  '&setaside_p=arpege%2F4dvar%2FOPER%2F20000101T0000A%2Fdummy%2Fdummyres'))
+        pr = fp.proxy.provider(
+            vortex_set_aside=fp.stdtypes.FPDict(
+                defaults=fp.stdtypes.FPDict(storage='toto.bucket.localhost'),
+                includes=('void', ),
+            ), **self.fp_defaults)
+        self.assertEqual(uriparse(pr.uri(self.t_res)),
+                         uriparse('vortex://' + self.fp_defaults['namespace'] +
+                                  '/arpege/4dvar/VOID/20000101T0000A/dummy/dummyres' +
+                                  '?setaside_args_storage=toto.bucket.localhost'
+                                  '&setaside_n=vortex.cache.fr' +
+                                  '&setaside_p=arpege%2F4dvar%2FVOID%2F20000101T0000A%2Fdummy%2Fdummyres'))
+        pr = fp.proxy.provider(
+            vortex_set_aside=fp.stdtypes.FPDict(
+                defaults=fp.stdtypes.FPDict(storage='toto.bucket.localhost'),
+                includes=('abcd', ),
+            ), **self.fp_defaults)
+        self.assertEqual(uriparse(pr.uri(self.t_res)),
+                         uriparse('vortex://' + self.fp_defaults['namespace'] +
+                                  '/arpege/4dvar/VOID/20000101T0000A/dummy/dummyres'))
+        pr = fp.proxy.provider(
+            vortex_set_aside=fp.stdtypes.FPDict(
+                defaults=fp.stdtypes.FPDict(storage='toto.bucket.localhost'),
+                excludes=('void',),
+            ), **self.fp_defaults)
+        self.assertEqual(uriparse(pr.uri(self.t_res)),
+                         uriparse('vortex://' + self.fp_defaults['namespace'] +
+                                  '/arpege/4dvar/VOID/20000101T0000A/dummy/dummyres'))
+        pr = fp.proxy.provider(
+            vortex_set_aside=fp.stdtypes.FPDict(
+                defaults=fp.stdtypes.FPDict(storage='toto.bucket.localhost'),
+                excludes=('abcd',),
+            ), **self.fp_defaults)
+        self.assertEqual(uriparse(pr.uri(self.t_res)),
+                         uriparse('vortex://' + self.fp_defaults['namespace'] +
+                                  '/arpege/4dvar/VOID/20000101T0000A/dummy/dummyres' +
+                                  '?setaside_args_storage=toto.bucket.localhost'
+                                  '&setaside_n=vortex.cache.fr' +
+                                  '&setaside_p=arpege%2F4dvar%2FVOID%2F20000101T0000A%2Fdummy%2Fdummyres'))
 
 
 @unittestGlobalLevel(TLOGLEVEL)

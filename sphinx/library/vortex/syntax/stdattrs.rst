@@ -68,6 +68,8 @@ Pre-defined attributes as abstract footprints
 
 .. autodata:: free_xpid
 
+.. autofunction:: any_vortex_xpid
+
 .. autodata:: actualfmt
 
 .. autodata:: cutoff

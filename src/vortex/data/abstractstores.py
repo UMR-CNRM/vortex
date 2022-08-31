@@ -67,7 +67,7 @@ class _SetAsideStoreMixin(object):
             a_spec['netloc'] = remote['query'].pop('setaside_n', [self.netloc])[0]
             a_spec['remote_path'] = remote['query'].pop('setaside_p')[0]
             set_aside_args_prefix = 'setaside_args_'
-            for k, v in remote['query']:
+            for k, v in remote['query'].items():
                 if k.startswith(set_aside_args_prefix):
                     k = k[len(set_aside_args_prefix):]
                     a_spec[k] = v[0]

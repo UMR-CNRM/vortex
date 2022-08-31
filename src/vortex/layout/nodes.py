@@ -24,6 +24,7 @@ from bronx.patterns import getbytag, observer
 from bronx.syntax.iterators import izip_pcn
 from bronx.system.interrupt import SignalInterruptError
 from footprints import proxy as fpx
+from footprints.stdtypes import FPDict
 from vortex import toolbox, VortexForceComplete
 from vortex.layout.appconf import ConfigSet
 from vortex.layout.subjobs import subjob_handling, SubJobLauncherError
@@ -603,8 +604,11 @@ class Node(getbytag.GetByTag, NiceLayout):
         if 'rundate' in self.conf:
             toolbox.defaults['date'] = self.conf.rundate
 
-        for optk in ('cutoff', 'geometry', 'cycle', 'model',):
+        for optk in ('cutoff', 'geometry', 'cycle', 'model', 'vortex_set_aside'):
             if optk in self.conf:
+                value = self.conf.get(optk)
+                if isinstance(value, dict):
+                    value = FPDict(value)
                 toolbox.defaults[optk] = self.conf.get(optk)
 
         toolbox.defaults(**extras)
