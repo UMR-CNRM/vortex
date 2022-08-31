@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Fetch an Uenv (and its content) and re-archive it in the ECFS archive.
+Fetch an Uenv (and its content) and re-archive it in a bucket or directly in
+ECMWF's ECFS archive.
 """
 
 from __future__ import print_function, absolute_import, division, unicode_literals
@@ -22,10 +23,11 @@ sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 from bronx.fancies import loggers
+import footprints as fp
 from footprints import proxy as fpx
 
 import vortex
-from vortex.tools.net import uriparse
+from vortex.tools.net import uriparse, uriunparse
 from vortex.tools.systems import ExecutionError
 
 import ecmwf.tools.addons
@@ -46,7 +48,8 @@ U_NETLOC = 'uget.archive.fr'
 G_SCHEME = 'gget'
 G_NETLOC = 'gco.meteo.fr'
 
-U_TARGET_STORAGE = 'ecfs.ecmwf.int'
+U_ECFS_TARGET_STORAGE = 'ecfs.ecmwf.int'
+U_BUCKET_TARGET_STORAGE = '{bucket:s}.bucket.localhost'
 
 # Main script logger
 logger = loggers.getLogger(__name__)
@@ -60,6 +63,13 @@ def parse_command_line():
     program_desc = program_shortdesc
     # Setup argument parser
     parser = argparse.ArgumentParser(description=program_desc)
+    parser.add_argument("-v", "--verbose", dest="verbose", action="count",
+                        help="set verbosity level [default: %(default)s]")
+    dest_group = parser.add_mutually_exclusive_group(required=True)
+    dest_group.add_argument('--to-ecfs', dest='ecfs', action='store_true',
+                            help='Re-archive data to ECFS')
+    dest_group.add_argument('--to-bucket', dest='bucket',
+                            help='Re-archive data to a bucket')
     parser.add_argument('--ec-gateway', dest='gateway',
                         help='The ecaccess gateway hostname.')
     parser.add_argument('--ec-association', dest='association',
@@ -74,14 +84,27 @@ def parse_command_line():
 
 def generic_setup(args):
     """Setup a few very generic things."""
-    if args.gateway:
-        vtx_env.ECTRANS_GATEWAY_HOST = args.gateway
     if args.association:
         vtx_env.ECTRANS_REMOTE_ARCHIVE = args.association
+    if args.gateway:
+        vtx_env.ECTRANS_GATEWAY_HOST = args.gateway
+        fpx.addon(sh=vtx_sh, kind='ecmwf')
     locale.setlocale(locale.LC_ALL,
                      os.environ.get('VORTEX_DEFAULT_ENCODING',
                                     str('en_US.UTF-8')))
-    fpx.addon(sh=vtx_sh, kind='ecmwf')
+    # Setup logger verbosity
+    if args.verbose is None:
+        (loglevel_me, loglevel_main, loglevel_fp) = ('INFO', 'ERROR', 'ERROR')
+    elif args.verbose == 1:
+        (loglevel_me, loglevel_main, loglevel_fp) = ('DEBUG', 'INFO', 'INFO')
+    elif args.verbose == 2:
+        (loglevel_me, loglevel_main, loglevel_fp) = ('DEBUG', 'DEBUG', 'INFO')
+    else:
+        (loglevel_me, loglevel_main, loglevel_fp) = ('DEBUG', 'DEBUG', 'DEBUG')
+    loggers.setGlobalLevel(loglevel_main)
+    logger.setLevel(loglevel_me)
+    fp.logger.setLevel(loglevel_fp)
+    del args.verbose
 
 
 @contextlib.contextmanager
@@ -112,9 +135,10 @@ def uenv_mirror(cycle, args):
     cycle = AbstractUgetId(cycle)
     # Create Uget stores
     uget_default_st = fpx.store(scheme=U_SCHEME, netloc=U_NETLOC)
-    uget_ecfs_st = fpx.store(scheme=U_SCHEME, netloc=U_NETLOC,
-                             storage=U_TARGET_STORAGE,
-                             readonly=False)
+    uget_out_st = fpx.store(scheme=U_SCHEME, netloc=U_NETLOC,
+                            storage=(U_ECFS_TARGET_STORAGE if args.ecfs
+                                     else U_BUCKET_TARGET_STORAGE.format(bucket=args.bucket)),
+                            readonly=False)
     if args.gdata:
         # If gget mirroring is requested, create the ad-hoc store
         ggetconfig = GcoStoreConfig(GGET_DEFAULT_CONFIGFILE)
@@ -127,14 +151,13 @@ def uenv_mirror(cycle, args):
         slurp = uenv.contents(cycle, scheme=U_SCHEME, netloc=U_NETLOC)
 
         uget_target = u_uri('env', cycle)
-        if uget_ecfs_st.check(uget_target):
-            logger.info("The target uenv already exists ... Doing nothing (%s)",
-                        uget_target)
+        if uget_out_st.check(uget_target):
+            logger.info("The target uenv already exists ... Doing nothing")
         else:
             logger.info('Mirroring the uenv file < %s >', cycle)
             with tempfile.NamedTemporaryFile(dir='.') as fhtmp:
                 uget_default_st.get(uget_target, fhtmp.name, dict())
-                uget_ecfs_st.put(fhtmp.name, uget_target, dict())
+                uget_out_st.put(fhtmp.name, uget_target, dict())
 
         for k, v in slurp.items():
 
@@ -148,10 +171,8 @@ def uenv_mirror(cycle, args):
                 if isinstance(v, AbstractUgetId):
                     target = u_uri('data', v)
                     try:
-                        if uget_ecfs_st.check(target):
-                            logger.info("The target already exists for < %s >... Doing nothing (%s)",
-                                        v, target)
-                            rc = True
+                        if uget_out_st.check(target):
+                            logger.info("The target already exists < %s >... Doing nothing", v)
                         else:
                             # The void extension avoid automatic untars...
                             rc = uget_default_st.get(target, v.id + '.void', dict())
@@ -167,9 +188,8 @@ def uenv_mirror(cycle, args):
                             target = u_uri('data',
                                            AbstractUgetId('uget:{0.id:s}{1:s}@{0.location:s}'
                                                           .format(v, suffix)))
-                            if uget_ecfs_st.check(target):
-                                logger.info("The target already exists for < %s >... Doing nothing (%s)",
-                                            v, target)
+                            if uget_out_st.check(target):
+                                logger.info("The target already exists < %s >... Doing nothing", v)
                             else:
                                 try:
                                     rc = rc and uget_default_st.get(target, v.id + suffix, dict())
@@ -189,16 +209,15 @@ def uenv_mirror(cycle, args):
                             reftodo = [(v, u_uri('data',
                                                  AbstractUgetId('uget:{:s}@{:s}'.format(v, args.gdata))))]
                         else:
-                            logger.info("Mutltiple data will be fetched for < %s > (monthly ?)", v)
+                            logger.info("Mutltiple data will be fetched < %s > (monthly ?)", v)
                             reftodo = [(xv, u_uri('data',
                                                   AbstractUgetId('uget:{:s}@{:s}'.format(xv, args.gdata))))
                                        for xv in mdef.names(v)]
                         # Actually getting data
                         rc = True
                         for xv, xtarget in reftodo:
-                            if uget_ecfs_st.check(xtarget):
-                                logger.info("The target already exists for < %s >... Doing nothing (%s)",
-                                            xv, xtarget)
+                            if uget_out_st.check(xtarget):
+                                logger.info("The target already exists < %s >... Doing nothing", xv)
                             else:
                                 try:
                                     rc = rc and gget_default_st.get(g_uri(xv), xv, dict())
@@ -217,10 +236,11 @@ def uenv_mirror(cycle, args):
                     if todo:
                         rc = True
                         for xv, target in todo:
-                            logger.debug("Uploading to < %s >", target)
-                            rc = rc and uget_ecfs_st.put(xv, target)
+                            logger.info("Uploading to < %s >",
+                                        uriunparse(list(target.values())[:6]))
+                            rc = rc and uget_out_st.put(xv, target)
                         if not rc:
-                            logger.info("Unable to upload data for < %s >.", v)
+                            logger.critical("Unable to upload data for < %s >.", v)
                             raise IOError('Unable to upload data for {!s}'.format(v))
                     else:
                         logger.info('Nothing to do for < %s >', v)

@@ -26,6 +26,7 @@ from vortex.syntax.stdattrs import hashalgo, hashalgo_avail_list, compressionpip
 from vortex.tools import storage
 from vortex.tools import compression
 from vortex.tools import net
+from vortex.tools.env import vartrue
 from vortex.tools.systems import ExecutionError
 from vortex.syntax.stdattrs import Namespace
 
@@ -61,10 +62,16 @@ class _SetAsideStoreMixin(object):
         if 'setaside_p' in remote['query']:
             remote = remote.copy()
             remote['query'] = remote['query'].copy()
-            set_aside_s = remote['query'].pop('setaside_s', [self.scheme])
-            set_aside_n = remote['query'].pop('setaside_n', [self.netloc])
-            set_aside_p = remote['query'].pop('setaside_p')
-            return remote, (set_aside_s[0], set_aside_n[0], set_aside_p[0])
+            a_spec = dict()
+            a_spec['scheme'] = remote['query'].pop('setaside_s', [self.scheme])[0]
+            a_spec['netloc'] = remote['query'].pop('setaside_n', [self.netloc])[0]
+            a_spec['remote_path'] = remote['query'].pop('setaside_p')[0]
+            set_aside_args_prefix = 'setaside_args_'
+            for k, v in remote['query']:
+                if k.startswith(set_aside_args_prefix):
+                    k = k[len(set_aside_args_prefix):]
+                    a_spec[k] = v[0]
+            return remote, a_spec
         else:
             return remote, None
 
@@ -87,10 +94,9 @@ class _SetAsideStoreMixin(object):
     def _do_set_aside(self, remote, local, set_aside, options):
         """Put the resource to the place designated by "setaside"."""
         remote_bis = remote.copy()
-        remote_bis['path'] = set_aside[2]
+        remote_bis['path'] = set_aside.pop('remote_path')
         st_bis_attr = self.footprint_as_shallow_dict()
-        st_bis_attr['scheme'] = set_aside[0]
-        st_bis_attr['netloc'] = set_aside[1]
+        st_bis_attr.update(set_aside)
         st_bis = footprints.proxy.store(** st_bis_attr)
         with self._do_set_aside_cocoon(local, options) as (local_bis, options_bis):
             return st_bis.put(local_bis, remote_bis, options=options_bis)
@@ -796,6 +802,7 @@ class ArchiveStore(Store):
         super(ArchiveStore, self).__init__(*args, **kw)
         self._actual_storage = self.storage
         self._actual_storetube = self.storetube
+        self._actual_export_mapping = None
 
     @property
     def realkind(self):
@@ -832,12 +839,19 @@ class ArchiveStore(Store):
     def _actual_from_genericconf(self, what):
         """Read an entry in the generic configuration file"""
         result = None
+        # Host specific rules (e.g. special things for ECMWF computers)
         inetsource = self.system.default_target.inetname
         k_inet = '{:s}@{:s}'.format(self.actual_storage, inetsource)
-        if self.genericconfig.has_option(k_inet, what):
-            result = self.genericconfig.get(k_inet, what)
-        if result is None and self.genericconfig.has_option(self.actual_storage, what):
-            result = self.genericconfig.get(self.actual_storage, what)
+        candidates = {s for s in self.genericconfig.sections() if k_inet.endswith(s)}
+        candidates = sorted(candidates, key=lambda c: c.count('.'))
+        if candidates and self.genericconfig.has_option(candidates[-1], what):
+            result = self.genericconfig.get(candidates[-1], what)
+        # Generic rules
+        candidates = {s for s in self.genericconfig.sections() if self.actual_storage.endswith(s)}
+        candidates = sorted(candidates, key=lambda c: c.count('.'))
+        if result is None and candidates and self.genericconfig.has_option(candidates[-1], what):
+            result = self.genericconfig.get(candidates[-1], what)
+        # Default (probably a bad idea)
         if result is None and what in self.genericconfig.defaults():
             result = self.genericconfig.defaults()[what]
         return result
@@ -850,6 +864,17 @@ class ArchiveStore(Store):
             if self._actual_storetube is None:
                 raise ValueError('Unable to find the archive access method.')
         return self._actual_storetube
+
+    @property
+    def actual_export_mapping(self):
+        """Deactivate any kind of processing between the URI and the target path."""
+        if self._actual_export_mapping is None:
+            self._actual_export_mapping = self._actual_from_genericconf('export_mapping')
+            if self._actual_export_mapping is None:
+                self._actual_export_mapping = False
+            else:
+                self._actual_export_mapping = bool(vartrue.match(self._actual_export_mapping))
+        return self._actual_export_mapping
 
     def _get_archive(self):
         """Create a new Archive object only if needed."""
@@ -875,14 +900,18 @@ class ArchiveStore(Store):
     archive = property(_get_archive, _set_archive, _del_archive)
 
     def _inarchiveformatpath(self, remote):
+        # Remove extra slashes
+        formatted = remote['path'].lstrip(self.system.path.sep)
+        # Store head ?
+        if self.storehead:
+            formatted = self.system.path.join(self.storehead, formatted)
+        # Export specials...
+        if self.actual_export_mapping:
+            formatted = self.system.path.join(self.scheme, self.netloc, formatted)
+        # Store root (if specified)
         pathroot = remote.get('root', self.storeroot)
         if pathroot is not None:
-            formatted = self.system.path.join(
-                pathroot,
-                remote['path'].lstrip(self.system.path.sep)
-            )
-        else:
-            formatted = remote['path'].lstrip(self.system.path.sep)
+            formatted = self.system.path.join(pathroot, formatted)
         return formatted
 
     def inarchivecheck(self, remote, options):

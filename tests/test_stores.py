@@ -44,105 +44,186 @@ class TestVortexArchiveStore(AbstractTestStores):
 
     _TEST_STORAGE = 'unittesttarget.fake.com'
 
+    _TEST_BUCKET = 'xtest.bucket.localhost'
+
+    _HEAD = 'vortex'
+
     _REMAPS = [
         # Vortex Standard
         dict(uri='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/unittest',
-             rread='vortex://vortex.archive-legacy.fr/vortex/arome/3dvarfr/A/B/C/D/20180101T0000A/forecast/unittest',
+             rread='vortex://vortex.archive-legacy.fr/arome/3dvarfr/A/B/C/D/20180101T0000A/forecast/unittest',
              rread_root='/home/m/marp/marp999',
-             rwrite='vortex://vortex.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000A/forecast/unittest',
+             rwrite='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/unittest',
              rwrite_root=''),
         dict(uri='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/forecast/unittest',
-             rread='vortex://vortex.archive-legacy.fr/vortex/arome/3dvarfr/A/B/C/D/forecast/unittest',
+             rread='vortex://vortex.archive-legacy.fr/arome/3dvarfr/A/B/C/D/forecast/unittest',
              rread_root='/home/m/marp/marp999',
-             rwrite='vortex://vortex.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/forecast/unittest',
+             rwrite='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/forecast/unittest',
              rwrite_root=''),
         dict(uri='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
-             rread='vortex://vortex.archive-legacy.fr/vortex/arome/3dvarfr/A/B/C/D/20180101T0000-20180101T1800/forecast/unittest',
+             rread='vortex://vortex.archive-legacy.fr/arome/3dvarfr/A/B/C/D/20180101T0000-20180101T1800/forecast/unittest',
              rread_root='/home/m/marp/marp999',
-             rwrite='vortex://vortex.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+             rwrite='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
              rwrite_root=''),
         # Vortex Op
         dict(uri='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/20180101T0000A/forecast/unittest',
-             rread='vortex://vsop.archive-legacy.fr/vortex/arome/3dvarfr/OPER/2018/01/01/T0000A/forecast/unittest',
+             rread='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/2018/01/01/T0000A/forecast/unittest',
              rread_root='/home/m/mxpt/mxpt001',
-             rwrite='vortex://vsop.archive-legacy.fr/vortex/arome/3dvarfr/OPER/2018/01/01/T0000A/forecast/unittest',
+             rwrite='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/2018/01/01/T0000A/forecast/unittest',
              rwrite_root='/home/m/mxpt/mxpt001'),
         dict(uri='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/forecast/unittest',
-             rread='vortex://vsop.archive-legacy.fr/vortex/arome/3dvarfr/OPER/forecast/unittest',
+             rread='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/forecast/unittest',
              rread_root='/home/m/mxpt/mxpt001',
-             rwrite='vortex://vsop.archive-legacy.fr/vortex/arome/3dvarfr/OPER/forecast/unittest',
+             rwrite='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/forecast/unittest',
              rwrite_root='/home/m/mxpt/mxpt001'),
         dict(uri='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/20180101T0000-20180101T1800/forecast/unittest',
-             rread='vortex://vsop.archive-legacy.fr/vortex/arome/3dvarfr/OPER/2018/01/01/T0000-20180101T1800/forecast/unittest',
+             rread='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/2018/01/01/T0000-20180101T1800/forecast/unittest',
              rread_root='/home/m/mxpt/mxpt001',
-             rwrite='vortex://vsop.archive-legacy.fr/vortex/arome/3dvarfr/OPER/2018/01/01/T0000-20180101T1800/forecast/unittest',
+             rwrite='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/2018/01/01/T0000-20180101T1800/forecast/unittest',
              rwrite_root='/home/m/mxpt/mxpt001'),
+    ]
+
+    _REMAPS_BUCKET = [
+        # Vortex Standard
+        dict(uri='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/unittest',
+             rread='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/unittest',
+             rread_root='',
+             rwrite='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/unittest',
+             rwrite_root=''),
+        dict(uri='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/forecast/unittest',
+             rread='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/forecast/unittest',
+             rread_root='',
+             rwrite='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/forecast/unittest',
+             rwrite_root=''),
+        dict(uri='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+             rread='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+             rread_root='',
+             rwrite='vortex://vortex.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+             rwrite_root=''),
+        # Vortex Op
+        dict(uri='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/20180101T0000A/forecast/unittest',
+             rread='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/20180101T0000A/forecast/unittest',
+             rread_root='',
+             rwrite='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/20180101T0000A/forecast/unittest',
+             rwrite_root=''),
+        dict(uri='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/forecast/unittest',
+             rread='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/forecast/unittest',
+             rread_root='',
+             rwrite='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/forecast/unittest',
+             rwrite_root=''),
+        dict(uri='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/20180101T0000-20180101T1800/forecast/unittest',
+             rread='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/20180101T0000-20180101T1800/forecast/unittest',
+             rread_root='',
+             rwrite='vortex://vsop.archive-legacy.fr/arome/3dvarfr/OPER/20180101T0000-20180101T1800/forecast/unittest',
+             rwrite_root=''),
     ]
 
     _REMAPS_CONFIGURABLE = [
         # Vortex Free
         dict(uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@unittest/20180101T0000A/forecast/unittest',
-             rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000A/forecast/unittest',
+             rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/unittest',
              rread_root='~unittest',
-             rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000A/forecast/unittest',
+             rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/unittest',
              rwrite_root='~unittest'),
         dict(uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@unittest/forecast/unittest',
-             rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/forecast/unittest',
+             rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD/forecast/unittest',
              rread_root='~unittest',
-             rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/forecast/unittest',
+             rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD/forecast/unittest',
              rwrite_root='~unittest'),
         dict(uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@tata/20180101T0000-20180101T1800/forecast/unittest',
-             rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+             rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
              rread_root='/somwhere/lies/tata',
-             rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+             rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
              rwrite_root='/somwhere/lies/tata'),
         dict(uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@toto15/20180101T0000-20180101T1800/forecast/unittest',
-             rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+             rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
              rread_root='/somwhere/lies/toto15',
-             rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+             rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
              rwrite_root='/somwhere/lies/toto15'),
         dict(
             uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special666@toto15/20180101T0000-20180101T1800/forecast/unittest',
-            rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/special666/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special666/20180101T0000-20180101T1800/forecast/unittest',
             rread_root='/somwhere/lies/toto15_by_foo',
-            rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/special666/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special666/20180101T0000-20180101T1800/forecast/unittest',
             rwrite_root='/somwhere/lies/toto15_by_foo'),
         dict(
             uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/other_stuff@toto15/20180101T0000-20180101T1800/forecast/unittest',
-            rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/other_stuff/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/other_stuff/20180101T0000-20180101T1800/forecast/unittest',
             rread_root='/somwhere/lies/toto15_by_foo',
-            rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/other_stuff/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/other_stuff/20180101T0000-20180101T1800/forecast/unittest',
             rwrite_root='/somwhere/lies/toto15_by_foo'),
         dict(
             uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special1@toto16/20180101T0000-20180101T1800/forecast/unittest',
-            rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/special1/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special1/20180101T0000-20180101T1800/forecast/unittest',
             rread_root='/somwhere/lies/masked_guy',
-            rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/special1/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special1/20180101T0000-20180101T1800/forecast/unittest',
             rwrite_root='/somwhere/lies/masked_guy'),
-        # To times in a row (to test the cache)
+        # Two times in a row (to test the cache)
         dict(
             uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special1@toto16/20180101T0000-20180101T1800/forecast/unittest',
-            rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/special1/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special1/20180101T0000-20180101T1800/forecast/unittest',
             rread_root='/somwhere/lies/masked_guy',
-            rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/special1/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special1/20180101T0000-20180101T1800/forecast/unittest',
             rwrite_root='/somwhere/lies/masked_guy'),
         dict(
             uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/nope@toto16/20180101T0000-20180101T1800/forecast/unittest',
-            rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/nope/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/nope/20180101T0000-20180101T1800/forecast/unittest',
             rread_root='~toto16',
-            rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/nope/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/nope/20180101T0000-20180101T1800/forecast/unittest',
             rwrite_root='~toto16'),
         dict(uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@titi/20180101T0000-20180101T1800/forecast/unittest',
-             rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+             rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
              rread_root='~titi',
-             rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+             rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
              rwrite_root='~titi'),
         dict(
             uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@self/20180101T0000-20180101T1800/forecast/unittest',
-            rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
             rread_root='~',
-            rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
             rwrite_root='~'),
+    ]
+
+    _REMAPS_CONFIGURABLE_BUCKET = [
+        # Vortex Free
+        dict(uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@unittest/20180101T0000A/forecast/unittest',
+             rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@unittest/20180101T0000A/forecast/unittest',
+             rread_root='',
+             rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@unittest/20180101T0000A/forecast/unittest',
+             rwrite_root=''),
+        dict(uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@unittest/forecast/unittest',
+             rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@unittest/forecast/unittest',
+             rread_root='',
+             rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@unittest/forecast/unittest',
+             rwrite_root=''),
+        dict(uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@tata/20180101T0000-20180101T1800/forecast/unittest',
+             rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@tata/20180101T0000-20180101T1800/forecast/unittest',
+             rread_root='',
+             rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@tata/20180101T0000-20180101T1800/forecast/unittest',
+             rwrite_root=''),
+        dict(uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@toto15/20180101T0000-20180101T1800/forecast/unittest',
+             rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@toto15/20180101T0000-20180101T1800/forecast/unittest',
+             rread_root='',
+             rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@toto15/20180101T0000-20180101T1800/forecast/unittest',
+             rwrite_root=''),
+        dict(
+            uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special666@toto15/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special666@toto15/20180101T0000-20180101T1800/forecast/unittest',
+            rread_root='',
+            rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special666@toto15/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite_root=''),
+        dict(
+            uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/other_stuff@toto15/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/other_stuff@toto15/20180101T0000-20180101T1800/forecast/unittest',
+            rread_root='',
+            rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/other_stuff@toto15/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite_root=''),
+        dict(
+            uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special1@toto16/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special1@toto16/20180101T0000-20180101T1800/forecast/unittest',
+            rread_root='',
+            rwrite='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special1@toto16/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite_root=''),
     ]
 
     def setUp(self):
@@ -155,20 +236,32 @@ class TestVortexArchiveStore(AbstractTestStores):
         self.sh.symlink(self.sh.path.join(DATAPATHTEST, 'store-vortex-free-testR1.ini'),
                         'test_remoteconf1.ini')
 
-    def _do_remap_asserts(self, remaps):
+    def _do_remap_asserts(self, remaps, storage=_TEST_STORAGE):
         for remap in remaps:
             puri = uriparse(remap['uri'])
             st = fp.proxy.store(scheme=puri['scheme'], netloc=puri['netloc'],
-                                storage=self._TEST_STORAGE)
+                                storage=storage)
             puri2 = st.remap_read(puri, dict())
             self.assertEqual(uriunparse(list(puri2.values())[:6]), remap['rread'])
             self.assertEqual(puri2.get('root', ''), remap['rread_root'])
+            if storage == self._TEST_BUCKET:
+                self.assertEqual(st._inarchiveformatpath(puri2),
+                                 self.sh.path.join(st.scheme, st.netloc, self._HEAD,
+                                                   puri2['path'])
+                                 )
+            else:
+                self.assertEqual(st._inarchiveformatpath(puri2),
+                                 self.sh.path.join(remap['rread_root'],
+                                                   self._HEAD,
+                                                   puri2['path'])
+                                 )
             puri2 = st.remap_write(puri, dict())
             self.assertEqual(uriunparse(list(puri2.values())[:6]), remap['rwrite'])
             self.assertEqual(puri2.get('root', ''), remap['rwrite_root'])
 
     def test_remaps1(self):
         self._do_remap_asserts(self._REMAPS)
+        self._do_remap_asserts(self._REMAPS_BUCKET, self._TEST_BUCKET)
 
     def test_remaps2(self):
         self._do_remap_asserts(self._REMAPS_CONFIGURABLE)
@@ -177,6 +270,8 @@ class TestVortexArchiveStore(AbstractTestStores):
         conf = ds.get(vortex.data.stores.VortexFreeStdBaseArchiveStore._datastore_id,
                       dict(storage=self._TEST_STORAGE))
         pickle.dumps(conf, DataStore._PICKLE_PROTOCOL)
+        # Bucket
+        self._do_remap_asserts(self._REMAPS_CONFIGURABLE_BUCKET, self._TEST_BUCKET)
 
     def test_use_cache_and_archive(self):
         st = fp.proxy.store(scheme='vortex', netloc='vortex.archive-legacy.fr',

@@ -476,11 +476,7 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
 
     def remap_read(self, remote, options):
         """Remap actual remote path to distant store path for intrusive actions."""
-        remote = copy.copy(remote)
-        xpath = remote['path'].split('/')
-        xpath[:0] = [self.system.path.sep, self.storehead]
-        remote['path'] = self.system.path.join(*xpath)
-        return remote
+        return copy.copy(remote)
 
     def remap_list(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
@@ -678,11 +674,11 @@ class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
-        actual_mappingroot = self._actual_mappingroot
-        if not self.storeroot and actual_mappingroot:
-            remote['root'] = actual_mappingroot
-            xpath[3:4] = list(xpath[3])
-        xpath[:0] = [self.system.path.sep, self.storehead]
+        if not self.actual_export_mapping:
+            actual_mappingroot = self._actual_mappingroot
+            if not self.storeroot and actual_mappingroot:
+                remote['root'] = actual_mappingroot
+                xpath[3:4] = list(xpath[3])
         remote['path'] = self.system.path.join(*xpath)
         return remote
 
@@ -732,11 +728,11 @@ class VortexFreeStdBaseArchiveStore(_VortexBaseArchiveStore, ConfigurableArchive
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].strip('/').split('/')
-        f_xpid = FreeXPid(xpath[2])
-        xpath[2] = f_xpid.id
-        xpath[:0] = [self.storehead, ]
-        if 'root' not in remote:
-            remote['root'] = self._actual_storeroot(f_xpid)
+        if not self.actual_export_mapping:
+            f_xpid = FreeXPid(xpath[2])
+            xpath[2] = f_xpid.id
+            if 'root' not in remote:
+                remote['root'] = self._actual_storeroot(f_xpid)
         remote['path'] = self.system.path.join(*xpath)
         return remote
 
@@ -790,16 +786,16 @@ class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
-        remote['root'] = self._actual_storeroot
         xpath = remote['path'].split('/')
-        if len(xpath) >= 5 and re.match(r'^\d{8}T\d{2,4}', xpath[4]):
-            # If a date is detected
-            vxdate = list(xpath[4])
-            vxdate.insert(4, '/')
-            vxdate.insert(7, '/')
-            vxdate.insert(10, '/')
-            xpath[4] = ''.join(vxdate)
-        xpath[:0] = [self.system.path.sep, self.storehead]
+        if not self.actual_export_mapping:
+            remote['root'] = self._actual_storeroot
+            if len(xpath) >= 5 and re.match(r'^\d{8}T\d{2,4}', xpath[4]):
+                # If a date is detected
+                vxdate = list(xpath[4])
+                vxdate.insert(4, '/')
+                vxdate.insert(7, '/')
+                vxdate.insert(10, '/')
+                xpath[4] = ''.join(vxdate)
         remote['path'] = self.system.path.join(*xpath)
         return remote
 
