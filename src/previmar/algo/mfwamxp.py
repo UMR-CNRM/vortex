@@ -159,12 +159,6 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             logger.info("%d winds", len(windcandidate))
             raise ValueError("No winds or too many")
 
-        # Untar SAR data if exists
-        sarcandidate = self.context.sequence.effective_inputs(role=('ObservationSpec'))
-        if len(sarcandidate) > 0:
-            rhsar = sarcandidate[0].rh
-            self.system.untar(rhsar.container.localpath())
-
         # Tweak Namelist parameters
         namcandidate = self.context.sequence.effective_inputs(role=('Namelist'),
                                                               kind=('namelist'))
@@ -179,8 +173,36 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
 
         if self.current_coupling:
             namcontents.setmacro('CDATECURA', (datedebana - self.currentbegin).compact())
+            namcontents.setmacro('IREFRA', 2)
+            namcontents.setmacro('LWCUR', True)
+        else:
+            namcontents.setmacro('IREFRA', 0)
+            namcontents.setmacro('LWCUR', False)
+
 
         namcontents.setmacro('NUMOD', self.numod)
+
+        # Untar SAR data if exists
+        sarcandidate = self.context.sequence.effective_inputs(role=('ObservationSpec'))
+        if len(sarcandidate) > 0:
+            rhsar = sarcandidate[0].rh
+            self.system.untar(rhsar.container.localpath())
+            namcontents.setmacro('LSARAS', True)
+        else:
+            namcontents.setmacro('LSARAS', False)
+
+        # Flag of assimilation of alti data if exists
+        altcandidate = self.context.sequence.effective_inputs(role=('Observation'))
+        if len(altcandidate) > 0:
+            namcontents.setmacro('LALTAS', True)
+        else:
+            namcontents.setmacro('LALTAS', False)
+
+        # Flag of assimilation
+        if len(sarcandidate)+len(altcandidate) > 0:
+            namcontents.setmacro('IASSI', 1)
+        else:
+            namcontents.setmacro('IASSI', 0)
 
         if self.soce:
             namcontents.setmacro('SOCE', self.soce)
@@ -362,6 +384,113 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
                 output_file = "reg{0:s}_{1:s}".format(self.file_out, dom)
                 sh.mv(self.fortoutput, sh.path.join(cwd, output_file), fmt='grib')
                 output_files.add(sh.path.join(cwd, output_file))
+
+        # Deal with promised resources
+        expected = [x for x in self.context.sequence.outputs()
+                    if (x.rh.provider.expected and
+                        x.rh.container.localpath() in output_files)]
+        for thispromise in expected:
+            thispromise.put(incache=True)
+
+
+class CompressionGribAlgo(ParaBlindRun):
+    """Algocomponent for compression of grib in grid_second_order."""
+    _footprint = dict(
+        info='Algo for compression of wave output grib',
+        attr = dict(
+            kind = dict(
+                values = ['grib_compression_algo'],
+            ),
+            refreshtime = dict(
+                type = int,
+                optional = True,
+                default = 20,
+            ),
+            timeout = dict(
+                type = int,
+                optional = True,
+                default = 1200,
+            ),
+        )
+    )
+
+    def execute(self, rh, opts):
+        """The algo component launchs a worker per output file."""
+        self._default_pre_execute(rh, opts)
+
+        common_i = self._default_common_instructions(rh, opts)
+        tmout = False
+
+
+        # Monitor for the input files
+        bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
+                               role='GridParameters', kind='gridpoint')
+
+        with bm:
+            while not bm.all_done or len(bm.available) > 0:
+                while bm.available:
+                    gpsec = bm.pop_available().section
+                    file_in = gpsec.rh.container.localpath()
+                    self._add_instructions(common_i,
+                                           dict(file_in=[file_in, ],))
+                    #                            grid=[self.grid, ],
+                    #                            file_out=[file_in, ]))
+
+                if not (bm.all_done or len(bm.available) > 0):
+                    # Timeout ?
+                    tmout = bm.is_timedout(self.timeout)
+                if tmout:
+                    break
+                # Wait a little bit :-)
+                time.sleep(1)
+                bm.health_check(interval=30)
+
+        self._default_post_execute(rh, opts)
+
+        for failed_file in [e.section.rh.container.localpath() for e in six.itervalues(bm.failed)]:
+            logger.error("We were unable to fetch the following file: %s", failed_file)
+            if self.fatal:
+                self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
+                                           traceback=False)
+
+        if tmout:
+            raise IOError("The waiting loop timed out")
+
+
+class _CompressionGribAlgoWorker(VortexWorkerBlindRun):
+    """Worker of the grib compression."""
+
+    _footprint = dict(
+        info = "Worker of the grib compression",
+        attr = dict(
+            kind = dict(
+                values  = ['grib_compression_algo'],
+            ),
+            # Input/Output data
+            file_in = dict(),
+            #grid = dict(
+            #    type = FPList,
+            #),
+        )
+    )
+
+    def vortex_task(self, **kwargs):  # @UnusedVariable
+        """Post-processing of a single output grib."""
+        logger.info("Starting the post-processing")
+
+        sh = self.system
+        logger.info("Compression of %s",self.file_in)
+
+        # Prepare the working directory
+        cwd = sh.pwd()
+        output_files = set()
+        with sh.cdcontext(sh.path.join(cwd, self.file_in + '.process.d'), create=True):
+
+            sh.softlink(sh.path.join(cwd, self.file_in), self.file_in)
+            self.local_spawn("output.log")
+            output_file = "{0:s}.comp".format(self.file_in)
+            sh.mv(output_file, sh.path.join(cwd, output_file), fmt='grib')
+            output_files.add(sh.path.join(cwd, output_file))
 
         # Deal with promised resources
         expected = [x for x in self.context.sequence.outputs()
