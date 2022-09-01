@@ -26,7 +26,7 @@ with echecker:
 
 @echecker.disabled_if_unavailable
 class Surfex_PreProcess(AlgoComponent):
-    """TODO: Class documentation."""
+    """Algo component to apply the required preprocessing before a SURFEX run (e.g. namelists adjustements)"""
 
     _footprint = dict(
         attr = dict(
@@ -83,7 +83,10 @@ class Surfex_PreProcess(AlgoComponent):
 
 @echecker.disabled_if_unavailable
 class Generate_Clim_TG(AlgoComponent):
-    """TODO: Class documentation."""
+    """
+    Algocomponent that generates a file of initial temperature to initialize the soil
+    from surfex meteorological forcing files
+    """
 
     _footprint = dict(
         attr = dict(

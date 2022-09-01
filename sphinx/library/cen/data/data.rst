@@ -1,5 +1,5 @@
-:mod:`cen.data` --- TODO Module Header
-======================================
+:mod:`cen.data` --- Data involved in S2M simulations
+====================================================
 
 .. automodule:: cen.data
    :synopsis: TODO Module Synopsis

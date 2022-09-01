@@ -1,8 +1,8 @@
-:mod:`cen.algo.postprocessing` --- TODO description
-===================================================
+:mod:`cen.algo.postprocessing` --- Post-processing of S2M simulations
+======================================================================
 
 .. automodule:: cen.algo.postprocessing
-   :synopsis: TODO description
+   :synopsis: Algocomponents for post-processing of S2M simulations
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

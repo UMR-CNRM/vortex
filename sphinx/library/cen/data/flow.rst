@@ -1,8 +1,8 @@
-:mod:`cen.data.flow` --- TODO Module Header
-===========================================
+:mod:`cen.data.flow` --- Resources specific to CEN (input-output of S2M simulations)
+=====================================================================================
 
 .. automodule:: cen.data.flow
-   :synopsis: TODO Module Synopsis
+   :synopsis: Resources specific to CEN (input-output of S2M simulations)
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

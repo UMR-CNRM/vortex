@@ -265,14 +265,12 @@ class Prep(InitialCondition):
 
 
 class SnowObs(GeoFlowResource):
-    """Any snow observations in netcdf format"""
+    """Abstract class for snow observations in netcdf format (unknown time management)"""
+    _abstract = True
     _footprint = [
         dict(
             info = 'Observations of snow',
             attr = dict(
-                kind = dict(
-                    values = ['SnowObservations'],
-                ),
                 model = dict(
                     values = ['obs']
                 ),
@@ -314,6 +312,19 @@ class SnowObs_Period(SnowObs):
         cendateperiod_deco,
         dict(
             info = 'Time series of snow observations of snow for model evaluation',
+            attr = dict(
+                kind=dict(
+                    values=['SnowObservations'],
+                ),
+                datebegin=dict(
+                    info="First date of the observation file",
+                    type=Date,
+                ),
+                dateend=dict(
+                    info="Last date of the observation file",
+                    type=Date,
+                ),
+            )
         )
     ]
 
@@ -328,6 +339,9 @@ class SnowObs_1date(SnowObs):
         dict(
             info='Instantaneous snow observations for assimilation',
             attr=dict(
+                kind=dict(
+                    values=['SnowObservations'],
+                ),
                 datevalidity=dict(
                     info="Validity date of the observation file",
                     type=Date,
@@ -464,13 +478,8 @@ class SafranPackedFiles(GeoFlowResource):
                 values  = ['safran'],
             ),
             nativefmt = dict(
-                values  = ['tar', 'tar.gz'],
+                values = ['tar', 'tar.gz'],
                 default = 'tar'
-            ),
-            source = dict(
-                values   = ['arpege', 'cep', 'surfaceobs', 'neb'],
-                default  = None,
-                optional = True,
             ),
             begindate = a_date,
             enddate   = a_date,
@@ -480,21 +489,3 @@ class SafranPackedFiles(GeoFlowResource):
     @property
     def realkind(self):
         return self.kind
-
-    def reanalysis_basename(self):
-        """
-        Basename of input files for SAFRAN reanalysis.
-        Since v1.8.3 and the introduction of SafranPackedFiles resources,
-        the reanalysis also use this type of resources.
-        """
-        if self.source == 'arpege':
-            return 'p' + self.begindate.yy + self.enddate.yy + '.' + self.nativefmt
-        elif self.source == 'cep':
-            return 'cep_' + self.begindate.yy + self.enddate.yy
-        elif self.source == 'surfaceobs':
-            return 'rs' + self.begindate.yy + self.enddate.yy + '.' + self.nativefmt
-        elif self.source == 'neb':
-            return 'n' + self.begindate.yy + self.enddate.yy + '.' + self.nativefmt
-        else:
-            print('ERROR : Missing "source" information to build resource file name')
-

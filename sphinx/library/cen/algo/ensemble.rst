@@ -1,8 +1,8 @@
-:mod:`cen.algo.ensemble` --- TODO description
-=============================================
+:mod:`cen.algo.ensemble` --- Ensemble S2M simulations
+======================================================
 
 .. automodule:: cen.algo.ensemble
-   :synopsis: TODO description
+   :synopsis: Algocomponents for ensemble S2M simulations
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
