@@ -758,7 +758,7 @@ class SytistWorker(_SafranWorker):
                     forcing_to_modify.add_standard_names()
                     forcing_to_modify.close()
 
-        if 'rc' in rdict.keys() and isinstance(rdict['rc'], S2MExecutionError):
+        if 'rc' in rdict.keys() and (isinstance(rdict['rc'], S2MExecutionError) or isinstance(rdict['rc'], InputCheckerError)):
             self.system.remove('FORCING_massif.nc')
             self.system.remove('FORCING_postes.nc')
 
