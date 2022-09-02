@@ -179,7 +179,6 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             namcontents.setmacro('IREFRA', 0)
             namcontents.setmacro('LWCUR', False)
 
-
         namcontents.setmacro('NUMOD', self.numod)
 
         # Untar SAR data if exists
@@ -199,7 +198,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             namcontents.setmacro('LALTAS', False)
 
         # Flag of assimilation
-        if len(sarcandidate)+len(altcandidate) > 0:
+        if len(sarcandidate) + len(altcandidate) > 0:
             namcontents.setmacro('IASSI', 1)
         else:
             namcontents.setmacro('IASSI', 0)
@@ -421,7 +420,6 @@ class CompressionGribAlgo(ParaBlindRun):
         common_i = self._default_common_instructions(rh, opts)
         tmout = False
 
-
         # Monitor for the input files
         bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
                                role='GridParameters', kind='gridpoint')
@@ -468,9 +466,6 @@ class _CompressionGribAlgoWorker(VortexWorkerBlindRun):
             ),
             # Input/Output data
             file_in = dict(),
-            #grid = dict(
-            #    type = FPList,
-            #),
         )
     )
 
@@ -479,7 +474,7 @@ class _CompressionGribAlgoWorker(VortexWorkerBlindRun):
         logger.info("Starting the post-processing")
 
         sh = self.system
-        logger.info("Compression of %s",self.file_in)
+        logger.info("Compression of %s", self.file_in)
 
         # Prepare the working directory
         cwd = sh.pwd()

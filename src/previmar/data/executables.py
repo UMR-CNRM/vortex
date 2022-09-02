@@ -204,7 +204,6 @@ class FiltrageGrib(Script):
         return 'filteringGrib'
 
 
-
 class FiltrageGribWave(FiltrageGrib):
     """Base class for Filtering Grib (Pmer, U,V 10-meters wind) on Model Grid."""
     _footprint = [
@@ -597,9 +596,6 @@ class CompressionGrib(Script):
                 kind = dict(
                     values = ['CompressingGrib']
                 ),
-                #model = dict(
-                 #   values = ['mfwam'],
-                #),
                 gvar = dict(
                     default  = 'wave_compression_grib',
                     values   = ['wave_compression_grib']
