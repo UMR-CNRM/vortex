@@ -82,7 +82,7 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: MasterWavesbis
-      :show-inheritance:
+   :show-inheritance:
    :members:
    :member-order: alphabetical
 
@@ -117,6 +117,6 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: CompressionGrib
-      :show-inheritance:
+   :show-inheritance:
    :members:
    :member-order: alphabetical

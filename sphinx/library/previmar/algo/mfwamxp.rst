@@ -25,6 +25,6 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: CompressionGribAlgo
-      :show-inheritance:
+   :show-inheritance:
    :members:
    :member-order: alphabetical
