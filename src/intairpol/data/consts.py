@@ -65,8 +65,13 @@ class GribTemplate(GenvModelGeoResource):
                 optional = True,
                 default  = 2,
             ),
+            source = dict(
+                values   = ['PREVAIR', 'CAMS'],
+                default = 'PREVAIR',
+                optional = True,
+            ),
             gvar = dict(
-                default  = 'GRIB_TEMPLATE_PREVAIR_[geometry::area]'
+                default  = 'GRIB_TEMPLATE_[source]_[geometry::area]'
             ),
         )
     )

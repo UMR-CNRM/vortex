@@ -165,90 +165,117 @@ class MocageDomainsConfTool(ConfTool):
 
             >>> mct = MocageDomainsConfTool(kind='mocagedomains',
             ...                             config=dict(
-            ...                                 actives=('MACC01', 'GLOB22'),
+            ...                                 actives=('MACC01', 'GLOB11'),
             ...                                 domains=dict(
             ...                                     GLOB11=dict(source_app='arpege',
-            ...                                                 source_conf='4dvarfr',
-            ...                                                 source_cutoff='assim',
-            ...                                                 source_model='arpege',
-            ...                                                 source_geometry='global1798',
-            ...                                                 atm_cpl_steps='0-finalterm-1',
-            ...                                                 chem_cpl_steps='0-finalterm-3',
-            ...                                                 surf_cpl_steps='0-finalterm-3',
-            ...                                                 post_steps='0-12-3,18-finalterm-6',
-            ...                                                 post_outgrib2='0-12-3,18-finalterm-6',
-            ...                                                 restart_steps='0-finalterm-24',
-            ...                                                 stats_steps='0-finalterm-24',
-            ...                                                 atm_cpl_fcst_steps='0-48-1,48-72-3,72-96-6', ),
+            ...                                             source_conf='4dvarfr',
+            ...                                             source_cutoff='production',
+            ...                                             source_model='arpege',
+            ...                                             source_geometry='global1798',
+            ...                                             atm_cpl_steps=dict(production='0-72-1,72-finalterm-3',
+            ...                                                                assim='0-finalterm-1'),
+            ...                                             chem_cpl_steps='0-finalterm-1',
+            ...                                             surf_cpl_steps='0-finalterm-24',
+            ...                                             atm_cpl_delta=dict(production='PT06H',
+            ...                                                                assim='PT00H'),
+            ...                                             post_steps='0-finalterm-1',
+            ...                                             post_outgrib2=dict(
+            ...                                                            production='0-48-1,48-72-3,72-finalterm-6',
+            ...                                                            assim=''),
+            ...                                             restart_steps='0-finalterm-24',
+            ...                                             stats_steps='0-finalterm-24',
+            ...                                             atm_cpl_fcst_steps='0-72-1,72-96-3', ),
             ...                                     MACC01=dict(source_app='ifs',
-            ...                                                 source_conf='determ',
-            ...                                                 source_model='ifs',
-            ...                                                 atm_cpl_delta=dict(production='PT24H',
-            ...                                                                    assim='PT12H'),
-            ...                                                 surf_cpl_delta='PT24H',
-            ...                                                 atm_cpl_steps=['0-6-1', '9-finalterm-3'],
-            ...                                                 surf_cpl_steps='0-finalterm-3',
-            ...                                                 chem_cpl_steps='0-finalterm-3',
-            ...                                                 post_steps='',
-            ...                                                 post_outgrib2='',
-            ...                                                 restart_steps='0-finalterm-24',
-            ...                                                 stats_steps='0-finalterm-24',
-            ...                                                 atm_cpl_fcst_steps='0-48-1,48-72-3,72-96-6', ),
-            ...                                     GLOB22=dict(is_like='MACC01'), ),
-            ...                                 finalterms=dict(production={'00':72, 'default':48},
+            ...                                             source_conf='determ',
+            ...                                             source_model='ifs',
+            ...                                             atm_cpl_delta=dict(production='PT12H',
+            ...                                                                assim='PT00H'),
+            ...                                             surf_cpl_delta=dict(production='PT12H',
+            ...                                                                assim='PT00H'),
+            ...                                             atm_cpl_steps=dict(production=['0-72-1,72-finalterm-3'],
+            ...                                                                assim='0-finalterm-1'),
+            ...                                             surf_cpl_steps='0-finalterm-24',
+            ...                                             chem_cpl_steps='0-finalterm-1',
+            ...                                             post_steps='0-finalterm-1',
+            ...                                             post_outgrib2=dict(
+            ...                                                            production='0-48-1,48-72-3,72-finalterm-6',
+            ...                                                            assim='0-finalterm-1'),
+            ...                                             restart_steps='0-finalterm-24',
+            ...                                             stats_steps='0-finalterm-24',
+            ...                                             atm_cpl_fcst_steps='0-72-1,72-96-3', ),
+            ...                                     GLOB22=dict(is_like='MACC01'),
+            ...                                     GLOBMOC05=dict(is_like='GLOB11'), ),
+            ...                                 finalterms=dict(production={'00':96, 'default':96},
             ...                                                 assim=24), )
             ...                             )
             >>> print(mct.ontime_domains('assim', 0)['GLOB11'])  # doctest: +NORMALIZE_WHITESPACE
             source_app      : arpege
             source_conf     : 4dvarfr
-            source_cutoff   : assim
+            source_cutoff   : production
             source_model    : arpege
             source_geometry : global1798
             atm_cpl_delta   : PT0S
             chem_cpl_delta  : PT0S
             surf_cpl_delta  : PT0S
             atm_cpl_steps   : 0-finalterm-1
-            chem_cpl_steps  : 0-finalterm-3
-            surf_cpl_steps  : 0-finalterm-3
-            post_steps      : 0-12-3,18-finalterm-6
-            post_outgrib2   : 0-12-3,18-finalterm-6
+            chem_cpl_steps  : 0-finalterm-1
+            surf_cpl_steps  : 0-finalterm-24
+            post_steps      : 0-finalterm-1
+            post_outgrib2   :
             restart_steps   : 0-finalterm-24
             stats_steps     : 0-finalterm-24
-            atm_cpl_fcst_steps: 0-48-1,48-72-3,72-96-6
+            atm_cpl_fcst_steps: 0-72-1,72-96-3
+            >>> print(mct.ontime_domains('assim', 0)['GLOBMOC05'])  # doctest: +NORMALIZE_WHITESPACE
+            source_app      : arpege
+            source_conf     : 4dvarfr
+            source_cutoff   : production
+            source_model    : arpege
+            source_geometry : global1798
+            atm_cpl_delta   : PT0S
+            chem_cpl_delta  : PT0S
+            surf_cpl_delta  : PT0S
+            atm_cpl_steps   : 0-finalterm-1
+            chem_cpl_steps  : 0-finalterm-1
+            surf_cpl_steps  : 0-finalterm-24
+            post_steps      : 0-finalterm-1
+            post_outgrib2   :
+            restart_steps   : 0-finalterm-24
+            stats_steps     : 0-finalterm-24
+            atm_cpl_fcst_steps: 0-72-1,72-96-3
             >>> print(mct.ontime_domains('assim', 0)['MACC01'])  # doctest: +NORMALIZE_WHITESPACE
             source_app      : ifs
             source_conf     : determ
             source_cutoff   : production
             source_model    : ifs
             source_geometry : None
-            atm_cpl_delta   : PT43200S
-            chem_cpl_delta  : PT43200S
-            surf_cpl_delta  : P1DT0S
-            atm_cpl_steps   : 0-6-1,9-finalterm-3
-            chem_cpl_steps  : 0-finalterm-3
-            surf_cpl_steps  : 0-finalterm-3
-            post_steps      :
-            post_outgrib2   :
+            atm_cpl_delta   : PT0S
+            chem_cpl_delta  : PT0S
+            surf_cpl_delta  : PT0S
+            atm_cpl_steps   : 0-finalterm-1
+            chem_cpl_steps  : 0-finalterm-1
+            surf_cpl_steps  : 0-finalterm-24
+            post_steps      : 0-finalterm-1
+            post_outgrib2   : 0-finalterm-1
             restart_steps   : 0-finalterm-24
             stats_steps     : 0-finalterm-24
-            atm_cpl_fcst_steps: 0-48-1,48-72-3,72-96-6
+            atm_cpl_fcst_steps: 0-72-1,72-96-3
             >>> print(mct.ontime_domains('assim', 0)['GLOB22'])  # doctest: +NORMALIZE_WHITESPACE
             source_app      : ifs
             source_conf     : determ
             source_cutoff   : production
             source_model    : ifs
             source_geometry : None
-            atm_cpl_delta   : PT43200S
-            chem_cpl_delta  : PT43200S
-            surf_cpl_delta  : P1DT0S
-            atm_cpl_steps   : 0-6-1,9-finalterm-3
-            chem_cpl_steps  : 0-finalterm-3
-            surf_cpl_steps  : 0-finalterm-3
-            post_steps      :
-            post_outgrib2   :
+            atm_cpl_delta   : PT0S
+            chem_cpl_delta  : PT0S
+            surf_cpl_delta  : PT0S
+            atm_cpl_steps   : 0-finalterm-1
+            chem_cpl_steps  : 0-finalterm-1
+            surf_cpl_steps  : 0-finalterm-24
+            post_steps      : 0-finalterm-1
+            post_outgrib2   : 0-finalterm-1
             restart_steps   : 0-finalterm-24
             stats_steps     : 0-finalterm-24
-            atm_cpl_fcst_steps: 0-48-1,48-72-3,72-96-6
+            atm_cpl_fcst_steps: 0-72-1,72-96-3
 
         In **domains** definitions:
 
@@ -276,12 +303,13 @@ class MocageDomainsConfTool(ConfTool):
         The list of active domains/geometries::
 
             >>> print(', '.join(mct.all_active('assim', '00')))
-            MACC01, GLOB22
+            MACC01, GLOB11
 
         Sometimes it is necessary to filter only active domains from a larger list::
 
-            >>> print(', '.join(mct.grep_active('assim', '00', 'GLOB11', 'GLOB22')))
-            GLOB22
+            >>> print(', '.join(mct.grep_active('assim', '00', 'GLOB11', 'GLOB22',
+            ...                'GLOBMOC05')))
+            GLOB11
 
         Or to retrieve the name of the first active domain::
 
@@ -291,31 +319,36 @@ class MocageDomainsConfTool(ConfTool):
         The dictionary that associates source_apps and geometries::
 
             >>> (mct.source_apps('assim', '00') ==
-            ...  {'geometry': {'GLOB11': 'arpege', 'MACC01': 'ifs', 'GLOB22': 'ifs'}})
+            ...  {'geometry': {'GLOB11': 'arpege', 'MACC01': 'ifs', 'GLOB22': 'ifs',
+            ...                'GLOBMOC05': 'arpege'}})
             True
 
         The dictionary that associates source_confs and geometries::
 
             >>> (mct.source_confs('assim', '00') ==
-            ...  {'geometry': {'GLOB11': '4dvarfr', 'MACC01': 'determ', 'GLOB22': 'determ'}})
+            ...  {'geometry': {'GLOB11': '4dvarfr', 'MACC01': 'determ', 'GLOB22': 'determ',
+            ...                'GLOBMOC05': '4dvarfr'}})
             True
 
         The dictionary that associates source_cutoffs and geometries::
 
             >>> (mct.source_cutoffs('assim', '00') ==
-            ...  {'geometry': {'GLOB11': 'assim', 'MACC01': 'production', 'GLOB22': 'production'}})
+            ...  {'geometry': {'GLOB11': 'production', 'MACC01': 'production', 'GLOB22': 'production',
+            ...                'GLOBMOC05': 'production'}})
             True
 
         The dictionary that associates source_model and geometries::
 
             >>> (mct.source_models('assim', '00') ==
-            ...  {'geometry': {'GLOB11': 'arpege', 'MACC01': 'ifs', 'GLOB22': 'ifs'}})
+            ...  {'geometry': {'GLOB11': 'arpege', 'MACC01': 'ifs', 'GLOB22': 'ifs',
+            ...                'GLOBMOC05': 'arpege'}})
             True
 
         The dictionary that associates source_geometry and geometries::
 
             >>> (mct.source_geometries('assim', '00') ==
-            ...  {'geometry': {'GLOB11': 'global1798', 'MACC01': None, 'GLOB22': None}})
+            ...  {'geometry': {'GLOB11': 'global1798', 'MACC01': None, 'GLOB22': None,
+            ...                'GLOBMOC05': 'global1798'}})
             True
 
         The dictionaries that associates coupling data's date and geometries
@@ -323,81 +356,107 @@ class MocageDomainsConfTool(ConfTool):
 
             >>> (mct.atm_cpl_dates('assim', '00', '2019080700') ==
             ...  {'geometry': {'GLOB11': Date('2019080700'),
-            ...                'MACC01': Date('2019080612'), 'GLOB22': Date('2019080612')}})
+            ...                'MACC01': Date('2019080700'),
+            ...                'GLOB22': Date('2019080700'),
+            ...                'GLOBMOC05': Date('2019080700')}})
             True
             >>> (mct.chem_cpl_dates('assim', '00', '2019080700') ==
             ...  {'geometry': {'GLOB11': Date('2019080700'),
-            ...                'MACC01': Date('2019080612'), 'GLOB22': Date('2019080612')}})
+            ...                'MACC01': Date('2019080700'),
+            ...                'GLOB22': Date('2019080700'),
+            ...                'GLOBMOC05': Date('2019080700')}})
             True
             >>> (mct.surf_cpl_dates('assim', '00', '2019080700') ==
             ...  {'geometry': {'GLOB11': Date('2019080700'),
-            ...                'MACC01': Date('2019080600'), 'GLOB22': Date('2019080600')}})
+            ...                'MACC01': Date('2019080700'),
+            ...                'GLOB22': Date('2019080700'),
+            ...                'GLOBMOC05': Date('2019080700')}})
             True
 
         Because of our configuration, the result is different depending on the
         *cutoff* and basetime (because ``atm_cpl_delta`` varies)::
 
             >>> (mct.atm_cpl_dates('production', '00', '2019080700') ==
-            ...  {'geometry': {'GLOB11': Date('2019080700'),
-            ...                'MACC01': Date('2019080600'), 'GLOB22': Date('2019080600')}})
+            ...  {'geometry': {'GLOB11': Date('2019080618'),
+            ...                'MACC01': Date('2019080612'),
+            ...                'GLOB22': Date('2019080612'),
+            ...                'GLOBMOC05': Date('2019080618')}})
             True
             >>> (mct.chem_cpl_dates('production', '00', '2019080700') ==
-            ...  {'geometry': {'GLOB11': Date('2019080700'),
-            ...                'MACC01': Date('2019080600'), 'GLOB22': Date('2019080600')}})
+            ...  {'geometry': {'GLOB11': Date('2019080618'),
+            ...                'MACC01': Date('2019080612'),
+            ...                'GLOB22': Date('2019080612'),
+            ...                'GLOBMOC05': Date('2019080618')}})
             True
             >>> (mct.surf_cpl_dates('production', '00', '2019080700') ==
-            ...  {'geometry': {'GLOB11': Date('2019080700'),
-            ...                'MACC01': Date('2019080600'), 'GLOB22': Date('2019080600')}})
+            ...  {'geometry': {'GLOB11': Date('2019080618'),
+            ...                'MACC01': Date('2019080612'),
+            ...                'GLOB22': Date('2019080612'),
+            ...                'GLOBMOC05': Date('2019080618')}})
             True
 
         The dictionaries that associates coupling data's terms and geometries::
 
             >>> (mct.atm_cpl_steps('assim', '00') ==
             ...  {'geometry': {'GLOB11': timerangex('0-24-1'),
-            ...                'MACC01': timerangex('0-6-1,9-24-3'),
-            ...                'GLOB22': timerangex('0-6-1,9-24-3')}})
+            ...                'MACC01': timerangex('0-24-1'),
+            ...                'GLOB22': timerangex('0-24-1'),
+            ...                'GLOBMOC05': timerangex('0-24-1')}})
             True
             >>> (mct.chem_cpl_steps('assim', '00') ==
-            ...  {'geometry': {'GLOB11': timerangex('0-24-3'),
-            ...                'MACC01': timerangex('0-24-3'), 'GLOB22': timerangex('0-24-3')}})
+            ...  {'geometry': {'GLOB11': timerangex('0-24-1'),
+            ...                'MACC01': timerangex('0-24-1'),
+            ...                'GLOB22': timerangex('0-24-1'),
+            ...                'GLOBMOC05': timerangex('0-24-1')}})
             True
             >>> (mct.surf_cpl_steps('assim', '00') ==
-            ...  {'geometry': {'GLOB11': timerangex('0-24-3'),
-            ...                'MACC01': timerangex('0-24-3'), 'GLOB22': timerangex('0-24-3')}})
+            ...  {'geometry': {'GLOB11': timerangex('0-24-24'),
+            ...                'MACC01': timerangex('0-24-24'),
+            ...                'GLOB22': timerangex('0-24-24'),
+            ...                'GLOBMOC05': timerangex('0-24-24')}})
             True
 
         A simple way to exclude the first/and last values of the steps list is provided::
 
             >>> (mct.atm_cpl_steps('assim', '00', first=False) ==
             ...  {'geometry': {'GLOB11': timerangex('1-24-1'),
-            ...                'MACC01': timerangex('1-6-1,9-24-3'),
-            ...                'GLOB22': timerangex('1-6-1,9-24-3')}})
+            ...                'MACC01': timerangex('1-24-1'),
+            ...                'GLOB22': timerangex('1-24-1'),
+            ...                'GLOBMOC05': timerangex('1-24-1')}})
             True
             >>> (mct.atm_cpl_steps('assim', '00', final=False) ==
             ...  {'geometry': {'GLOB11': timerangex('0-23-1'),
-            ...                'MACC01': timerangex('0-6-1,9-21-3'),
-            ...                'GLOB22': timerangex('0-6-1,9-21-3')}})
+            ...                'MACC01': timerangex('0-23-1'),
+            ...                'GLOB22': timerangex('0-23-1'),
+            ...                'GLOBMOC05': timerangex('0-23-1')}})
             True
             >>> (mct.atm_cpl_steps('assim', '00', first=False, final=False) ==
             ...  {'geometry': {'GLOB11': timerangex('1-23-1'),
-            ...                'MACC01': timerangex('1-6-1,9-21-3'),
-            ...                'GLOB22': timerangex('1-6-1,9-21-3')}})
+            ...                'MACC01': timerangex('1-23-1'),
+            ...                'GLOB22': timerangex('1-23-1'),
+            ...                'GLOBMOC05': timerangex('1-23-1')}})
             True
 
         By default, the coupling data's term starts at the first term listed in the settings
         and ends at ``self.finalterm`` but this can be overwritten::
 
-            >>> (mct.atm_cpl_steps('assim', 0, 12, 18) ==
+            >>> (mct.atm_cpl_steps('assim', '00', 12, 18) ==
             ...  {'geometry': {'GLOB11': timerangex('12-18-1'),
-            ...                'MACC01': timerangex('12-18-3'), 'GLOB22': timerangex('12-18-3')}})
+            ...                'MACC01': timerangex('12-18-1'),
+            ...                'GLOB22': timerangex('12-18-1'),
+            ...                'GLOBMOC05': timerangex('12-18-1')}})
             True
-            >>> (mct.chem_cpl_steps('assim', 0, 12, 18) ==
-            ...  {'geometry': {'GLOB11': timerangex('12-18-3'),
-            ...                'MACC01': timerangex('12-18-3'), 'GLOB22': timerangex('12-18-3')}})
+            >>> (mct.chem_cpl_steps('assim', '00', 12, 18) ==
+            ...  {'geometry': {'GLOB11': timerangex('12-18-1'),
+            ...                'MACC01': timerangex('12-18-1'),
+            ...                'GLOB22': timerangex('12-18-1'),
+            ...                'GLOBMOC05': timerangex('12-18-1')}})
             True
-            >>> (mct.surf_cpl_steps('assim', 0, 12) ==
-            ...  {'geometry': {'GLOB11': timerangex('12-24-3'),
-            ...                'MACC01': timerangex('12-24-3'), 'GLOB22': timerangex('12-24-3')}})
+            >>> (mct.surf_cpl_steps('assim', '00', 12) ==
+            ...  {'geometry': {'GLOB11': timerangex('24-36-24'),
+            ...                'MACC01': [timerangex('24-36-24')],
+            ...                'GLOB22': [timerangex('24-36-24')],
+            ...                'GLOBMOC05': [timerangex('24-36-24')]}})
             True
 
         For the first active domain, the coupling frequency at the begining of
@@ -406,73 +465,67 @@ class MocageDomainsConfTool(ConfTool):
             >>> mct.atm_cpl_firstfreq('assim', 0)
             Period(seconds=3600)
             >>> mct.atm_cpl_firstfreq('assim', 0, start=6)
-            Period(seconds=10800)
+            Period(seconds=3600)
             >>> mct.chem_cpl_firstfreq('assim', 0)
-            Period(seconds=10800)
+            Period(seconds=3600)
             >>> mct.surf_cpl_firstfreq('assim', 0)
-            Period(seconds=10800)
+            Period(days=1)
 
         There are equivalent methods that return values shifted by the ``(atm|chem|surf)_cpl_delta`` entry::
 
             >>> (mct.atm_cpl_shiftedsteps('assim', '00') ==
             ...  {'geometry': {'GLOB11': timerangex('0-24-1'),
-            ...                'MACC01': timerangex('12-18-1,21-36-3'),
-            ...                'GLOB22': timerangex('12-18-1,21-36-3')}})
+            ...                'MACC01': timerangex('0-24-1'),
+            ...                'GLOB22': timerangex('0-24-1'),
+            ...                'GLOBMOC05': timerangex('0-24-1')}})
             True
             >>> (mct.chem_cpl_shiftedsteps('assim', '00') ==
-            ...  {'geometry': {'GLOB11': timerangex('0-24-3'),
-            ...                'MACC01': timerangex('12-36-3'), 'GLOB22': timerangex('12-36-3')}})
+            ...  {'geometry': {'GLOB11': timerangex('0-24-1'),
+            ...                'MACC01': timerangex('0-24-1'), 'GLOB22': timerangex('0-24-1'),
+            ...                'GLOBMOC05': timerangex('0-24-1')}})
             True
             >>> (mct.surf_cpl_shiftedsteps('assim', '00') ==
-            ...  {'geometry': {'GLOB11': timerangex('0-24-3'),
-            ...                'MACC01': timerangex('24-48-3'), 'GLOB22': timerangex('24-48-3')}})
+            ...  {'geometry': {'GLOB11': timerangex('0-24-24'),
+            ...                'MACC01': timerangex('0-24-24'), 'GLOB22': timerangex('0-24-24'),
+            ...                'GLOBMOC05': timerangex('0-24-24')}})
             True
 
         Because of our configuration, the result is different depending on the
         *cutoff* and basetime (because of ``finalterms`` and ``atm_cpl_delta``):
 
             >>> (mct.atm_cpl_steps('production', '00') ==
-            ...  {'geometry': {'GLOB11': timerangex('0-72-1'),
-            ...                'MACC01': timerangex('0-6-1,9-72-3'),
-            ...                'GLOB22': timerangex('0-6-1,9-72-3')}})
+            ...  {'geometry': {'GLOB11': timerangex('0-72-1,72-96-3'),
+            ...                'MACC01': timerangex('0-72-1,72-96-3'),
+            ...                'GLOB22': timerangex('0-72-1,72-96-3'),
+            ...                'GLOBMOC05': timerangex('0-72-1,72-96-3')}})
             True
             >>> (mct.atm_cpl_shiftedsteps('production', '00') ==
-            ...  {'geometry': {'GLOB11': timerangex('0-72-1'),
-            ...                'MACC01': timerangex('24-30-1,33-96-3'),
-            ...                'GLOB22': timerangex('24-30-1,33-96-3')}})
-            True
-            >>> (mct.atm_cpl_steps('production', '12') ==
-            ...  {'geometry': {'GLOB11': timerangex('0-48-1'),
-            ...                'MACC01': timerangex('0-6-1,9-48-3'),
-            ...                'GLOB22': timerangex('0-6-1,9-48-3')}})
-            True
-            >>> (mct.atm_cpl_shiftedsteps('production', '12') ==
-            ...  {'geometry': {'GLOB11': timerangex('0-48-1'),
-            ...                'MACC01': timerangex('24-30-1,33-72-3'),
-            ...                'GLOB22': timerangex('24-30-1,33-72-3')}})
+            ...  {'geometry': {'GLOB11': timerangex('6-78-1,78-102-3'),
+            ...                'MACC01': timerangex('12-84-1,84-108-3'),
+            ...                'GLOB22': timerangex('12-84-1,84-108-3'),
+            ...                'GLOBMOC05': timerangex('6-78-1,78-102-3')}})
             True
 
         The dictionary that associates post-processing terms and geometries work the same way::
 
-            >>> (mct.post_steps('production', '12') ==
-            ...  {'geometry': {'GLOB11': timerangex('0-12-3,18-48-6'), 'MACC01':[], 'GLOB22':[]}})
-            True
             >>> (mct.post_steps('production', '00') ==
-            ...  {'geometry': {'GLOB11': timerangex('0-12-3,18-72-6'), 'MACC01':[], 'GLOB22':[]}})
+            ...  {'geometry': {'GLOB11': timerangex('0-96-1'), 'MACC01':timerangex('0-96-1'),
+            ...                'GLOB22': timerangex('0-96-1'), 'GLOBMOC05': timerangex('0-96-1')}})
             True
             >>> (mct.post_steps('production', '00', 6, 24) ==
-            ...  {'geometry': {'GLOB11': timerangex('6-12-3,18-24-6'), 'MACC01':[], 'GLOB22':[]}})
+            ...  {'geometry': {'GLOB11': timerangex('6-24-1'), 'MACC01':timerangex('6-24-1'),
+            ...                'GLOB22': timerangex('6-24-1'), 'GLOBMOC05': timerangex('6-24-1')}})
             True
 
         Conversely, the dictionary that associates restart/stats terms and geometries::
 
-            >>> (mct.restart_steps('production', '12') ==
-            ...  {'geometry': {'GLOB11': timerangex('0-48-24'), 'MACC01':timerangex('0-48-24'),
-            ...                'GLOB22':timerangex('0-48-24')}})
+            >>> (mct.restart_steps('production', '00') ==
+            ...  {'geometry': {'GLOB11': timerangex('0-96-24'), 'MACC01':timerangex('0-96-24'),
+            ...                'GLOB22':timerangex('0-96-24'), 'GLOBMOC05':timerangex('0-96-24')}})
             True
-            >>> (mct.stats_steps('production', '12') ==
-            ...  {'geometry': {'GLOB11': timerangex('0-48-24'), 'MACC01':timerangex('0-48-24'),
-            ...                'GLOB22':timerangex('0-48-24')}})
+            >>> (mct.stats_steps('production', '00') ==
+            ...  {'geometry': {'GLOB11': timerangex('0-96-24'), 'MACC01':timerangex('0-96-24'),
+            ...                'GLOB22':timerangex('0-96-24'), 'GLOBMOC05':timerangex('0-96-24')}})
             True
 
         Domains can be grouped together and used jointly (if they share the same configuration)::
@@ -482,9 +535,9 @@ class MocageDomainsConfTool(ConfTool):
             >>> print(mct.group('assim', '00', ['MACC01', 'GLOB22']).source_conf)
             determ
             >>> mct.group('assim', '00', ['MACC01', 'GLOB22']).atm_cpl_date('2019080700')
-            Date(2019, 8, 6, 12, 0)
+            Date(2019, 8, 7, 0, 0)
             >>> (mct.group('assim', '00', ['MACC01', 'GLOB22']).atm_cpl_steps() ==
-            ...  timerangex('0-6-1,9-24-3'))
+            ...  timerangex('0-24-1'))
             True
 
         Groups with only one domain also work (also it is kind of useless...)::
@@ -512,26 +565,26 @@ class MocageDomainsConfTool(ConfTool):
             >>> print(mct00A.domains['GLOB11'])  # doctest: +NORMALIZE_WHITESPACE
             source_app      : arpege
             source_conf     : 4dvarfr
-            source_cutoff   : assim
+            source_cutoff   : production
             source_model    : arpege
             source_geometry : global1798
             atm_cpl_delta   : PT0S
             chem_cpl_delta  : PT0S
             surf_cpl_delta  : PT0S
             atm_cpl_steps   : 0-finalterm-1
-            chem_cpl_steps  : 0-finalterm-3
-            surf_cpl_steps  : 0-finalterm-3
-            post_steps      : 0-12-3,18-finalterm-6
-            post_outgrib2   : 0-12-3,18-finalterm-6
+            chem_cpl_steps  : 0-finalterm-1
+            surf_cpl_steps  : 0-finalterm-24
+            post_steps      : 0-finalterm-1
+            post_outgrib2   :
             restart_steps   : 0-finalterm-24
             stats_steps     : 0-finalterm-24
-            atm_cpl_fcst_steps: 0-48-1,48-72-3,72-96-6
+            atm_cpl_fcst_steps: 0-72-1,72-96-3
 
 
         For example, to get the source_app mapping:
 
             >>> (mct00A.source_apps() ==
-            ...  {'geometry': {'GLOB11': 'arpege', 'MACC01': 'ifs', 'GLOB22': 'ifs'}})
+            ...  {'geometry': {'GLOB11': 'arpege', 'MACC01': 'ifs', 'GLOB22': 'ifs', 'GLOBMOC05': 'arpege'}})
             True
 
         Likewise, to get the finalterm:
