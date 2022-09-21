@@ -105,25 +105,32 @@ class DomainMonthClimMisc(GenericClim):
         return 'generic_clim_misc'
 
 
-class Ch4SurfEmissions(GenericClim):
-    """Class for a CH4 climatology (domain dependant).
+class ElmtEmissions(GenericClim):
+    """Class for a chemical element climatology (domain dependant).
 
     A LonlatGeometry object is needed. A Genvkey can be given
-    with a default name retrieved thanks to a GenvDomain object.
+    with a default name retrieved thanks to a GenvDomain object
+    and a specific chemical element emission.
     """
     _footprint = [
         gdomain,
         dict(
-            info = 'Ch4 climatology',
+            info = 'Elmt climatology',
             attr = dict(
                 kind = dict(
-                    values = ['emiss_ch4']
+                    values = ['emiss_elmt', 'emiss_ch4'],
+                    remap = dict(emiss_ch4 = 'emiss_elmt'),
+                ),
+                elmt = dict(
+                    values = ['surf_ch4', 'volc'],
+                    default = 'surf_ch4',
+                    optional = True,
                 ),
                 geometry = dict(
                     type = LonlatGeometry,
                 ),
                 gvar = dict(
-                    default = 'emis_surf_ch4_[gdomain]'
+                    default = 'emis_[elmt]_[gdomain]'
                 ),
             )
         )
@@ -131,7 +138,7 @@ class Ch4SurfEmissions(GenericClim):
 
     @property
     def realkind(self):
-        return 'emiss_ch4'
+        return 'emiss_elmt'
 
 
 class SurfaceSpeciesConfig(GenericClim):
