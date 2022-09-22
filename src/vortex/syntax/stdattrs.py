@@ -6,20 +6,19 @@ of attributes description that could be used in the footprint definition of any
 class which follow the :class:`footprints.Footprint` syntax.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
 import re
-import six
 
-from bronx.stdtypes.date import Date, Time, Month
+import footprints
+import six
+from bronx.stdtypes.date import Date, Month, Time
 from bronx.syntax.decorators import secure_getattr
 from bronx.system import hash as hashutils
-import footprints
-
-from .stddeco import namebuilding_append, namebuilding_insert, generic_pathname_insert
 from vortex.tools import env
 
+from .stddeco import generic_pathname_insert, namebuilding_append, namebuilding_insert
 
 #: Export a set of attributes :data:`a_model`, :data:`a_date`, etc..
 __all__ = [
@@ -29,35 +28,35 @@ __all__ = [
 ]
 
 #: Possible values for the *model* attribute.
-models = set([
-    'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro',
-    'aearp', 'pearp', 'mocage', 'mesonh', 'surfex', 'hycom', 'psy4',
-    'safran', 'ifs', 'aroifs', 'cifs', 'mfwam', 'pg1', 'alpha', 'eps',
-    'postproc', 'ww3', 'sympo', 'psym', 'petaroute', 'promethee',
-    'hycom3d', 'croco', 'alaro', 'harmoniearome'
-])
+models = {
+    'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro', 'aearp', 'pearp', 'mocage',
+    'mesonh', 'surfex', 'hycom', 'psy4', 'safran', 'ifs', 'aroifs', 'cifs', 'mfwam', 'pg1',
+    'alpha', 'eps', 'postproc', 'ww3', 'sympo', 'psym', 'petaroute', 'promethee', 'hycom3d',
+    'croco', 'alaro', 'harmoniearome'
+}
 
 #: Possible values for the most common binaries.
-binaries = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'sumo',
-                'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd',
-                'ifs', 'oops', 'assistance', 'arpifs', 'mfwam', 'mfwam_interp',
-                'ww3', 'ww3_prnc', 'ww3_bound', 'ww3_ncgrb', 'ial', 'alaro',
-                'harmoniearome'])
+binaries = {
+    'arpege', 'aladin', 'arome', 'aromeom_common', 'batodb', 'peace', 'mocage', 'sumo',
+    'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd', 'ifs', 'oops',
+    'assistance', 'arpifs', 'mfwam', 'mfwam_interp', 'ww3', 'ww3_prnc', 'ww3_bound',
+    'ww3_ncgrb', 'ial', 'alaro', 'harmoniearome'
+}
+
 #: Possible values for the most common utility programs.
-utilities = set(['batodb'])
+utilities = {'batodb'}
 
 #: Known formats
-knownfmt = set([
-    'auto', 'autoconfig', 'unknown', 'foo', 'arpifslist', 'bdmbufr_listing',
-    'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib', 'grib1', 'grib2',
-    'bufr', 'hdf5', 'obsoul', 'odb', 'ecma', 'ccma',
-    'bullx', 'sx', 'ddhpack', 'tar', 'tgz', 'rawfiles', 'binary', 'bin',
-    'obslocationpack', 'obsfirepack', 'wbcpack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr',
-    'yml', 'yaml'
-])
+knownfmt = {
+    'auto', 'autoconfig', 'unknown', 'foo', 'arpifslist', 'bdmbufr_listing', 'ascii', 'txt',
+    'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib', 'grib1', 'grib2', 'bufr', 'hdf5', 'obsoul',
+    'odb', 'ecma', 'ccma', 'bullx', 'sx', 'ddhpack', 'tar', 'tgz', 'rawfiles', 'binary', 'bin',
+    'obslocationpack', 'obsfirepack', 'wbcpack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr', 'yml',
+    'yaml'
+}
 
 #: Default attributes excluded from `repr` display
-notinrepr = set(['kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'])
+notinrepr = {'kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'}
 
 
 class DelayedEnvValue(object):
@@ -145,6 +144,7 @@ class XPid(six.text_type):
 
 class LegacyXPid(XPid):
     """Basestring wrapper for experiment ids (Olive/Oper convention)."""
+
     def __new__(cls, value):
         if len(value) != 4 or '@' in value:
             raise ValueError('XPid should be a 4 digits string')
@@ -179,13 +179,13 @@ class FreeXPid(XPid):
 opsuites = set([LegacyXPid(x) for x in (['OPER', 'DBLE', 'TEST', 'MIRR'] +
                                         ['OP{0:02d}'.format(i) for i in range(100)])])
 
-
 #: The list of experiemnt names dedicated to Vortex' demos
-demosuites = set([LegacyXPid('DEMO'), LegacyXPid('DREF')])
+demosuites = {LegacyXPid('DEMO'), LegacyXPid('DREF')}
 
 
 class Namespace(six.text_type):
     """Basestring wrapper for namespaces (as net domains)."""
+
     def __new__(cls, value):
         value = value.lower()
         full = value
@@ -240,6 +240,7 @@ class Namespace(six.text_type):
 
 class Latitude(float):
     """Bounded floating point value with N-S nice representation."""
+
     def __new__(cls, value):
         value = six.text_type(value).lower()
         if value.endswith('n'):
@@ -263,6 +264,7 @@ class Latitude(float):
 
 class Longitude(float):
     """Bounded floating point value with E-W nice representation."""
+
     def __new__(cls, value):
         value = six.text_type(value).lower()
         if value.endswith('e'):
@@ -613,5 +615,8 @@ compressionpipeline = footprints.Footprint(info='Abstract Compression Pipeline',
 def show():
     """Returns available items and their type."""
     dmod = globals()
-    for stda in sorted(filter(lambda x: x.startswith('a_') or type(dmod[x]) == footprints.Footprint, dmod.keys())):
+    for stda in sorted(filter(
+        lambda x: x.startswith('a_') or type(dmod[x]) == footprints.Footprint,
+        dmod.keys()
+    )):
         print('{0} ( {1} ) :\n  {2}\n'.format(stda, type(dmod[stda]).__name__, dmod[stda]))

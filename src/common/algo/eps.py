@@ -4,24 +4,26 @@
 AlgoComponents dedicated to computations related to the Ensemble Prediction System.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
 import copy
 import io
 import re
-import six
 
-from bronx.fancies import loggers
 import footprints
-
-from vortex.util.structs import ShellEncoder
+import six
+from bronx.compat.itertools import pairwise
+from bronx.fancies import loggers
+from bronx.stdtypes.date import Time
+from common.tools.drhook import DrHookDecoMixin
 from vortex.algo.components import BlindRun
 from vortex.layout.dataflow import intent
 from vortex.tools.grib import EcGribDecoMixin
+from vortex.util.structs import ShellEncoder
+
 from .ifsroot import IFSParallel
 from .stdpost import parallel_grib_filter
-from common.tools.drhook import DrHookDecoMixin
 
 #: No automatic export
 __all__ = []
@@ -34,19 +36,19 @@ class Svect(IFSParallel):
 
     _footprint = dict(
         info='Computation of the singular vectors.',
-        attr=dict(
-            kind=dict(
-                values=['svectors', 'svector', 'sv', 'svect', 'svarpe'],
-                remap=dict(autoremap='first'),
+        attr = dict(
+            kind = dict(
+                values   = ['svectors', 'svector', 'sv', 'svect', 'svarpe'],
+                remap    = dict(autoremap='first'),
             ),
-            conf=dict(
+            conf = dict(
                 type     = int,
                 optional = True,
-                default=601,
+                default  = 601,
             ),
-            xpname=dict(
+            xpname = dict(
                 optional = True,
-                default='SVEC',
+                default  = 'SVEC',
             ),
         )
     )
@@ -91,7 +93,8 @@ class Combi(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
             namsec.rh.reset_contents()
             if 'NAMCOEF' + kind.upper() in namsec.rh.contents:
                 logger.info("Extract the " + msg + " coefficient from the updated namelist.")
-                coeff = {'rcoef' + kind: float(namsec.rh.contents['NAMCOEF' + kind.upper()]['RCOEF' + kind.upper()])}
+                coeff = {'rcoef' + kind:
+                         float(namsec.rh.contents['NAMCOEF' + kind.upper()]['RCOEF' + kind.upper()])}
                 self.system.json_dump(coeff, 'coeff' + kind + '.out', indent=4, cls=ShellEncoder)
 
 
@@ -102,7 +105,7 @@ class CombiPert(Combi):
     _footprint = dict(
         attr = dict(
             nbpert = dict(
-                type      = int,
+                type = int,
             ),
         )
     )
@@ -130,7 +133,7 @@ class CombiSV(CombiPert):
     _footprint = dict(
         attr = dict(
             info_fname = dict(
-                default = 'singular_vectors_info.json',
+                default  = 'singular_vectors_info.json',
                 optional = True,
             ),
         )
@@ -162,7 +165,7 @@ class CombiSV(CombiPert):
         # Convert the temporary dictionary to a dictionary of tuples
         nbVect = collections.OrderedDict()
         for k, v in nbVectTmp.items():
-            nbVect[k] = _SvInfoTuple(* v)
+            nbVect[k] = _SvInfoTuple(*v)
         logger.info("Number of vectors :\n" +
                     '\n'.join(['- {0:8s}: {1.available:3d} ({1.expected:3d} expected).'.format(z, n)
                                for z, n in nbVect.items()]))
@@ -176,12 +179,14 @@ class CombiSV(CombiPert):
             namsec.rh.contents['NAMMOD']['LANAP'] = False
             namsec.rh.contents['NAMMOD']['LBRED'] = False
             logger.info("Added to NVSZONE namelist entry")
-            namsec.rh.contents['NAMOPTI']['NVSZONE'] = [v.available for v in nbVect.values()
-                                                        if v.available]  # Zones with 0 vectors are discarded
+            namsec.rh.contents['NAMOPTI']['NVSZONE'] = [
+                v.available for v in nbVect.values() if v.available
+            ]  # Zones with 0 vectors are discarded
 
             nbVectNam = namsec.rh.contents['NAMENS']['NBVECT']
             if int(nbVectNam) != totalVects:
-                logger.warning("%s singular vectors expected but only %d accounted for.", nbVectNam, totalVects)
+                logger.warning("%s singular vectors expected but only %d accounted for.",
+                               nbVectNam, totalVects)
                 logger.info("Update the total number of vectors in the NBVECT namelist entry")
                 namsec.rh.contents['NAMENS']['NBVECT'] = totalVects
 
@@ -210,9 +215,7 @@ class CombiSVunit(CombiSV):
         attr = dict(
             kind = dict(
                 values = ['sv2unitpert', 'init', 'combi_init', ],
-                remap = dict(
-                    combi_init = 'init',
-                ),
+                remap  = dict(combi_init='init',),
             ),
         )
     )
@@ -232,9 +235,7 @@ class CombiSVnorm(CombiSV):
         attr = dict(
             kind = dict(
                 values = ['sv2normedpert', 'optim', 'combi_optim', ],
-                remap = dict(
-                    remap=dict(autoremap='first'),
-                ),
+                remap  = dict(autoremap='first'),
             ),
         )
     )
@@ -256,17 +257,17 @@ class CombiIC(Combi):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = ['pert2ic', 'sscales', 'combi_sscales', ],
-                remap=dict(autoremap='first'),
+                values   = ['pert2ic', 'sscales', 'combi_sscales', ],
+                remap    = dict(autoremap='first'),
             ),
             nbic = dict(
-                alias = ('nbruns',),
-                type      = int,
+                alias    = ('nbruns',),
+                type     = int,
             ),
             nbpert = dict(
-                type      = int,
+                type     = int,
                 optional = True,
-                default = 0,
+                default  = 0,
             ),
         )
     )
@@ -306,9 +307,14 @@ class CombiIC(Combi):
             logger.info("Add the breeding coefficient to the NAMCOEFBM namelist entry.")
             namcoefbm = namsec[0].rh.contents.newblock('NAMCOEFBM')
             namcoefbm['RCOEFBM'] = bd_sections[0].rh.contents['rcoefbm']
-            nbBd = len(self.context.sequence.effective_inputs(role='BreedingPerturbedState') or
-                       [sec for sec in self.context.sequence.effective_inputs(role='PerturbedState')
-                        if 'BMHR' in sec.rh.container.filename])
+            nbBd = len(
+                self.context.sequence.effective_inputs(role='BreedingPerturbedState')
+                or [
+                    sec
+                    for sec in self.context.sequence.effective_inputs(role='PerturbedState')
+                    if 'BMHR' in sec.rh.container.filename
+                ]
+            )
             # symmetric perturbations except if analysis: one more file
             # or zero if one control ic (hypothesis: odd nbic)
             nbPert = nbPert or (nbBd - 1 if nbBd == self.nbic + 1 or
@@ -332,7 +338,7 @@ class CombiIC(Combi):
                                      prefix + '_{:03d}'.format(num + 1))
 
         logger.info("NAMMOD namelist summary: LANAP=%s, LVS=%s, LBRED=%s.",
-                    * [nammod[k] for k in ('LANAP', 'LVS', 'LBRED')])
+                    *[nammod[k] for k in ('LANAP', 'LVS', 'LBRED')])
         logger.info("Add the NBPERT=%d coefficient to the NAMENS namelist entry.", nbPert)
         namsec[0].rh.contents['NAMENS']['NBPERT'] = nbPert
 
@@ -361,9 +367,7 @@ class CombiBreeding(CombiPert):
         attr = dict(
             kind = dict(
                 values = ['fc2bredpert', 'breeding', 'combi_breeding', ],
-                remap = dict(
-                    remap=dict(autoremap='first'),
-                ),
+                remap  = dict(autoremap='first'),
             ),
         )
     )
@@ -409,10 +413,10 @@ class SurfCombiIC(BlindRun):
         attr = dict(
             kind = dict(
                 values = ['surf_pert2ic', 'surf2ic', ],
-                remap=dict(autoremap='first'),
+                remap  = dict(autoremap='first'),
             ),
             member = dict(
-                type = int,
+                type   = int,
             ),
         )
     )
@@ -439,25 +443,25 @@ class Clustering(BlindRun, EcGribDecoMixin):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = ['clustering', 'clust', ],
-                remap=dict(autoremap='first'),
+                values   = ['clustering', 'clust', ],
+                remap    = dict(autoremap='first'),
             ),
             fileoutput = dict(
                 optional = True,
-                default = '_griblist',
+                default  = '_griblist',
             ),
             nbclust = dict(
-                type = int,
+                type     = int,
             ),
             nbmembers = dict(
-                type = int,
+                type     = int,
                 optional = True,
-                access = 'rwx',
+                access   = 'rwx',
             ),
-            gribfilter_tasks=dict(
-                type=int,
-                optional=True,
-                default=8,
+            gribfilter_tasks = dict(
+                type     = int,
+                optional = True,
+                default  = 8,
             ),
         )
     )
@@ -477,6 +481,7 @@ class Clustering(BlindRun, EcGribDecoMixin):
             population = avail_json[0].rh.contents.data['population']
             self.nbmembers = len(population)
             file_list = list()
+            terms_set = set()
             for elt in population:
                 sublist_ids = list()
                 for (i, grib) in enumerate(grib_sections):
@@ -487,11 +492,27 @@ class Clustering(BlindRun, EcGribDecoMixin):
                 # Stack the gribs in file_list
                 file_list.extend(sorted([six.text_type(grib_sections[i].rh.container.localpath())
                                          for i in sublist_ids]))
+                terms_set.update([grib_sections[i].rh.resource.term for i in sublist_ids])
                 for i in reversed(sublist_ids):
                     del grib_sections[i]
         else:
             file_list = sorted([six.text_type(grib.rh.container.localpath())
                                 for grib in grib_sections])
+            terms_set = {grib.rh.resource.term for grib in grib_sections}
+
+        # determine what terms are available to the clustering algorithm
+        terms = sorted(terms_set - {Time(0)})
+        delta = {last - first for first, last in pairwise(terms)}
+        if len(delta) == 1:
+            cluststep = delta.pop().hour
+        else:
+            cluststep = -999
+            logger.error('Terms are not evenly spaced. What should we do ?')
+            logger.error('Terms=' + str(terms) + 'delta=' + str(delta))
+            logger.error('Continuing with little hope and cluststep = %d', cluststep)
+        clustdeb = terms[0].hour
+        clustfin = terms[-1].hour
+        logger.info('clustering deb=%d fin=%d step=%d', clustdeb, clustfin, cluststep)
 
         # Deal with xGribs
         file_list_cat = [f + '.concatenated' for f in file_list]
@@ -507,6 +528,11 @@ class Clustering(BlindRun, EcGribDecoMixin):
             if self.nbmembers is not None:
                 logger.info("NBRMB added to NAMCLUST namelist entry: %d", self.nbmembers)
                 namsec[0].rh.contents['NAMCLUST']['NBRMB'] = self.nbmembers
+            logger.info('Setting namelist macros ECHDEB=%d ECHFIN=%d ECHSTEP=%d',
+                        clustdeb, clustfin, cluststep)
+            namsec[0].rh.contents.setmacro('ECHDEB', clustdeb)
+            namsec[0].rh.contents.setmacro('ECHFIN', clustfin)
+            namsec[0].rh.contents.setmacro('ECHSTEP', cluststep)
             namsec[0].rh.save()
             namsec[0].rh.container.cat()
 
@@ -528,7 +554,7 @@ class Clustering(BlindRun, EcGribDecoMixin):
             with io.open('ASCII_RMCLUST', 'w') as fdrm:
                 fdrm.write("\n".join([six.text_type(i) for i in range(1, self.nbmembers + 1)]))
             with io.open('ASCII_POPCLUST', 'w') as fdpop:
-                fdpop.write("\n".join(['1', ] * self.nbmembers))
+                fdpop.write("\n".join(['1'] * self.nbmembers))
 
     def postfix(self, rh, opts):
         """Create a JSON with all the clustering informations."""
@@ -573,10 +599,10 @@ class Addpearp(BlindRun):
         attr = dict(
             kind = dict(
                 values = ['addpearp', ],
-                remap=dict(autoremap='first'),
+                remap  = dict(autoremap='first'),
             ),
             nbpert = dict(
-                type = int,
+                type   = int,
             ),
         )
     )
