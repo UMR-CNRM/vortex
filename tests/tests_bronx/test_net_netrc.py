@@ -4,42 +4,45 @@
 # Proposed patched applied: https://bugs.python.org/issue11416
 # LFM: from test import support -> from test import test_support (for ptyhon2.7)
 # LFM: test for quoted password
+# LFM: test of test.support removed
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import bronx.net.netrc as netrc
+import contextlib
 import io
 import os
 import unittest
+import shutil
 import sys
+import tempfile
 import textwrap
 
-test_support_ok = True
-try:
-    from test import support as test_support
-except ImportError:  # For python <= 2.7.13
+
+@contextlib.contextmanager
+def temporary_environment_set(** kwargs):
+    prev_store = {k: os.environ[k] for k in kwargs.keys()}
     try:
-        from test import test_support
-    except ImportError as e:
-        sys.stderr.write('{:s}: Import error < {!s} >.\n'.format(__file__, e))
-        test_support_ok = False
+        for k, v in kwargs.items():
+            os.environ[k] = v
+        yield os.environ
+    finally:
+        for k, v in prev_store.items():
+            os.environ[k] = v
 
-if test_support_ok:
-    temp_filename = test_support.TESTFN
 
-
-@unittest.skipUnless(test_support_ok, "test_support import failed.")
 class NetrcTestCase(unittest.TestCase):
 
-    def make_nrc(self, test_data):
+    @staticmethod
+    def make_nrc(test_data):
         test_data = textwrap.dedent(test_data)
         mode = 'w'
         if sys.platform != 'cygwin':
             mode += 't'
-        with io.open(temp_filename, mode) as fp:
+        with tempfile.NamedTemporaryFile(mode=mode, prefix='vortex_netrc_test_') as fp:
             fp.write(test_data)
-        self.addCleanup(os.unlink, temp_filename)
-        return netrc.netrc(temp_filename)
+            fp.flush()
+            return netrc.netrc(fp.name)
 
     def test_default(self):
         nrc = self.make_nrc("""\
@@ -135,23 +138,23 @@ class NetrcTestCase(unittest.TestCase):
     def test_security(self):
         # This test is incomplete since we are normally not run as root and
         # therefore can't test the file ownership being wrong.
-        d = test_support.TESTFN
-        os.mkdir(d)
-        self.addCleanup(test_support.rmtree, d)
-        fn = os.path.join(d, '.netrc')
-        with io.open(fn, 'wt') as f:
-            f.write("""\
-                machine foo.domain.com login bar password pass
-                default login foo password pass
-                """)
-        with test_support.EnvironmentVarGuard() as environ:
-            environ.set('HOME', d)
-            os.chmod(fn, 0o600)
-            nrc = netrc.netrc()
-            self.assertEqual(nrc.hosts['foo.domain.com'],
-                             ('bar', None, 'pass'))
-            os.chmod(fn, 0o622)
-            self.assertRaises(netrc.NetrcParseError, netrc.netrc)
+        d = tempfile.mkdtemp(prefix='vortex_netrc_test_')
+        try:
+            fn = os.path.join(d, '.netrc')
+            with io.open(fn, 'wt') as f:
+                f.write("""\
+                    machine foo.domain.com login bar password pass
+                    default login foo password pass
+                    """)
+            with temporary_environment_set(HOME=d):
+                os.chmod(fn, 0o600)
+                nrc = netrc.netrc()
+                self.assertEqual(nrc.hosts['foo.domain.com'],
+                                 ('bar', None, 'pass'))
+                os.chmod(fn, 0o622)
+                self.assertRaises(netrc.NetrcParseError, netrc.netrc)
+        finally:
+            shutil.rmtree(d)
 
     def test_handle_several_accounts_per_host(self):
         nrc = self.make_nrc("""\
