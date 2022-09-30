@@ -89,7 +89,7 @@ In this example, the **experiment** identifiers ending with ``@mf-reforecast``
 are declared as potential "proxy" experiments. For such experiments, the associated
 configuration file is located on ``hendrix.meteo.fr`` with exceptions for
 target hosts ``belenos`` and ``taranis`` that rely on local configuration files
-(Note: In this example, it is the maintainer's responsibility to ensure that
+(Note: In this example, it is the maintainers responsibility to ensure that
 configuration files located on ``hendrix``, ``belenos`` and ``taranis`` are
 consistent).
 
@@ -203,15 +203,17 @@ Description of the Vortex *Archive*
 The Vortex *Archive* may be managed using a large variety of technologies.
 However, Vortex currently uses file-based archiving systems. Such systems can be
 accessed using various protocols: Vortex should be preconfigured in order to
-determine which host and protocol need to be used.
+determine which host (aka **storage**) and protocol (aka **storetube**) need
+to be used:
 
-If a user wants to override these preconfigured values, the **storage**
-(host name) and **storetube** attributes may be added during the
-:func:`vortex.toolbox.input` or :func:`vortex.toolbox.output` calls.
-Alternatively, for a more permanent change regarding the target host, the
-``VORTEX_DEFAULT_STORAGE`` environment variable can be set. Be aware that
-it is not guaranteed to work since Vortex may lack configuration data for
-some hosts.
+* The default storage on a given target (named ``XXX``) is prescribed in
+  ``conf/target-XXX.ini`` (via the ``storage`` variable of the ``[stores]``
+  section).
+* For unconfigured targets (i.e. no corresponding ``conf/target-XXX.ini``
+  file), ``conf/target-commons.ini`` is used.
+* For a given **storage** (e.g. ``hendrix.meteo.fr``), a default **storetube**
+  is configured in ``conf/store-archive-mapping.ini``. It depends on the target
+  host/storage but also from where Vortex is running.
 
 The Vortex Provider determines the root of the data hierarchy depending on the
 **experiment** attribute:
@@ -227,13 +229,63 @@ The Vortex Provider determines the root of the data hierarchy depending on the
 * Otherwise, **experiment** should look like that:
   ``any_xp_identifier@location`` where ``location`` usually identifies a
   user-name on the *Archive*. In such a case, Vortex will consider that the
-  root of the data hierarchy is the 'vortex' directory, in the home directory
+  root of the data hierarchy is the ``vortex`` directory, in the home directory
   of the user identified by ``location``. This is the default behaviour that
   will be used most of the time. However, in Vortex's configuration it is
   possible to define "virtual" ``location`` attributes. This configuration-based
   mechanism might be interesting to designate some general-interest data
   (as opposed to personal or user specific data). A more detailed explanation
   is given in the following section.
+
+Override preconfigured values
+-----------------------------
+
+During the :func:`vortex.toolbox.input` or :func:`vortex.toolbox.output`
+calls, explicitly specifying **storage** (host name) and **storetube**
+attributes overrides the default values.
+
+Alternatively, for a more permanent change regarding the target host:
+
+* The :attr:`~vortex.gloves.Glove.default_fthost` property of the current
+  session's :class:`~vortex.gloves.Glove` can be set. If *mkjob* is used to run
+  the job, it can be easily achieved using the application's configuration
+  file: just add a ``fthost`` variable in the ``[DEFAULT]`` section or at least
+  in the section relevant to your job.
+* The ``VORTEX_ARCHIVE_HOST`` environment variable can be set.
+
+Be aware that it is not guaranteed to work since Vortex may lack configuration
+data for some hosts.
+
+Depending on **storetube**, an authentication may be required. By default,
+Vortex will user the system's logname (accessible via the **user** attribute
+of the session's :class:`~vortex.gloves.Glove`). This behaviour can be
+customised:
+
+* The :func:`~vortex.gloves.Glove.setftuser` method of the session's
+  :class:`~vortex.gloves.Glove` can be called to provide a new default
+  logname or host-specific lognames. If *mkjob* is used to run the job,
+  it can be easily achieved using the application's configuration file: just
+  add a ``ftuser`` variable in the ``[DEFAULT]`` section or at least in the
+  section relevant to your job. ``ftuser`` may be a string (to set a new
+  default) or a dictionary (to provide host-specific lognames).
+* The ``VORTEX_ARCHIVE_USER`` environment variable can be set.
+
+Local storage
+-------------
+
+Usually the Vortex *Archive* is backed on some kind of mass-archive system. For
+any reasons, it may be required to "stay" on the local machine. This can be
+achieved using the ``localhost`` value for the **storage** attribute (or in the
+:class:`~vortex.gloves.Glove`\'s :attr:`~vortex.gloves.Glove.default_fthost`).
+In such a case:
+
+* No network protocol will be used.
+* Data will be store in the ``vortex`` sub-directory of the user's home
+  directory. This default behaviour can not be changed. However, the ``vortex``
+  sub-directory may be a symbolic link pointing to a more convenient location.
+
+**storage** attributes like ``foo.bucket.localhost`` are also allowed. This
+feature won't be described here. Please refer to: :ref:`vortex_data_export`.
 
 .. _vortex_data_v_location:
 
