@@ -2,11 +2,26 @@
 # -*- coding: utf-8 -*-
 
 """
-Fetch an Uenv (and its content) and re-archive it in a bucket or directly in
-ECMWF's ECFS archive.
+Fetch an Uenv (and its content) and re-archive it in a
+bucket or directly in ECMWF's ECFS archive.
 """
 
 from __future__ import print_function, absolute_import, division, unicode_literals
+
+DOC_EPILOG = """
+The data are retrieved for the default storage. It may be tweaked using the
+VORTEX_ARCHIVE_HOST environment variable.
+
+When used at ECMWF (depending on the default storage or the VORTEX_ARCHIVE_HOST
+environment variable), you will probably want to access a remote mass-archive
+using ectrans. This will probably require the --ec-gateway and --ec-association
+options.
+
+The "Uenv" your are targeting may fetch some data using the GCO's "gget" tool.
+If you want to re-archive them, you will have to provide an alternative Uget
+location where they will be stored (e.g. --gdata-target=mylocation will cause
+the gget element "foo.01" to be re-archived in "uget:foo.01@mylocation").
+"""
 
 import argparse
 import contextlib
@@ -62,7 +77,9 @@ def parse_command_line():
     program_shortdesc = program_name + ' -- ' + __import__('__main__').__doc__.lstrip("\n")
     program_desc = program_shortdesc
     # Setup argument parser
-    parser = argparse.ArgumentParser(description=program_desc)
+    parser = argparse.ArgumentParser(description=program_desc,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     epilog=DOC_EPILOG)
     parser.add_argument("-v", "--verbose", dest="verbose", action="count",
                         help="set verbosity level [default: %(default)s]")
     dest_group = parser.add_mutually_exclusive_group(required=True)
