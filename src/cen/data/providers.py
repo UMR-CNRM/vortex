@@ -113,7 +113,7 @@ class CenSopranoDevProvider(Provider):
                     optional  = False,
                 ),
                 storage = dict(
-                    values   = ['guppy.meteo.fr', ]
+                    values   = ['guppy.meteo.fr', 'sotrtm35-sidev.meteo.fr']
                 ),
                 tube = dict(
                     optional = True,
