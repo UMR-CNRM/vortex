@@ -174,7 +174,7 @@ def mix_list(list_elements, date=None, member=None):
             seed = dateinfo.epoch * 100
         else:
             seed = 9999999
-        if memberinfo is not None:
+        if memberinfo:
             seed = seed // memberinfo
         logger.debug("The random seed is %s.", seed)
         rgen.seed(seed)
