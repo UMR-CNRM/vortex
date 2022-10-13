@@ -203,8 +203,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         else:
             namcontents.setmacro('IASSI', 0)
 
-        if self.soce:
-            namcontents.setmacro('SOCE', self.soce)
+        namcontents.setmacro('SOCE', self.soce)
 
         for i in ['PATH', 'CPATH']:
             namcontents.setmacro(i, '.')
