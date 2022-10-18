@@ -15,6 +15,7 @@ from vortex.syntax.stddeco import namebuilding_append
 __all__ = []
 
 
+@namebuilding_append('src', lambda self: [self.scope, self.source])
 class GenericConfig(StaticResource):
     """Generic class to access a pack of configuration files."""
 
@@ -64,7 +65,6 @@ class AsciiConfig(GenericConfig):
     )
 
 
-@namebuilding_append('src', lambda self: [self.scope, self.source])
 class IniConfig(GenericConfig):
     """Generic class to access a ini configuration file (e.g. for mkjob)."""
     _footprint = dict(

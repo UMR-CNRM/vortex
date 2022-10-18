@@ -58,12 +58,12 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: SnowObs_Period
+.. autoclass:: SnowObsPeriod
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: SnowObs_1date
+.. autoclass:: SnowObsOneDate
    :show-inheritance:
    :members:
    :member-order: alphabetical

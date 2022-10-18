@@ -39,74 +39,56 @@ class SodaWorker(Parallel):
                 values = ['SODA'],
                 optional = False
             ),
-            datebegin=dict(
-                type = Date,
-                optional = True
-            ),
-            dateend=dict(
-                type = Date,
-                optional = True
-            ),
             dateassim=dict(
                 type = Date,
-                optional = False
-            ),
-            members = dict(
-                info = "The members that will be processed",
-                type = footprints.FPList,
                 optional = False
             ),
         )
     )
 
+    @property
+    def mb_sections(self):
+        return sorted(
+            self.context.sequence.effective_inputs(role=('SnowpackInit', )),
+            key=lambda s: s.rh.provider.member)
+
     def prepare(self, rh, opts):
         super(SodaWorker, self).prepare(rh, opts)
-
-        self.mbdirs = ['mb{0:04d}'.format(m + 1) for m in range(len(self.members))]
-
+        mb_sections = self.mb_sections
         # symbolic links for each prep from each member dir to the soda dir
-        jj = 0
-        for dirIt in self.mbdirs:
-            self.system.symlink(dirIt + '/PREP_' + self.dateassim.ymdh + '.nc', 'PREP_' + self.dateassim.ymdHh +
-                                '_PF_ENS' + str(jj + 1) + '.nc')
-            jj += 1
+        for jj, mb_s in enumerate(mb_sections, start=1):
+            self.system.symlink(mb_s.rh.container.localpath(),
+                                'PREP_' + self.dateassim.ymdHh + '_PF_ENS' + str(jj) + '.nc')
         # symbolic link from a virtual PREP.nc to the first member (for SODA date-reading reasons)
-        self.system.symlink(self.mbdirs[0] + '/PREP_' + self.dateassim.ymdh + '.nc', 'PREP.nc')
-
-    def execute(self, rh, opts):
-        # run SODA
-        super(SodaWorker, self).execute(rh, opts)
+        self.system.symlink(mb_sections[0].rh.container.localpath(), 'PREP.nc')
 
     def postfix(self, rh, opts):
+        super(SodaWorker, self).postfix(rh, opts)
         # rename ((and mix)) surfout files for next offline assim
         # rename background preps
         # delete soda symbolic links
+        mb_sections = self.mb_sections
         self.system.remove('PREP.nc')
-        memberslist = range(1, len(self.members) + 1)
-
-        for dirIt, mb in zip(self.mbdirs, memberslist):
-            self.system.remove('PREP_' + self.dateassim.ymdHh + '_PF_ENS' + str(mb) + '.nc')
-            if self.system.path.isfile(dirIt + '/PREP.nc'):  # old task/offline case
-                self.system.remove(dirIt + '/PREP.nc')
-            self.system.mv(dirIt + "/PREP_" + self.dateassim.ymdh + ".nc", dirIt + "/PREP_" + self.dateassim.ymdh +
-                           "_bg.nc")
-            self.system.mv("SURFOUT" + str(mb) + ".nc", dirIt + "/PREP_" + self.dateassim.ymdh + ".nc")
-            self.system.symlink(dirIt + "/PREP_" + self.dateassim.ymdh + ".nc", dirIt + '/PREP.nc')
-            #  above useful only for old task/offline case
+        for jj, mb_s in enumerate(mb_sections, start=1):
+            dir_it = mb_s.rh.container.dirname
+            self.system.remove('PREP_' + self.dateassim.ymdHh + '_PF_ENS' + str(jj) + '.nc')
+            if self.system.path.isfile(self.system.path.join(dir_it, 'PREP.nc')):
+                self.system.remove(self.system.path.join(dir_it, 'PREP.nc'))
+                my_base, my_ext = self.system.path.splitext(mb_s.rh.container.localpath())
+                self.system.mv(my_base + my_ext, my_base + '_bg' + my_ext)
+                self.system.mv("SURFOUT" + str(jj) + ".nc", my_base + '.nc')
+                if dir_it == 'mb{:04d}'.format(mb_s.rh.provider.member):
+                    # useful only for old task/offline case
+                    self.system.symlink(my_base + '.nc', dir_it + '/PREP.nc')
 
         # rename particle file
-        if self.system.path.isfile('PART'):
-            self.system.mv('PART', 'PART_' + self.dateassim.ymdh + '.txt')
-        if self.system.path.isfile('BG_CORR'):
-            self.system.mv('BG_CORR', 'BG_CORR_' + self.dateassim.ymdh + '.txt')
-        if self.system.path.isfile('IMASK'):
-            self.system.mv('IMASK', 'IMASK_' + self.dateassim.ymdh + '.txt')
-        if self.system.path.isfile('ALPHA'):
-            self.system.mv('ALPHA', 'ALPHA_' + self.dateassim.ymdh + '.txt')
+        for fprefix in ('PART', 'BG_CORR', 'IMASK', 'ALPHA'):
+            if self.system.path.isfile(fprefix):
+                self.system.mv(fprefix, fprefix + '_' + self.dateassim.ymdh + '.txt')
 
 
 @echecker.disabled_if_unavailable
-class Soda_PreProcess(AlgoComponent):
+class SodaPreProcess(AlgoComponent):
     """Prepare SODA namelist according to configuration file"""
 
     _footprint = dict(
@@ -236,9 +218,6 @@ class PerturbForcingComponent(TaylorRun):
         for attribute in self.footprint_attributes:
             ddict[attribute] = getattr(self, attribute)
         return ddict
-
-    def postfix(self, rh, opts):
-        pass
 
     def execute(self, rh, opts):
         """Loop on the output members requested to apply stochastic perturbations."""

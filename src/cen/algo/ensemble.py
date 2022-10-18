@@ -759,7 +759,7 @@ class SytistWorker(_SafranWorker):
                     forcing_to_modify.close()
 
         if 'rc' in rdict.keys() and (isinstance(rdict['rc'], S2MExecutionError) or
-                isinstance(rdict['rc'], InputCheckerError)):
+                                     isinstance(rdict['rc'], InputCheckerError)):
             self.system.remove('FORCING_massif.nc')
             self.system.remove('FORCING_postes.nc')
 
@@ -977,7 +977,7 @@ class SurfexWorker(_S2MWorker):
         else:
             list_files_copy_ifnotprovided = []
             list_files_link_ifnotprovided = ["PREP.nc"]
-# here Bertrand also created links towards the forcings but in a non-standard way --> to be checked
+        # here Bertrand also created links towards the forcings but in a non-standard way --> to be checked
 
         for required_copy in list_files_copy:
             self.copy_if_exists(self.system.path.join(rundir, required_copy), required_copy)

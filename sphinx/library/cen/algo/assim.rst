@@ -17,7 +17,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Soda_PreProcess
+.. autoclass:: SodaPreProcess
    :show-inheritance:
    :members:
    :member-order: alphabetical
