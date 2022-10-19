@@ -18,6 +18,7 @@ from common.tools.drhook import DrHookDecoMixin
 from vortex.algo.components import AlgoComponentError, BlindRun, Parallel
 from vortex.algo.components import AlgoComponentDecoMixin, algo_component_deco_mixin_autodoc
 from vortex.layout.dataflow import intent
+from vortex.tools.grib import EcGribDecoMixin
 
 from .forecasts import FullPos
 
@@ -438,12 +439,14 @@ class PrepMixin(AlgoComponentDecoMixin):
     _MIXIN_EXECUTE_OVERWRITE = _execute_prep_common
 
 
-class Prep(BlindRun, PrepMixin, CouplingBaseDateNamMixin, DrHookDecoMixin):
+class Prep(BlindRun, PrepMixin, CouplingBaseDateNamMixin,
+           DrHookDecoMixin, EcGribDecoMixin):
     """Coupling/Interpolation of Surfex files (non-MPI version)."""
     pass
 
 
-class ParallelPrep(Parallel, PrepMixin, CouplingBaseDateNamMixin, DrHookDecoMixin):
+class ParallelPrep(Parallel, PrepMixin, CouplingBaseDateNamMixin,
+                   DrHookDecoMixin, EcGribDecoMixin):
     """Coupling/Interpolation of Surfex files (MPI version)."""
     pass
 
