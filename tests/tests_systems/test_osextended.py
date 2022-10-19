@@ -17,7 +17,7 @@ from vortex.tools.systems import OSExtended
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), '../data')
 
 
-class TestableOSExtended(OSExtended):
+class TmpOSExtended(OSExtended):
 
     _footprint = dict(
         attr = dict(
@@ -43,7 +43,7 @@ class TestOSExtendedBasics(unittest.TestCase):
         os.chdir(self.tmpdir)
         # Create the system
         gl = fp.proxy.glove()
-        self.sh = TestableOSExtended(glove=gl, sysname='UnitTestable')
+        self.sh = TmpOSExtended(glove=gl, sysname='UnitTestable')
         self.sh.target(inetname='unittest',
                        inifile=os.path.join(DATAPATHTEST, 'target-test.ini'),
                        sysname='Linux')

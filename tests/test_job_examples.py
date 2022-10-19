@@ -25,7 +25,7 @@ JOBSDIR = os.path.abspath(os.path.join(
 ))
 
 
-class TestJobIsolationHelper(object):
+class _JobIsolationHelper(object):
 
     def __init__(self, tmpdir):
         self._tmpdir = tmpdir
@@ -92,7 +92,7 @@ class TestJobExamples(unittest.TestCase):
         os.chdir(my_appdir)
         tmpdir = tempfile.mkdtemp(prefix='jobs_', dir='.')
         try:
-            helper = TestJobIsolationHelper(os.path.abspath(tmpdir))
+            helper = _JobIsolationHelper(os.path.abspath(tmpdir))
             os.chdir(tmpdir)
             yield helper
         finally:

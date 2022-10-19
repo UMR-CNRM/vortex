@@ -127,15 +127,15 @@ _GLOBAL_OBS = SecludedObserverBoard()
 tloglevel = 'CRITICAL'
 
 
-class TestTask(Task):
+class TmpTask(Task):
 
     def build(self):
-        super(TestTask, self).build()
+        super(TmpTask, self).build()
         _GLOBAL_OBS.notify_new(self, dict(tag=self.tag))
 
     def complete(self):
         _GLOBAL_OBS.notify_del(self, dict(tag=self.tag))
-        super(TestTask, self).complete()
+        super(TmpTask, self).complete()
 
     def refill(self, **kw):
         """Populates the vortex cache with expected input flow data.
@@ -275,10 +275,10 @@ class TestHeavyNodesStuff(unittest.TestCase):
             if steps:
                 opts['steps'] = steps
             dr = Driver(tag='job_demo_drv_' + extra, ticket=self.t,
-                        nodes=[TestTask(tag='forecast1_' + extra, ticket=self.t, **opts),
-                               TestTask(tag='forecast3_' + extra, ticket=self.t,
-                                        pleasefail=True, on_error='continue', **opts),
-                               TestTask(tag='forecast2_' + extra, ticket=self.t, **opts)],
+                        nodes=[TmpTask(tag='forecast1_' + extra, ticket=self.t, **opts),
+                               TmpTask(tag='forecast3_' + extra, ticket=self.t,
+                                       pleasefail=True, on_error='continue', **opts),
+                               TmpTask(tag='forecast2_' + extra, ticket=self.t, **opts)],
                         options=opts,
                         iniencoding='utf-8')
             self.assertEqual(dr.status, NODE_STATUS.CREATED)
@@ -371,12 +371,12 @@ class TestHeavyNodesStuff(unittest.TestCase):
                                 nodes=[
                                     Family(tag='update1', ticket=self.t,
                                            nodes=[
-                                               TestTask(tag='forecast1h', ticket=self.t, **opts)
+                                               TmpTask(tag='forecast1h', ticket=self.t, **opts)
                                            ], **opts),
                                     Family(tag='update2', ticket=self.t,
                                            active_callback=lambda s: s.conf.member == 0,
                                            nodes=[
-                                               TestTask(tag='forecast2h', ticket=self.t, **opts)
+                                               TmpTask(tag='forecast2h', ticket=self.t, **opts)
                                            ], **opts),
                                 ], **opts),
                             ], **opts),
@@ -444,10 +444,10 @@ class TestHeavyNodesStuff(unittest.TestCase):
                                 worksharename='members_share,physics_share',
                                 worksharesize=3,
                                 nodes=[
-                                    TestTask(tag='forecast1h_h2', ticket=self.t, **opts),
-                                    TestTask(tag='forecast2h_h2', ticket=self.t,
-                                             active_callback=lambda s: s.conf.rundate == '2018010100',
-                                             **opts)
+                                    TmpTask(tag='forecast1h_h2', ticket=self.t, **opts),
+                                    TmpTask(tag='forecast2h_h2', ticket=self.t,
+                                            active_callback=lambda s: s.conf.rundate == '2018010100',
+                                            **opts)
                                 ], **opts),
                             ], **opts),
                         ], ], options=opts)
@@ -504,10 +504,10 @@ class TestHeavyNodesStuff(unittest.TestCase):
                                 worksharesize=3,
                                 worksharelimit='nnodes',
                                 nodes=[
-                                    TestTask(tag='forecast1h_h3', ticket=self.t, **opts),
-                                    TestTask(tag='forecast2h_h3', ticket=self.t,
-                                             active_callback=lambda s: s.conf.rundate == '2018010100',
-                                             **opts)
+                                    TmpTask(tag='forecast1h_h3', ticket=self.t, **opts),
+                                    TmpTask(tag='forecast2h_h3', ticket=self.t,
+                                            active_callback=lambda s: s.conf.rundate == '2018010100',
+                                            **opts)
                                 ], **opts),
                             ], **opts),
                         ], ], options=opts)

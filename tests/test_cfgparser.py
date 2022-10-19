@@ -11,7 +11,8 @@ logging.basicConfig(level=logging.ERROR)
 
 from six.moves.configparser import InterpolationMissingOptionError, NoSectionError, NoOptionError
 
-from unittest import TestCase, TestLoader, TextTestRunner
+import unittest
+from unittest import TestCase
 
 from bronx.stdtypes import date
 
@@ -366,12 +367,7 @@ Localisation : HELLO"""
 
 
 if __name__ == '__main__':
-    action = TestLoader().loadTestsFromTestCase
-    tests = [UtGenericConfigParser, UtExtendedConfigParser, UtIgaCfgParser,
-             TestAppConfigDecoder, UtConfigurationTable]
-    suites = [action(elmt) for elmt in tests]
-    for suite in suites:
-        TextTestRunner(verbosity=1).run(suite)
+    unittest.main(verbosity=2)
 
 
 def get_test_class():

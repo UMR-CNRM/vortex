@@ -168,7 +168,11 @@ def capture(command, *args, **kwargs):
         sys.stdout = out
 
 
-expected_keys = """ * blop
+expected_keys = """ * att1
+ * att1                     [optional]
+ * att2
+ * att3                     [optional]
+ * blop
  * kind
  * scrontch
  * someMixedCase            [optional]
@@ -1005,6 +1009,47 @@ class utFootprint(TestCase):
 
 # Base class for footprint classes
 
+class FpTmpA(FootprintBase):
+    _footprint = dict(
+        attr=dict(
+            att1=dict(default='toto',
+                      optional=True,
+                      values=['toto', 'titi']),
+            att2=dict(type=int),
+        )
+    )
+
+
+fpatt3 = Footprint(
+    info='Abstract att1',
+    attr=dict(
+        att3=dict(default='scrontch', optional=True),
+    )
+)
+
+
+fpatt3_deco = DecorativeFootprint(fpatt3, decorator=[easy_decorator, ])
+
+
+class FpTmpB(FootprintBase):
+    _footprint = [
+        fpatt3_deco,
+        dict(
+            attr=dict(
+                att1=dict(default='titi'),
+            )
+        )
+    ]
+
+
+class FpTmpC(FpTmpB, FpTmpA):
+    _footprint = dict(
+        attr=dict(
+            att2=dict(values=[1, 2, 3])
+        )
+    )
+
+
 class utFootprintBase(TestCase):
 
     def test_metaclass_abstract(self):
@@ -1060,54 +1105,18 @@ class utFootprintBase(TestCase):
 
     def test_metaclass_inheritance_and_merging(self):
 
-        class testA(FootprintBase):
-            _footprint = dict(
-                attr=dict(
-                    att1=dict(default='toto',
-                              optional=True,
-                              values=['toto', 'titi']),
-                    att2=dict(type=int),
-                )
-            )
-
-        fpatt3 = Footprint(
-            info='Abstract att1',
-            attr=dict(
-                att3=dict(default='scrontch', optional=True),
-            )
-        )
-
-        fpatt3_deco = DecorativeFootprint(fpatt3, decorator=[easy_decorator, ])
-
-        class testB(FootprintBase):
-            _footprint = [
-                fpatt3_deco,
-                dict(
-                    attr=dict(
-                        att1=dict(default='titi'),
-                    )
-                )
-            ]
-
-        class testC(testB, testA):
-            _footprint = dict(
-                attr=dict(
-                    att2=dict(values=[1, 2, 3])
-                )
-            )
-
-        self.assertEqual(testC._footprint.attr['att1']['default'], 'titi')
-        self.assertEqual(testC._footprint.attr['att1']['optional'], False)
-        self.assertEqual(testC._footprint.attr['att1']['values'], set())
-        self.assertEqual(testC._footprint.attr['att2']['type'], int)
-        self.assertEqual(testC._footprint.attr['att2']['values'], set((1, 2, 3)))
-        self.assertEqual(testC._footprint.attr['att3']['default'], 'scrontch')
-        self.assertEqual(testC._footprint.attr['att3']['optional'], True)
+        self.assertEqual(FpTmpC._footprint.attr['att1']['default'], 'titi')
+        self.assertEqual(FpTmpC._footprint.attr['att1']['optional'], False)
+        self.assertEqual(FpTmpC._footprint.attr['att1']['values'], set())
+        self.assertEqual(FpTmpC._footprint.attr['att2']['type'], int)
+        self.assertEqual(FpTmpC._footprint.attr['att2']['values'], set((1, 2, 3)))
+        self.assertEqual(FpTmpC._footprint.attr['att3']['default'], 'scrontch')
+        self.assertEqual(FpTmpC._footprint.attr['att3']['optional'], True)
 
         # Decorator effect...
-        self.assertTrue(testB.easy_decorator_was_here)
-        self.assertTrue(testC.easy_decorator_was_here)  # Because of the MRO
-        self.assertNotIn('easy_decorator_was_here', testC.__dict__)  # But actually not defined in testC
+        self.assertTrue(FpTmpB.easy_decorator_was_here)
+        self.assertTrue(FpTmpC.easy_decorator_was_here)  # Because of the MRO
+        self.assertNotIn('easy_decorator_was_here', FpTmpC.__dict__)  # But actually not defined in testC
 
     def test_baseclass_fp1(self):
         self.assertFalse(FootprintTestOne.footprint_abstract())

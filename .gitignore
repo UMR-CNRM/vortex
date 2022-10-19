@@ -19,7 +19,7 @@ pip-log.txt
 
 # Unit test / coverage reports
 coverage_report
-.coverage
+.coverage*
 .tox
 tests/test*.log
 

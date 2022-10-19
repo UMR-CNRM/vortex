@@ -38,7 +38,7 @@ tloglevel = 'critical'
 
 
 # The test cache Storage Object
-class TestDataCache(FixedEntryCache):
+class _TmpDataCache(FixedEntryCache):
     """Cache items for the MTOOL jobs (or any job that acts like it)."""
 
     _footprint = dict(
@@ -86,7 +86,7 @@ class TestDataCache(FixedEntryCache):
 
 
 # The test Vortex Store
-class VortexCacheTestStore(_VortexCacheBaseStore):
+class VortexCacheTmpStore(_VortexCacheBaseStore):
 
     _footprint = dict(
         info = 'VORTEX MTOOL like Cache access',
@@ -136,7 +136,7 @@ class VortexCacheTestStore(_VortexCacheBaseStore):
         return self.incachefinaliseget(result_id, remote, local, options)
 
 
-class VortexCacheTestStoreBis(_VortexCacheBaseStore):
+class VortexCacheTmpStoreBis(_VortexCacheBaseStore):
 
     _footprint = dict(
         info = 'VORTEX MTOOL like Cache access (without earlyget)',
@@ -154,7 +154,7 @@ class VortexCacheTestStoreBis(_VortexCacheBaseStore):
     )
 
 
-class BasicTestMultiStore(MultiStore):
+class BasicTmpMultiStore(MultiStore):
     """Combined cache and archive legacy VORTEX stores.
 
     By '-legacy' we mean that stack resources are ignored.
@@ -177,7 +177,7 @@ class BasicTestMultiStore(MultiStore):
         return [self.netloc.firstname + d for d in ('.testcache0.fr', '.testcache.fr')]
 
 
-class TestPromiseCacheStore(PromiseCacheStore):
+class TmpPromiseCacheStore(PromiseCacheStore):
     """Some kind of vortex cache for demo expected resources."""
 
     _footprint = dict(
@@ -197,7 +197,7 @@ class TestPromiseCacheStore(PromiseCacheStore):
     )
 
 
-class VortexTestPromiseStore(VortexPromiseStore):
+class VortexTmpPromiseStore(VortexPromiseStore):
     """Combine a Promise Store for expected resources and a Demo VORTEX Store."""
 
     _footprint = dict(
@@ -219,7 +219,7 @@ class VortexTestPromiseStore(VortexPromiseStore):
 
 
 # A test delayed action... (it's just a cp)
-class TestLocalCpDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
+class TmpLocalCpDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
 
     _footprint = dict(
         info = "Just copy the data...",
@@ -252,7 +252,7 @@ class TestLocalCpDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
 
 
 # The test Vortex provider
-class VortexTest(VortexStd):
+class VortexTmp(VortexStd):
     """Standard Vortex provider (any experiment with an Olive id)."""
 
     _footprint = dict(
@@ -267,7 +267,7 @@ class VortexTest(VortexStd):
 
 # In order to test prestaging
 
-class TestCachePrestagingTool(PrestagingTool):
+class TmpCachePrestagingTool(PrestagingTool):
 
     _footprint = dict(
         info = "Process testcache pre-staging requests.",
@@ -293,7 +293,7 @@ class TestCachePrestagingTool(PrestagingTool):
 
 # Test resources
 
-class AbstractTestResource(FlowResource):
+class AbstractTmpResource(FlowResource):
 
     _abstract = True
     _footprint = dict(
@@ -310,7 +310,7 @@ class AbstractTestResource(FlowResource):
     )
 
 
-class TestResource1(AbstractTestResource):
+class TmpResource1(AbstractTmpResource):
 
     _footprint = dict(
         attr = dict(
@@ -325,7 +325,7 @@ class TestResource1(AbstractTestResource):
         return 'utest1'
 
 
-class TestResource2(AbstractTestResource):
+class TmpResource2(AbstractTmpResource):
 
     _footprint = dict(
         attr = dict(
@@ -340,7 +340,7 @@ class TestResource2(AbstractTestResource):
         return 'utest2'
 
 
-class TestResource9(AbstractTestResource):
+class TmpResource9(AbstractTmpResource):
 
     _footprint = dict(
         attr = dict(
