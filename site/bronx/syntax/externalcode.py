@@ -48,7 +48,8 @@ Example of that also checks a version number::
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from distutils.version import LooseVersion
+import re
+import sys
 import traceback
 import types
 
@@ -56,6 +57,21 @@ from bronx.fancies import loggers
 from bronx.fancies.display import join_list_in_proper_english
 
 logger = loggers.getLogger(__name__)
+
+if (sys.version_info.major == 2 or
+        (sys.version_info.major == 3 and sys.version_info.minor < 10)):
+    from distutils.version import LooseVersion as version_cb
+else:
+    # distutils is now deprecated
+    try:
+        from packaging.version import parse as version_cb
+    except ImportError:
+
+        def version_cb(version1):
+            """Crude version processing."""
+            return tuple([int(x)
+                          for x in re.sub(r'(\.0+)*$', '', version1).split(".")
+                          if x.isdigit()])
 
 
 class ExternalCodeUnavailableError(Exception):
@@ -84,7 +100,7 @@ class ExternalCodeImportChecker(object):
         if 'version' not in self._register:
             raise RuntimeError('No version registered for the {!s} package.'
                                .format(self.nickname))
-        return LooseVersion(self._register['version']) >= LooseVersion(minimal_version)
+        return version_cb(self._register['version']) >= version_cb(minimal_version)
 
     def _item_check(self, itemname, value):
         """Check the imported package's info fits."""

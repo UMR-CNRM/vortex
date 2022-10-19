@@ -504,7 +504,7 @@ class NumaNodesInfo(collections_abc.Mapping):
         nz = len(self)
         allnodes = sorted(self.keys())
         # Compute the flat distance matrix
-        flatmat = np.empty((nz * (nz - 1) // 2, ), dtype=np.int)
+        flatmat = np.empty((nz * (nz - 1) // 2, ), dtype=np.int64)
         i = 0
         for iz in allnodes:
             for jz in allnodes[iz + 1:]:
