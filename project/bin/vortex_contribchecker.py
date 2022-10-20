@@ -52,6 +52,7 @@ class ContribCheckerConfig(ConfigParser):
         super().__init__()
         self._vortexbase = vortexbase
         self._nosetesters = None
+        self._pytesters = None
         self._codechecker_interpreter = None
         self._doc_buildtarget = None
         self._doc_interpreter = None
@@ -82,6 +83,11 @@ class ContribCheckerConfig(ConfigParser):
         return int(self.get('settings', 'nosetests_ntasks', fallback=3))
 
     @property
+    def pytests_ntasks(self):
+        """During unit-testing with pytest, the number of parallel threads to be used."""
+        return int(self.get('settings', 'pytests_ntasks', fallback=3))
+
+    @property
     def codechecker_ntasks(self):
         """During the codestyle check, the number of parallel tasks to be used."""
         return int(self.get('settings', 'codechecker_ntasks', fallback=1))
@@ -106,6 +112,22 @@ class ContribCheckerConfig(ConfigParser):
                     self._check_exists(n, 'nose launcher')
                     self._nosetesters[k] = n
         return self._nosetesters
+
+    @property
+    def pytesters(self):
+        """The various ``pytests`` executable to run the unit tests with.
+
+        :rtype: dict
+        :return: A dictionary that associates a label and a path to a nosetests
+                 utility
+        """
+        if self._pytesters is None:
+            self._pytesters = dict()
+            if self.has_section('pytesters'):
+                for k, n in self.items('pytesters'):
+                    self._check_exists(n, 'pytest launcher')
+                    self._pytesters[k] = n
+        return self._pytesters
 
     def _docinit(self):
         """Read all of the documentation related configuration data."""
@@ -253,13 +275,13 @@ class AbstractChecker(metaclass=abc.ABCMeta):
         pass
 
 
-class NoseChecker(AbstractChecker):
+class AbstractUnitTestChecker(AbstractChecker):
     """Run Vortex's unit-tests using various Python's version."""
 
     _TEST_SUBDIR = 'tests'
 
     #: Argument to be added to the nosetests command line
-    _DEFAULT_ARGS = ['--no-byte-compile']
+    _DEFAULT_ARGS = []
 
     #: A list of tests not to be launched in parallel
     _CRITCALTESTS = set()
@@ -276,12 +298,22 @@ class NoseChecker(AbstractChecker):
     #: Seconds (the longest test should not last more than...)
     _TIMEOUT = 120
 
+    #: The associated configuration in the configuration file
+    _CONFIGFILE_SECTION = ''
+
+    #: The test launcher name
+    _TESTLAUNCHER_NAME = ''
+
     def __init__(self, config):
         """
         :param ContribCheckerConfig config: Configuration data for this run.
         """
         super().__init__(config)
         self._allresults = dict()
+
+    @property
+    def _ntasks(self):
+        raise NotImplementedError
 
     @contextlib.contextmanager
     def _spawn_switch(self):
@@ -310,7 +342,7 @@ class NoseChecker(AbstractChecker):
 
     def _spawn(self, cmd, *args, **kwargs):
         """Run the nosetests command and automatically adds some arguments."""
-        args = self._DEFAULT_ARGS + ['--where={:s}'.format(self._testdir)] + list(args)
+        args = self._DEFAULT_ARGS + list(args)
         return super()._spawn(cmd, *args, **kwargs)
 
     def _discover_tests(self):
@@ -338,20 +370,22 @@ class NoseChecker(AbstractChecker):
         """Run Vortex's unit-tests."""
         critical, todo = self._discover_tests()
         # Parallel run of all nose tests
-        for nkey, ntester in self.config.nosetesters.items():
-            logger.info("Starting tests with %s's nose (%s)", nkey, ntester)
+        for nkey, ntester in getattr(self.config, self._CONFIGFILE_SECTION).items():
+            logger.info("Starting tests with %s's %s (%s)",
+                        nkey, self._TESTLAUNCHER_NAME, ntester)
             self._allresults[nkey] = dict()
             for a_test in critical:
                 self._allresults[nkey][a_test] = self._spawn(ntester, a_test)
             with self._spawn_switch():
                 with concurrent.futures.ThreadPoolExecutor(
-                    max_workers=self.config.nosetests_ntasks
+                        max_workers=self._ntasks
                 ) as executor:
                     bareresults = executor.map(self._spawn, [ntester, ] * len(todo), todo,
                                                timeout=self._TIMEOUT)
             self._allresults[nkey].update({t: r for t, r in zip(todo, bareresults)})
-            logger.info("Done     testing with %s's nose", nkey)
-        logger.debug('nose overall results:\n%s', pprint.pformat(self._allresults))
+            logger.info("Done     testing with %s's %s", nkey, self._TESTLAUNCHER_NAME)
+        logger.debug('%s overall results:\n%s',
+                     self._TESTLAUNCHER_NAME, pprint.pformat(self._allresults))
 
     def dumperrors(self):
         """Display the test output if something went wrong with a test."""
@@ -369,7 +403,48 @@ class NoseChecker(AbstractChecker):
         for nkey, nresults in self._allresults.items():
             accrc = sum([r[0] for r in nresults.values()])
             print('[{:s}] Unit-tests with Python {:s} ({:s})'
-                  .format(self._rc_display(accrc), nkey, self.config.nosetesters[nkey]))
+                  .format(self._rc_display(accrc), nkey, getattr(self.config, self._CONFIGFILE_SECTION)[nkey]))
+
+
+class NoseChecker(AbstractUnitTestChecker):
+    """Run Vortex's unit-tests using various Python's version."""
+
+    #: Argument to be added to the nosetests command line
+    _DEFAULT_ARGS = ['--no-byte-compile']
+
+    #: The associated configuration in the configuration file
+    _CONFIGFILE_SECTION = 'nosetesters'
+
+    #: The test launcher name
+    _TESTLAUNCHER_NAME = 'nose'
+
+    @property
+    def _ntasks(self):
+        return self.config.nosetests_ntasks
+
+    def _spawn(self, cmd, *args, **kwargs):
+        """Run the nosetests command and automatically adds some arguments."""
+        args = self._DEFAULT_ARGS + ['--where={:s}'.format(self._testdir)] + list(args)
+        return super()._spawn(cmd, *args, **kwargs)
+
+
+class PyTestChecker(AbstractUnitTestChecker):
+    """Run Vortex's unit-tests using various Python's version."""
+
+    #: The associated configuration in the configuration file
+    _CONFIGFILE_SECTION = 'pytesters'
+
+    #: The test launcher name
+    _TESTLAUNCHER_NAME = 'pytest'
+
+    @property
+    def _ntasks(self):
+        return self.config.pytests_ntasks
+
+    def _spawn(self, cmd, *args, **kwargs):
+        """Run the nosetests command and automatically adds some arguments."""
+        args = self._DEFAULT_ARGS + [os.path.join(self._testdir, a) for a in args]
+        return super()._spawn(cmd, *args, **kwargs)
 
 
 class AbstractOneShotChecker(AbstractChecker):
@@ -593,6 +668,8 @@ def main():
         checkers.append(DocSphinxChecker(confdata))
     if confdata.nosetesters:
         checkers.append(NoseChecker(confdata))
+    if confdata.pytesters:
+        checkers.append(PyTestChecker(confdata))
     if confdata.doc_interpreter:
         checkers.append(DocMissChecker(confdata))
     if confdata.codechecker_interpreter:

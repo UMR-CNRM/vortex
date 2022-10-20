@@ -17,5 +17,5 @@ List of all the modules provided by :mod:`test_names`
 
    test_names_core
    test_names_discover
-   test_names_testall
+   test_names_test_all
    test_names_utils

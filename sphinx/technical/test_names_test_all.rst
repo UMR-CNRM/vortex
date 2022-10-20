@@ -1,7 +1,7 @@
-:mod:`test_names.testall` --- UnitTest realted classes
-======================================================
+:mod:`test_names.test_all` --- UnitTest realted classes
+=======================================================
 
-.. automodule:: test_names.testall
+.. automodule:: test_names.test_all
    :synopsis: UnitTest realted classes
 
 .. moduleauthor:: The Vortex Team
