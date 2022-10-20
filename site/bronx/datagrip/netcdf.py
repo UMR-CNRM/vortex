@@ -193,8 +193,11 @@ class NetCDF4VariableStructure(dict):
         self['dimensions'] = netcdf4_obj.dimensions
         self['shape'] = netcdf4_obj.shape
         self['ncattrs'] = {k: netcdf4_obj.getncattr(k) for k in netcdf4_obj.ncattrs()}
-        self['filters'] = {k: v for k, v in netcdf4_obj.filters().items()
-                           if not (v is None or v is False)}
+        if hasattr(netcdf4_obj.filters(), 'items'):
+            self['filters'] = {k: v for k, v in netcdf4_obj.filters().items()
+                               if not (v is None or v is False)}
+        else:
+            self['filters'] = {}
 
 
 def netcdf_dataset_structure(netcdf4_obj):
