@@ -258,7 +258,6 @@ class Prep(InitialCondition):
         return 'PREP'
 
 
-@namebuilding_append('src', lambda s: s.scope, none_discard=True)
 class SnowObs(GeoFlowResource):
     """Abstract class for snow observations in netcdf format (unknown time management)"""
 
@@ -271,7 +270,7 @@ class SnowObs(GeoFlowResource):
                     values = ['SnowObservations'],
                 ),
                 model = dict(
-                    values = ['obs']
+                    values = ['surfex'],
                 ),
                 nativefmt = dict(
                     values  = ['netcdf', 'nc'],
