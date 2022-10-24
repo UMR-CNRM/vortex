@@ -62,6 +62,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: FtpProService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: TransmetService
    :show-inheritance:
    :members:

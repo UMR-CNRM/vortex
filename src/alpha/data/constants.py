@@ -111,26 +111,3 @@ class AlphaVersion(GenvModelResource):
         return 'version'
 
 
-class AlphaWeightFile(ModelResource):
-    """Input file containing model weights used in Alpha.
-    """
-    _footprint = [
-        dict(
-            info = 'Input file containing model weights used in Alpha.',
-            attr = dict(
-                kind = dict(
-                    values  = ['weightFile', ],
-                ),
-                model = dict(
-                    values = ['alpha', ],
-                ),
-                nativefmt = dict(
-                    values  = ['json']
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'weightFile'

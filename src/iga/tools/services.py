@@ -677,6 +677,41 @@ class BdapService(RoutingUpstreamService):
                "@{0.realkind}".format(self, now=date.now().compact())
 
 
+class FtpProService(BdapService):
+    """
+    Class responsible for handling data sent to a simple ftp server.
+
+    The sending mechanism is the same as for the bdap, but the target here is not
+    a dedicated server able to handle dates but a simple ftp server, without even
+    a date hierarchy. Hence the inclusion of the date in the target name.
+
+    This class should not be called directly.
+    """
+
+    _footprint = dict(
+        info = 'FtpPro service class',
+        attr = dict(
+            kind = dict(
+                values   = ['ftppro'],
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('FtpProService init %s', self.__class__)
+        super(FtpProService, self).__init__(*args, **kw)
+
+    @property
+    def realkind(self):
+        return 'FTPPRO'
+
+    @property
+    def _actual_targetname(self):
+        target = self.targetname or self.sh.path.basename(self._actual_filename)
+        dated_target = self.dmt_date_pivot + '_' + target
+        return self.sh.path.join(self.sh.path.dirname(self._actual_filename), dated_target)
+
+
 class BdpeService(RoutingService):
     """
     Abstract class for handling bdpe data.
@@ -765,11 +800,15 @@ class BdpeService(RoutingService):
             "@{0.filename}@{0.realkind}_{0.producer}"
         return s.format(self, now=date.now().compact())
 
+    @property
+    def absolute_routing_name(self):
+        return self.sh.path.abspath(self.routing_name)
+
     def get_cmdline(self):
         """Complete command line that runs the Transfer Agent."""
         if self.actual_routingkey is None:
             return None
-        options = "{0.routing_name} {0.actual_routingkey} -p {0.producer}" \
+        options = "{0.absolute_routing_name} {0.actual_routingkey} -p {0.producer}" \
                   " -n {0.productid} -e {0.term.fmtraw} -d {0.dmt_date_pivot}" \
                   " -q {0.quality} -r {0.soprano_target}".format(self)
         return agt_actual_command(self.sh, self.agt_pe_cmd, options)
