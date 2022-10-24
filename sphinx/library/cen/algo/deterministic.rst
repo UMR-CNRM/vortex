@@ -1,8 +1,8 @@
-:mod:`cen.algo.deterministic` --- TODO description
-==================================================
+:mod:`cen.algo.deterministic` --- Deterministic S2M simulations
+================================================================
 
 .. automodule:: cen.algo.deterministic
-   :synopsis: TODO description
+   :synopsis: Algocomponents for deterministic S2M simulations
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

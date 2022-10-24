@@ -2129,11 +2129,11 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/massif/obs_insitu.obs.alp_2017_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/massif/obs_insitu.surfex.alp_2017_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2142,11 +2142,11 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/massif/obs_insitu.obs.alp_2017_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/massif/obs_insitu.surfex.alp_2017_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2155,11 +2155,11 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.obs.alp_2017_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.surfex.alp_2017_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2168,11 +2168,11 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2181,11 +2181,11 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2194,11 +2194,11 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2207,11 +2207,11 @@
       dateend: '201812020000'
       experiment: OPER
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000X/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000X/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2220,11 +2220,11 @@
       dateend: '201812020000'
       experiment: OPER
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2233,11 +2233,11 @@
       dateend: '201812020000'
       experiment: OPER
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2247,11 +2247,11 @@
       experiment: OPER@vernaym
       geometry: pyr
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/massif/obs_insitu.obs.pyr_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/massif/obs_insitu.surfex.pyr_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2261,11 +2261,11 @@
       experiment: OPER@vernaym
       geometry: pyr
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/massif/obs_insitu.obs.pyr_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/massif/obs_insitu.surfex.pyr_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2275,11 +2275,11 @@
       experiment: OPER@vernaym
       geometry: pyr
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.obs.pyr_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.surfex.pyr_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2288,12 +2288,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
       nativefmt: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2302,12 +2302,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
       nativefmt: nc
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2316,12 +2316,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
       nativefmt: netcdf
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2330,12 +2330,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
       nativefmt: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2344,12 +2344,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
       nativefmt: nc
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2358,12 +2358,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
       nativefmt: netcdf
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2372,12 +2372,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
       nativefmt: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2386,12 +2386,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
       nativefmt: nc
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2400,12 +2400,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
       nativefmt: netcdf
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2414,11 +2414,11 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.obs.alp_2017_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.surfex.alp_2017_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2427,11 +2427,11 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.obs.alp_2017_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.surfex.alp_2017_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2440,11 +2440,11 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.obs.alp_2017_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.surfex.alp_2017_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2453,11 +2453,11 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2466,11 +2466,11 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2479,11 +2479,11 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2492,11 +2492,11 @@
       dateend: '201812020000'
       experiment: OPER
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000P/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000P/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2505,11 +2505,11 @@
       dateend: '201812020000'
       experiment: OPER
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000P/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000P/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2518,11 +2518,11 @@
       dateend: '201812020000'
       experiment: OPER
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2532,11 +2532,11 @@
       experiment: OPER@vernaym
       geometry: pyr
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.obs.pyr_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.surfex.pyr_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2546,11 +2546,11 @@
       experiment: OPER@vernaym
       geometry: pyr
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.obs.pyr_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.surfex.pyr_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2560,11 +2560,11 @@
       experiment: OPER@vernaym
       geometry: pyr
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.obs.pyr_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.surfex.pyr_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2573,12 +2573,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
       nativefmt: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2587,12 +2587,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
       nativefmt: nc
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2601,12 +2601,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: null
       nativefmt: netcdf
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2615,12 +2615,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
       nativefmt: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2629,12 +2629,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
       nativefmt: nc
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2643,12 +2643,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: cen
       nativefmt: netcdf
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2657,12 +2657,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
       nativefmt: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2671,12 +2671,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
       nativefmt: nc
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.surfex.alp_2018_2018.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2685,12 +2685,12 @@
       dateend: '201812020000'
       experiment: OPER@vernaym
       kind: SnowObservations
-      model: obs
+      model: surfex
       namebuild: flat@cen
       nativefmt: netcdf
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.obs.alp_2018_2018.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/obs_insitu.surfex.alp_2018_2018.nc
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif

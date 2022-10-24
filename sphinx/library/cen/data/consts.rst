@@ -1,5 +1,5 @@
-:mod:`cen.data.consts` --- TODO Module Header
-=============================================
+:mod:`cen.data.consts` --- Parameter files specific to CEN
+===========================================================
 
 .. automodule:: cen.data.consts
    :synopsis: TODO Module Synopsis

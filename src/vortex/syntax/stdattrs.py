@@ -52,7 +52,7 @@ knownfmt = {
     'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib', 'grib1', 'grib2', 'bufr', 'hdf5', 'obsoul',
     'odb', 'ecma', 'ccma', 'bullx', 'sx', 'ddhpack', 'tar', 'tgz', 'rawfiles', 'binary', 'bin',
     'obslocationpack', 'obsfirepack', 'wbcpack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr', 'yml',
-    'yaml'
+    'yaml', 'ini'
 }
 
 #: Default attributes excluded from `repr` display

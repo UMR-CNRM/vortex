@@ -1,5 +1,5 @@
-:mod:`cen.data.executables` --- TODO Module Header
-==================================================
+:mod:`cen.data.executables` --- Executables specific to CEN
+=============================================================
 
 .. automodule:: cen.data.executables
    :synopsis: TODO Module Synopsis

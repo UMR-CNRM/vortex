@@ -17,7 +17,7 @@ __all__ = []
 
 logger = loggers.getLogger(__name__)
 
-map_suffix = {'alp': '_al', 'pyr': '_py', 'cor': '_co'}
+map_suffix = {'alp': '_al', 'pyr': '_py', 'cor': '_co', 'mac': '_mc', 'jur': '_ju', 'vog': '_vo'}
 
 
 class CenCfgParser(GenericConfigParser):
@@ -113,7 +113,7 @@ class CenSopranoDevProvider(Provider):
                     optional  = False,
                 ),
                 storage = dict(
-                    values   = ['guppy.meteo.fr', ]
+                    values   = ['guppy.meteo.fr', 'sotrtm35-sidev.meteo.fr']
                 ),
                 tube = dict(
                     optional = True,

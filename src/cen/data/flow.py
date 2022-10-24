@@ -258,22 +258,20 @@ class Prep(InitialCondition):
         return 'PREP'
 
 
-@namebuilding_insert('cen_period', lambda self: [self.datebegin.y, self.dateend.y])
 class SnowObs(GeoFlowResource):
+    """Abstract class for snow observations in netcdf format (unknown time management)"""
 
+    _abstract = True
     _footprint = [
-        cendateperiod_deco,
         dict(
-            info = 'Observations of snow for model evaluation',
+            info = 'Observations of snow',
             attr = dict(
                 kind = dict(
                     values = ['SnowObservations'],
                 ),
-
                 model = dict(
-                    values = ['obs']
+                    values = ['surfex'],
                 ),
-
                 nativefmt = dict(
                     values  = ['netcdf', 'nc'],
                     default = 'netcdf',
@@ -283,11 +281,10 @@ class SnowObs(GeoFlowResource):
                     info = "The resource's massif geometry.",
                     type = HorizontalGeometry,
                 ),
-                datebegin = dict(
-                    info = "First date of the forcing file",
-                ),
-                dateend = dict(
-                    info = "Last date of the forcing file",
+                scope = dict(
+                    optional    = True,
+                    alias       = ('nature', ),
+                    info        = "Free description of the obs (var, sensor, location...)",
                 ),
                 # This notion does not mean anything in our case (and seems to be rather
                 # ambiguous also in other cases)
@@ -302,11 +299,92 @@ class SnowObs(GeoFlowResource):
 
     @property
     def realkind(self):
-        return "obs_insitu"
+        id = 'insitu' if self.scope is None else self.scope
+        return "obs_" + id
+
+
+@namebuilding_insert('cen_period', lambda self: [self.datebegin.y, self.dateend.y])
+class SnowObsPeriod(SnowObs):
+    """Snow observations covering a time period in netcdf format"""
+
+    _footprint = [
+        cendateperiod_deco,
+        dict(
+            info = 'Time series of snow observations of snow for model evaluation',
+            attr = dict(
+                datebegin=dict(
+                    info="First date of the observation file",
+                ),
+                dateend=dict(
+                    info="Last date of the observation file",
+                ),
+            )
+        )
+    ]
+
+
+@namebuilding_insert('cen_period', lambda self: [self.datevalidity.ymdh, ])
+class SnowObsOneDate(SnowObs):
+    """Snow observations covering at a given date in netcdf format"""
+
+    _footprint = [
+        dict(
+            info='Instantaneous snow observations for assimilation',
+            attr=dict(
+                datevalidity=dict(
+                    info="Validity date of the observation file",
+                    type=Date,
+                    default='[date]',
+                ),
+            )
+        )
+    ]
+
+
+@namebuilding_insert('cen_period', lambda self: [self.dateassim.ymdh, ])
+class PfSample(GeoFlowResource):
+    """
+    Class for SODA particle filter outputs (text files at each assim step)
+    @author : B. Cluzet
+    """
+
+    _footprint = [
+        dict(
+            info = 'pf sample file',
+            attr = dict(
+                # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
+                cutoff = dict(
+                    optional = True
+                ),
+                kind = dict(
+                    values = ['PART', 'BG_CORR', 'IMASK', 'ALPHA']
+                ),
+                nativefmt=dict(
+                    values=['ascii', 'netcdf', 'nc'],
+                    default='ascii',
+                    remap=dict(nc='netcdf'),
+                ),
+                model = dict(
+                    values = ['soda']
+                ),
+                dateassim = dict(
+                    info = "date of the analysis",
+                    type = Date,
+                    default='[date]',
+                ),
+            )
+        )
+    ]
+
+    _extension_remap = dict(ascii='txt', netcdf='nc')
+
+    @property
+    def realkind(self):
+        return self.kind
 
 
 class ScoresSnow(SurfaceIO):
-    """Class for the safrane output files."""
+    """Class for scores of snow simulations."""
 
     _footprint = [
         dict(

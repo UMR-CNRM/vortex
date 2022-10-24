@@ -57,10 +57,6 @@ todo:
             -   source_app: null
                 source_conf: null
             -   source_app: arpege
-                source_conf: 4dvarfr
-
-                    - null
-                    - arpege
                 source_conf:
                     source_app:
                         null: null
@@ -121,7 +117,7 @@ todo:
             cutoff:
               -   production
               -   null
-            model: obs
+            model: surfex
             namebuild:
               -   null
               -   cen

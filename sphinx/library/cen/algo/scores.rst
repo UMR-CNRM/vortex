@@ -1,8 +1,8 @@
-:mod:`cen.algo.scores` --- TODO description
-===========================================
+:mod:`cen.algo.scores` --- Compute scores of ensemble S2M simulations
+======================================================================
 
 .. automodule:: cen.algo.scores
-   :synopsis: TODO description
+   :synopsis: Algocomponents to compute scores of ensemble S2M simulations
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

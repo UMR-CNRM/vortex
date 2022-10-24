@@ -12,6 +12,7 @@ from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
 
 from vortex.algo.components import Parallel, AlgoComponent
+from common.tools.drhook import DrHookDecoMixin
 
 logger = loggers.getLogger(__name__)
 
@@ -26,7 +27,7 @@ with echecker:
 
 @echecker.disabled_if_unavailable
 class Surfex_PreProcess(AlgoComponent):
-    """TODO: Class documentation."""
+    """Algo component to apply the required preprocessing before a SURFEX run (e.g. namelists adjustements)"""
 
     _footprint = dict(
         attr = dict(
@@ -83,7 +84,10 @@ class Surfex_PreProcess(AlgoComponent):
 
 @echecker.disabled_if_unavailable
 class Generate_Clim_TG(AlgoComponent):
-    """TODO: Class documentation."""
+    """
+    Algocomponent that generates a file of initial temperature to initialize the soil
+    from surfex meteorological forcing files
+    """
 
     _footprint = dict(
         attr = dict(
@@ -133,7 +137,7 @@ class Pgd_Parallel_from_Forcing(Parallel):
 
 
 @echecker.disabled_if_unavailable
-class Surfex_Parallel(Parallel):
+class Surfex_Parallel(Parallel, DrHookDecoMixin):
     """
     This algo component is designed to run SURFEX experiments over large domains
     with MPI parallelization.
