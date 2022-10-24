@@ -539,7 +539,6 @@ class AbstractArchive(Storage):
             ),
             tube = dict(
                 info     = "How to communicate with the archive ?",
-                values   = ['ftp'],
             ),
         )
     )
@@ -830,36 +829,18 @@ class Archive(AbstractArchive):
         return rc, dict()
 
 
-class LocalArchive(AbstractArchive):
+class AbstractLocalArchive(AbstractArchive):
     """The default class to handle storage to the same host."""
 
+    _abstract = True
     _footprint = dict(
-        info = 'Default local archive description',
+        info = 'Generic local archive description',
         attr = dict(
-            storage = dict(
-                value    = ['localhost', ],
-            ),
             tube = dict(
                 values   = ['inplace', ],
             ),
-            auto_self_expand = dict(
-                info     = ('Automatically expand the current user home if ' +
-                            'a relative path is given (should always be True ' +
-                            'except during unit-testing)'),
-                type     = bool,
-                default  = True,
-                optional = True,
-            ),
         )
     )
-
-    def _formatted_path(self, rawpath, **kwargs):
-        rawpath = self.sh.path.expanduser(rawpath)
-        if '~' in rawpath:
-            raise OSError('User expansion failed for "{:s}"'.format(rawpath))
-        if self.auto_self_expand and not self.sh.path.isabs(rawpath):
-            rawpath = self.sh.path.expanduser(self.sh.path.join('~', rawpath))
-        return super(LocalArchive, self)._formatted_path(rawpath, **kwargs)
 
     def _inplacefullpath(self, item, **kwargs):
         """Actual _fullpath."""
@@ -918,6 +899,68 @@ class LocalArchive(AbstractArchive):
         if self._inplacecheck(item, **kwargs)[0]:
             rc = self.sh.rm(item, fmt=fmt)
         return rc, dict(fmt=fmt)
+
+
+class LocalArchive(AbstractLocalArchive):
+    """The default class to handle storage to the same host."""
+
+    _footprint = dict(
+        info = 'Default local archive description',
+        attr = dict(
+            storage = dict(
+                values   = ['localhost', ],
+            ),
+            auto_self_expand = dict(
+                info     = ('Automatically expand the current user home if ' +
+                            'a relative path is given (should always be True ' +
+                            'except during unit-testing)'),
+                type     = bool,
+                default  = True,
+                optional = True,
+            ),
+        )
+    )
+
+    def _formatted_path(self, rawpath, **kwargs):
+        rawpath = self.sh.path.expanduser(rawpath)
+        if '~' in rawpath:
+            raise OSError('User expansion failed for "{:s}"'.format(rawpath))
+        if self.auto_self_expand and not self.sh.path.isabs(rawpath):
+            rawpath = self.sh.path.expanduser(self.sh.path.join('~', rawpath))
+        return super(LocalArchive, self)._formatted_path(rawpath, **kwargs)
+
+
+class LocalBucketArchive(AbstractLocalArchive):
+    """The default class to handle storage in a Bucket (for export)."""
+
+    _footprint = dict(
+        info = 'Default local archive description',
+        attr = dict(
+            storage = dict(
+                outcast  = ['localhost', ],
+            ),
+        ),
+        only = dict(
+            storage = footprints.FPRegex(r'^\w+\.bucket\.localhost$')
+        )
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(LocalBucketArchive, self).__init__(*kargs, **kwargs)
+        self._bucketname = self.storage.split('.')[0]
+
+    @property
+    def bucketname(self):
+        return self._bucketname
+
+    def _formatted_path(self, rawpath, **kwargs):
+        root = kwargs.get('root', None)
+        if root is not None:
+            raise ValueError("The {!r} storage does not support the 'root' argument".format(self.__class__))
+        rawpath = self.sh.path.expanduser(
+            self.sh.path.join('~', 'vortexbucket', self.bucketname, rawpath)
+        )
+        return super(LocalBucketArchive, self)._formatted_path(rawpath, **kwargs)
 
 
 # Concrete cache implementations

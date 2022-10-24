@@ -24,6 +24,7 @@ Detailed documentation on some technical aspects:
 * :ref:`env-interface`
 * :ref:`nbook-Uget`
 * :ref:`nbook-VortexStacksDoc`
+* :ref:`vortex_data_export`
 
 .. toctree::
    :maxdepth: 1
@@ -33,6 +34,7 @@ Detailed documentation on some technical aspects:
    footprints_fr
    fortran
    environment
+   vortex_data_export
 
 Some quasi-philosophical considerations on the Vortex toolbox (in french):
 

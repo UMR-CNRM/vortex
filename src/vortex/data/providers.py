@@ -20,12 +20,13 @@ from bronx.fancies import loggers
 from bronx.syntax.parsing import StringDecoder
 import footprints
 from footprints import proxy as fpx
+from footprints.stdtypes import FPDict
 
 from vortex import sessions
 from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, \
     demosuites, scenario, member, block
-from vortex.syntax.stdattrs import LegacyXPid, FreeXPid
-from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt, DelayedEnvValue
+from vortex.syntax.stdattrs import LegacyXPid, any_vortex_xpid
+from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt
 from vortex.tools import net, names
 from vortex.util.config import GenericConfigParser
 
@@ -298,13 +299,12 @@ class Vortex(Provider):
                     default     = False,
                     doc_zorder  = -5,
                 ),
-                set_aside = dict(
+                vortex_set_aside = dict(
                     info        = "Do we need to re-archive retrieve data somewhere else?",
                     optional    = True,
-                    default     = DelayedEnvValue('VORTEX_PROVIDER_SET_ASIDE',
-                                                  default='dict()'),
+                    type        = FPDict,
                     doc_visibility = footprints.doc.visibility.GURU,
-                )
+                ),
             ),
             fastkeys = set(['block', 'experiment']),
         )
@@ -324,6 +324,7 @@ class Vortex(Provider):
         else:
             self._namebuilder = self._DEFAULT_NAME_BUILDER
         self._x_set_aside = None
+        self._x_set_aside_specs = None
 
     @property
     def namebuilder(self):
@@ -375,6 +376,75 @@ class Vortex(Provider):
         """
         return self.namebuilder.pack_basename(resource.namebuilding_info())
 
+    @property
+    def x_set_aside(self):
+        if self._x_set_aside is None:
+            if self.vortex_set_aside is not None:
+                input_set_aside = self.vortex_set_aside
+            else:
+                t = sessions.current()
+                if t.env.VORTEX_PROVIDER_SET_ASIDE:
+                    input_set_aside = StringDecoder()(t.env.VORTEX_PROVIDER_SET_ASIDE)
+                else:
+                    input_set_aside = dict()
+            if not isinstance(input_set_aside, dict):
+                logger.warning("setaside should decode as a dictionary (got '%s' that translate into '%s')",
+                               self.vortex_set_aside, input_set_aside)
+            # New configuration style ?
+            if set(input_set_aside.keys()) < {'defaults', 'edits', 'excludes', 'includes'}:
+                self._x_set_aside = dict()
+                if 'excludes' in input_set_aside and 'includes' in input_set_aside:
+                    logger.warning("excludes/includes can not appear at the same time. Ignoring set_aside.")
+                else:
+                    for what in ('includes', 'excludes'):
+                        if what in input_set_aside:
+                            self._x_set_aside[what] = {any_vortex_xpid(k)
+                                                       for k in input_set_aside[what]}
+                    if 'edits' in input_set_aside:
+                        self._x_set_aside['edits'] = {any_vortex_xpid(k): v
+                                                      for k, v in input_set_aside['edits'].items()}
+                    else:
+                        self._x_set_aside['edits'] = dict()
+                    self._x_set_aside['defaults'] = input_set_aside.get('defaults', dict())
+            # Legacy configuration style
+            else:
+                # Check the dictionary keys
+                self._x_set_aside = dict()
+                for k, v in input_set_aside.items():
+                    try:
+                        k = any_vortex_xpid(k)
+                    except ValueError:
+                        logger.warning("erroneous xpid in the vortex_set_aside dictionary (%s). Ignoring it.", k)
+                    else:
+                        self._x_set_aside[k] = v
+        return self._x_set_aside
+
+    @property
+    def x_set_aside_specs(self):
+        if self._x_set_aside_specs is None:
+            self._x_set_aside_specs = dict()
+            # New configuration style
+            if 'defaults' in self.x_set_aside:
+                if (('excludes' in self.x_set_aside and
+                     self.experiment not in self.x_set_aside['excludes']) or
+                    ('includes' in self.x_set_aside and
+                     self.experiment in self.x_set_aside['includes']) or
+                    ('includes' not in self.x_set_aside and
+                     'excludes' not in self.x_set_aside)):
+                    self._x_set_aside_specs = self.x_set_aside['defaults'].copy()
+                    self._x_set_aside_specs.update(
+                        self.x_set_aside['edits'].get(self.experiment, dict())
+                    )
+            # Legacy configuration style
+            else:
+                if self.experiment in self.x_set_aside:
+                    value = self.x_set_aside[self.experiment]
+                    if isinstance(value, dict):
+                        self._x_set_aside_specs = value
+                    else:
+                        self._x_set_aside_specs = dict(experiment=value)
+        return self._x_set_aside_specs.copy()
+
     def urlquery(self, resource):
         """Construct the urlquery (taking into account stacked storage)."""
         s_urlquery = super(Vortex, self).urlquery(resource)
@@ -393,18 +463,18 @@ class Vortex(Provider):
                                  self.basename(stackres)), ]
             uqs['stackfmt'] = [stackres.nativefmt, ]
         # Deal with set_aside
-        if self._x_set_aside is None:
-            self._x_set_aside = StringDecoder()(self.set_aside)
-            if not isinstance(self._x_set_aside, dict):
-                logger.warning("setaside should decode as a dictionary (got '%s' that translate into '%s')",
-                               self.set_aside, self._x_set_aside)
-                self._x_set_aside = dict()
-        if self.experiment in self._x_set_aside:
+        if self.x_set_aside_specs:
             provider_attrs = self.footprint_as_shallow_dict()
-            provider_attrs['experiment'] = self._x_set_aside[self.experiment]
+            del provider_attrs['vortex_set_aside']
+            for k, v in self.x_set_aside_specs.items():
+                if not k.startswith('stor'):
+                    provider_attrs[k] = v
             provider_bis = fpx.provider(** provider_attrs)
             uqs['setaside_n'] = [provider_bis.netloc(resource), ]
             uqs['setaside_p'] = [provider_bis.pathname(resource) + '/' + provider_bis.basename(resource), ]
+            for k, v in self.x_set_aside_specs.items():
+                if k.startswith('stor'):
+                    uqs['setaside_args_{:s}'.format(k)] = v
         return urlparse.urlencode(sorted(uqs.items()), doseq=True)
 
 
@@ -559,13 +629,10 @@ class VortexFreeStd(Vortex):
                             redirection_priority = int(k_match.group('pri')) if k_match.group('pri') else 0
                             redirection_to = None
                             try:
-                                redirection_to = LegacyXPid(k_match.group('xp'))
+                                redirection_to = any_vortex_xpid(k_match.group('xp'))
                             except ValueError:
-                                try:
-                                    redirection_to = FreeXPid(k_match.group('xp'))
-                                except ValueError:
-                                    logger.error('Invalid experiment ID provided (section "%s" from "%s"). Ignoring',
-                                                 k, conf_uri)
+                                logger.error('Invalid experiment ID provided (section "%s" from "%s"). Ignoring',
+                                             k, conf_uri)
                             logger.debug('Valid configuration entry %s -> %s. Priority=%d',
                                          self.experiment, redirection_to, redirection_priority)
                             if redirection_to is not None:

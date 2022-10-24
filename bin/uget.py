@@ -34,6 +34,7 @@ from bronx.stdtypes.tracking import MappingTracker
 from footprints import proxy as fpx
 
 import vortex
+from vortex.tools.env import vartrue
 from vortex.tools.net import uriparse
 from vortex.tools.systems import ExecutionError
 
@@ -114,7 +115,7 @@ class UGetShell(cmd.Cmd):
                              r'))?\s*$')
     _valid_hack = re.compile(r'(?P<gco>g)?(?P<what>data|env)\s+' + _valid_partial_baseid + r'\s+' +
                              r'into\s+' + _valid_partial_ugetid + '$')
-    _valid_set = re.compile(r'(?:(?P<what1>storage|location)\s+(?P<value>\S+)|' +
+    _valid_set = re.compile(r'(?:(?P<what1>storage|location|ecmwf_support)\s+(?P<value>\S+)|' +
                             r'(?P<what2>ftuser)\s+(?P<user>\S+)\s+for\s+(?P<target>\S+))$')
     _valid_bootstraphack = re.compile(r'(?P<bootlocation>\w+)')
 
@@ -143,11 +144,17 @@ class UGetShell(cmd.Cmd):
                     self._config.readfp(fhconf)
                 else:
                     self._config.read_file(fhconf)
+            if not self._config.has_option('cli', 'ecmwf_support'):
+                self._cliconfig_set('ecmwf_support', 'off')
+
         else:
             # Or create a void one...
             self._config.add_section('cli')
             self._cliconfig_set('storage', None)
             self._cliconfig_set('location', None)
+            self._cliconfig_set('ecmwf_support', 'off')
+        # Various Vortex related configurations
+        self.ecmwf_support_init()
         # Initialise the stores
         self._storehack = fpx.store(scheme='uget',
                                     netloc='{:s}.hack.fr'.format(netloc_prefix))
@@ -156,7 +163,15 @@ class UGetShell(cmd.Cmd):
                                       readonly=False)
         self._update_stores(storage=self._cliconfig_get('storage'))
 
-    # A whole bunch of utility functions
+    # A bunch of utility functions
+
+    def ecmwf_support_init(self):
+        """Activate the ecmwf extension (if need be)."""
+        if (vartrue.match(self._cliconfig_get('ecmwf_support')) and
+                'ecmwf' not in sh.loaded_addons()):
+            import ecmwf.tools.addons
+            assert ecmwf.tools.addons
+            fpx.addon(sh=sh, kind='ecmwf')
 
     @staticmethod
     def _error(msg):
@@ -474,6 +489,7 @@ class UGetShell(cmd.Cmd):
         omitted, the default one is used).
         """
         print('Default location: {!s}'.format(self._cliconfig_get('location')))
+        print('ECMWF Support   : {!s}'.format(self._cliconfig_get('ecmwf_support')))
         print('Hack store      : {!s}'.format(self._storehack))
         print('Archive store   : {!s}'.format(self._storearch))
         ftuser_associations = [s for s in self._config.sections()
@@ -489,7 +505,7 @@ class UGetShell(cmd.Cmd):
         """Auto-completion for the *set* command."""
         sline = line.split()
         # First keyword
-        first_choices = ['storage', 'location', 'ftuser']
+        first_choices = ['storage', 'location', 'ecmwf_support', 'ftuser']
         if len(sline) == 1 or (len(sline) == 2 and sline[1] not in first_choices):
             completions = first_choices
         # Second keyword
@@ -504,14 +520,15 @@ class UGetShell(cmd.Cmd):
         """
         Edit the settings of the uget.py command-line interface.
 
-        First syntax: set (storage|location) somevalue
+        First syntax: set (storage|location|ecmwf_support) somevalue
 
         * somevalue may be 'None'
         * 'set storage' refers to the hostname where the Uget archive is located
           (if None, the Vortex default is used)
         * 'set location' refers to the default location for any UgetID. (i.e.
           an UgetID looks like 'element_name@location'. If @location is omitted,
-          the default one is used).
+          the default one is used)
+        * 'set ecmwf_support' tells whether ECMWF System's addons are loaded.
 
         Second syntax: set ftuser username for a_location
 
@@ -532,6 +549,8 @@ class UGetShell(cmd.Cmd):
                 self._update_stores(storage=self._cliconfig_get('storage'))
             elif mline['what1'] == 'location':
                 self._cliconfig_set('location', mline['value'])
+            elif mline['what1'] == 'ecmwf_support':
+                self._cliconfig_set('ecmwf_support', mline['value'])
             elif mline['what2'] == 'ftuser':
                 self._locationconfig_set(mline['target'], 'ftuser', mline['user'])
             with io.open(self._config_file, 'w' + ('b' if six.PY2 else '')) as fpconf:

@@ -22,6 +22,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 _DATASTORE_KIND = 'uenv_registered_cycle'
+_DATASTORE_CONFIG_KIND = 'uenv_configuration_data'
 
 _UENV_IGNORE_RE = re.compile(r'^(?:\s*(?:#|//|!).*|\s*)$')
 _UENV_LINE_RE = re.compile(r'^[^=]+=')
@@ -36,15 +37,24 @@ def handler():
     return vortex.sessions.current().datastore
 
 
+def config(entry, value=None):
+    p = handler()
+    if value is None:
+        return p.get(_DATASTORE_CONFIG_KIND, dict(option=entry), default_payload='')
+    else:
+        p.insert(_DATASTORE_CONFIG_KIND, dict(option=entry), value)
+        return value
+
+
 def contents(cycle, scheme=None, netloc=None):
     """Return definition of a given ``cycle``."""
     p = handler()
-    regcycle = None
     if not isinstance(cycle, AbstractUgetId):
         cycle = AbstractUgetId(cycle)
     if p.check(_DATASTORE_KIND, dict(cycle=cycle)):
         regcycle = p.get(_DATASTORE_KIND, dict(cycle=cycle))
         regcycle = regcycle.clone()
+        return regcycle
     else:
         if scheme is None or netloc is None:
             raise UenvError("scheme and/or netloc were not provided. Cannot retrieve the cycle.")
@@ -85,7 +95,16 @@ def contents(cycle, scheme=None, netloc=None):
                 raise UenvError('Malformed environment file (line {:d}, "{:s}")'
                                 .format(i + 1, item.rstrip("\n")))
         tmplocal.clear()
-    return regcycle
+        gget_detour = config('gdata_detour')
+        if gget_detour:
+            newregcycle = dict()
+            for k, v in regcycle.items():
+                if isinstance(v, GgetId):
+                    v = AbstractUgetId('uget:{:s}@{:s}'.format(v, gget_detour))
+                newregcycle[k] = v
+            return newregcycle
+        else:
+            return regcycle
 
 
 def nicedump(cycle, scheme=None, netloc=None):

@@ -133,7 +133,7 @@ class Observer(object):
 
     def newobsitem(self, item, info):
         """A new ``item`` has been created. Some information is provided through the dict ``info``."""
-        self._debuglogging('new item %s info %s', item, info)
+        self._debuglogging('new item of class %s (id %s) info %s', item.__class__, id(item), info)
 
     def delobsitem(self, item, info):
         """The ``item`` has been deleted. Some information is provided through the dict ``info``."""
@@ -191,7 +191,8 @@ class SecludedObserverBoard(object):
 
     def notify_new(self, item, info):
         """Notify the listening objects that a new observed object is born."""
-        logger.debug('Notify new %s info %s', repr(item), info)
+        logger.debug('Notify new item of class %s (id %s) info %s',
+                     item.__class__, id(item), info)
         self._items.add(item)
         for remote in list(self._listen):
             remote.newobsitem(item, self._extended_info(info))
@@ -209,7 +210,8 @@ class SecludedObserverBoard(object):
             self._items, this method has no effect.
         """
         if item in self._items:
-            logger.debug('Notify del %s info %s', repr(item), info)
+            logger.debug('Notify del item of class %s (id %s) info %s',
+                         item.__class__, id(item), info)
             for remote in list(self._listen):
                 remote.delobsitem(item, self._extended_info(info))
             self._items.discard(item)
@@ -217,7 +219,8 @@ class SecludedObserverBoard(object):
     def notify_upd(self, item, info):
         """Notify the listening objects that an observed object has been updated."""
         if item in self._items:
-            logger.debug('Notify upd %s info %s', repr(item), info)
+            logger.debug('Notify upd item of class %s (id %s) info %s',
+                         item.__class__, id(item), info)
             for remote in list(self._listen):
                 remote.updobsitem(item, self._extended_info(info))
 

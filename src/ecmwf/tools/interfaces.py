@@ -49,7 +49,8 @@ class ECMWFInterface(object):
         else:
             return command
 
-    def __call__(self, list_args=list(), dict_args=dict(), list_options=list(), command=None):
+    def __call__(self, list_args=list(), dict_args=dict(), list_options=list(), command=None,
+                 fatal=True, capture=False, silent=False):
         """Construct the command line and run it in the shell"""
         actual_command = self.actual_command(command)
         command_line = self.build_command_line(command=actual_command,
@@ -58,7 +59,7 @@ class ECMWFInterface(object):
                                                list_options=list_options)
         logger.debug("The command line launched is: {}".format(command_line))
         command_line = command_line.split()
-        return self.system.spawn(command_line, shell=False, output=False)
+        return self.system.spawn(command_line, shell=False, output=capture, fatal=fatal, silent=silent)
 
     @staticmethod
     def build_command_line(command, list_args, dict_args, list_options):
@@ -73,9 +74,6 @@ class ECMWFInterface(object):
         """
         # Initialize the command line with the header
         command_line = command
-        # Add positional arguments
-        for arg in list_args:
-            command_line = " ".join([command_line, arg])
         # Add named options with value(s)
         for kwarg, value in dict_args.items():
             if isinstance(value, (set, list, tuple)):
@@ -84,6 +82,9 @@ class ECMWFInterface(object):
         # Add named options without value
         for arg in list_options:
             command_line = " ".join([command_line, '-{attr}'.format(attr=arg)])
+        # Add positional arguments
+        for arg in list_args:
+            command_line = " ".join([command_line, arg])
         return command_line
 
     def prepare_arguments(self, list_args):

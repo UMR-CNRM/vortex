@@ -818,12 +818,14 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
     def _universal_remap(self, remote):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
-        xpath = remote['path'].split('/')
-        f_uuid = AbstractUgetId('uget:' + xpath[2])
-        remote['path'] = self.system.path.join(self.storehead, xpath[1],
-                                               self._hashdir(f_uuid.id), f_uuid.id)
-        if 'root' not in remote:
-            remote['root'] = self._actual_storeroot(f_uuid)
+        if not self.actual_export_mapping:
+            xpath = remote['path'].split('/')
+            f_uuid = AbstractUgetId('uget:' + xpath[2])
+            remote['path'] = self.system.path.join(xpath[1],
+                                                   self._hashdir(f_uuid.id),
+                                                   f_uuid.id)
+            if 'root' not in remote:
+                remote['root'] = self._actual_storeroot(f_uuid)
         return remote
 
     def _list_remap(self, remote):
@@ -832,20 +834,28 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
         xpath = remote['path'].split('/')
         if re.match(r'^@(\w+)$', xpath[2]):
             f_uuid = AbstractUgetId('uget:fake' + xpath[2])
-            for h in range(16):
+            if self.actual_export_mapping:
                 a_remote = copy.copy(remote)
-                a_remote['path'] = self.system.path.join(self.storehead, xpath[1],
-                                                         re.sub('0x(.)', r'\1', hex(h)))
+                a_remote['path'] = self.system.path.join(xpath[1])
                 rlist.append(a_remote)
+            else:
+                for h in range(16):
+                    a_remote = copy.copy(remote)
+                    a_remote['path'] = self.system.path.join(xpath[1],
+                                                             re.sub('0x(.)', r'\1', hex(h)))
+                    rlist.append(a_remote)
         else:
             f_uuid = AbstractUgetId('uget:' + xpath[2])
             a_remote = copy.copy(remote)
-            a_remote['path'] = self.system.path.join(self.storehead, xpath[1],
-                                                     self._hashdir(f_uuid.id), f_uuid.id)
+            if self.actual_export_mapping:
+                a_remote['path'] = self.system.path.join(xpath[1], xpath[2])
+            else:
+                a_remote['path'] = self.system.path.join(xpath[1], self._hashdir(f_uuid.id), f_uuid.id)
             rlist.append(a_remote)
         for a_remote in rlist:
-            if 'root' not in a_remote:
-                a_remote['root'] = self._actual_storeroot(f_uuid)
+            if not self.actual_export_mapping:
+                if 'root' not in a_remote:
+                    a_remote['root'] = self._actual_storeroot(f_uuid)
         return rlist
 
     def ugetcheck(self, remote, options):

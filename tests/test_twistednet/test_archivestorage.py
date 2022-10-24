@@ -52,6 +52,14 @@ class TestArchiveStorage(NetrcFtpBasedTestCase):
                            auto_self_expand=expand,
                            )
 
+    def bucketarchive(self):
+        self.sh.touch('void_config_file.ini')
+        return fpx.archive(kind='std',
+                           storage='xtest.bucket.localhost',
+                           tube='inplace',
+                           inifile='void_config_file.ini',
+                           )
+
     def _actual_archive_storage_test(self, st, remote_cb):
         self.assertEqual(st.check('some/test/file'), None)
         self.assertEqual(st.list('some/test/file'), None)
@@ -150,3 +158,8 @@ class TestArchiveStorage(NetrcFtpBasedTestCase):
         # Test failures
         with self.assertRaises(OSError):
             st.fullpath('~notexistingusername/mystuff')
+
+    def test_archive_bucketstorage(self):
+        st = self.bucketarchive()
+        self.assertEqual(st.fullpath('some/test/file'),
+                         self.sh.path.expanduser('~/vortexbucket/xtest/some/test/file'))

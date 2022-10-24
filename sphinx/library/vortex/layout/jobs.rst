@@ -65,3 +65,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: JobAssistantUenvGdataDetourPlugin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

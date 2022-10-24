@@ -182,22 +182,18 @@ class OliveArchiveStore(ArchiveStore):
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
-        xpath = remote['path'].split('/')
-        actual_mappingroot = self._actual_mappingroot
-        if not self.storeroot and actual_mappingroot:
-            remote['root'] = actual_mappingroot
-            xpath[1:2] = list(xpath[1])
-        xpath[:0] = [self.system.path.sep, self.storehead]
-        remote['path'] = self.system.path.join(*xpath)
+        if not self.actual_export_mapping:
+            actual_mappingroot = self._actual_mappingroot
+            if not self.storeroot and actual_mappingroot:
+                remote['root'] = actual_mappingroot
+                xpath = remote['path'].split('/')
+                xpath[1:2] = list(xpath[1])
+                remote['path'] = self.system.path.join(*xpath)
         return remote
 
     def remap_write(self, remote, options):
         """Remap actual remote path to distant store path for intrusive actions."""
-        remote = copy.copy(remote)
-        xpath = remote['path'].split('/')
-        xpath[:0] = [self.system.path.sep, self.storehead]
-        remote['path'] = self.system.path.join(*xpath)
-        return remote
+        return copy.copy(remote)
 
     def olivecheck(self, remote, options):
         """Remap and inarchivecheck sequence."""

@@ -175,6 +175,18 @@ class FreeXPid(XPid):
         return self.split('@')[1]
 
 
+def any_vortex_xpid(xpidguess):
+    """Try to reclass *xpidquess* as a Legacy or Free XPid"""
+    try:
+        try:
+            xp = LegacyXPid(xpidguess)
+        except ValueError:
+            xp = FreeXPid(xpidguess)
+    except ValueError:
+        raise ValueError("'{:s}' could not be reclassed as a LegacyXPid or a FreeXPid")
+    return xp
+
+
 #: The list of operational experiment names.
 opsuites = set([LegacyXPid(x) for x in (['OPER', 'DBLE', 'TEST', 'MIRR'] +
                                         ['OP{0:02d}'.format(i) for i in range(100)])])

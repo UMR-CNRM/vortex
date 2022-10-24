@@ -28,7 +28,8 @@ class FinderECMWF(Finder):
         )
     )
 
-    def ectransfullpath(self, remote):
+    @staticmethod
+    def ectransfullpath(remote):
         return remote["path"]
 
     def ectranscheck(self, remote, options):
@@ -44,12 +45,12 @@ class FinderECMWF(Finder):
         ectrans_remote = self.system.ectrans_remote_init(remote=options.get("remote", None),
                                                          storage=self.hostname())
         ectrans_gateway = self.system.ectrans_gateway_init(gateway=options.get("gateway", None))
-        rc, dict_args = self.system.ectransget(source=rpath,  # @UnusedVariable
-                                               target=local,
-                                               fmt=options.get("fmt", "foo"),
-                                               cpipeline=options.get("compressionpipeline", None),
-                                               gateway=ectrans_gateway,
-                                               remote=ectrans_remote)
+        rc = self.system.ectransget(source=rpath,
+                                    target=local,
+                                    fmt=options.get("fmt", "foo"),
+                                    cpipeline=options.get("compressionpipeline", None),
+                                    gateway=ectrans_gateway,
+                                    remote=ectrans_remote)
         if rc:
             self._localtarfix(local)
         return rc
@@ -61,27 +62,26 @@ class FinderECMWF(Finder):
         ectrans_remote = self.system.ectrans_remote_init(remote=options.get("remote", None),
                                                          storage=self.hostname())
         ectrans_gateway = self.system.ectrans_gateway_init(gateway=options.get("gateway", None))
-        rc, dict_args = self.system.ectransput(source=local,  # @UnusedVariable
-                                               target=rpath,
-                                               fmt=options.get("fmt", "foo"),
-                                               cpipeline=options.get("compressionpipeline", None),
-                                               gateway=ectrans_gateway,
-                                               remote=ectrans_remote,
-                                               sync=options.get('enforcesync', False))
-        return rc
+        return self.system.ectransput(source=local,
+                                      target=rpath,
+                                      fmt=options.get("fmt", "foo"),
+                                      cpipeline=options.get("compressionpipeline", None),
+                                      gateway=ectrans_gateway,
+                                      remote=ectrans_remote,
+                                      sync=options.get('enforcesync', False))
 
     def ectransdelete(self, remote, options):
         raise NotImplementedError
 
-    def ecfsfullpath(self, remote):
+    @staticmethod
+    def ecfsfullpath(remote):
         return "ec:{}".format(remote["path"])
 
     def ecfscheck(self, remote, options):
         rpath = self.ecfsfullpath(remote)
         list_options = options.get("options", list())
-        rc, dict_args = self.system.ecfstest(item=rpath,  # @UnusedVariable
-                                             options=list_options)
-        return rc
+        return self.system.ecfstest(item=rpath,
+                                    options=list_options)
 
     def ecfslocate(self, remote, options):
         return self.ecfsfullpath(remote)
@@ -90,11 +90,11 @@ class FinderECMWF(Finder):
         rpath = self.ecfsfullpath(remote)
         list_options = options.get("options", list())
         cpipeline = options.get("compressionpipeline")
-        rc, dict_args = self.system.ecfsget(source=rpath,  # @UnusedVariable
-                                            target=local,
-                                            fmt=options.get("fmt", "foo"),
-                                            cpipeline=cpipeline,
-                                            options=list_options)
+        rc = self.system.ecfsget(source=rpath,
+                                 target=local,
+                                 fmt=options.get("fmt", "foo"),
+                                 cpipeline=cpipeline,
+                                 options=list_options)
         if rc:
             self._localtarfix(local)
         return rc
@@ -103,16 +103,15 @@ class FinderECMWF(Finder):
         rpath = self.ecfsfullpath(remote)
         list_options = options.get("options", list())
         cpipeline = options.get("compressionpipeline")
-        rc, dict_args = self.system.ecfsput(source=local,  # @UnusedVariable
-                                            target=rpath,
-                                            fmt=options.get("fmt", "foo"),
-                                            cpipeline=cpipeline,
-                                            options=list_options)
-        return rc
+        return self.system.ecfsput(source=local,
+                                   target=rpath,
+                                   fmt=options.get("fmt", "foo"),
+                                   cpipeline=cpipeline,
+                                   options=list_options)
 
     def ecfsdelete(self, remote, options):
         rpath = self.ecfsfullpath(remote)
         list_options = options.get("options", list())
-        rc, dict_args = self.system.ecfsrm(item=rpath,  # @UnusedVariable
-                                           options=list_options)
-        return rc
+        return self.system.ecfsrm(item=rpath,
+                                  fmt=options.get("fmt", "foo"),
+                                  options=list_options)

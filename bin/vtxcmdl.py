@@ -113,6 +113,11 @@ def vortex_delayed_init(t, loadedmods=None):
     if loadedmods:
         for m in loadedmods:
             importlib.import_module(m)
+            # Automatically load the ecmwf addons (for ectrans/ecfs support)
+            if m == 'ecmwf':
+                import ecmwf.tools.addons
+                assert ecmwf.tools.addons
+                vortex.proxy.addon(kind='ecmwf', shell=t.sh)
 
 
 def actual_action(action, t, args, fatal=True):

@@ -1246,3 +1246,27 @@ class JobAssistantRdMailSetupPlugin(JobAssistantPlugin):
                 for action in ad.candidates(candidate):
                     logger.info('Activating the << %s >> action.', action.kind)
                     action.on()
+
+
+class JobAssistantUenvGdataDetourPlugin(JobAssistantPlugin):
+    """Setup an alternative location for GCO data (gget) referenced in Uenvs."""
+
+    _footprint = dict(
+        info='JobAssistant to deal with Uenv alternative locations .',
+        attr = dict(
+            kind=dict(
+                values=['uenv_gdata_detour', ]
+            ),
+        )
+    )
+
+    def plugable_extra_session_setup(self, t, **kw):
+        """Acquire the lock on job startup."""
+        detour = self.masterja.conf.get('uenv_gdata_detour', None)
+        if detour:
+            from gco.tools.uenv import config as u_config
+            u_config('gdata_detour', value=detour)
+            logger.info('gdata referenced in uenvs will be taken in the "@%s" uget location.',
+                        detour)
+        else:
+            logger.info('No relevant uenv_gdata_detour variable was found in the job conf.')
