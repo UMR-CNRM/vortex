@@ -16,9 +16,11 @@ import footprints
 
 from vortex.algo.components import BlindRun, AlgoComponent, Parallel, TaylorRun
 from vortex.data.geometries import HorizontalGeometry
+from vortex.tools.grib import EcGribDecoMixin
 from vortex.tools.parallelism import TaylorVortexWorker
 from common.algo.ifsroot import IFSParallel
 from common.tools.drhook import DrHookDecoMixin
+
 
 
 #: No automatic export
@@ -27,7 +29,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class BuildPGD(BlindRun, DrHookDecoMixin):
+class BuildPGD(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
     """Preparation of physiographic fields for Surfex."""
 
     _footprint = dict(
@@ -40,7 +42,7 @@ class BuildPGD(BlindRun, DrHookDecoMixin):
     )
 
 
-class BuildPGD_MPI(Parallel, DrHookDecoMixin):
+class BuildPGD_MPI(Parallel, DrHookDecoMixin, EcGribDecoMixin):
     """Preparation of physiographic fields for Surfex."""
 
     _footprint = dict(
