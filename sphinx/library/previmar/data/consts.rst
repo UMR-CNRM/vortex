@@ -90,3 +90,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: WamPreprocBis
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

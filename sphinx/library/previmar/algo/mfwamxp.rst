@@ -23,3 +23,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: CompressionGribAlgo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

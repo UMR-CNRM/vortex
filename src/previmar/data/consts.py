@@ -286,6 +286,22 @@ class WamPreproc(GenvModelResource):
         return 'wampreproc'
 
 
+class WamPreprocBis(WamPreproc):
+    """Constant files for alternative MFWAM in ensemble."""
+    _footprint = dict(
+        info = 'Constant files for alternative MFWAM',
+        attr = dict(
+            gvar = dict(
+                default = '[model]_preproc_tgz_bis',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'wampreprocbis'
+
+
 class WamGridPost(GenvModelResource):
     """Information on a grid for MFWAM post-processing."""
     _footprint = dict(

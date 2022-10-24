@@ -205,17 +205,20 @@ class FiltrageGrib(Script):
 
 
 class FiltrageGribWave(FiltrageGrib):
-    """Base class."""
+    """Base class for Filtering Grib (Pmer, U,V 10-meters wind) on Model Grid."""
     _footprint = [
         gvar,
         dict(
             info = 'Filtering Grib input',
             attr = dict(
+                kind = dict(
+                    values = ['FilteringWave']
+                ),
                 model = dict(
                     values = ['mfwam'],
                 ),
                 gvar = dict(
-                    default  = 'filtrage_grib',
+                    default  = 'wave_filtrage_grib',
                     values   = ['wave_filtrage_grib', 'filtrage_grib'],
                 ),
             )
@@ -357,6 +360,25 @@ class MasterWaves(OceanographicModel):
     @property
     def realkind(self):
         return 'WaveChief'
+
+
+class MasterWavesbis(MasterWaves):
+    """Alternative master MFWAM executable for ensemble."""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Master wave bis',
+            attr = dict(
+                gvar = dict(
+                    default  = 'master_[model]_bis',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'WaveChiefbis'
 
 
 class Filteralti(BlackBox):
@@ -562,3 +584,26 @@ class ConversionNcGrib(BlackBox):
     @property
     def realkind(self):
         return 'convertncgrb'
+
+
+class CompressionGrib(Script):
+    """Class for compressiong grib in grid_second_order."""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Compressing grib output',
+            attr = dict(
+                kind = dict(
+                    values = ['CompressingGrib']
+                ),
+                gvar = dict(
+                    default  = 'wave_compression_grib',
+                    values   = ['wave_compression_grib']
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'CompressionGrib'

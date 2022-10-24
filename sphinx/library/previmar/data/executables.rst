@@ -81,6 +81,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MasterWavesbis
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: BoundariesConditionWw3
    :show-inheritance:
    :members:
@@ -107,6 +112,11 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: InterpolationUGnc
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CompressionGrib
    :show-inheritance:
    :members:
    :member-order: alphabetical
