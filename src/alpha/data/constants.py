@@ -12,8 +12,6 @@ from gco.syntax.stdattrs import gdomain
 
 from common.data.consts import GenvModelResource
 
-from vortex.data.outflow import ModelResource
-
 #: No automatic export
 __all__ = []
 
@@ -109,5 +107,3 @@ class AlphaVersion(GenvModelResource):
     @property
     def realkind(self):
         return 'version'
-
-
