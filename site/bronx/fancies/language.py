@@ -8,6 +8,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import locale
 import re
+import sys
 
 #: No automatic export
 __all__ = []
@@ -109,7 +110,7 @@ class Pluralise(object):
         """
         if curlocale is None:
             curlocale = locale.getlocale()[0]
-            if curlocale is None:
+            if curlocale is None and sys.version_info.major <= 3 and sys.version_info.minor < 13:
                 curlocale = locale.getdefaultlocale()[0]
             if curlocale is None:
                 raise ValueError('Unable to detect the current locale')

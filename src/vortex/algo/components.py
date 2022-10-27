@@ -967,7 +967,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         opts = self.spawn_stdin_options()
         stdin_text = rh.resource.stdin_text(**opts)
         if stdin_text is not None:
-            plocale = locale.getdefaultlocale()[1] or 'ascii'
+            plocale = locale.getlocale()[1] or 'ascii'
             tmpfh = tempfile.TemporaryFile(dir=self.system.pwd(), mode='w+b')
             if isinstance(stdin_text, six.text_type):
                 tmpfh.write(stdin_text.encode(plocale))
@@ -1328,7 +1328,7 @@ class Expresso(ExecutableAlgoComponent):
         logger.info('Run script %s', args)
         rh_stdin = self.spawn_stdin(rh)
         if rh_stdin is not None:
-            plocale = locale.getdefaultlocale()[1] or 'ascii'
+            plocale = locale.getlocale()[1] or 'ascii'
             logger.info('Script stdin:\n%s', rh_stdin.read().decode(plocale, 'replace'))
             rh_stdin.seek(0)
         # Python path stuff
@@ -1431,7 +1431,7 @@ class BlindRun(xExecutableAlgoComponent):
         logger.info('BlindRun executable resource %s', args)
         rh_stdin = self.spawn_stdin(rh)
         if rh_stdin is not None:
-            plocale = locale.getdefaultlocale()[1] or 'ascii'
+            plocale = locale.getlocale()[1] or 'ascii'
             logger.info('BlindRun executable stdin (fileno:%d):\n%s',
                         rh_stdin.fileno(), rh_stdin.read().decode(plocale, 'replace'))
             rh_stdin.seek(0)

@@ -179,7 +179,7 @@ class AbstractSubJobLauncher(fp.FootprintBase):
         :param outcome: Some indication on how the subjob ended
         :param ignore_end: Print the entire standard output (usefull for debuging)
         """
-        plocale = locale.getdefaultlocale()[1] or 'ascii'
+        plocale = locale.getlocale()[1] or 'ascii'
         self.ticket.sh.title('subjob "{:s}" {:s}. Here is the output:'.format(tag, outcome))
         with io.open(_JOB_STDEO.format(self.fsid, tag), mode='rt', encoding=plocale) as fhst:
             started = False

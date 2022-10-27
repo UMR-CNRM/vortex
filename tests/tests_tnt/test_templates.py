@@ -64,7 +64,7 @@ COMPOSED_NAM = """\
 """
 
 
-def test_yaml():
+def checklib_yaml():
     rc = True
     try:
         import yaml  # @UnusedImport
@@ -83,7 +83,7 @@ class TestTntTemplate(unittest.TestCase):
                               ('NAMBLOCK1', 'KEY1'): 46.5,
                               ('NAMBLOCK3', 'KEY3(50)'): -50})
 
-    @unittest.skipUnless(test_yaml(), "pyyaml is unavailable")
+    @unittest.skipUnless(checklib_yaml(), "pyyaml is unavailable")
     def test_tnt_tpl_yaml(self):
         tplyaml = tnt.config.read_directives(os.path.join(tpl_path,
                                                           'tnt-directive.tpl.yaml'))
@@ -92,7 +92,7 @@ class TestTntTemplate(unittest.TestCase):
                               ('NAMBLOCK3', 'KEY3(50)'): -50,
                               ('NAMBLOCK1', 'KEY1'): 46.5})
 
-    @unittest.skipUnless(test_yaml(), "pyyaml is unavailable")
+    @unittest.skipUnless(checklib_yaml(), "pyyaml is unavailable")
     def test_tntstack_tpl_yaml(self):
         # Read the yaml file
         import yaml
@@ -105,7 +105,7 @@ class TestTntTemplate(unittest.TestCase):
                             set(['surfexdiags', 'geo499c1', 'dfi']))
 
 
-@unittest.skipUnless(test_yaml(), "pyyaml is unavailable")
+@unittest.skipUnless(checklib_yaml(), "pyyaml is unavailable")
 class TestTntRecipe(unittest.TestCase):
 
     def test_recipe_yaml(self):

@@ -1053,7 +1053,7 @@ class OSExtended(System):
                 p.wait()
             raise  # Fatal has no effect on that !
         else:
-            plocale = locale.getdefaultlocale()[1] or 'ascii'
+            plocale = locale.getlocale()[1] or 'ascii'
             if p.returncode in ok:
                 if isinstance(output, bool) and output:
                     rc = p_out.decode(plocale, 'replace')
@@ -1739,7 +1739,7 @@ class OSExtended(System):
             if logname:
                 extras.extend(['-u', logname])
             ftcmd = self.ftgetcmd or 'ftget'
-            plocale = locale.getdefaultlocale()[1] or 'ascii'
+            plocale = locale.getlocale()[1] or 'ascii'
             with tempfile.TemporaryFile(dir=self.path.dirname(self.path.abspath(destination[0])),
                                         mode='wb') as tmpio:
                 tmpio.writelines(['{:s} {:s}\n'.format(s, d).encode(plocale)
@@ -1754,7 +1754,7 @@ class OSExtended(System):
                     # Process output data
                     tmpoutput.seek(0)
                     ft_outputs = tmpoutput.read()
-            ft_outputs = ft_outputs.decode(locale.getdefaultlocale()[1] or 'ascii', 'replace')
+            ft_outputs = ft_outputs.decode(locale.getlocale()[1] or 'ascii', 'replace')
             logger.info('Here is the ftget command output: \n%s', ft_outputs)
             # Expand the return codes
             if rc:

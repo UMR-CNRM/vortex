@@ -801,7 +801,7 @@ class MpiTool(footprints.FootprintBase):
             for outf in sorted(self.system.glob('vwrap_stdeo.*')):
                 rank = int(outf[12:])
                 with io.open(outf, 'r',
-                             encoding=locale.getdefaultlocale()[1] or 'ascii',
+                             encoding=locale.getlocale()[1] or 'ascii',
                              errors='replace') as sfh:
                     for (i, l) in enumerate(sfh):
                         if i == 0:

@@ -390,7 +390,7 @@ if six.PY2:
             t_out = subprocess.check_output([AFFINITY_CMD, '-p', str(pid)])
         except OSError:
             raise CpusToolUnavailableError('No {:s} command on this system.'.format(AFFINITY_CMD))
-        locencode = locale.getdefaultlocale()[1] or 'ascii'
+        locencode = locale.getlocale()[1] or 'ascii'
         uni_out = t_out.decode(locencode, 'replace')  # Unicode stuff...
         binproc = int(_re_get_out.match(uni_out).group('binproc'), 16)  # It's hexadecimal
         binlist = list()
