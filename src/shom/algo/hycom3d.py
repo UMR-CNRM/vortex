@@ -7,16 +7,21 @@ Created on Thu Apr  4 17:32:49 2019 by sraynaud
 from collections import defaultdict
 
 import bronx.stdtypes.date as vdate
+from bronx.fancies import loggers
 from footprints.stdtypes import FPList, FPDict
-
+import footprints
 from vortex.syntax.stdattrs import date
+from vortex.data import geometries
 from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError
-from vortex.algo.components import Expresso, BlindRun, Parallel
+from vortex.algo.components import Expresso, BlindRun, Parallel, ParaBlindRun
+from vortex.tools.parallelism import VortexWorkerBlindRun
 
 from ..util.env import config_to_env_vars, stripout_conda_env
 
 
 __all__ = []
+
+logger = loggers.getLogger(__name__)
 
 
 # %% Utility classes (mixins for common behaviours)
@@ -26,12 +31,11 @@ class Hycom3dSpecsFileDecoMixin(AlgoComponentDecoMixin):
 
     def _get_specs_data(self, fname):
         """Return specs data from json."""
-        return self.system.json_load("regridcdf.json")
+        return self.system.json_load(fname)
 
     def _get_specs_and_link(self, fname):
-        """Return specs data and link regional files."""
+        """Return specs data and link files."""
         specs = self._get_specs_data(fname)
-        # Link to regional files
         for path in specs.get("links", []):
             local_path = self.system.path.basename(path)
             if not self.system.path.exists(local_path):
@@ -111,6 +115,11 @@ class Hycom3dIBCRunHorizRegridcdf(BlindRun, Hycom3dSpecsFileDecoMixin):
             attr=dict(
                 kind=dict(values=["hycom3d_ibc_run_horiz_regridcdf"]),
                 method=dict(type=int),
+                density_corr=dict(type=int),
+                bathy_corr=dict(type=int),
+                regridvars=dict(
+                    default=["ssh", "saln", "temp"],
+                    type=FPList)
             ),
         ),
     ]
@@ -120,19 +129,22 @@ class Hycom3dIBCRunHorizRegridcdf(BlindRun, Hycom3dSpecsFileDecoMixin):
         super(Hycom3dIBCRunHorizRegridcdf, self).prepare(rh, opts)
         specs = self._get_specs_and_link("regridcdf.json")
         resfiles = specs["resfiles"]
-        self.varnames = list(resfiles.keys())
         self.csteps = range(len(resfiles["ssh"]))
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
-        return dict(method=self.method, **self._clargs)
+        return dict(method=self.method,
+                    density_corr=self.density_corr,
+                    bathy_corr=self.bathy_corr,
+                    **self._clargs)
 
     def execute(self, rh, opts):
         """We execute several times the executable with different arguments"""
-        # Note LFM: It would be more generic to have this list in the footprint.
-        for varname in ["ssh", "saln", "temp"]:
+        for varname in self.regridvars:
+            print(varname)
             for cstep in self.csteps:
                 self._clargs = dict(varname=varname, cstep=cstep)
+                print(self._clargs)
                 super(Hycom3dIBCRunHorizRegridcdf, self).execute(rh, opts)
 
 
@@ -157,7 +169,8 @@ class Hycom3dIBCRunVerticalInicon(BlindRun, Hycom3dSpecsFileDecoMixin):
             attr=dict(
                 kind=dict(values=["hycom3d_ibc_run_vert_inicon"]),
                 sshmin=dict(),
-                cmoy=dict()
+                cmoy=dict(),
+                bathy_corr=dict(type=int)
             ),
         ),
     ]
@@ -184,6 +197,7 @@ class Hycom3dIBCRunVerticalInicon(BlindRun, Hycom3dSpecsFileDecoMixin):
             nz=self._specs["nz"],
             cmoy=self.cmoy,
             sshmin=self.sshmin,
+            bathy_corr=self.bathy_corr,
             cstep="0")
 
 
@@ -264,7 +278,10 @@ class Hycom3dAtmFrcTime(Expresso):
         insta_rhs = [sec.rh for sec in
                      self.context.sequence.effective_inputs(role="InputInsta")]
         insta_rhs.sort(key=lambda rh: (rh.resource.date, rh.resource.term))
-        self._insta_files = [rh.container.localpath() for rh in insta_rhs]
+        self._insta_files = []
+        for rh in insta_rhs:
+            if not rh.container.localpath() in self._insta_files:
+                self._insta_files.append(rh.container.localpath())
 
         # Input cumul files
         cumul_rhs = [sec.rh for sec in
@@ -395,7 +412,31 @@ class Hycom3dSpectralNudgingRunSpectralPreproc(Expresso):
         )
 
 
-class Hycom3dSpectralNudgingRunSpectral(BlindRun, Hycom3dSpecsFileDecoMixin):
+class Hycom3dSpectralNudgingRunSpectralMixin(AlgoComponentDecoMixin):
+
+    def _nudging_prepare(self, rh, opts):
+        """Get specs data from JSON and setup args."""
+        self._specs = self._get_specs_and_link("spectral.json")
+        self.varnames = list(self._specs["ncfiles"].keys())
+        self.ncfiles = self._specs["ncfiles"]
+        self.ncout_patt = self._specs["ncout_patt"]
+        # Get command line options
+        self._clargs = self.system.json_load(self._specs["clargs"])
+        self._links = self._specs["links"] if "links" in self._specs.keys() else []
+
+    _MIXIN_PREPARE_PREHOOKS = (_nudging_prepare, )
+
+    def _nudging_cli_opts_extend(self, prev):
+        """Prepare options for the resource's command line."""
+        prev.update(self._clargs)
+        return prev
+
+    _MIXIN_CLI_OPTS_EXTEND = (_nudging_cli_opts_extend, )
+
+
+class Hycom3dSpectralNudgingRunSpectral(BlindRun,
+                                        Hycom3dSpectralNudgingRunSpectralMixin,
+                                        Hycom3dSpecsFileDecoMixin):
     """Spectral filtering over Hycom3d and Mercator outputs."""
 
     _footprint = dict(
@@ -411,20 +452,6 @@ class Hycom3dSpectralNudgingRunSpectral(BlindRun, Hycom3dSpecsFileDecoMixin):
     def realkind(self):
         return "hycom3d_spnudge_spectral"
 
-    def prepare(self, rh, opts):
-        """Get specs data from JSON and setup args."""
-        super(Hycom3dSpectralNudgingRunSpectral, self).prepare(rh, opts)
-        specs = self._get_specs_and_link("spectral.json")
-        self.varnames = list(specs["ncfiles"].keys())
-        self.ncfiles = specs["ncfiles"]
-        self.ncout_patt = specs["ncout_patt"]
-        # Get command line options
-        self._clargs = self.system.json_load(specs["clargs"])
-
-    def spawn_command_options(self):
-        """Prepare options for the resource's command line."""
-        return dict(**self._clargs)
-
     def execute(self, rh, opts):
         """We execute several times the executable with different inputs."""
         for varname in self.varnames:
@@ -435,50 +462,130 @@ class Hycom3dSpectralNudgingRunSpectral(BlindRun, Hycom3dSpecsFileDecoMixin):
                 self.system.mv("output.nc", self.ncout_patt.format(**locals()))
 
 
-# %% Model run AlgoComponents
-
-class Hycom3dModelRunPreproc(Expresso):
+class Hycom3dSpectralNudgingRunSpectralPara(ParaBlindRun,
+                                            Hycom3dSpectralNudgingRunSpectralMixin,
+                                            Hycom3dSpecsFileDecoMixin):
+    """Spectral filtering over Hycom3d and Mercator outputs in parallel."""
 
     _footprint = dict(
-        info="Prepare Hycom output for postproduction",
+        info="Run the spectral filtering over Hycom3d outputs in parallel",
         attr=dict(
             kind=dict(
-                values=["hycom3d_model_preproc"],
+                values=["hycom3d_spnudge_spectral_para"],
             ),
-            rank=dict(
+            outfiles=dict(
                 optional=True,
-                default=0,
-                type=int,
+                type=FPList,
+                default=[]
             ),
-            restart=dict(
-                default=True,
-                type=bool,
-                optional=True,
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return "hycom3d_spnudge_spectral_para"
+
+    def _default_common_instructions(self, rh, opts):
+        """Create a common instruction dictionary that will be used by the workers."""
+        ddict = super(Hycom3dSpectralNudgingRunSpectralPara, self)._default_common_instructions(rh, opts)
+        del ddict['progname']
+        del ddict['progargs']
+        return ddict
+
+    def execute(self, rh, opts):
+        """Loop on the various initial conditions provided."""
+        scheduler_instructions = defaultdict(list)
+        sh = self.system
+        workdir = sh.pwd()
+        progname = rh.container.localpath()
+        iworker = 0
+        for varname in self.varnames:
+            for source in list(self.ncfiles[varname].keys()):
+                iworker += 1
+                subdir = "worker_{}".format(iworker)
+                outfiles = self.outfiles.copy()
+                outfiles.append(self.ncout_patt.format(**locals()))
+                with sh.cdcontext(subdir, create=True):
+                    if not sh.path.exists(progname):
+                        sh.softlink(sh.path.join(workdir, progname),
+                                    progname)
+                    sh.softlink(
+                        sh.path.join(workdir, self.ncfiles[varname][source]),
+                        "input.nc")
+                    if len(self._links) > 0:
+                        for link in self._links:
+                            sh.softlink(sh.path.join(workdir, link),
+                                        sh.path.basename(link))
+                    scheduler_instructions['name'].append('{:s}'.format(subdir))
+                    scheduler_instructions['progname'].append(sh.path.join(workdir, subdir, progname))
+                    scheduler_instructions['progargs'].append(footprints.FPList(self.spawn_command_line(rh)))
+                    scheduler_instructions['base'].append(subdir)
+                    scheduler_instructions['subdir'].append(subdir)
+                    scheduler_instructions['files_out'].append(outfiles)
+        self._default_pre_execute(rh, opts)
+        common_i = self._default_common_instructions(rh, opts)
+        logger.info("common_i %s", common_i)
+        common_i.update(dict(workdir=workdir, ))
+        self._add_instructions(common_i, scheduler_instructions)
+        logger.info('scheduler_instruction %s', scheduler_instructions)
+        self._default_post_execute(rh, opts)
+
+
+class SpnudgeWorker(VortexWorkerBlindRun):
+    """Include utility methods to run a basic program (i.e no MPI)."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['hycom3d_spnudge_spectral_para'],
             ),
-            delday=dict(
-                default=1,
-                type=int,
-                optional=True,
+            subdir = dict(
+                info = 'work in this particular subdirectory',
+                optional = True
             ),
-            mode=dict(
-                default="forecast",
-                optional=True,
+            files_out = dict(
+                info = 'names of the output files',
+                optional = True,
+                type=FPList,
             ),
-            mpiname=dict(
-                default="mpirun",
-                optional=True,
+        )
+    )
+
+    def vortex_task(self, **kwargs):
+        """TODO: documentation."""
+        logger.info("self.subdir %s", self.subdir)
+        logger.info("files_out %s", self.files_out)
+
+        sh = self.system
+        rundir = sh.getcwd()
+        thisdir = sh.path.join(rundir, self.subdir)
+        logger.info('thisdir %s', thisdir)
+        with sh.cdcontext(thisdir, create=False):
+            self.local_spawn('log.out')
+            sh.mv("output.nc", sh.path.join(rundir, self.files_out[-1]))
+            for file_out in self.files_out[:-1]:
+                if not sh.path.exists(sh.path.join(rundir, file_out)):
+                    sh.mv(file_out, sh.path.join(rundir, file_out))
+
+
+# %% Model run AlgoComponents
+
+class Hycom3dModelRunPrepost(Expresso):
+
+    _footprint = dict(
+        info="Pre- and post-processings of Hycom run",
+        attr=dict(
+            kind=dict(
+                values=["hycom3d_model_prepost"],
+            ),
+            clargs=dict(
+                type=FPDict,
             ),
         ),
     )
 
     def spawn_command_options(self):
-        return dict(
-            rank=self.rank,
-            mode=self.mode,
-            delday=self.delday,
-            restart=self.restart,
-            mpiname=self.mpiname
-        )
+        return self.clargs
 
 
 class Hycom3dModelRun(Parallel, Hycom3dSpecsFileDecoMixin):
@@ -579,15 +686,89 @@ class Hycom3dPostprodPreproc(Expresso):
         )
 
 
-class Hycom3dPostprod(BlindRun, Hycom3dSpecsFileDecoMixin):
+class Hycom3dPostprodConcat(Hycom3dPostprodPreproc):
+    """TODO Class Documentation."""
+
+    _footprint = dict(
+        info="Prepare Hycom output for postproduction",
+        attr=dict(
+            kind=dict(
+                values=["hycom3d_postprod_concat"],
+            ),
+            vapp=dict(
+                default="hycom3d",
+                optional=True,
+            ),
+            vconf=dict(
+                default="manga",
+                optional=True,
+            ),
+        ),
+    )
+
+    def spawn_command_options(self):
+        clopts = super(Hycom3dPostprodConcat, self).spawn_command_options()
+        clopts['vapp'] = self.vapp
+        clopts['vconf'] = self.vconf
+        return clopts
+
+
+class Hycom3dPostprodMixin(AlgoComponentDecoMixin):
+
+    def _postprod_prepare(self, rh, opts):
+        self._specs = self._get_specs_data("specs.json")
+        self._clargs = self._specs["clargs"]
+
+    _MIXIN_PREPARE_PREHOOKS = (_postprod_prepare, )
+
+    def _postprod_cli_opts_extend(self, prev):
+        """Prepare options for the resource's command line."""
+        prev.clear()
+        for kopt, vopt in self._clargs.items():
+            if isinstance(vopt, dict):
+                prev.update(vopt)
+            else:
+                prev[kopt] = vopt
+        return prev
+
+    _MIXIN_CLI_OPTS_EXTEND = (_postprod_cli_opts_extend, )
+
+
+class Hycom3dPostprod(BlindRun, Hycom3dPostprodMixin, Hycom3dSpecsFileDecoMixin):
     """Post-production filter over hycom3d outputs."""
 
     _footprint = dict(
         info="Run the postprod filtering over Hycom3d outputs",
         attr=dict(
             kind=dict(
-                values=["hycom3d_postprod_filter",
-                        "hycom3d_postprod_tempconversion"],
+                values=[
+                    "hycom3d_postprod_filter",
+                    "hycom3d_postprod_tempconversion"],
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return "hycom3d_postprod"
+
+    def execute(self, rh, opts):
+        """We execute several times the executable with different inputs."""
+        for arg in self._clargs:
+            self._clarg = arg
+            super(Hycom3dPostprod, self).execute(rh, opts)
+
+
+class Hycom3dParaPostprod(ParaBlindRun, Hycom3dPostprodMixin, Hycom3dSpecsFileDecoMixin):
+    """Hycom3d algo component running post-production
+    Fortran executables in parallel
+    """
+
+    _footprint = dict(
+        info="Run the postprod Fortran executable over Hycom3d outputs",
+        attr=dict(
+            kind=dict(
+                values=["hycom3d_postprod_para", ]
             ),
         ),
     )
@@ -597,22 +778,95 @@ class Hycom3dPostprod(BlindRun, Hycom3dSpecsFileDecoMixin):
         return "hycom3d_postprod"
 
     def prepare(self, rh, opts):
-        super(Hycom3dPostprod, self).prepare(rh, opts)
-        self._specs = self._get_specs_data("specs.json")
-        self.args = self._specs["clargs"]
+        super(Hycom3dParaPostprod, self).prepare(rh, opts)
+        self._links = self._specs["links"] if "links" in self._specs.keys() else []
 
-    def spawn_command_options(self):
-        """Prepare options for the resource's command line."""
-        return dict(**self._clargs)
+    def _default_common_instructions(self, rh, opts):
+        """Create a common instruction dictionary that will be used by the workers."""
+        ddict = super(Hycom3dParaPostprod, self)._default_common_instructions(rh, opts)
+        del ddict['progname']
+        del ddict['progargs']
+        return ddict
 
     def execute(self, rh, opts):
-        """We execute several times the executable with different inputs."""
-        for arg in self.args:
-            self._clargs = arg
-            super(Hycom3dPostprod, self).execute(rh, opts)
+        """Loop on the various initial conditions provided."""
+        scheduler_instructions = defaultdict(list)
+        sh = self.system
+        workdir = sh.pwd()
+        progname = rh.container.localpath()
+        for iclarg, clarg in enumerate(self._clargs):
+            self._clarg = clarg
+            subdir = "worker_{}".format(iclarg)
+            with sh.cdcontext(subdir, create=True):
+                if not sh.path.exists(progname):
+                    sh.softlink(sh.path.join(workdir, progname),
+                                progname)
+                if "ncins" in clarg.keys():
+                    for nc in clarg["ncins"]:
+                        fin = clarg["ncins"][nc]
+                        if not sh.path.exists(fin):
+                            sh.softlink(sh.path.join(workdir, fin),
+                                        fin)
+                else:
+                    fin = clarg["ncin"]
+                    if not self.system.path.exists(fin):
+                        sh.softlink(sh.path.join(workdir, fin),
+                                    fin)
+                for link in self._links:
+                    if "traductions_noms_longs" in link:
+                        sh.softlink(sh.path.join(workdir, link),
+                                    "traductions_noms_longs")
+                    else:
+                        sh.softlink(sh.path.join(workdir, link),
+                                    sh.path.basename(link))
+                scheduler_instructions['name'].append('{:s}'.format(subdir))
+                scheduler_instructions['progname'].append(sh.path.join(workdir, subdir, progname))
+                scheduler_instructions['progargs'].append(footprints.FPList(self.spawn_command_line(rh)))
+                scheduler_instructions['base'].append(subdir)
+                scheduler_instructions['subdir'].append(subdir)
+                scheduler_instructions['file_out'].append(clarg["ncout"])
+        self._default_pre_execute(rh, opts)
+        common_i = self._default_common_instructions(rh, opts)
+        logger.info("common_i %s", common_i)
+        common_i.update(dict(workdir=workdir, ))
+        self._add_instructions(common_i, scheduler_instructions)
+        logger.info('scheduler_instruction %s', scheduler_instructions)
+        self._default_post_execute(rh, opts)
 
 
-class Hycom3dPostprodInterpolation(Hycom3dPostprod):
+class PostprodWorker(VortexWorkerBlindRun):
+    """Include utility methods to run a basic program (i.e no MPI)."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['hycom3d_postprod_para'],
+            ),
+            subdir = dict(
+                info = 'work in this particular subdirectory',
+                optional = True
+            ),
+            file_out = dict(
+                info = 'name of the output file',
+                optional = True
+            ),
+        )
+    )
+
+    def vortex_task(self, **kwargs):
+        """TODO: documentation."""
+        logger.info("self.subdir %s", self.subdir)
+        logger.info("file_out %s", self.file_out)
+
+        rundir = self.system.getcwd()
+        thisdir = self.system.path.join(rundir, self.subdir)
+        logger.info('thisdir %s', thisdir)
+        with self.system.cdcontext(thisdir, create=False):
+            self.local_spawn('log.out')
+            self.system.mv(self.file_out, self.system.path.join(rundir, self.file_out))
+
+
+class Hycom3dPostprodInterpolation(Hycom3dPostprodPreproc):
     """
     Post-production interpolation over hycom3d outputs
     """
@@ -639,3 +893,28 @@ class Hycom3dPostprodInterpolation(Hycom3dPostprod):
                     self.system.symlink(path, "traductions_noms_longs")
                 else:
                     self.system.symlink(path, local_path)
+
+
+class Hycom3dPostprodExtract(Hycom3dPostprodPreproc):
+    """TODO Class Documentation."""
+
+    _footprint = dict(
+        info="Prepare Hycom output for postproduction",
+        attr=dict(
+            kind=dict(
+                values=["hycom3d_postprod_extract"]
+            ),
+            geometries=dict(
+                default="geometries.ini",
+                optional=True
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return "hycom3d_postprod_extract"
+
+    def postfix(self, rh, opts):
+        super(Hycom3dPostprodPreproc, self).postfix(rh, opts)
+        geometries.load(self.geometries)

@@ -51,6 +51,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Hycom3dPostprodOutput
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Hycom3dRiversModelInput
    :show-inheritance:
    :members:
