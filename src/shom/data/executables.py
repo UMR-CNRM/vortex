@@ -57,10 +57,9 @@ class Hycom3dIBCIniconBinary(Binary):
         return "hycom3d_ibc_inicon_binary"
 
     def command_line(self, **opts):
-        return ("{datadir} {sshfile} {tempfile} {salnfile} "+
-                 "{nx} {ny} {nz} {cmoy} {sshmin} "+
-                 "{bathy_corr} {cstep}").format(**opts)
-
+        return ("{datadir} {sshfile} {tempfile} {salnfile} " +
+                "{nx} {ny} {nz} {cmoy} {sshmin} " +
+                "{bathy_corr} {cstep}").format(**opts)
 
 
 class Hycom3dSpNudgeDemerliacBinary(Binary):
@@ -329,6 +328,7 @@ class Hycom3dSpnudgeSpectralPreprocScript(Script):
     def command_line(self, **opts):
         return "{nchycom3d} {ncmercator}".format(**opts)
 
+
 class Hycom3dPostprodPreprocScript(Script):
     """TODO Class Documentation."""
 
@@ -340,6 +340,7 @@ class Hycom3dPostprodPreprocScript(Script):
     def command_line(self, **opts):
         return "{ncins} --rank {rank} --postprod {postprod} --rundate {rundate}".format(**opts)
 
+
 class Hycom3dPostprodConcatScript(Script):
     """TODO Class Documentation."""
 
@@ -349,4 +350,5 @@ class Hycom3dPostprodConcatScript(Script):
     )
 
     def command_line(self, **opts):
-        return "{ncins} --rank {rank} --postprod {postprod} --rundate {rundate} --vapp {vapp} --vconf {vconf}".format(**opts)
+        return ("{ncins} --rank {rank} --postprod {postprod} " +
+                "--rundate {rundate} --vapp {vapp} --vconf {vconf}").format(**opts)

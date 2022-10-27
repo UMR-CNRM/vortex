@@ -5,7 +5,6 @@ Created on Thu Apr  4 17:32:49 2019 by sraynaud
 """
 
 from collections import defaultdict
-import logging
 
 import bronx.stdtypes.date as vdate
 from bronx.fancies import loggers
@@ -23,6 +22,7 @@ from ..util.env import config_to_env_vars, stripout_conda_env
 __all__ = []
 
 logger = loggers.getLogger(__name__)
+
 
 # %% Utility classes (mixins for common behaviours)
 
@@ -133,7 +133,7 @@ class Hycom3dIBCRunHorizRegridcdf(BlindRun, Hycom3dSpecsFileDecoMixin):
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
-        return dict(method=self.method, 
+        return dict(method=self.method,
                     density_corr=self.density_corr,
                     bathy_corr=self.bathy_corr,
                     **self._clargs)
@@ -308,6 +308,7 @@ class Hycom3dAtmFrcTime(Expresso):
             ]),
         )
 
+
 # %% Spectral nudging
 
 class Hycom3dSpectralNudgingRunPrepost(Expresso):
@@ -411,7 +412,31 @@ class Hycom3dSpectralNudgingRunSpectralPreproc(Expresso):
         )
 
 
-class Hycom3dSpectralNudgingRunSpectral(BlindRun, Hycom3dSpecsFileDecoMixin):
+class Hycom3dSpectralNudgingRunSpectralMixin(AlgoComponentDecoMixin):
+
+    def _nudging_prepare(self, rh, opts):
+        """Get specs data from JSON and setup args."""
+        self._specs = self._get_specs_and_link("spectral.json")
+        self.varnames = list(self._specs["ncfiles"].keys())
+        self.ncfiles = self._specs["ncfiles"]
+        self.ncout_patt = self._specs["ncout_patt"]
+        # Get command line options
+        self._clargs = self.system.json_load(self._specs["clargs"])
+        self._links = self._specs["links"] if "links" in self._specs.keys() else []
+
+    _MIXIN_PREPARE_PREHOOKS = (_nudging_prepare, )
+
+    def _nudging_cli_opts_extend(self, prev):
+        """Prepare options for the resource's command line."""
+        prev.update(self._clargs)
+        return prev
+
+    _MIXIN_CLI_OPTS_EXTEND = (_nudging_cli_opts_extend, )
+
+
+class Hycom3dSpectralNudgingRunSpectral(BlindRun,
+                                        Hycom3dSpectralNudgingRunSpectralMixin,
+                                        Hycom3dSpecsFileDecoMixin):
     """Spectral filtering over Hycom3d and Mercator outputs."""
 
     _footprint = dict(
@@ -427,21 +452,6 @@ class Hycom3dSpectralNudgingRunSpectral(BlindRun, Hycom3dSpecsFileDecoMixin):
     def realkind(self):
         return "hycom3d_spnudge_spectral"
 
-    def prepare(self, rh, opts):
-        """Get specs data from JSON and setup args."""
-        super(Hycom3dSpectralNudgingRunSpectral, self).prepare(rh, opts)
-        self._specs = self._get_specs_and_link("spectral.json")
-        self.varnames = list(self._specs["ncfiles"].keys())
-        self.ncfiles = self._specs["ncfiles"]
-        self.ncout_patt = self._specs["ncout_patt"]
-        # Get command line options
-        self._clargs = self.system.json_load(self._specs["clargs"])
-        self._links = self._specs["links"] if "links" in self._specs.keys() else []
- 
-    def spawn_command_options(self):
-        """Prepare options for the resource's command line."""
-        return dict(**self._clargs)
-
     def execute(self, rh, opts):
         """We execute several times the executable with different inputs."""
         for varname in self.varnames:
@@ -452,9 +462,10 @@ class Hycom3dSpectralNudgingRunSpectral(BlindRun, Hycom3dSpecsFileDecoMixin):
                 self.system.mv("output.nc", self.ncout_patt.format(**locals()))
 
 
-class Hycom3dSpectralNudgingRunSpectralPara(Hycom3dSpectralNudgingRunSpectral, ParaBlindRun):
-    """Spectral filtering over Hycom3d and Mercator outputs
-    in parallel."""
+class Hycom3dSpectralNudgingRunSpectralPara(ParaBlindRun,
+                                            Hycom3dSpectralNudgingRunSpectralMixin,
+                                            Hycom3dSpecsFileDecoMixin):
+    """Spectral filtering over Hycom3d and Mercator outputs in parallel."""
 
     _footprint = dict(
         info="Run the spectral filtering over Hycom3d outputs in parallel",
@@ -473,15 +484,12 @@ class Hycom3dSpectralNudgingRunSpectralPara(Hycom3dSpectralNudgingRunSpectral, P
     @property
     def realkind(self):
         return "hycom3d_spnudge_spectral_para"
-                                            
-    def prepare(self, rh, opts):
-        super(Hycom3dSpectralNudgingRunSpectralPara, self).prepare(rh, opts)
 
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super(ParaBlindRun, self)._default_common_instructions(rh, opts)
-        ddict['progtaskset'] = self.taskset
-        ddict['progtaskset_bsize'] = self.taskset_bsize
+        ddict = super(Hycom3dSpectralNudgingRunSpectralPara, self)._default_common_instructions(rh, opts)
+        del ddict['progname']
+        del ddict['progargs']
         return ddict
 
     def execute(self, rh, opts):
@@ -520,8 +528,7 @@ class Hycom3dSpectralNudgingRunSpectralPara(Hycom3dSpectralNudgingRunSpectral, P
         common_i.update(dict(workdir=workdir, ))
         self._add_instructions(common_i, scheduler_instructions)
         logger.info('scheduler_instruction %s', scheduler_instructions)
-        logger.info('Intermediate report:', self._boss.get_report())
-        self._boss.wait_till_finished()
+        self._default_post_execute(rh, opts)
 
 
 class SpnudgeWorker(VortexWorkerBlindRun):
@@ -618,7 +625,7 @@ class Hycom3dModelRun(Parallel, Hycom3dSpecsFileDecoMixin):
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
         return dict(**self._clargs)
-     
+
     def execute(self, rh, opts):
         # LFM: I think it's a bad idea. mpiopts and mpiname should be provided
         #      during the call to the run method. With this piece of code, this
@@ -631,7 +638,7 @@ class Hycom3dModelRun(Parallel, Hycom3dSpecsFileDecoMixin):
             mpiname=self.namempi
         )
         super(Hycom3dModelRun, self).execute(rh, opts)
-    
+
 
 # %% Post-production run algo component
 
@@ -700,18 +707,34 @@ class Hycom3dPostprodConcat(Hycom3dPostprodPreproc):
     )
 
     def spawn_command_options(self):
-        return dict(
-            ncins=','.join(self._files),
-            rank=self.rank,
-            postprod=self.postprod,
-            rundate=self.rundate,
-            vapp=self.vapp,
-            vconf=self.vconf
-        )
+        clopts = super(Hycom3dPostprodConcat, self).spawn_command_options()
+        clopts['vapp'] = self.vapp
+        clopts['vconf'] = self.vconf
+        return clopts
 
 
+class Hycom3dPostprodMixin(AlgoComponentDecoMixin):
 
-class Hycom3dPostprod(BlindRun, Hycom3dSpecsFileDecoMixin):
+    def _postprod_prepare(self, rh, opts):
+        self._specs = self._get_specs_data("specs.json")
+        self._clargs = self._specs["clargs"]
+
+    _MIXIN_PREPARE_PREHOOKS = (_postprod_prepare, )
+
+    def _postprod_cli_opts_extend(self, prev):
+        """Prepare options for the resource's command line."""
+        prev.clear()
+        for kopt, vopt in self._clargs.items():
+            if isinstance(vopt, dict):
+                prev.update(vopt)
+            else:
+                prev[kopt] = vopt
+        return prev
+
+    _MIXIN_CLI_OPTS_EXTEND = (_postprod_cli_opts_extend, )
+
+
+class Hycom3dPostprod(BlindRun, Hycom3dPostprodMixin, Hycom3dSpecsFileDecoMixin):
     """Post-production filter over hycom3d outputs."""
 
     _footprint = dict(
@@ -729,15 +752,6 @@ class Hycom3dPostprod(BlindRun, Hycom3dSpecsFileDecoMixin):
     def realkind(self):
         return "hycom3d_postprod"
 
-    def prepare(self, rh, opts):
-        super(Hycom3dPostprod, self).prepare(rh, opts)
-        self._specs = self._get_specs_data("specs.json")
-        self._clargs = self._specs["clargs"]
-
-    def spawn_command_options(self):
-        """Prepare options for the resource's command line."""
-        return dict(**self._clarg)
-
     def execute(self, rh, opts):
         """We execute several times the executable with different inputs."""
         for arg in self._clargs:
@@ -745,7 +759,7 @@ class Hycom3dPostprod(BlindRun, Hycom3dSpecsFileDecoMixin):
             super(Hycom3dPostprod, self).execute(rh, opts)
 
 
-class Hycom3dParaPostprod(Hycom3dPostprod, ParaBlindRun):
+class Hycom3dParaPostprod(ParaBlindRun, Hycom3dPostprodMixin, Hycom3dSpecsFileDecoMixin):
     """Hycom3d algo component running post-production
     Fortran executables in parallel
     """
@@ -754,37 +768,24 @@ class Hycom3dParaPostprod(Hycom3dPostprod, ParaBlindRun):
         info="Run the postprod Fortran executable over Hycom3d outputs",
         attr=dict(
             kind=dict(
-                values=[
-                    "hycom3d_postprod_para",
-                    ]
+                values=["hycom3d_postprod_para", ]
             ),
         ),
     )
-    
+
+    @property
+    def realkind(self):
+        return "hycom3d_postprod"
+
     def prepare(self, rh, opts):
         super(Hycom3dParaPostprod, self).prepare(rh, opts)
         self._links = self._specs["links"] if "links" in self._specs.keys() else []
 
-
-    def spawn_command_options(self):
-        """Prepare options for the resource's command line."""
-        opts = self._clarg
-        opts2pop, opts2update = [], []
-        for kopt, vopt in opts.items():
-            if isinstance(vopt, dict):
-                opts2pop.append(kopt)
-                opts2update.append(vopt)
-        for opt2pop in opts2pop:
-            opts.pop(opt2pop)
-        for opt2update in opts2update:
-            opts.update(opt2update)
-        return opts
-
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super(ParaBlindRun, self)._default_common_instructions(rh, opts)
-        ddict['progtaskset'] = self.taskset
-        ddict['progtaskset_bsize'] = self.taskset_bsize
+        ddict = super(Hycom3dParaPostprod, self)._default_common_instructions(rh, opts)
+        del ddict['progname']
+        del ddict['progargs']
         return ddict
 
     def execute(self, rh, opts):
@@ -792,7 +793,7 @@ class Hycom3dParaPostprod(Hycom3dPostprod, ParaBlindRun):
         scheduler_instructions = defaultdict(list)
         sh = self.system
         workdir = sh.pwd()
-        progname = rh.container.localpath()        
+        progname = rh.container.localpath()
         for iclarg, clarg in enumerate(self._clargs):
             self._clarg = clarg
             subdir = "worker_{}".format(iclarg)
@@ -814,7 +815,7 @@ class Hycom3dParaPostprod(Hycom3dPostprod, ParaBlindRun):
                 for link in self._links:
                     if "traductions_noms_longs" in link:
                         sh.softlink(sh.path.join(workdir, link),
-                                     "traductions_noms_longs")
+                                    "traductions_noms_longs")
                     else:
                         sh.softlink(sh.path.join(workdir, link),
                                     sh.path.basename(link))
@@ -830,8 +831,7 @@ class Hycom3dParaPostprod(Hycom3dPostprod, ParaBlindRun):
         common_i.update(dict(workdir=workdir, ))
         self._add_instructions(common_i, scheduler_instructions)
         logger.info('scheduler_instruction %s', scheduler_instructions)
-        logger.info('Intermediate report:', self._boss.get_report())
-        self._boss.wait_till_finished()
+        self._default_post_execute(rh, opts)
 
 
 class PostprodWorker(VortexWorkerBlindRun):
@@ -863,7 +863,7 @@ class PostprodWorker(VortexWorkerBlindRun):
         logger.info('thisdir %s', thisdir)
         with self.system.cdcontext(thisdir, create=False):
             self.local_spawn('log.out')
-            self.system.mv(self.file_out, self.system.path.join(rundir, self.file_out))       
+            self.system.mv(self.file_out, self.system.path.join(rundir, self.file_out))
 
 
 class Hycom3dPostprodInterpolation(Hycom3dPostprodPreproc):

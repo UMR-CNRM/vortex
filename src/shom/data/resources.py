@@ -4,13 +4,10 @@
 Hycom3d files.
 """
 
-from bronx.stdtypes.date import Date
-from vortex.data.flow import FlowResource
-from common.data.modelstates import InitialCondition, Analysis
-from vortex.data.flow import GeoFlowResource
+from vortex.data.flow import FlowResource, GeoFlowResource
 from vortex.syntax.stddeco import namebuilding_append
 from vortex.syntax.stdattrs import term_deco
-from previmar.data.resources import SurgesResultNative
+from common.data.modelstates import InitialCondition, Analysis
 
 __all__ = []
 
@@ -38,6 +35,7 @@ class CmemsRivers(FlowResource):
     @property
     def realkind(self):
         return 'rivers'
+
 
 # %% Pre-processing intermediate files
 
@@ -128,7 +126,7 @@ class Hycom3dRiversModelInput(Hycom3dModelInput):
             ),
             nativefmt=dict(
                 values=['r', 'nc', 'ascii', 'netcdf'],
-                remap={'r':'ascii', 'nc':'netcdf'}
+                remap={'r': 'ascii', 'nc': 'netcdf'}
             ),
             format=dict(
                 values=['r', 'nc'],
@@ -164,6 +162,7 @@ class Hycom3dInitialCondition(InitialCondition):
             ),
         ),
     )
+
 
 # %% Model outputs
 
@@ -224,12 +223,11 @@ class Hycom3dPostprodOutput(Hycom3dModelOutput):
             attr=dict(
                 kind=dict(
                     values=["postprod"],
-                ) 
+                )
             )
         )
-    ]   
+    ]
 
     @property
     def realkind(self):
         return "hycom3d_postprod_output"
-

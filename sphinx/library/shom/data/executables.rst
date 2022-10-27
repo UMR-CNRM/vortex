@@ -56,6 +56,16 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Hycom3dModelPostprocScript
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Hycom3dPostprodConcatScript
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Hycom3dPostProdFilterBinary
    :show-inheritance:
    :members:

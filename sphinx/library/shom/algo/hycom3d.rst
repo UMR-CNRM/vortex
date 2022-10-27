@@ -56,12 +56,32 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Hycom3dModelRunPreproc
+.. autoclass:: Hycom3dModelRunPrepost
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Hycom3dPostprodMixin
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
 .. autoclass:: Hycom3dPostprod
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Hycom3dParaPostprod
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Hycom3dPostprodConcat
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Hycom3dPostprodExtract
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -96,6 +116,16 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Hycom3dSpectralNudgingRunSpectralMixin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Hycom3dSpectralNudgingRunSpectralPara
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Hycom3dSpectralNudgingRunSpectral
    :show-inheritance:
    :members:
@@ -106,3 +136,12 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: PostprodWorker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SpnudgeWorker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
