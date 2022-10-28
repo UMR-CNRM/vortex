@@ -74,12 +74,14 @@ class SodaWorker(Parallel):
             self.system.remove('PREP_' + self.dateassim.ymdHh + '_PF_ENS' + str(jj) + '.nc')
             if self.system.path.isfile(self.system.path.join(dir_it, 'PREP.nc')):
                 self.system.remove(self.system.path.join(dir_it, 'PREP.nc'))
-                my_base, my_ext = self.system.path.splitext(mb_s.rh.container.localpath())
-                self.system.mv(my_base + my_ext, my_base + '_bg' + my_ext)
-                self.system.mv("SURFOUT" + str(jj) + ".nc", my_base + '.nc')
-                if dir_it == 'mb{:04d}'.format(mb_s.rh.provider.member):
-                    # useful only for old task/offline case
-                    self.system.symlink(my_base + '.nc', dir_it + '/PREP.nc')
+            my_base, my_ext = self.system.path.splitext(mb_s.rh.container.localpath())
+            # Save background:
+            self.system.mv(my_base + my_ext, my_base + '_bg' + my_ext)
+            # Save analysis:
+            self.system.mv("SURFOUT" + str(jj) + ".nc", my_base + '.nc')
+            if dir_it == 'mb{:04d}'.format(mb_s.rh.provider.member):
+                # useful only for old task/offline case
+                self.system.symlink(my_base + '.nc', dir_it + '/PREP.nc')
 
         # rename particle file
         for fprefix in ('PART', 'BG_CORR', 'IMASK', 'ALPHA'):
