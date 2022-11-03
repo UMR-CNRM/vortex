@@ -9,11 +9,11 @@ thread-safe proof ones.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import bronx.fancies.loggers
+from bronx.fancies import loggers
 
 __all__ = []
 
-logger = bronx.fancies.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Borg(object):
