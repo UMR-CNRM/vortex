@@ -124,10 +124,11 @@ class ECfsTools(addons.Addon):
         ecfs = ECfs(system=self.sh)
         command = " emkdir"
         list_args = [target, ]
-        if options is None:
-            list_options = ['p', ]
-        else:
+        list_options = list()
+        if isinstance(options, list):
             list_options = options
+        if not list_options:
+            list_options.append('p')
         return ecfs(command=command,
                     list_args=list_args,
                     dict_args=dict(),
@@ -157,10 +158,11 @@ class ECfsTools(addons.Addon):
         command = "ecp"
         with self._ecfscp_xsource(source) as source:
             list_args = [source, target]
-            if options is None:
-                list_options = list()
-            else:
+            list_options = list()
+            if isinstance(options, list):
                 list_options = options
+            if {'e', 'n', 'u', 't'}.isdisjoint(set(list_options)):
+                list_options.append('o')
             rc = ecfs(command=command,
                       list_args=list_args,
                       dict_args=dict(),
