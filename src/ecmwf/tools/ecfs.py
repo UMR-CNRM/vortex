@@ -7,6 +7,7 @@ System Addons to support ECMWF' ECFS archiving system.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import contextlib
+import re
 import six
 import tempfile
 
@@ -135,15 +136,43 @@ class ECfsTools(addons.Addon):
                     list_options=list_options)
 
     @contextlib.contextmanager
+    def _ecfspath_normalize(self, path):
+        if not re.match(r'^ec\w*:', path) and ':' in path:
+            tmpdir = tempfile.mkdtemp(prefix='ecfs_path_normalise_')
+            try:
+                target = self.sh.path.join(tmpdir, 'normalized')
+                logger.debug("Temporary remapping of %s to %s (because of ECFS filename restrictions)",
+                             path, target)
+                self.sh.softlink(path, target)
+                yield target
+            finally:
+                self.sh.remove(tmpdir)
+        else:
+            yield path
+
+    @contextlib.contextmanager
     def _ecfscp_xsource(self, source):
         if isinstance(source, six.string_types):
-            yield source
+            with self._ecfspath_normalize(source) as source:
+                yield source
         else:
             with tempfile.NamedTemporaryFile('w+b') as fhtmp:
                 source.seek(0)
                 self.sh.copyfileobj(source, fhtmp)
                 fhtmp.flush()
                 yield fhtmp.name
+
+    @contextlib.contextmanager
+    def _ecfscp_xtarget(self, target):
+        if isinstance(target, six.string_types):
+            with self._ecfspath_normalize(target) as target:
+                yield target
+        else:
+            with tempfile.NamedTemporaryFile('w+b') as fhtmp:
+                yield fhtmp.name
+                fhtmp.flush()
+                fhtmp.seek(0)
+                self.sh.copyfileobj(fhtmp, target)
 
     @fmtshcmd
     def ecfscp(self, source, target, options=None):
@@ -157,16 +186,17 @@ class ECfsTools(addons.Addon):
         ecfs = ECfs(system=self.sh)
         command = "ecp"
         with self._ecfscp_xsource(source) as source:
-            list_args = [source, target]
-            list_options = list()
-            if isinstance(options, list):
-                list_options = options
-            if {'e', 'n', 'u', 't'}.isdisjoint(set(list_options)):
-                list_options.append('o')
-            rc = ecfs(command=command,
-                      list_args=list_args,
-                      dict_args=dict(),
-                      list_options=list_options)
+            with self._ecfscp_xtarget(target) as target:
+                list_args = [source, target]
+                list_options = list()
+                if isinstance(options, list):
+                    list_options = options
+                if {'e', 'n', 'u', 't'}.isdisjoint(set(list_options)):
+                    list_options.append('o')
+                rc = ecfs(command=command,
+                          list_args=list_args,
+                          dict_args=dict(),
+                          list_options=list_options)
         return rc
 
     @fmtshcmd
