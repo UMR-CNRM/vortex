@@ -237,15 +237,17 @@ def uenv_mirror(cycle, args):
                                 logger.info("The target already exists < %s >... Doing nothing", xv)
                             else:
                                 try:
-                                    rc = rc and gget_default_st.get(g_uri(xv), xv, dict())
+                                    localxv = xv + '.foo'
+                                    rc = rc and gget_default_st.get(g_uri(xv), localxv, dict())
                                     # Create a tar file from directories
-                                    if rc and vtx_sh.path.isdir(xv):
-                                        rc = rc and vtx_sh.tar(xv + '.tgz', xv)
-                                        rc = rc and vtx_sh.rm(xv)
-                                        rc = rc and vtx_sh.mv(xv + '.tgz', xv)
+                                    if rc and vtx_sh.path.isdir(localxv):
+                                        rc = rc and vtx_sh.tar(localxv + '.tgz', localxv)
+                                        rc = rc and vtx_sh.rm(localxv)
+                                        rc = rc and vtx_sh.mv(localxv + '.tgz', localxv)
                                     if rc:
-                                        todo.append((xv, xtarget))
+                                        todo.append((localxv, xtarget))
                                 except (IOError, ExecutionError):
+                                    logger.exception("Unexpected exception during tar creation")
                                     rc = False
                             if not rc:
                                 break
