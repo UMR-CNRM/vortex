@@ -24,6 +24,8 @@ Functions
 
 .. autofunction:: bundle_guess_packname
 
+.. autofunction:: set_env4git
+
 
 Exceptions
 ----------

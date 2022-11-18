@@ -127,7 +127,7 @@ def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
     data = {'jsonData': jsonData,
             'xpid': xpid,
             'type': kind,
-            'token':token}
+            'token': token}
     # sending post request and saving response as response object
     try:
         rc, status, headers, rdata = http_post_data(url=davai_server_post_url, data=data, **kwargs)
