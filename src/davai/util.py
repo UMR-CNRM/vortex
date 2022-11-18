@@ -156,7 +156,7 @@ def set_env4git():
     target = t.sh.target()
     git_installdir = target.config.get('git', 'git_installdir')
     if git_installdir not in ('', None):
-        logger.info("Loading git from:", git_installdir)
+        logger.info("Loading git from: '{}'".format(git_installdir))
         t.env.setbinpath(t.sh.path.join(git_installdir, 'bin'), 0)
         t.env['GIT_EXEC_PATH'] = t.sh.path.join(git_installdir,
                                                 'libexec',
