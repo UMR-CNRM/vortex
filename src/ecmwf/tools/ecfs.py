@@ -137,15 +137,24 @@ class ECfsTools(addons.Addon):
                     list_options=list_options)
 
     @contextlib.contextmanager
-    def _ecfspath_normalize(self, path):
+    def _ecfspath_normalize(self, path, intent='in'):
+        if intent not in {'in', 'out'}:
+            raise ValueError('Improper value for intent.')
         if not re.match(r'^ec\w*:', path) and ':' in path:
-            tmpdir = tempfile.mkdtemp(prefix='ecfs_path_normalise_')
+            tmpdir = tempfile.mkdtemp(prefix='ecfs_pnorm_')
             try:
                 target = self.sh.path.join(tmpdir, 'normalized')
-                logger.debug("Temporary remapping of %s to %s (because of ECFS filename restrictions)",
-                             path, target)
-                self.sh.softlink(path, target)
+                if intent == 'in':
+                    logger.debug("Temporary remapping of %s to %s (because of ECFS filename restrictions)",
+                                 path, target)
+                    self.sh.softlink(path, target)
+                else:
+                    logger.debug("Temporary file created: %s (because of ECFS filename restrictions)",
+                                 target)
                 yield target
+                if intent == 'out':
+                    logger.debug("Moving temporary file %s to %s", target, path)
+                    self.sh.mv(target, path)
             finally:
                 self.sh.remove(tmpdir)
         else:
@@ -166,7 +175,7 @@ class ECfsTools(addons.Addon):
     @contextlib.contextmanager
     def _ecfscp_xtarget(self, target):
         if isinstance(target, six.string_types):
-            with self._ecfspath_normalize(target) as target:
+            with self._ecfspath_normalize(target, intent='out') as target:
                 yield target
         else:
             with tempfile.NamedTemporaryFile('w+b') as fhtmp:
