@@ -14,7 +14,6 @@ import re
 import tarfile
 import tempfile
 import json
-import os
 
 from bronx.fancies import loggers
 
@@ -117,7 +116,8 @@ def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
     Additional kwargs are passed to requests.post()
     """
     # token
-    token = os.environ.get('CIBOULAI_TOKEN', '')
+    t = sessions.current()
+    token = t.env.get('CIBOULAI_TOKEN', '')
     if token == '':
         logger.error("Environment variable CIBOULAI_TOKEN must be set in order to send data to Ciboulai. " +
                      "Please contact your Davai admin to get a valid token.")
