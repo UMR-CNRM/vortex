@@ -1265,8 +1265,8 @@ class MtoolCache(FixedEntryCache):
             elif e.MTOOLDIR and self.sh.path.isdir(e.MTOOLDIR):
                 cache = self.sh.path.join(e.MTOOLDIR, 'cache')
                 logger.debug('Using mtool dir cache %s', cache)
-            elif e.FTDIR or e.WORKDIR:
-                cache = self.sh.path.join(e.FTDIR or e.WORKDIR, self.kind, 'cache')
+            elif e.FTDIR or e.WORKDIR or e.SCRATCH:
+                cache = self.sh.path.join(e.FTDIR or e.WORKDIR or e.SCRATCH, self.kind, 'cache')
                 logger.debug('Using default cache %s', cache)
             else:
                 logger.error('Unable to find an appropriate location for the cache space.')
