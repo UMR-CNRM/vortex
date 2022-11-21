@@ -643,7 +643,7 @@ class MpiTool(footprints.FootprintBase):
             if bin_obj.master is None:
                 raise MpiException('No master defined before launching MPI')
             # If there are no options, do not bother...
-            if bin_obj.options:
+            if bin_obj.options and bin_obj.nprocs != 0:
                 if not bin_obj.nprocs:
                     raise ValueError('nranks must be provided when using envelopes')
                 for mpirank in range(ranksidx, ranksidx + bin_obj.nprocs):
@@ -658,18 +658,20 @@ class MpiTool(footprints.FootprintBase):
 
     def _envelope_mkwrapper_cpu_dispensers(self):
         # Dispensers map
+        totalnodes = 0
         ranks_idx = 0
         dispensers_map = dict()
         for e_bit in self.envelope:
             if 'nn' in e_bit.options and 'nnp' in e_bit.options:
-                for i_node in range(e_bit.options['nn']):
+                for _ in range(e_bit.options['nn']):
                     cpu_disp = self.system.cpus_ids_dispenser(topology=self._actual_mpibind_topology)
                     if not cpu_disp:
                         raise MpiException('Unable to detect the CPU layout with topology: {:s}'
                                            .format(self._actual_mpibind_topology, ))
                     for _ in range(e_bit.options['nnp']):
-                        dispensers_map[ranks_idx] = (cpu_disp, i_node)
+                        dispensers_map[ranks_idx] = (cpu_disp, totalnodes)
                         ranks_idx += 1
+                    totalnodes += 1
             else:
                 logger.error("Cannot compute a proper binding without nn/nnp information")
                 raise MpiException("Vortex binding error.")
@@ -1404,16 +1406,18 @@ class SRun(ConfigurableMpiTool):
         else:
             # Find all the available nodes and ranks
             base_nodelist = []
+            totalnodes = 0
             totaltasks = 0
             availnodes = itertools.cycle(xlist_strings(self.env.SLURM_NODELIST
                                                        if self._actual_slurmversion < 18
                                                        else self.env.SLURM_JOB_NODELIST))
             for e_bit in self.envelope:
                 totaltasks += e_bit.nprocs
-                for i_node in range(e_bit.options['nn']):
+                for _ in range(e_bit.options['nn']):
                     availnode = next(availnodes)
-                    logger.debug('Node #%5d is: %s', i_node, availnode)
+                    logger.debug('Node #%5d is: %s', totalnodes, availnode)
                     base_nodelist.extend([availnode, ] * e_bit.options['nnp'])
+                    totalnodes += 1
             # Re-order the nodelist based on the binary groups
             nodelist = list()
             for i_rank in range(len(base_nodelist)):
@@ -1450,7 +1454,7 @@ class SRun(ConfigurableMpiTool):
         """Things that may be substituted in environment variables."""
         sdict = super(SRun, self)._environment_substitution_dict(opts, conflabel)
         shp = self.system.path
-        # Detect the path to the srun commande
+        # Detect the path to the srun command
         actlauncher = self.launcher
         if not shp.exists(self.launcher):
             actlauncher = self.system.which(actlauncher)
