@@ -151,15 +151,12 @@ class _AutoExtractStoreMixin(object):
             # Create another copy and move it (in order to preserve the
             # .autoextract directory)
             destdir = self.system.path.dirname(self.system.path.realpath(local))
-            destdir_bis = tempfile.mkdtemp(suffix='.autoextract',
-                                           dir=self.system.path.dirname(local))
-            try:
+            with self.system.temporary_dir_context(suffix='.autoextract',
+                                                   dir=self.system.path.dirname(local))as destdir_bis:
                 self.system.cp(destdir_autox, destdir_bis, intent=xintent)
                 for to_mv in unpacked:
                     self.system.mv(self.system.path.join(destdir_bis, to_mv),
                                    self.system.path.join(destdir, to_mv))
-            finally:
-                self.system.rm(destdir_bis)
         return rc
 
 
@@ -378,8 +375,8 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
                             rcx = False
                             localdir = self.system.path.dirname(local)
                             self.system.mkdir(localdir)
-                            tmpdir = tempfile.mkdtemp(suffix='.fromcache.autoextract', dir=localdir)
-                            try:
+                            with self.system.temporary_dir_context(suffix='.fromcache.autoextract',
+                                                                   dir=localdir) as tmpdir:
                                 rcx = self.incacheget(self._build_remote_autoextract(remote),
                                                       tmpdir,
                                                       self._build_raw_options(options))
@@ -399,8 +396,6 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
                                             # Actually copy each item
                                             self.system.mv(self.system.path.join(tmpdir, item),
                                                            localdest)
-                            finally:
-                                self.system.rm(tmpdir)
                         else:
                             rcx = False
                             logger.info("No auto-extracted item in cache. Proceeding as usual.")
@@ -637,8 +632,7 @@ class GcoCentralStore(Store, _AutoExtractStoreMixin):
             self.system.mkdir(localdir)
         else:
             localdir = '.'
-        tmpdir = tempfile.mkdtemp(dir=localdir, prefix='gco_autoextract_')
-        try:
+        with sh.temporary_dir_context(dir=localdir, prefix='gco_autoextract_') as tmpdir:
             with sh.cdcontext(tmpdir):
                 # Tweak the Gget command according to extract
                 if extract:
@@ -676,8 +670,6 @@ class GcoCentralStore(Store, _AutoExtractStoreMixin):
             else:
                 logger.warning('GCO Central Store get %s was not successful (with rc=%s)', gname, rc)
                 rc = False
-        finally:
-            sh.rm(tmpdir)
         # Automatic untar if needed... (the local file needs to end with a tar extension)
         if rc and self._do_local_auto_untar(local):
             rc = self._local_auto_untar(local, gname,

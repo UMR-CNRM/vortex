@@ -1132,6 +1132,38 @@ class OSExtended(System):
         """
         return CdContext(self, path, create, clean_onexit)
 
+    @contextlib.contextmanager
+    def temporary_dir_context(self, suffix=None, prefix=None, dir=None):
+        """Creates a temporary directory and remove it when exiting the context.
+
+        :param suffix: The temporary directory name will end with that suffix
+        :param prefix: The temporary directory name will start with that suffix
+        :param dir: The temporary directory will be created in that directory
+        """
+        self.stderr('temporary_dir_context starts', suffix)
+        if six.PY2:
+            self.stderr('mkdtemp', suffix, prefix, dir)
+            tmp_dir = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
+            try:
+                yield tmp_dir
+            finally:
+                self.rm(tmp_dir)
+        else:
+            self.stderr('tempfile.TemporaryDirectory', suffix, prefix, dir)
+            with tempfile.TemporaryDirectory(suffix=suffix, prefix=prefix, dir=dir) as tmp_dir:
+                yield tmp_dir
+                self.stderr('tempfile.TemporaryDirectory cleanup', tmp_dir)
+
+    @contextlib.contextmanager
+    def temporary_dir_cdcontext(self, suffix=None, prefix=None, dir=None):
+        """Change to a temporary directory, and remove it when exiting the context.
+
+        For a description of the context's arguments, see :func:`temporary_dir_context`.
+        """
+        with self.temporary_dir_context(suffix=suffix, prefix=prefix, dir=dir) as tmp_dir:
+            with self.cdcontext(tmp_dir, create=False, clean_onexit=False):
+                yield tmp_dir
+
     def ffind(self, *args):
         """Recursive file find. Arguments are starting paths."""
         if not args:
@@ -1550,6 +1582,21 @@ class OSExtended(System):
             else:
                 logger.warning('Could not login on %s as %s [%s]', hostname, logname, str(rc))
                 return None
+
+    @contextlib.contextmanager
+    def ftpcontext(self, hostname, logname=None, delayed=False, port=DEFAULT_FTP_PORT):
+        """Create an FTP object and close it when the context exits.
+
+        For a description of the context's arguments, see :func:`ftp`.
+        """
+        ftp = self.ftp(hostname, logname=logname, delayed=delayed, port=port)
+        if ftp:
+            try:
+                yield ftp
+            finally:
+                ftp.close()
+        else:
+            return ftp
 
     @fmtshcmd
     def anyft_remote_rewrite(self, remote):

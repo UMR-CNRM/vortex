@@ -126,10 +126,12 @@ class TestArchiveStorage(NetrcFtpBasedTestCase):
         for i in (1, 2):
             self.assertFile(self.sh.path.join('manual_ext1', foldername, 'testfile{:d}'.format(i)),
                             'Coucou_Very_Very_Long')
-        self.assertTrue(st.retrieve('some/test/folder', foldername + '_auto', fmt='filespack'))
-        for i in (1, 2):
-            self.assertFile(self.sh.path.join(foldername + '_auto', 'testfile{:d}'.format(i)),
-                            'Coucou_Very_Very_Long')
+        for extra_ext in ('', '.tgz'):
+            self.assertTrue(st.retrieve('some/test/folder' + extra_ext, foldername + '_auto', fmt='filespack'))
+            for i in (1, 2):
+                self.assertFile(self.sh.path.join(foldername + '_auto', 'testfile{:d}'.format(i)),
+                                'Coucou_Very_Very_Long')
+            self.sh.rm(foldername + '_auto')
 
     def test_archive_storage(self):
         with self.server():

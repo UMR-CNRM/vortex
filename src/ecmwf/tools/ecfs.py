@@ -141,22 +141,22 @@ class ECfsTools(addons.Addon):
         if intent not in {'in', 'out'}:
             raise ValueError('Improper value for intent.')
         if not re.match(r'^ec\w*:', path) and ':' in path:
-            tmpdir = tempfile.mkdtemp(prefix='ecfs_pnorm_')
-            try:
+            tmp_base_dir = None
+            if intent == 'out':
+                tmp_base_dir = self.sh.path.dirname(self.sh.path.abspath(path))
+            with self.sh.temporary_dir_context(prefix='ecfs_pnorm_', dir=tmp_base_dir) as tmpdir:
                 target = self.sh.path.join(tmpdir, 'normalized')
                 if intent == 'in':
                     logger.debug("Temporary remapping of %s to %s (because of ECFS filename restrictions)",
                                  path, target)
                     self.sh.softlink(path, target)
                 else:
-                    logger.debug("Temporary file created: %s (because of ECFS filename restrictions)",
+                    logger.debug("Temporary file cocooned: %s (because of ECFS filename restrictions)",
                                  target)
                 yield target
                 if intent == 'out':
                     logger.debug("Moving temporary file %s to %s", target, path)
                     self.sh.mv(target, path)
-            finally:
-                self.sh.remove(tmpdir)
         else:
             yield path
 
