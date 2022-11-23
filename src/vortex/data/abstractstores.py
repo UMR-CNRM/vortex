@@ -99,7 +99,10 @@ class _SetAsideStoreMixin(object):
         st_bis_attr.update(set_aside)
         st_bis = footprints.proxy.store(** st_bis_attr)
         with self._do_set_aside_cocoon(local, options) as (local_bis, options_bis):
-            return st_bis.put(local_bis, remote_bis, options=options_bis)
+            rc = st_bis.put(local_bis, remote_bis, options=options_bis)
+            if not rc:
+                logger.warning("An error occured because of the 'set_aside'")
+            return rc
 
 
 class Store(footprints.FootprintBase, _SetAsideStoreMixin):
@@ -358,7 +361,7 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
             else:
                 rc = getattr(self, self.scheme + action, self.notyet)(remote, local, options)
             if rc and set_aside:
-                self._do_set_aside(remote, local, set_aside, options=options)
+                rc = self._do_set_aside(remote, local, set_aside, options=options)
             self._observer_notify('get', rc, remote, local=local, options=options)
             return rc
         else:
@@ -682,7 +685,7 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
                     break
         if rc:
             if set_aside:
-                self._do_set_aside(remote, local, set_aside, options)
+                rc = self._do_set_aside(remote, local, set_aside, options)
         else:
             self._verbose_log(options, 'warning',
                               "Multistore get {:s}://{:s}: none of the opened store succeeded."
