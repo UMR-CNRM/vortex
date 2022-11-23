@@ -1596,7 +1596,7 @@ class OSExtended(System):
             finally:
                 ftp.close()
         else:
-            return ftp
+            yield ftp
 
     @fmtshcmd
     def anyft_remote_rewrite(self, remote):
