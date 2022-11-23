@@ -22,7 +22,7 @@ import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes.tracking import Tracker
 
-from . import addons
+from . import addons, systems
 
 from vortex.layout import contexts
 from vortex.tools.net import DEFAULT_FTP_PORT
@@ -387,9 +387,30 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         """Extended copy for (possibly) multi lfi file."""
         st = self._std_prepare(source, destination, intent)
         if st.rc == 0:
-            st.rc = self._spawn_wrap('copy', (['-pack', ] if pack else []) +
-                                     ['-intent={}'.format(intent), source, destination],
-                                     output=False)
+            ln_same_fs = self.sh.is_samefs(source, destination)
+            ln_cross_users = ln_same_fs and not self.sh.usr_file(source)
+            actual_pack = pack
+            actual_intent = intent
+            if ln_cross_users and not self.sh.allow_cross_users_links:
+                actual_pack = True
+                actual_intent = 'inout'
+            try:
+                st.rc = self._spawn_wrap('copy', (['-pack', ] if actual_pack else []) +
+                                         ['-intent={}'.format(actual_intent), source, destination],
+                                         output=False)
+            except systems.ExecutionError:
+                if self.sh.allow_cross_users_links and ln_cross_users:
+                    # This is expected to fail if the fs.protected_hardlinks
+                    # Linux kernel setting is 1.
+                    logger.info("Force System's allow_cross_users_links to False")
+                    self.sh.allow_cross_users_links = False
+                    logger.info("Re-running the cp command on this LFI file")
+                    st = self._std_copy(source, destination, intent=intent, pack=pack, silent=silent)
+                else:
+                    raise
+            else:
+                if ln_cross_users and not self.sh.allow_cross_users_links and intent == 'in':
+                    self.sh.readonly(destination)
         return st
 
     lfi_cp = lfi_copy = fa_cp = fa_copy = _std_copy

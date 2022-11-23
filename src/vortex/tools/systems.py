@@ -2380,6 +2380,20 @@ class OSExtended(System):
                 self.readonly(destination)
             return rc
 
+    def _smartcp_cross_users_links_fallback(self, source, destination, silent, exc, tmp_destination=None):
+        """Catch errors related to Kernel configuration."""
+        if (exc.errno == errno.EPERM) and not self.usr_file(source):
+            # This is expected to fail if the fs.protected_hardlinks
+            # Linux kernel setting is 1.
+            if tmp_destination is not None:
+                self.remove(tmp_destination)
+            logger.info("Force System's allow_cross_users_links to False")
+            self.allow_cross_users_links = False
+            logger.info("Re-running the smartcp command")
+            return self.smartcp(source, destination, silent=silent)
+        else:
+            raise
+
     def smartcp(self, source, destination, silent=False):
         """
         Hard link the **source** file to a safe **destination** (if possible).
@@ -2407,26 +2421,36 @@ class OSExtended(System):
                     (self.allow_cross_users_links or self.usr_file(source))):
                 tmp_destination = destination + self.safe_filesuffix()
                 if self.path.isdir(source):
-                    rc = self.hardlink(source, tmp_destination, securecopy=False)
-                    if rc:
-                        # Move fails if a directory already exists ; so be careful...
-                        with self.secure_directory_move(destination):
-                            rc = self.move(tmp_destination, destination)
-                        if not rc:
-                            logger.error('Cannot move the tmp directory to the final destination %s',
-                                         destination)
-                            self.remove(tmp_destination)  # Anyway, try to clean-up things
+                    try:
+                        rc = self.hardlink(source, tmp_destination, securecopy=False)
+                    except OSError as e:
+                        rc = self._smartcp_cross_users_links_fallback(
+                            source, destination, silent, e, tmp_destination=tmp_destination
+                        )
                     else:
-                        logger.error('Cannot copy the data to the tmp directory %s', tmp_destination)
-                        self.remove(tmp_destination)  # Anyway, try to clean-up things
+                        if rc:
+                            # Move fails if a directory already exists ; so be careful...
+                            with self.secure_directory_move(destination):
+                                rc = self.move(tmp_destination, destination)
+                            if not rc:
+                                logger.error('Cannot move the tmp directory to the final destination %s',
+                                             destination)
+                                self.remove(tmp_destination)  # Anyway, try to clean-up things
+                        else:
+                            logger.error('Cannot copy the data to the tmp directory %s', tmp_destination)
+                            self.remove(tmp_destination)  # Anyway, try to clean-up things
                     return rc
                 else:
-                    rc = self.hardlink(source, tmp_destination, securecopy=False)
-                    rc = rc and self.move(tmp_destination, destination)  # Move is atomic for a file
-                    # On some systems, the temporary file may remain (if the
-                    # destination's inode is identical to the tmp_destination's
-                    # inode). The following call to remove will remove leftovers.
-                    self.remove(tmp_destination)
+                    try:
+                        rc = self.hardlink(source, tmp_destination, securecopy=False)
+                    except OSError as e:
+                        rc = self._smartcp_cross_users_links_fallback(source, destination, silent, e)
+                    else:
+                        rc = rc and self.move(tmp_destination, destination)  # Move is atomic for a file
+                        # On some systems, the temporary file may remain (if the
+                        # destination's inode is identical to the tmp_destination's
+                        # inode). The following call to remove will remove leftovers.
+                        self.remove(tmp_destination)
                     return rc
             else:
                 rc = self.rawcp(source, destination)  # Rawcp is atomic as much as possible
