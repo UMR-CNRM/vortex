@@ -197,7 +197,7 @@ class ECfsTools(addons.Addon):
         with self._ecfscp_xsource(source) as source:
             with self._ecfscp_xtarget(target) as target:
                 list_args = [source, target]
-                list_options = list()
+                list_options = ['p', ]
                 if isinstance(options, list):
                     list_options = options
                 if {'e', 'n', 'u', 't'}.isdisjoint(set(list_options)):
