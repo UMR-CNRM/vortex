@@ -2419,6 +2419,10 @@ class OSExtended(System):
                 else:
                     rc = self.hardlink(source, tmp_destination, securecopy=False)
                     rc = rc and self.move(tmp_destination, destination)  # Move is atomic for a file
+                    # On some systems, the temporary file may remain (if the
+                    # destination's inode is identical to the tmp_destination's
+                    # inode). The following call to remove will remove leftovers.
+                    self.remove(tmp_destination)
                     return rc
             else:
                 rc = self.rawcp(source, destination)  # Rawcp is atomic as much as possible
