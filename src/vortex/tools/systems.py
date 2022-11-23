@@ -1143,6 +1143,10 @@ class OSExtended(System):
         self.stderr('temporary_dir_context starts', suffix)
         if six.PY2:
             self.stderr('mkdtemp', suffix, prefix, dir)
+            if suffix is None:
+                suffix = ''
+            if prefix is None:
+                prefix = 'tmp'
             tmp_dir = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
             try:
                 yield tmp_dir
