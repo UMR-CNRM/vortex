@@ -1,14 +1,21 @@
 # -*- coding: utf-8 -*-
 
 """
-Configuration management through ini files.
+Configuration management through ini and template files.
+
+The :func:`load_template` function is the entry-point when looking for template files.
+It returns an object compliant with the interface defined in
+:class:`AbstractTemplatingAdapter`.
 """
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
+import abc
+import contextlib
 import io
 import itertools
 import re
+import string
 import sys
 
 import six
@@ -35,22 +42,189 @@ _RE_AUTO_TPL = re.compile(r'^@(([^/].*)\.tpl)$')
 
 _RE_ENCODING = re.compile(r"^\s*#.*?coding[=:]\s*([-\w.]+)")
 
+_RE_TEMPLATING = re.compile(r"^\s*#\s*vortex-templating\s*[=:]\s*([-\w.]+)$")
+
 _DEFAULT_CONFIG_PARSER = ConfigParser if six.PY3 else SafeConfigParser
 
 
-def load_template(t, tplfile, encoding=None, version=None):
+@six.add_metaclass(abc.ABCMeta)
+class AbstractTemplatingAdapter(object):
+    """Interface to any templating system.
+
+    To render the template, just call the object with a list of named arguments
+    that should be used during template rendering.
     """
-    Load a template according to filename provided, either absolute or relative path.
-    The first argument ``t`` should be a valid ticket session.
+
+    KIND = None
+
+    def __init__(self, tpl_str, tpl_file, tpl_encoding, tpl_dirs):
+        """
+        :param tpl_str: The template (as a string)
+        :param tpl_file: The template filename (when read from disk)
+        :param tpl_encoding: The template encoding (when read from disk)
+        :param tpl_dirs: The lookup directories for additional templates
+        """
+        self._tpl_file = tpl_file
+        self._tpl_encoding = tpl_encoding
+        self._tpl_dirs = tpl_dirs
+        self._tpl_obj = self._rendering_tool_init(tpl_str)
+
+    @property
+    def srcfile(self):
+        """The template filename (when read from disk)."""
+        return self._tpl_file
+
+    @abc.abstractmethod
+    def _rendering_tool_init(self, tpl_str):
+        pass
+
+    def substitute(self, *kargs, **kwargs):
+        """Render the template using the kargs and kwargs dictionaries."""
+        todo = dict()
+        for m in kargs:
+            todo.update(m)
+        todo.update(kwargs)
+        return self(** todo)
+
+    safe_substitute = substitute
+
+    @abc.abstractmethod
+    def __call__(self, **kwargs):
+        """Render the template using the kwargs dictionary."""
+        pass
+
+
+class LegacyTemplatingAdapter(AbstractTemplatingAdapter):
+    """Just use :class:`string.Template` for the rendering.
+
+    See :class:`AbstractTemplatingAdapter` for more details on this class usage.
+    """
+
+    KIND = 'legacy'
+
+    def _rendering_tool_init(self, tpl_str):
+        return string.Template(tpl_str)
+
+    def safe_substitute(self, *kargs, **kwargs):
+        """Render the template using the kargs and kwargs dictionaries."""
+        return self._tpl_obj.safe_substitute(*kargs, **kwargs)
+
+    def __call__(self, **kwargs):
+        """Render the template using the kwargs dictionary."""
+        return self._tpl_obj.substitute(kwargs)
+
+
+class TwoPassLegacyTemplatingAdapter(AbstractTemplatingAdapter):
+    """Just use :class:`string.Template`, but render the template two times.
+
+    (it allows for two level of nesting in the variable to be rendered).
+
+    See :class:`AbstractTemplatingAdapter` for more details on this class usage.
+    """
+
+    KIND = 'twopasslegacy'
+
+    def _rendering_tool_init(self, tpl_str):
+        return string.Template(tpl_str)
+
+    def safe_substitute(self, *kargs, **kwargs):
+        """Render the template using the kargs and kwargs dictionaries."""
+        return string.Template(
+            self._tpl_obj.safe_substitute(*kargs, **kwargs)
+        ).safe_substitute(*kargs, **kwargs)
+
+    def __call__(self, **kwargs):
+        """Render the template using the kwargs dictionary."""
+        return string.Template(self._tpl_obj.substitute(kwargs)).substitute(kwargs)
+
+
+class Jinja2TemplatingAdapter(AbstractTemplatingAdapter):
+    """Use the jinja2 templating engine to render the template.
+
+    It requires the, external, :mod:`jinja2` package. Please refer to the
+    jinja2 documentation for more details on the jinja2 templating language.
+
+    See :class:`AbstractTemplatingAdapter` for more details on this class usage.
+    """
+
+    KIND = 'jinja2'
+
+    @contextlib.contextmanager
+    def _elaborate_on_jinja2_error(self):
+        import jinja2
+        try:
+            yield
+        except jinja2.exceptions.TemplateError as e:
+            if isinstance(e, jinja2.exceptions.TemplateSyntaxError):
+                logger.error("%s exception while processing Jinja2 templates:\n" +
+                             "  Toplevel template file: %s\n"
+                             "  Jinja2 template info  : %s (line %d)\n" +
+                             "  Jinja2 error message  : %s",
+                             e.__class__, self._tpl_file, e.name, e.lineno, e.message)
+            else:
+                logger.error("%s exception while processing Jinja2 templates:\n" +
+                             "  Toplevel template file: %s",
+                             e.__class__, self._tpl_file)
+            raise
+
+    def _rendering_tool_init(self, tpl_str):
+        import jinja2
+        loader = jinja2.FileSystemLoader(
+            self._tpl_dirs,
+            encoding=self._tpl_encoding,
+            followlinks=True) if self._tpl_dirs else None
+        j_env = jinja2.Environment(loader=loader, autoescape=False)
+        with self._elaborate_on_jinja2_error():
+            return j_env.from_string(tpl_str)
+
+    def __call__(self, **kwargs):
+        """Render the template using the kwargs dictionary."""
+        with self._elaborate_on_jinja2_error():
+            return self._tpl_obj.render(kwargs)
+
+
+def load_template(t, tplfile, encoding=None, version=None, default_templating='legacy'):
+    """Load a template according to *tplfile*.
+
 
     :param vortex.sessions.Ticket t: The Vortex' session to be used
     :param str tplfile: The name of the desired template file
-    :param str encoding: Specify an encoding in order to get a properly decoded
-                         unicode string.
-                         If "script", the encoding is read in the
-                         file if it is present, set to None else.
+    :param str encoding: The characters encoding of the template file
     :param int version: Find a template file with version >= to version
+    :param str default_templating: The default templating engine that will be used.
+                                   The content of the template file is always searched
+                                   in order to detect a "# vortex-templating:" comment
+                                   that will override this default.
+    :return: A :class:`AbstractTemplatingAdapter` object
+
+    *tplfile* can be a relative or absolute filename. However, most of the time,
+    it is a string like ``@foo.tpl``. In such a case, a file named ``foo.tpl`` will
+    be looked for in the ``~/.vortexrc/templates`` and in the ``templates``
+    sub-directory of the Vortex source code distribution.
+
+    The characters encoding of the template file may be specified. If *encoding*
+    equals ``script``, a line looking like ``# encoding:special-encoding`` will be
+    searched for in the first ten lines of the template file. If it exists, the
+    ``special-encoding`` will be used as an encoding and the
+    ``# encoding:special-encoding`` line will be stripped from the template.
+
+    Different templating engine may be used to render the template file. It
+    defaults to ``legacy`` that is compatible with Python's :class:`string.Template`
+    class. However, another default may be provided using the
+    *default_templating* argument. In any case, a line looking like
+    ``# vortex-templating:kind`` will be searched for in the first ten lines
+    of the template file. If it exists, the ``kind`` templating engine will be
+    used and the ``# vortex-templating:kind`` line will be stripped.
+
+    Currently, only few templating engines are supported:
+
+    * ``legacy``: see :class:`LegacyTemplatingAdapter`
+    * ``twopasslegacy``: see :class:`TwoPassLegacyTemplatingAdapter`
+    * ``jinja2``: see :class:`Jinja2TemplatingAdapter`
     """
+    persodir = t.sh.path.join(t.glove.configrc, 'templates')
+    sitedir = t.sh.path.join(t.glove.siteroot, 'templates')
+    searchdirs = list()
     autofile = _RE_AUTO_TPL.match(tplfile)
     if autofile is None:
         if t.sh.path.exists(tplfile):
@@ -58,9 +232,8 @@ def load_template(t, tplfile, encoding=None, version=None):
         else:
             raise ValueError('Template file not found: <{}>'.format(tplfile))
     else:
+        searchdirs = (persodir, sitedir)
         new_tplfile = None
-        persodir = t.sh.path.join(t.glove.configrc, 'templates')
-        sitedir = t.sh.path.join(t.glove.siteroot, 'templates')
         if version is None:
             autofile = autofile.group(1)
             persofile = t.sh.path.join(persodir, autofile)
@@ -96,30 +269,42 @@ def load_template(t, tplfile, encoding=None, version=None):
         else:
             tplfile = new_tplfile
     try:
-        import string
-        # Treat the case encoding = "script"
-        if encoding == "script":
-            actual_encoding = None
-            # To determine the encoding, open the file with the default encoding
-            # (ignoring decoding errors) and look for the 'coding' comment
-            with io.open(tplfile, 'r', errors='replace') as tpfld_tmp:
-                # Only inspect the fist 5 lines (in theory the fist two line would be enough)
-                for iencoding, line in enumerate(itertools.islice(tpfld_tmp, 5)):
+        ignored_lines = set()
+        actual_encoding = None if encoding == 'script' else encoding
+        actual_templating = default_templating
+        # To determine the encoding & templating open the file with the default
+        # encoding (ignoring decoding errors) and look for comments
+        with io.open(tplfile, 'r', errors='replace') as tpfld_tmp:
+            if encoding is None:
+                actual_encoding = tpfld_tmp.encoding
+            # Only inspect the fist 10 lines
+            for iline, line in enumerate(itertools.islice(tpfld_tmp, 10)):
+                # Encoding
+                if encoding == 'script':
                     encoding_match = _RE_ENCODING.match(line)
                     if encoding_match:
+                        ignored_lines.add(iline)
                         actual_encoding = encoding_match.group(1)
-                        break
-        else:
-            actual_encoding = encoding
+                # Templating
+                templating_match = _RE_TEMPLATING.match(line)
+                if templating_match:
+                    ignored_lines.add(iline)
+                    actual_templating = templating_match.group(1)
         # Read the template and delete the encoding line if present
-        logger.debug('Openning %s with encoding %s', tplfile, str(actual_encoding))
+        logger.debug('Opening %s with encoding %s', tplfile, str(actual_encoding))
         with io.open(tplfile, 'r', encoding=actual_encoding) as tpfld:
-            if encoding == "script" and actual_encoding is not None:
-                tpl = string.Template("".join([l for (i, l) in enumerate(tpfld)
-                                               if i != iencoding]))
-            else:
-                tpl = string.Template(tpfld.read())
-        tpl.srcfile = tplfile
+            tpl_txt = "".join([l for (i, l) in enumerate(tpfld)
+                               if i not in ignored_lines])
+
+        template_rendering_classes = {cls.KIND: cls for cls in globals().values()
+                                      if (isinstance(cls, type) and
+                                          issubclass(cls, AbstractTemplatingAdapter) and
+                                          cls.KIND)}
+        try:
+            template_rendering_cls = template_rendering_classes[actual_templating]
+        except KeyError:
+            raise ValueError('Unknown templating system < {:s} >'.format(actual_templating))
+        tpl = template_rendering_cls(tpl_txt, tplfile, actual_encoding, searchdirs)
     except Exception as pb:
         logger.error('Could not read template <%s>', str(pb))
         raise

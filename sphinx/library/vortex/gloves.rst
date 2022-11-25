@@ -35,3 +35,7 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: UnitTestGlove
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

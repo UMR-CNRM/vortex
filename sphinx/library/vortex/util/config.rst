@@ -19,8 +19,31 @@ Functions
 
 .. autofunction:: load_template
 
-Classes
--------
+Classes related to templating
+-----------------------------
+
+.. autoclass:: AbstractTemplatingAdapter
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: LegacyTemplatingAdapter
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: TwoPassLegacyTemplatingAdapter
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Jinja2TemplatingAdapter
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+Classes related to configuration files
+--------------------------------------
 
 .. autoclass:: GenericReadOnlyConfigParser
    :show-inheritance:

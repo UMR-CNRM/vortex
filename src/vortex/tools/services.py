@@ -26,7 +26,7 @@ from bronx.stdtypes import date
 from bronx.stdtypes.dictionaries import UpperCaseDict
 from bronx.syntax.pretty import EncodedPrettyPrinter
 from vortex import sessions
-from vortex.util.config import GenericConfigParser, load_template
+from vortex.util.config import GenericConfigParser, load_template, LegacyTemplatingAdapter
 
 #: No automatic export
 __all__ = []
@@ -784,7 +784,7 @@ class TemplatedMailService(MailService):
         * on error, a safe substitution is applied.
         * The substitution is iterated ``depth`` times.
         """
-        if not isinstance(tpl, Template):
+        if not isinstance(tpl, (Template, LegacyTemplatingAdapter)):
             tpl = Template(tpl)
         result = ''
         for level in range(depth):
@@ -795,7 +795,7 @@ class TemplatedMailService(MailService):
                              str(exc), level + 1)
                 result = tpl.safe_substitute(tpldict)
             except ValueError as exc:
-                logger.error('Illegal syntax in template: %s', exc.message)
+                logger.error('Illegal syntax in template: %s', exc)
                 result = tpl.safe_substitute(tpldict)
             tpl = Template(result)
         return result

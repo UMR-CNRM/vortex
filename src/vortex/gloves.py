@@ -255,3 +255,32 @@ class OperGlove(Glove):
     @property
     def realkind(self):
         return 'opuser'
+
+
+class UnitTestGlove(ResearchGlove):
+    """A very special glove for unit-tests."""
+
+    _footprint = dict(
+        info = 'Unit-Test Glove',
+        attr = dict(
+            profile = dict(
+                optional = False,
+                values   = ['utest'],
+            ),
+            test_configrc = dict(
+                optional = False,
+            ),
+            test_siteroot = dict(
+                optional = False,
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        super(UnitTestGlove, self).__init__(*args, **kw)
+        self._siteroot = self.test_siteroot
+
+    @property
+    def configrc(self):
+        """Returns the path of the default directory where ``.ini`` files are stored."""
+        return self.test_configrc
