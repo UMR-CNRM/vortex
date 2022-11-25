@@ -88,7 +88,8 @@ class ECMWFSequana1(Target):
                 values = ['Linux', ]
             ),
             inifile = dict(
-                default = '@target-[inetname].ini',
+                # Always remap to the aa configuration
+                default = '@target-aa.ini',
             )
         ),
         priority = dict(
@@ -98,7 +99,7 @@ class ECMWFSequana1(Target):
 
 
 class EcmwfAA(ECMWFSequana1):
-    """CCA Computer at ECMWF."""
+    """AA Computer at ECMWF."""
 
     _footprint = dict(
         info = 'Atos Sequana AA Supercomputer at ECMWF',
@@ -110,5 +111,56 @@ class EcmwfAA(ECMWFSequana1):
         ),
         only = dict(
             hostname = footprints.FPRegex(r'aa\d+-\d+')
+        ),
+    )
+
+
+class EcmwfAB(ECMWFSequana1):
+    """AB Computer at ECMWF."""
+
+    _footprint = dict(
+        info = 'Atos Sequana AB Supercomputer at ECMWF',
+        attr = dict(
+            inetname = dict(
+                default = 'ab',
+                values  = ['ab']
+            ),
+        ),
+        only = dict(
+            hostname = footprints.FPRegex(r'ab\d+-\d+')
+        ),
+    )
+
+
+class EcmwfAC(ECMWFSequana1):
+    """AC Computer at ECMWF."""
+
+    _footprint = dict(
+        info = 'Atos Sequana AC Supercomputer at ECMWF',
+        attr = dict(
+            inetname = dict(
+                default = 'ac',
+                values  = ['ac']
+            ),
+        ),
+        only = dict(
+            hostname = footprints.FPRegex(r'ac\d+-\d+')
+        ),
+    )
+
+
+class EcmwfAD(ECMWFSequana1):
+    """AD Computer at ECMWF."""
+
+    _footprint = dict(
+        info = 'Atos Sequana AA Supercomputer at ECMWF',
+        attr = dict(
+            inetname = dict(
+                default = 'ad',
+                values  = ['ad']
+            ),
+        ),
+        only = dict(
+            hostname = footprints.FPRegex(r'ad\d+-\d+')
         ),
     )
