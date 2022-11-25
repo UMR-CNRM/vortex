@@ -13,7 +13,6 @@ import collections
 import functools
 import importlib
 import re
-import string
 import sys
 import tempfile
 import traceback
@@ -31,7 +30,8 @@ from vortex.layout.appconf import ConfigSet
 from vortex.tools.actions import actiond as ad
 from vortex.tools.actions import FlowSchedulerGateway
 from vortex.tools.systems import istruedef
-from vortex.util.config import GenericConfigParser, ExtendedReadOnlyConfigParser, load_template
+from vortex.util.config import GenericConfigParser, ExtendedReadOnlyConfigParser, AppConfigStringDecoder
+from vortex.util.config import load_template
 
 #: Export nothing
 __all__ = []
@@ -283,7 +283,6 @@ def _mkjob_opts_detect_2(t, tplconf, jobconf, jobconf_defaults, tr_opts, auto_op
         tr_opts.setdefault(k, v)
     for k, v in p_tplconf.items():
         tr_opts.setdefault(k, v)
-
     return tr_opts, auto_opts
 
 
@@ -348,9 +347,21 @@ def mkjob(t, **kw):
     tr_opts['auto_options'] = _mkjob_opts_autoexport(auto_opts)
 
     # Generate the job
-    corejob = load_template(t, tr_opts['template'], encoding="script")
+    corejob = load_template(t,
+                            tr_opts['template'],
+                            encoding="script",
+                            default_templating='twopasslegacy')
     tr_opts['tplfile'] = corejob.srcfile
-    pycode = string.Template(corejob.substitute(tr_opts)).substitute(tr_opts)
+
+    # Variable starting with j2_ are dealt with using the AppConfigStringDecoder.
+    # It allows fancier things when jinja2 templates are used
+    j2_activated = corejob.KIND == 'jinja2'
+    if j2_activated:
+        csd = AppConfigStringDecoder(substitution_cb=lambda k: tr_opts[k])
+        for k in [k for k in tr_opts.keys() if k.startswith('j2_')]:
+            tr_opts[k] = csd(tr_opts[k])
+
+    pycode = corejob(** tr_opts)
 
     if opts['wrap']:
         def autojob():
@@ -358,7 +369,12 @@ def mkjob(t, **kw):
         objcode = autojob
     else:
         # Using ast ensures that a valid python script was generated
-        ast.parse(pycode, 'compile.mkjob.log', 'exec')
+        try:
+            ast.parse(pycode, 'compile.mkjob.log', 'exec')
+        except SyntaxError as e:
+            logger.error("Error while attempting to parse the following script:\n%s",
+                         pycode)
+            raise
         objcode = pycode
 
     return objcode, tr_opts

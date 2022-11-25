@@ -119,7 +119,6 @@ class TestMkjobDetect(unittest.TestCase):
                  'exclusive': 'exclusive',
                  'extrapythonpath': "'blop1','blop2',",
                  'file': 'montest.py',
-                 'flow_tplsuffix': '',
                  'fullplay': 'True',
                  'hasmember': True,
                  'inovativedate': '2019010100',
