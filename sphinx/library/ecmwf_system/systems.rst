@@ -11,23 +11,8 @@
 .. autodata:: __all__
 
 
-Cray XC targets
----------------
-
-.. autoclass:: ECMWFCrayXC
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: CCA
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: CCB
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
+Atos Sequana targets
+--------------------
 
 .. autoclass:: ECMWFSequana1
    :show-inheritance:
