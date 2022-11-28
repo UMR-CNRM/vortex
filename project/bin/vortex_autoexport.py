@@ -210,6 +210,7 @@ class LocalToolboxProvider(ToolboxProvider):
                                                             self._wantedversion),
                   '--exclude-backups', '--exclude=*.py[co]',
                   '--exclude=build', '--exclude=coverage_report',
+                  '--exclude=.git', '--exclude=__pycache__',
                   '-czf', self._output_name, '.']
         logger.debug('Launching: ' + ' '.join(thecmd))
         subprocess.check_call(thecmd, shell=False)
