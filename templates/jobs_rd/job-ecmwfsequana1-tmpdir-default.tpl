@@ -14,4 +14,7 @@
 #SBATCH --time={{time}}
 #SBATCH --{{verbose}}
 #SBATCH --output={{pwd}}/../logs/{{file}}.%j
+{% if billing_account is defined and billing_account -%}
+#SBATCH --account={{billing_account}}
+{% endif -%}
 {%- endblock job_header %}
