@@ -756,6 +756,13 @@ class Node(getbytag.GetByTag, NiceLayout):
             else:
                 mpiopts[stuff] = int(mpiopts[stuff])
 
+        # Read the configuration file for some extra configuration
+        allowed_conf_extras = ('launcher', 'opts', 'wrapstd', 'bind_topology')
+        for k, v in self.conf.items():
+            if (k not in kwargs and '_mpi' in k and
+                    any([k.endswith('_mpi' + a) for a in allowed_conf_extras])):
+                kwargs[k] = v
+
         # When multiple list of binaries are given (i.e several binaries are launched
         # by the same MPI command).
         if tbx and isinstance(tbx[0], (list, tuple)):
