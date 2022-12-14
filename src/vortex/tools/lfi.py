@@ -383,7 +383,8 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     lfi_rm = lfi_remove = fa_rm = fa_remove = _std_remove
 
-    def _std_copy(self, source, destination, intent='in', pack=False, silent=False):
+    def _std_copy(self, source, destination,
+                  smartcp_threshold=0, intent='in', pack=False, silent=False):
         """Extended copy for (possibly) multi lfi file."""
         st = self._std_prepare(source, destination, intent)
         if st.rc == 0:
@@ -619,7 +620,8 @@ class LFI_Tool_Py(LFI_Tool_Raw):
             'read' if intent == 'in' else 'write',
         )
 
-    def _std_copy(self, source, destination, intent='in', pack=False, silent=False):
+    def _std_copy(self, source, destination,
+                  smartcp_threshold=0, intent='in', pack=False, silent=False):
         """Extended copy for (possibly) multi lfi file."""
         st = LFI_Status()
         if not self.sh.path.exists(source):
@@ -640,9 +642,9 @@ class LFI_Tool_Py(LFI_Tool_Raw):
                 st.rc = actualcp(source, self.sh.path.realpath(destination))
         else:
             if intent == 'in':
-                st.rc = self.sh.smartcp(source, destination)
+                st.rc = self.sh.smartcp(source, destination, smartcp_threshold=smartcp_threshold)
             else:
-                st.rc = self.sh.cp(source, destination)
+                st.rc = self.sh.cp(source, destination, smartcp_threshold=smartcp_threshold)
         return st
 
     lfi_cp = lfi_copy = fa_cp = fa_copy = _std_copy

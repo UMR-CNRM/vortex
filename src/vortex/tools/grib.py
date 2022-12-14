@@ -75,8 +75,9 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                 rc = fd.read(7) == b'file://'
         return rc
 
-    def _backend_cp(self, source, destination, intent='in'):
-        return self.sh.cp(source, destination, intent=intent, smartcp=True)
+    def _backend_cp(self, source, destination, smartcp_threshold=0, intent='in'):
+        return self.sh.cp(source, destination,
+                          smartcp_threshold=smartcp_threshold, intent=intent, smartcp=True)
 
     def _backend_rm(self, *args):
         return self.sh.rm(*args)
@@ -107,7 +108,8 @@ class GRIB_Tool(addons.FtrawEnableAddon):
 
     grib_rm = grib_remove = _std_remove
 
-    def _std_copy(self, source, destination, intent='in', pack=False, silent=False):
+    def _std_copy(self, source, destination,
+                  smartcp_threshold=0, intent='in', pack=False, silent=False):
         """Extended copy for (possibly) multi GRIB file."""
         # Might be multipart
         if self.is_xgrib(source):
@@ -120,7 +122,8 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                     target_idx = list()
                     for (i, a_mpart) in enumerate(idx):
                         target_idx.append(self.sh.path.join(destdir, 'GRIB_mpart{:06d}'.format(i)))
-                        rc = rc and self._backend_cp(a_mpart, target_idx[-1], intent=intent)
+                        rc = rc and self._backend_cp(a_mpart, target_idx[-1],
+                                                     smartcp_threshold=smartcp_threshold, intent=intent)
                         rc = rc and self._std_grib_index_write(destination, target_idx)
                     if intent == 'in':
                         self.sh.chmod(destination, 0o444)
@@ -128,7 +131,8 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                 rc = rc and self.xgrib_pack(source, destination)
         else:
             # Usual file or file descriptor
-            rc = self._backend_cp(source, destination, intent=intent)
+            rc = self._backend_cp(source, destination,
+                                  smartcp_threshold=smartcp_threshold, intent=intent)
         return rc
 
     grib_cp = grib_copy = _std_copy

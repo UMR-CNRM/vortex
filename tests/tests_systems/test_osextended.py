@@ -82,6 +82,12 @@ class TestOSExtendedBasics(unittest.TestCase):
         self.assertTrue(self.sh.cp(self._TESTFILE_DEFAULT, 'tter.txt', intent="in"))
         self.assert_tfile('tter.txt')
         self.assert_sameinode(self._TESTFILE_DEFAULT, 'tter.txt')
+        self.assertTrue(self.sh.cp(self._TESTFILE_DEFAULT, 'tquad.txt', intent="in", smartcp_threshold=2))
+        self.assert_tfile('tquad.txt')
+        self.assert_sameinode(self._TESTFILE_DEFAULT, 'tquad.txt')
+        self.assertTrue(self.sh.cp(self._TESTFILE_DEFAULT, 'tpenta.txt', intent="in", smartcp_threshold=1024))
+        self.assert_tfile('tpenta.txt')
+        self.assert_not_sameinode(self._TESTFILE_DEFAULT, 'tpenta.txt')
         # Mkdir
         self.assertTrue(self.sh.mkdir('testdir'))
         self.assertTrue(self.sh.path.isdir('testdir'))
@@ -145,6 +151,20 @@ class TestOSExtendedBasics(unittest.TestCase):
         ))
         self.assert_sameinode(self._TESTFILE_DEFAULT,
                               self.sh.path.join('testdir_in', 'sub1', 'tlink3.txt'))
+        self.assertTrue(self.sh.cp('testdir', 'testdir_in2', intent='in', smartcp_threshold=1024))
+        self.assert_not_sameinode(self._TESTFILE_DEFAULT,
+                                  self.sh.path.join('testdir_in2', 'tsfile1'))
+        for lname in ('tlink2.txt', 'tlink2abs.txt'):
+            self.assert_not_sameinode('tbis.txt',
+                                      self.sh.path.join('testdir_in2', 'sub1', lname))
+            self.assertFalse(self.sh.path.islink(
+                self.sh.path.join('testdir_in2', 'sub1', lname)
+            ))
+        self.assertTrue(self.sh.path.islink(
+            self.sh.path.join('testdir_in2', 'sub1', 'tlink3.txt')
+        ))
+        self.assert_not_sameinode(self._TESTFILE_DEFAULT,
+                                  self.sh.path.join('testdir_in2', 'sub1', 'tlink3.txt'))
         self.assertTrue(self.sh.cp('testdir', 'testdir_inout', intent='inout'))
         self.assert_not_sameinode(self._TESTFILE_DEFAULT,
                                   self.sh.path.join('testdir_inout', 'tsfile1'))

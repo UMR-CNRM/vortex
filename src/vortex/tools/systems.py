@@ -2274,6 +2274,19 @@ class OSExtended(System):
         st2 = self.stat(self.path.dirname(self.path.realpath(path2)))
         return st1.st_dev == st2.st_dev and not self.path.islink(path1)
 
+    def _rawcp_instead_of_hardlink(self, source, destination, securecopy=True):
+        self.stderr('rawcp_instead_of_hardlink', source, destination)
+        if securecopy:
+            rc = self.rawcp(source, destination)
+        else:
+            # Do not bother with a temporary file, create a direct copy
+            self.copyfile(source, destination)
+            # Preserve the execution permissions...
+            if self.xperm(source):
+                self.xperm(destination, force=True)
+            rc = bool(self.size(source) == self.size(destination))
+        return rc
+
     def _safe_hardlink(self, source, destination, securecopy=True):
         """Create a (unique) hardlink in a secure way.
 
@@ -2293,15 +2306,7 @@ class OSExtended(System):
                 # Too many links
                 logger.warning('Too many links for the source file (%s).', source)
                 if self.usr_file(source):
-                    if securecopy:
-                        rc = self.rawcp(source, destination)
-                    else:
-                        # Do not bother with a temporary file, create a direct copy
-                        self.copyfile(source, destination)
-                        # Preserve the execution permissions...
-                        if self.xperm(source):
-                            self.xperm(destination, force=True)
-                        rc = bool(self.size(source) == self.size(destination))
+                    rc = self._rawcp_instead_of_hardlink(source, destination, securecopy=securecopy)
                     if rc:
                         try:
                             logger.warning('Replacing the orignal file with a copy...')
@@ -2325,13 +2330,17 @@ class OSExtended(System):
         return rc
 
     def hardlink(self, source, destination,
-                 readonly=True, securecopy=True, keep_symlinks_below=None):
+                 link_threshold=0, readonly=True, securecopy=True,
+                 keep_symlinks_below=None):
         """Create hardlinks for both single files or directories.
 
+        :param int link_threshold: if the source file size is smaller than
+                                   **link_threshold** a copy is made (instead
+                                   of a hardlink)
         :param bool readonly: ensure that all of the created links are readonly
         :param bool securecopy: while creating the copy of the source file
-                        (because of a "Too many links" OS error), create
-                        a temporary filename and move it afterward to the
+                        (because of a "Too many links" OS error or **link_threshold**),
+                        create a temporary filename and move it afterward to the
                         *destination*: longer but safer.
         :param str keep_symlinks_below: Preserve relative symlinks that have
                                         a target below the **keep_symlinks_below**
@@ -2353,17 +2362,24 @@ class OSExtended(System):
                     if self._os.path.islink(srcname):
                         linkto = self._validate_symlink_below(srcname, keep_symlinks_below)
                         if linkto is None:
-                            rc = self._safe_hardlink(self.path.join(self.path.dirname(srcname),
-                                                                    self._os.readlink(srcname)),
-                                                     dstname, securecopy=securecopy)
+                            link_target = self.path.join(self.path.dirname(srcname),
+                                                         self._os.readlink(srcname))
+                            rc = self.hardlink(link_target, dstname,
+                                               link_threshold=link_threshold,
+                                               readonly=readonly, securecopy=securecopy,
+                                               keep_symlinks_below=keep_symlinks_below)
                         else:
                             self._os.symlink(linkto, dstname)
                     elif self.path.isdir(srcname):
                         rc = self.hardlink(srcname, dstname,
+                                           link_threshold=link_threshold,
                                            readonly=readonly, securecopy=securecopy,
                                            keep_symlinks_below=keep_symlinks_below)
                     else:
-                        rc = self._safe_hardlink(srcname, dstname, securecopy=securecopy)
+                        if link_threshold and self.size(srcname) < link_threshold:
+                            rc = self._rawcp_instead_of_hardlink(srcname, dstname, securecopy=securecopy)
+                        else:
+                            rc = self._safe_hardlink(srcname, dstname, securecopy=securecopy)
                         if readonly and rc:
                             self.readonly(dstname)
                     if not rc:
@@ -2374,13 +2390,17 @@ class OSExtended(System):
                     self.wperm(destination, force=True)
                 return rc
         else:
-            self.stderr('hardlink', source, destination)
-            rc = self._safe_hardlink(source, destination, securecopy=securecopy)
+            if link_threshold and self.size(source) < link_threshold:
+                rc = self._rawcp_instead_of_hardlink(source, destination, securecopy=securecopy)
+            else:
+                self.stderr('hardlink', source, destination)
+                rc = self._safe_hardlink(source, destination, securecopy=securecopy)
             if readonly and rc:
                 self.readonly(destination)
             return rc
 
-    def _smartcp_cross_users_links_fallback(self, source, destination, silent, exc, tmp_destination=None):
+    def _smartcp_cross_users_links_fallback(self, source, destination, smartcp_threshold, silent,
+                                            exc, tmp_destination=None):
         """Catch errors related to Kernel configuration."""
         if (exc.errno == errno.EPERM) and not self.usr_file(source):
             # This is expected to fail if the fs.protected_hardlinks
@@ -2390,11 +2410,12 @@ class OSExtended(System):
             logger.info("Force System's allow_cross_users_links to False")
             self.allow_cross_users_links = False
             logger.info("Re-running the smartcp command")
-            return self.smartcp(source, destination, silent=silent)
+            return self.smartcp(source, destination,
+                                smartcp_threshold=smartcp_threshold, silent=silent)
         else:
             raise
 
-    def smartcp(self, source, destination, silent=False):
+    def smartcp(self, source, destination, smartcp_threshold=0, silent=False):
         """
         Hard link the **source** file to a safe **destination** (if possible).
         Otherwise, let the standard copy do the job.
@@ -2422,7 +2443,8 @@ class OSExtended(System):
                 tmp_destination = destination + self.safe_filesuffix()
                 if self.path.isdir(source):
                     try:
-                        rc = self.hardlink(source, tmp_destination, securecopy=False)
+                        rc = self.hardlink(source, tmp_destination,
+                                           link_threshold=smartcp_threshold, securecopy=False)
                     except OSError as e:
                         rc = self._smartcp_cross_users_links_fallback(
                             source, destination, silent, e, tmp_destination=tmp_destination
@@ -2442,7 +2464,8 @@ class OSExtended(System):
                     return rc
                 else:
                     try:
-                        rc = self.hardlink(source, tmp_destination, securecopy=False)
+                        rc = self.hardlink(source, tmp_destination,
+                                           link_threshold=smartcp_threshold, securecopy=False)
                     except OSError as e:
                         rc = self._smartcp_cross_users_links_fallback(source, destination, silent, e)
                     else:
@@ -2467,7 +2490,8 @@ class OSExtended(System):
             return False
 
     @fmtshcmd
-    def cp(self, source, destination, intent='inout', smartcp=True, silent=False):
+    def cp(self, source, destination, intent='inout',
+           smartcp=True, smartcp_threshold=0, silent=False):
         """Copy the **source** file to a safe **destination**.
 
         :param source: The source of data (either a path to file or a
@@ -2479,6 +2503,8 @@ class OSExtended(System):
         :param str intent: 'in' for a read-only copy. 'inout' for a read-write copy
             (default: 'inout').
         :param bool smartcp: use :meth:`smartcp` as much as possible (default: *True*)
+        :param int smartcp_threshold: Should smartcp be used, it will only be activated if
+                                      the source file size is above *smartcp_threshold* Bytes.
         :param bool silent: do not complain on error (default: *False*).
 
         It relies on :meth:`hybridcp`, :meth:`smartcp` or :meth:`rawcp`
@@ -2494,7 +2520,8 @@ class OSExtended(System):
                 logger.error('Missing source %s', source)
             return False
         if smartcp and intent == 'in':
-            return self.smartcp(source, destination, silent=silent)
+            return self.smartcp(source, destination,
+                                smartcp_threshold=smartcp_threshold, silent=silent)
         if self.filecocoon(destination):
             return self.rawcp(source, destination)
         else:
