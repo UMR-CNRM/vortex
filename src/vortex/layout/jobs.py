@@ -865,7 +865,8 @@ class JobAssistantAutodirPlugin(JobAssistantPlugin):
         if self._joblabel is None:
             with t.sh.cdcontext(tmpbase, create=True):
                 self._joblabel = t.sh.path.basename(tempfile.mkdtemp(
-                    prefix='{:s}_{:s}_'.format(self.jobname, date.now().iso8601()),
+                    prefix='{:s}_{:s}_'.format(self.jobname,
+                                               date.now().strftime('%Y%m%d_%H%M%S')),
                     dir='.'
                 ))
         return t.sh.path.join(tmpbase, self._joblabel)
