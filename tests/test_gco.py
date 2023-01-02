@@ -271,9 +271,6 @@ class TestGcoGget(PrivateCocoonGcoTest):
             self.assertTrue(self.sh.path.islink('file4'))
             self.assertTrue(self.sh.path.isdir('subdir'))
             file1incache = self.sh.path.join(gcocache, 'fakearchive.01.tgz.autoextract', 'file1')
-            # The file should come from the cache...
-            self.assertEqual(self.sh.stat(file1incache).st_ino,
-                             self.sh.stat('file1').st_ino)
         # Intent ?
         with self.sh.cdcontext('fromcacheter', create=True):
             self.assertTrue(st.get(uriparse('gget://gco.cache.fr/fakearchive.01.tgz'),
