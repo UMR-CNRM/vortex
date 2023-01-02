@@ -77,10 +77,12 @@ class FolderShell(addons.FtrawEnableAddon):
         )
     )
 
-    def _folder_cp(self, source, destination, intent='in', silent=False):
+    def _folder_cp(self, source, destination,
+                   smartcp_threshold=0, intent='in', silent=False):
         """Extended copy for a folder repository."""
         rc, source, destination = self._folder_tarfix_out(source, destination)
-        rc = rc and self.sh.cp(source, destination, intent=intent)
+        rc = rc and self.sh.cp(source, destination,
+                               smartcp_threshold=smartcp_threshold, intent=intent)
         if rc:
             rc, source, destination = self._folder_tarfix_in(source, destination)
             if rc and intent == 'inout':

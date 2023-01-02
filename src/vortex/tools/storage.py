@@ -197,15 +197,25 @@ class Storage(footprints.FootprintBase):
         """
         return self._history
 
-    def actual(self, attr):
-        """Return the actual attribute, either defined in config or plain attribute."""
-        thisattr = getattr(self, attr, 'conf')
-        if thisattr == 'conf':
-            if self._actual_config.has_option(self.kind, attr):
-                thisattr = self._actual_config.get(self.kind, attr)
-            else:
+    def _actual_config_lookup(self, attr, fatal=True, default=None):
+        """Look for *attr* in the configuration."""
+        k_glove = '@' + self.session.glove.realkind
+        if self._actual_config.has_option(self.kind + k_glove, attr):
+            return self._actual_config.get(self.kind + k_glove, attr)
+        elif self._actual_config.has_option(self.kind, attr):
+            return self._actual_config.get(self.kind, attr)
+        else:
+            if fatal:
                 raise AttributeError('Could not find default ' + attr + ' in config.')
-        return thisattr
+            else:
+                return default
+
+    def actual(self, attr, fatal=True, default=None):
+        """Return the actual attribute, either defined in config or plain attribute."""
+        this_attr = getattr(self, attr, 'conf')
+        if this_attr == 'conf':
+            this_attr = self._actual_config_lookup(attr, fatal, default)
+        return this_attr
 
     @property
     def actual_record(self):
@@ -375,6 +385,25 @@ class Cache(Storage):
     def realkind(self):
         return 'cache'
 
+    def _actual_config_lookup(self, attr, fatal=True, default=None):
+        """Look for *attr* in the configuration."""
+        k_glove = '@' + self.session.glove.realkind
+        k_head = None if self.headdir == 'conf' else '-' + self.headdir
+        if k_head and self._actual_config.has_option(self.kind + k_head + k_glove, attr):
+            return self._actual_config.get(self.kind + k_head + k_glove, attr)
+        elif k_head and self._actual_config.has_option(self.kind + k_head, attr):
+            return self._actual_config.get(self.kind + k_head, attr)
+        elif self._actual_config.has_option(self.kind + k_glove, attr):
+            this_attr = self._actual_config.get(self.kind + k_glove, attr)
+        elif self._actual_config.has_option(self.kind, attr):
+            this_attr = self._actual_config.get(self.kind, attr)
+        else:
+            if fatal:
+                raise AttributeError('Could not find default ' + attr + ' in config.')
+            else:
+                this_attr = default
+        return this_attr
+
     @property
     def actual_rootdir(self):
         """This cache rootdir (potentially read form the configuration file)."""
@@ -384,6 +413,18 @@ class Cache(Storage):
     def actual_headdir(self):
         """This cache headdir (potentially read form the configuration file)."""
         return self.actual('headdir')
+
+    @property
+    def actual_hardlink_threshold(self):
+        """Read the threshold for hardlink creation (form the configuration file).
+
+        If the source file size exceed this threshold, hardlink will be used
+        (as much as possible). Otherwise a simple copy will be used.
+        """
+        t = self.actual('hardlink_threshold', fatal=False)
+        if t is not None:
+            t = int(t)
+        return t
 
     @property
     def tag(self):
@@ -467,7 +508,8 @@ class Cache(Storage):
         # Insert the element
         tpath = self._formatted_path(item)
         if tpath is not None:
-            rc = self.sh.cp(local, tpath, intent=intent, fmt=fmt)
+            rc = self.sh.cp(local, tpath, intent=intent, fmt=fmt,
+                            smartcp_threshold=self.actual_hardlink_threshold)
         else:
             logger.warning('No target location for < %s >', item)
             rc = False
@@ -493,12 +535,14 @@ class Cache(Storage):
                 for subpath in self.sh.glob(source + '/*'):
                     rc = rc and self.sh.cp(subpath,
                                            self.sh.path.join(destdir, self.sh.path.basename(subpath)),
-                                           intent=intent, fmt=fmt)
+                                           intent=intent, fmt=fmt,
+                                           smartcp_threshold=self.actual_hardlink_threshold)
                     # For the insitu feature to work...
                     rc = rc and self.sh.touch(local)
             # The usual case: just copy source
             else:
-                rc = self.sh.cp(source, local, intent=intent, fmt=fmt, silent=silent)
+                rc = self.sh.cp(source, local, intent=intent, fmt=fmt, silent=silent,
+                                smartcp_threshold=self.actual_hardlink_threshold)
                 # If auto_tarextract, a potential tar file is extracted
                 if (rc and tarextract and not self.sh.path.isdir(local) and
                         self.sh.is_tarname(local) and self.sh.is_tarfile(local)):
