@@ -44,7 +44,7 @@ dict()
 {% block driver_opts -%}
     opts = dict(jobassistant=ja,
                 steps={% block ja_mtool_steps %}ja.mtool_steps{% endblock %},
-                mstep_job_last=ja.is_last)
+                mstep_job_last=ja.mstep_is_last)
 {% endblock -%}
 
 {% block job_post_rescue -%}

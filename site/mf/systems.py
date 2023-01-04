@@ -7,9 +7,11 @@ This package handles some common targets used at Meteo France.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
+import collections
 import contextlib
 import ftplib
 import re
+import shlex
 import uuid
 
 from bronx.fancies import loggers
@@ -74,6 +76,31 @@ class MeteoBullX3(Target):
                     actual_cmd = [c.format(todo='enable') for c in dis_boost_cmd]
                     logger.info('Re-enabling AMD boost: %s\n', ' '.join(actual_cmd))
                     ticket.sh.spawn(actual_cmd, output=False)
+
+    def plugable_extra_session_setup(self, ja, t, **kw):
+        """When a JobAssitant's setup is called, this bit of code will be used."""
+        if t.rundir:
+            real_rundir = t.sh.path.realpath(t.rundir)
+            # Read Lustre related configuration
+            lfs_mapping = collections.defaultdict(list)
+            for m_def in self.get('fs:lustre_fs', '').split(' '):
+                k, values = m_def.split(':', 1)
+                lfs_mapping[k].extend(values.split(','))
+            fs_tag = None
+            for tag, fss in lfs_mapping.items():
+                if any([real_rundir.startswith(fs) for fs in fss]):
+                    fs_tag = tag
+                    break
+            lfs_setstripes = []
+            if fs_tag:
+                lfs_setstripes = shlex.split(self.get('fs:lustre_setstripe_' + fs_tag, ''))
+            # Set stripping if needed
+            if lfs_setstripes and getattr(ja, 'mstep_is_first', True):
+                # Tweak Lustre striping on the run directory
+                logger.info('Setting stripping on < %s >. Parameters: %s',
+                            t.rundir, lfs_setstripes)
+                t.sh.spawn(['lfs', 'setstripe'] + lfs_setstripes + [t.rundir, ],
+                           output=False)
 
 
 class Belenos(MeteoBullX3):
