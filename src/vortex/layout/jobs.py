@@ -394,13 +394,21 @@ def _extendable(func):
         dargs = list(kargs)
         if not (dargs and isinstance(dargs[0], vortex.sessions.Ticket)):
             dargs.insert(0, vortex.sessions.current())
-        # Go through the plugins and look for available methods
+        # The method we are looking for
         plugable_n = 'plugable_' + func.__name__.lstrip('_')
+        # Go through the plugins and look for available methods
         for p in [p for p in self.plugins if hasattr(p, plugable_n)]:
             # If the previous result was a session, use it...
             if isinstance(res, vortex.sessions.Ticket):
                 dargs[0] = res
             res = getattr(p, plugable_n)(*dargs, **kw)
+        # Look into the session's default target
+        tg_callback = getattr(dargs[0].sh.default_target, plugable_n, None)
+        if tg_callback is not None:
+            # If the previous result was a session, use it...
+            if isinstance(res, vortex.sessions.Ticket):
+                dargs[0] = res
+            res = tg_callback(self, *dargs, **kw)
         return res
     return new_me
 
@@ -941,8 +949,13 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
             return ()
 
     @property
-    def is_last(self):
-        """Is it the laste MTOOL step (appart from the cleaning)."""
+    def mstep_is_first(self):
+        """Is it the first MTOOL step."""
+        return self.step == 1
+
+    @property
+    def mstep_is_last(self):
+        """Is it the last MTOOL step (apart from the cleaning)."""
         return self.stepid == self.lastid
 
     def plugable_extra_session_setup(self, t, **kw):
@@ -1064,12 +1077,11 @@ class JobAssistantFlowSchedPlugin(JobAssistantPlugin):
             self._printfmt('Flow scheduler client path: {:s}', ad.flow_path())
 
             # Initialise the flow scheduler
+            mstep_fist = getattr(self.masterja, 'mstep_is_first', True)
             mtplug = self._flow_sched_mtool_plugin
-            if mtplug is None:
+            if mstep_fist:
                 ad.flow_init(rid)
-            else:
-                if mtplug.step == 1:
-                    ad.flow_init(rid)
+            if mtplug is not None:
                 label = "{:s} (mtoolid={!s})".format(label, mtplug.mtoolid)
                 if self.mtoolmeters:
                     ad.flow_meter('work', 1 + (mtplug.step - 1) * 2)
@@ -1079,15 +1091,13 @@ class JobAssistantFlowSchedPlugin(JobAssistantPlugin):
     def plugable_complete(self, t):
         """Should be called when a job finishes successfully."""
         if self.masterja.subjob_tag is None:
+            mstep_last = getattr(self.masterja, 'mstep_is_last', True)
             mtplug = self._flow_sched_mtool_plugin
-            if mtplug is None:
-                ad.flow_complete()
-            else:
+            if mtplug is not None:
                 if self.mtoolmeters:
                     ad.flow_meter('work', 2 + (mtplug.step - 1) * 2)
-                # With MTOOL, complete only at the end of the last step...
-                if mtplug.stepid == mtplug.lastid:
-                    ad.flow_complete()
+            if mstep_last:
+                ad.flow_complete()
 
     def plugable_rescue(self, t):
         """Called at the end of a job when something went wrong."""
@@ -1191,26 +1201,14 @@ class JobAssistantAppWideLockPlugin(JobAssistantPlugin):
 
     def __init__(self, *kargs, **kwargs):
         super(JobAssistantAppWideLockPlugin, self).__init__(*kargs, **kwargs)
-        self._appwide_lock_saved_mtplug = 0
         self._appwide_lock_label = None
         self._appwide_lock_acquired = None
-
-    @property
-    def _appwide_lock_mtool_plugin(self):
-        """Return the MTOOL plugin (if present)."""
-        if self._appwide_lock_saved_mtplug == 0:
-            self._appwide_lock_saved_mtplug = None
-            for p in self.masterja.plugins:
-                if p.kind == 'mtool':
-                    self._appwide_lock_saved_mtplug = p
-        return self._appwide_lock_saved_mtplug
 
     def plugable_job_final_init(self, t, **kw):
         """Acquire the lock on job startup."""
         self._appwide_lock_label = self.label.format(** self.masterja.special_variables)
         if self.acquire:
-            mtplug = self._appwide_lock_mtool_plugin
-            if (mtplug and mtplug.step == 1) or mtplug is None:
+            if getattr(self.masterja, 'mstep_is_first', True):
                 logger.info("Acquiring the '%s' application wide lock",
                             self._appwide_lock_label)
                 self._appwide_lock_acquired = t.sh.appwide_lock(self._appwide_lock_label,
@@ -1232,8 +1230,7 @@ class JobAssistantAppWideLockPlugin(JobAssistantPlugin):
     def plugable_complete(self, t):
         """Should be called when a job finishes successfully."""
         if self.release:
-            mtplug = self._appwide_lock_mtool_plugin
-            if (mtplug and mtplug.stepid == mtplug.lastid) or mtplug is None:
+            if getattr(self.masterja, 'mstep_is_last', True):
                 self._appwide_lock_release(t)
 
     def plugable_rescue(self, t):
