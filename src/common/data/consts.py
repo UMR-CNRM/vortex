@@ -139,10 +139,10 @@ class RtCoef(GenvModelResource):
         info = 'Set of satellite  coefficients',
         attr = dict(
             kind = dict(
-                values  = ['rtcoef', ]
+                values  = ['rtcoef', 'mwave_rtcoef']
             ),
             gvar = dict(
-                default = 'rtcoef_tgz'
+                default = '[kind]_tgz'
             ),
         )
     )
@@ -471,7 +471,7 @@ class AtlasEmissivityGeneric(AtlasEmissivity):
         info = 'Yearly emissivity atlas from a given source.',
         attr = dict(
             source = dict(
-                values         = ['uwir'],
+                values         = ['uwir', 'telsem'],
             ),
             gvar = dict(
                 default        = '[source]_emis_atlas'

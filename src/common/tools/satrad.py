@@ -10,7 +10,8 @@ import re
 
 from bronx.fancies import loggers
 
-from vortex.algo.components import AlgoComponentDecoMixin, algo_component_deco_mixin_autodoc
+from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError
+from vortex.algo.components import algo_component_deco_mixin_autodoc
 
 #: No automatic export
 __all__ = []
@@ -35,7 +36,12 @@ class SatRadDecoMixin(AlgoComponentDecoMixin):
         rtcoefs = self.context.sequence.effective_inputs(role='RtCoef', kind='rtcoef')
         if rtcoefs:
             sh = self.system
-            rtpath = sh.path.dirname(sh.path.realpath(rtcoefs[0].rh.container.localpath()))
+            rtpaths = {sh.path.dirname(sh.path.realpath(rtcoef.rh.container.localpath()))
+                       for rtcoef in rtcoefs}
+            if len(rtpaths) != 1:
+                raise AlgoComponentError('The Radiative Transfer Coefficients are scattered in' +
+                                         'several directories: {!s}'.format(rtpaths))
+            rtpath = rtpaths.pop()
             logger.info('Setting %s = %s', 'RTTOV_COEFDIR', rtpath)
             self.env['RTTOV_COEFDIR'] = rtpath
 
