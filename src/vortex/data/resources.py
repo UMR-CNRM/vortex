@@ -17,6 +17,7 @@ from bronx.stdtypes.dictionaries import LowerCaseDict
 import footprints
 
 from vortex.syntax.stdattrs import nativefmt_deco, notinrepr, term_deco
+from gco.syntax.stdattrs import gvar
 from .contents import DataContent, UnknownContent, FormatAdapter
 
 #: Export Resource and associated Catalog classes.
@@ -160,24 +161,27 @@ class Resource(footprints.FootprintBase):
 
 class Unknown(Resource):
 
-    _footprint = dict(
-        info = 'Unknown assumed NWP Resource (development only !)',
-        attr = dict(
-            unknown = dict(
-                info = "Activate the unknown resource.",
-                type = bool
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Unknown assumed NWP Resource (development only !)',
+            attr = dict(
+                unknown = dict(
+                    info = "Activate the unknown resource.",
+                    type = bool
+                ),
+                nickname = dict(
+                    info = "The string that serves the purpose of Vortex's basename radical",
+                    optional = True,
+                    default = 'unknown'
+                ),
+                clscontents = dict(
+                    default = FormatAdapter,
+                ),
             ),
-            nickname = dict(
-                info = "The string that serves the purpose of Vortex's basename radical",
-                optional = True,
-                default = 'unknown'
-            ),
-            clscontents = dict(
-                default = FormatAdapter,
-            ),
-        ),
-        fastkeys = set(['unknown', ]),
-    )
+            fastkeys = set(['unknown', ]),
+        )
+    ]
 
     def namebuilding_info(self):
         """Keep the Unknown resource unknown."""

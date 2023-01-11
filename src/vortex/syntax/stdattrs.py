@@ -32,7 +32,7 @@ models = {
     'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro', 'aearp', 'pearp', 'mocage',
     'mesonh', 'surfex', 'hycom', 'psy4', 'safran', 'ifs', 'aroifs', 'cifs', 'mfwam', 'pg1',
     'alpha', 'eps', 'postproc', 'ww3', 'sympo', 'psym', 'petaroute', 'promethee', 'hycom3d',
-    'croco', 'alaro', 'harmoniearome'
+    'croco', 'alaro', 'harmoniearome', 'nemo'
 }
 
 #: Possible values for the most common binaries.
@@ -40,7 +40,7 @@ binaries = {
     'arpege', 'aladin', 'arome', 'aromeom_common', 'batodb', 'peace', 'mocage', 'sumo',
     'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd', 'ifs', 'oops',
     'assistance', 'arpifs', 'mfwam', 'mfwam_interp', 'ww3', 'ww3_prnc', 'ww3_bound',
-    'ww3_ncgrb', 'ial', 'alaro', 'harmoniearome'
+    'ww3_ncgrb', 'ial', 'alaro', 'harmoniearome', 'nemo', 'oasis', 'arobase'
 }
 
 #: Possible values for the most common utility programs.
