@@ -31,6 +31,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: NemoModel
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Prep
    :show-inheritance:
    :members:
@@ -202,6 +207,11 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: DomeoScriptDataCor
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Xios
    :show-inheritance:
    :members:
    :member-order: alphabetical

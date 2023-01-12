@@ -8,7 +8,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import vortex
 
-from vortex.data.executables import Script, GnuScript, BlackBox, NWPModel, SurfaceModel
+from vortex.data.executables import Script, GnuScript, BlackBox, NWPModel, SurfaceModel, OceanographicModel
 from gco.syntax.stdattrs import gvar, arpifs_cycle, gmkpack_compiler_identification_deco, executable_flavour_deco
 from gco.syntax.stdattrs import ArpIfsSimplifiedCycle
 
@@ -112,6 +112,32 @@ class Arome(IFSModel):
         """Enforce aladin model option."""
         kw.setdefault('model', 'aladin')
         return super(Arome, self).command_line(**kw)
+
+
+class NemoModel(OceanographicModel):
+    """Any model from the NEMO community."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'NEMO',
+            attr = dict(
+                gvar = dict(
+                    default  = 'master_[model]'
+                ),
+                kind = dict(
+                    values   = ['nemomodel', ],
+                ),
+                model = dict(
+                    values   = ['nemo', ],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'nemo'
 
 
 @gmkpack_bin_deco
@@ -992,3 +1018,26 @@ class DomeoScriptDataCor(Script):
     @property
     def realkind(self):
         return 'domeo_cor_script'
+
+
+class Xios(BlackBox):
+    """The XIOS I/O Server Binary."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'The XIOS I/O Server.',
+            attr = dict(
+                kind = dict(
+                    values   = ['xios', ],
+                ),
+                gvar = dict(
+                    default  = 'master_xios'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'xios'
