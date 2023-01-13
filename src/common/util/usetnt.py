@@ -19,12 +19,9 @@ from vortex.util.roles import setrole
 
 logger = loggers.getLogger(__name__)
 
-tnt_checker = ExternalCodeImportChecker('tnt')
+tnt_checker = ExternalCodeImportChecker('thenamelisttool')
 with tnt_checker as tnt_register:
-    import tnt
-
-    tnt_register.update(version=tnt.__version__)
-    logger.info('TNT %s loaded.', str(tnt.__version__))
+    import thenamelisttool
 
 __all__ = []
 
@@ -85,10 +82,10 @@ def compose_nam(options):
     dirpack_path = _get_pack_adress(dirpack_role) if dirpack_role else nampack_path
 
     out_io = six.BytesIO()
-    tnt.util.compose_namelist(
+    thenamelisttool.util.compose_namelist(
         t.sh.path.join(dirpack_path, source + '.yaml'),
         sourcenam_directory=nampack_path,
-        sorting=tnt.namadapter.FIRST_ORDER_SORTING,
+        sorting=thenamelisttool.namadapter.FIRST_ORDER_SORTING,
         squeeze=False,
         fhoutput=codecs.getwriter('utf-8')(out_io)
     )

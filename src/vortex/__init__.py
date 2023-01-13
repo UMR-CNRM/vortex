@@ -113,7 +113,5 @@ atexit.register(complete)
 del atexit, complete
 
 print('Vortex', __version__, 'loaded', '(', bronx.stdtypes.date.at_second().reallynice(), ')')
-if __version__ != footprints.__version__:
-    print('   ... with a non-matching footprints version (', footprints.__version__, ')')
 
 del footprints
