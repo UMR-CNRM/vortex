@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "taylorism"
+description = "Framework for parallelisation of tasks"
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = []
+license = {text = "CECILL-C"}
+authors = [
+    {name = "The Vortex Team", email = "vortex.support@meteo.fr"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: CeCILL-C Free Software License Agreement (CECILL-C)",
+]
+dependencies = [
+    "bronx",
+    "footprints"
+]
+dynamic = ["version"]
+
+[project.urls]
+repository = "https://github.com/UMR-CNRM/taylorism"
+
+[project.optional-dependencies]
+docs = [
+    "sphinx",
+]
+tests = [
+    "numpy",
+]
+
+[tool.setuptools_scm]
+tag_regex = '^(?P<prefix>v)?(?P<version>[^\+]+)(?P<suffix>.*)?$'
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "src",
+]
+testpaths = [
+    "tests",
+]
+
+[tool.pydocstyle]
+convention = "pep257"
+add_ignore = "D105,D107,D200,D204,D205,D400,D401,D402"
