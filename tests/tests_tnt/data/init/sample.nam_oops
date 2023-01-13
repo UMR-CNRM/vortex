@@ -1,6 +1,0 @@
-&NAMOBJ
-  L_OOPS=.TRUE.,
-/
-&NAMFA
-  NVGRIB=2,
-/

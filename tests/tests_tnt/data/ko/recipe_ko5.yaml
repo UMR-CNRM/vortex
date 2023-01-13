@@ -1,4 +1,0 @@
-namelist_obs/+:
-    - TOTO
-    - TRUC:
-        - MACHIN

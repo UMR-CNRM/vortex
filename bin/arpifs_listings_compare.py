@@ -1,1 +1,0 @@
-../site/arpifs_listings/bin/compare_listings.py
