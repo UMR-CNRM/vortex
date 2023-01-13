@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bronx"
+description = "Bunch of Reusable Objects Not in vorteX."
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = []
+license = {text = "CECILL-C"}
+authors = [
+    {name = "The Vortex Team", email = "vortex.support@meteo.fr"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: CeCILL-C Free Software License Agreement (CECILL-C)",
+]
+dependencies = [
+    "six",
+]
+dynamic = ["version"]
+
+[project.urls]
+repository = "https://github.com/UMR-CNRM/bronx"
+
+[project.optional-dependencies]
+docs = [
+    "sphinx",
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "pyyaml",
+    "netCDF4",
+    "Pillow"
+]
+tests = [
+    "numpy",
+    "scipy",
+    "pyyaml",
+    "netCDF4",
+]
+
+[tool.setuptools_scm]
+tag_regex = '^(?P<prefix>v)?(?P<version>[^\+]+)(?P<suffix>.*)?$'
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "src",
+]
+testpaths = [
+    "tests",
+]
+
+[tool.pydocstyle]
+convention = "pep257"
+add_ignore = "D105,D107,D200,D204,D205,D400,D401,D402"
