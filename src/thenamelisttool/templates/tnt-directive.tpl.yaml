@@ -1,0 +1,51 @@
+
+# 1. Blocks to be added.
+new_blocks:
+    - NAMNEW1
+    - NAMNEW2
+
+# 2. Blocks to be moved. If target block exists, raise an error.
+blocks_to_move:
+     NAMOLD1: NAMMOVED1
+     NAMOLD1: NAMMOVED2
+     
+
+# 3. Keys to be moved. If target exists or target block is missing, raise an error.
+# Blocks need to be consistent with above blocks movings.
+keys_to_move:
+    NAMOLD1:
+        KEYOLD1:
+            NAMNEW1: KEYNEW1  # change the key from block, and/or rename it
+        KEYOLD2:
+            NAMNEW2: KEYNEW2  
+
+# 4. Keys to be removed. Already missing keys are ignored.
+# Blocks need to be consistent with above movings.
+keys_to_remove:
+    NAMBLOCK1:
+        - KEYTOREMOVE1
+        - KEYTOREMOVE2
+    NAMBLOCK2:
+        - KEYTOREMOVE1
+        - KEYTOREMOVE2
+
+# 5. Keys to be set with a value (new or modified). If block is missing, raise an error.
+# Blocks need to be consistent with above movings.
+keys_to_set:
+    NAMBLOCK1:
+        KEY1: 46.5
+    NAMBLOCK2:
+        KEY2(1:3): [5,6,7]
+    NAMBLOCK3:
+        KEY3(50): -50
+
+# 6. Blocks to be removed. Already missing blocks are ignored.
+blocks_to_remove:
+    - NAMBLOCK1
+    - NAMBLOCK2
+
+# 7. Macros: substitutions in the namelist's values. A *None* value ignores
+# the substitution (keeps the keyword, to be substituted later on).
+macros:
+    VAL_TO_SUBSTITUTE: 8
+    VAL_TO_KEEP_AND_BE_SUBSTITUTED_LATER: null

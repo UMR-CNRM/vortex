@@ -1,0 +1,44 @@
+# __init__ and __final__ are optional, and are merged resp. first and last:
+# they can either refer to an existing namelist file
+__initial__: init/sample.nam_oops
+
+# or use inlined yaml definitions
+__final__:
+    NAMFA:
+        NVGRIB: 123
+    NAMEMPTY: null
+
+# then requested blocks/keys from as many input namelists as necessary
+# [processed and merged respecting order]
+namelistmin1312_assim/+:
+    # keep only these blocks
+    - NAERAD
+    - NAMDYN
+    - NAMRIP
+    - NAMFA/+:
+        # keep only these keys in this block
+        - NBITCS
+        - NBITPG
+    - NAMINI/-:
+        # keep the whole block, except these keys
+        - LDFI
+
+namelist_obs/-:
+    # keep the whole namelist except these blocks 
+    - NAMARG
+    - NAMOBS/-:
+        # keep the whole block except these keys
+        - LCAPACH
+    - NAMDIM/+:
+        # keep only these keys of this block
+        - NPROMA
+
+# take the whole namelist
+namelist_empty: __all__
+
+# Macros: substitutions in the namelist's values. A *None* value ignores
+# the substitution (keeps the keyword, to be substituted later on).
+__macros__:
+    VAL_TO_SUBSTITUTE: 8
+    VAL_TO_KEEP_AND_BE_SUBSTITUTED_LATER: null
+
