@@ -121,8 +121,10 @@ class DefaultExporter(object):
                      '.. note::\n' +
                      '   ' +
                      'This page had been generated from a IPython/Jupyter notebook. ' +
-                     'You can :download:`download this notebook <{:s}>` individually or '.format(os.path.basename(a_file)) +
-                     "get a :download:`tarball <{:s}>` of all the project's notebooks.".format(tarpath) +
+                     'You can :download:`download this notebook <{:s}>` individually or '.
+                     format(os.path.basename(a_file)) +
+                     "get a :download:`tarball <{:s}>` of all the project's notebooks.".
+                     format(tarpath) +
                      '\n\n')
         return (statement + rst + statement)
 

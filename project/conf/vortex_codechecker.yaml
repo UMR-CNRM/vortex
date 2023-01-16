@@ -50,7 +50,6 @@ checkconfigs:
             - iga.tools.services
             - intairpol.tools.addons
            importuse_local_whitelist: &IMP_L_WL
-            site/footprints/loggers.py: [logging, ]
             src/common/algo/ifsroot.py: [common.algo.ifsnaming, ]
             src/vortex/sessions.py: [vortex.gloves, ]
            importblacklist: &IMP_BL
@@ -85,22 +84,22 @@ checkconfigs:
            builtinblacklist: *BLT_BL
 
 places:
-   site:  # The place nickname
-      path: site  # The path to the place (relative to the vortex repository root)
+   site_mf:  # The place nickname
+      path: site/mf  # The path to the place (relative to the vortex repository root)
       footprints_detect: true  # Do we need to look for footprint definitions ?
       checkconfigs:  # List of checkconfig (see above) to apply on this place
          - astro
          - pystd
          - docstrict
-   jeevessite:
-      path: site/jeeves
-      footprints_detect: true
-      checkconfigs:  # No astroid checks since Python3 compatibility is not checked...
+   site_ec:
+     path: site/ecmwf_system
+     footprints_detect: true
+     checkconfigs:
+         - astro
          - pystd
-         - docweak
-   weaksite:
-      path: site/bronx/fancies
-      footprints_detect: true
+         - docstrict
+   site_jeeves:
+      path: site/jeeves
       checkconfigs:
          - astro
          - pystd
@@ -128,6 +127,6 @@ places:
       path: project
       checkconfigs:
          - astro
-         - pylong
+         - pystd
          - docweak
  
