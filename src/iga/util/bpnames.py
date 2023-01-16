@@ -755,7 +755,7 @@ def global_snames(resource, provider):
         bname = 'ctbto_in.tar'
 
     elif resource.realkind == 'promethee_inputs':
-        bname = 'alim_hpc_promethee_' + resource.date.ymdhms + '.tar'
+        bname = 'alim_hpc_prom' + vconf + '_' + resource.date.ymdhms + '.tar'
 
     elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'chimique':
         bname = '7960.tar'

@@ -275,7 +275,7 @@ class SopranoProvider(Provider):
             return self.config.resolvedpath(resource, self.vapp, self.vconf, sopranomaptag)
 
         elif self.vapp == 'promethee':
-            info['level_one'] = 'promethee'
+            info['level_one'] = 'promethee_' + suite_map.get(self.suite, self.suite)
             info['level_two'] = 'alim_hpc'
             info['level_three'] = '.'
             self.config.setall(info)
