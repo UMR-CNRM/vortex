@@ -247,9 +247,9 @@ class SopranoProvider(Provider):
         elif self.vapp == 'arpege' and resource.model == 'ifs':
             info['model'] = 'restart_cep'
         elif self.vapp == 'pprod':
-            info['level_one'] = 'alpha'
-            info['level_two'] = 'alim_hpc_alpha'
-            info['level_three'] = 'extractions'
+            info['level_one'] = 'prod_alpha_' + suite_map.get(self.suite, self.suite)
+            info['level_two'] = 'alim_hpc'
+            info['level_three'] = '.'
             self.config.setall(info)
             return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
 
