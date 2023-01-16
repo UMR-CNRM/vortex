@@ -12,8 +12,6 @@ GENEINDEX     = ../project/bin/package_doc_index.py
 GENEDOC       = ../project/bin/config2doc.py
 # Path to Vortex's Notebook exporter (it converts notebooks to Rst files + attachments)
 NBOOKEXPORT   = ../project/bin/notebook2sphinx.py
-# Path to Footprint's collectors dumpers (generate XML/Json dumps for available resources, ...)
-XMLEXPORT     = ../bin/tbinterface.py
 
 # Path to Sphinx build program
 SPHINXBUILD     = sphinx-build
@@ -60,9 +58,6 @@ AUTO_LIBINDEXES = $(shell find library/* -maxdepth 0 -type d -print)
 BUILD_LIBINDEXES = $(patsubst library/%, %_libindex, $(AUTO_LIBINDEXES))
 CLEAN_LIBINDEXES = $(patsubst library/%, clean-%_libindex, $(AUTO_LIBINDEXES))
 
-# Target directory for footprint's XML exports
-XMLEXPORTDIR  = $(SOURCEDIR)/_static/vortex-help/_ExportXML
-
 # Auto html doc
 AUTO_HTML_DOC = _static/auto_html_docs
 
@@ -88,7 +83,7 @@ all: auto_html_docs html  # HTML documentation is obviously the default
 
 # No dependency check for the following targets (always execute them)
 .PHONY: all full-check miss-check $(CHECKREPORT) html auto_html_docs \
-        clean clean-$(NOTEBOOKS) clean-auto_html_docs $(XMLEXPORTDIR)
+        clean clean-$(NOTEBOOKS) clean-auto_html_docs
 
 # Create rst files for new modules and check all of the aspects
 full-check:
@@ -116,11 +111,6 @@ $(POL_ELTS): $(POL_ELTS_DEP)
 
 $(POL_SITES): $(POL_SITES_DEP)
 	$(PYTHON) $(GENEDOC) --configtable pollutants,sites,std,en,intairpol $(POL_SITES)
-
-# Do the Footprint's XML export (used in vortex-help)
-$(XMLEXPORTDIR):
-	mkdir -p $(XMLEXPORTDIR)
-	$(PYTHON) $(XMLEXPORT) -a -f xml -o $(XMLEXPORTDIR)/tbinterface
 
 # Build the notebooks export
 $(NOTEBOOKS): $(NOTEBOOKS_DEP)
@@ -159,5 +149,5 @@ clean-auto_html_docs:
 
 # Clean the build directory and the automatically generated rst files.
 clean: clean-$(NOTEBOOKS) clean-auto_html_docs $(CLEAN_LIBINDEXES)
-	rm -rf $(BUILDDIR) $(XMLEXPORTDIR)
+	rm -rf $(BUILDDIR)
 	rm -f $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES)

@@ -50,7 +50,6 @@ Extras
    List of default pollutant elements (from pollutants-elements-std.ini) <pollutants-elements-std>
    List of default pollutant sites (from pollutants-sites-std.ini) <pollutants-sites-std>
    checkreport
-   Vortex-Help <_static/vortex-help/index.html#http://>
 
 .. toctree::
    :maxdepth: 1
