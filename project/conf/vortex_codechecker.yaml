@@ -13,6 +13,12 @@ checkconfigs:
          - type: pycodestyle
            max_line_length: 400
            ignore: *PEP8IGN
+   pystrict:
+     label: "code "
+     checkers:
+       - type: pycodestyle
+         max_line_length: 120
+         ignore: [ W504, ]
    docweak:
       label: "doc  "
       checkers:
@@ -50,6 +56,7 @@ checkconfigs:
             - iga.tools.services
             - intairpol.tools.addons
            importuse_local_whitelist: &IMP_L_WL
+            site/footprints/loggers.py: [logging, ]
             src/common/algo/ifsroot.py: [common.algo.ifsnaming, ]
             src/vortex/sessions.py: [vortex.gloves, ]
            importblacklist: &IMP_BL
@@ -104,6 +111,12 @@ places:
          - astro
          - pystd
          - docweak
+   site:
+     path: site
+     checkconfigs:
+       - astro
+       - pystrict
+       - docstrict
    src:
       path: src
       footprints_detect: true
@@ -111,11 +124,36 @@ places:
          - astrovtx
          - pystd
          - docweak
+   tests_fp:
+     path: tests/tests_footprints
+     footprints_detect: false
+     checkconfigs:
+       - pystrict
+   tests_bronx:
+     path: tests/tests_bronx
+     footprints_detect: false
+     checkconfigs:
+       - pystrict
+   tests_arpifs_listings:
+     path: tests/tests_arpifs_listings
+     footprints_detect: false
+     checkconfigs:
+       - pystrict
+   tests_tnt:
+     path: tests/tests_tnt
+     footprints_detect: false
+     checkconfigs:
+       - pystrict
+   tests_taylorism:
+     path: tests/tests_taylorism
+     footprints_detect: false
+     checkconfigs:
+       - pystrict
    tests:
-      path: tests
-      footprints_detect: true
-      checkconfigs:
-         - pylong
+     path: tests
+     footprints_detect: true
+     checkconfigs:
+       - pylong
    bin:
       path: bin
       footprints_detect: true
