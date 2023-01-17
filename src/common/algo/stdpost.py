@@ -8,7 +8,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 
 import collections
-import io
 import json
 import re
 import time
@@ -112,7 +111,7 @@ class _FA2GribWorker(VortexWorkerBlindRun):
             nb.ITUNIT = self.timeunit
         nb['CLFSORT(1)'] = thisoutput
         nb['CDNOMF(1)'] = self.fortinput
-        with io.open(self.fortnam, 'w') as namfd:
+        with open(self.fortnam, 'w') as namfd:
             namfd.write(nb.dumps())
 
         # Finally set the actual init file
@@ -1059,7 +1058,7 @@ class Fa2GaussGrib(BlindRun, DrHookDecoMixin):
 
             nb['LLBAVE'] = self.verbose
             nb['CDNOMF(1)'] = self.fortinput
-            with io.open('fort.4', 'w') as namfd:
+            with open('fort.4', 'w') as namfd:
                 namfd.write(nb.dumps())
 
             self.system.header('{0:s} : local namelist {1:s} dump'.format(self.realkind, 'fort.4'))

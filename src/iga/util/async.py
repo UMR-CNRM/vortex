@@ -8,7 +8,6 @@ If needed, VORTEX must be loaded via a VortexWorker in this context.
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import fcntl
-import io
 import re
 from pprint import pformat
 
@@ -33,7 +32,7 @@ class LockedOpen(object):
     """Context class for locking a file while it is open."""
 
     def __init__(self, filename, mode):
-        self.fp = io.open(filename, mode)
+        self.fp = open(filename, mode)
 
     @property
     def fid(self):

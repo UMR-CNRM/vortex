@@ -8,7 +8,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from six.moves.urllib import parse as urlparse
 import hashlib
-import io
 
 from bronx.fancies import loggers
 import footprints as fp
@@ -89,16 +88,16 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
             with self.sh.ftppool(nrcfile=self._fnrc):
                 # Create a fake listing files
                 sh = self.sh
-                with io.open('flisting1', 'w') as fhl:
+                with open('flisting1', 'w') as fhl:
                     fhl.write('forecast_list')
-                with io.open('flisting1.gz', 'wb') as fhl:
-                    with io.open('flisting1', 'rb') as fhl_in:
+                with open('flisting1.gz', 'wb') as fhl:
+                    with open('flisting1', 'rb') as fhl_in:
                         sh.spawn(['gzip', '--stdout', '-6'], stdin=fhl_in, output=fhl)
 
                 # Archive them using a compression pipeline (not advisable in real life).
                 st = self.vortex_store('vortex.archive.fr', store_compressed='gz')
                 self.assertTrue(st.put('flisting1', _URIl1, dict(fmt='ascii', delayed=False)))
-                with io.open('flisting1.gz', 'rb') as fhl:
+                with open('flisting1.gz', 'rb') as fhl:
                     self.assertVortexRemote(_PATHl1 + '.gz', fhl.read(), binary=True)
                 self.assertTrue(st.get(_URIl1, 'toto', dict(fmt='ascii')))
                 self.assertFile('toto', 'forecast_list')
@@ -117,7 +116,7 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
                 self.assertTrue(st.check(_URIl1, dict(fmt='ascii')))
                 self.assertTrue(st.get(_URIl1, 'toto', dict(fmt='ascii')))
                 self.assertFile('toto', 'forecast_list')
-                with io.open(self.vortex_in_ftp_path(_PATHl1 + '.md5'), 'w') as fhmd:
+                with open(self.vortex_in_ftp_path(_PATHl1 + '.md5'), 'w') as fhmd:
                     # Put erroneous things in the md5 file...
                     fhmd.write('1e25698a')
                 self.assertFalse(st.get(_URIl1, 'toto', dict(fmt='ascii')))
@@ -168,7 +167,7 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
                 self.assertTrue(xloc)
                 self.assertTrue(sh.readonly(xloc[0]))
                 self.assertTrue(stC.get(_SA_URIl1_CHECK, 'toto_bis', dict(fmt='ascii')))
-                with io.open('toto', 'r') as fhl:
+                with open('toto', 'r') as fhl:
                     self.assertFile('toto_bis', fhl.read())
                 sh.rm('toto')
                 sh.rm('toto_bis')
@@ -176,7 +175,7 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
                 self.assertTrue(stC.get(_SA_URIl1, 'toto', dict(fmt='ascii', intent="inout")))
                 self.assertTrue(sh.wperm('toto'))
                 self.assertTrue(sh.readonly(xloc[0]))
-                with io.open('toto', 'r') as fhl:
+                with open('toto', 'r') as fhl:
                     self.assertFile(xloc[0], fhl.read())
                 sh.rm('toto')
 
@@ -186,9 +185,9 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
                 # Working with stacks...
                 # Create a fake stack of files
                 sh = self.sh
-                with io.open('flisting1', 'w') as fhl:
+                with open('flisting1', 'w') as fhl:
                     fhl.write('forecast_list')
-                with io.open('mlisting1', 'w') as fhl:
+                with open('mlisting1', 'w') as fhl:
                     fhl.write('minim_list')
                 st = self.vortex_store('vortex.cache.fr')
                 self.assertTrue(st.put('flisting1', _STACK_URIl1, dict(fmt='ascii')))
@@ -295,7 +294,7 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
         with self.server():
             with self.sh.ftppool(nrcfile=self._fnrc):
                 sh = self.sh
-                with io.open('flisting1', 'w') as fhl:
+                with open('flisting1', 'w') as fhl:
                     fhl.write('forecast_list')
                 stF = fpx.store(scheme='ftp',
                                 netloc='{0.user:s}@localhost:{0.port:d}'.format(self))

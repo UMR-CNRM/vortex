@@ -2,7 +2,6 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import io
 import re
 import sys
 import tempfile
@@ -110,7 +109,7 @@ class MyTaylorRunAlgoWorker(TaylorVortexWorker):
         testlogger.debug("Test debug {:06d}".format(self.loopindex))
         if self.loopindex == self.failingindex:
             raise ValueError('Blurp...')
-        with io.open('{0.prefix:s}_{0.loopindex:06d}.result'.format(self), 'w') as fhout:
+        with open('{0.prefix:s}_{0.loopindex:06d}.result'.format(self), 'w') as fhout:
             fhout.write("Test write {:06d}".format(self.loopindex))
 
 
@@ -144,7 +143,7 @@ class TestTaylorRunAlgo(unittest.TestCase):
 
     def assertOutputs(self, prefix, loopcount):
         for i in range(loopcount):
-            with io.open('{:s}_{:06d}.result'.format(prefix, i), 'r') as fhin:
+            with open('{:s}_{:06d}.result'.format(prefix, i), 'r') as fhin:
                 self.assertEqual(fhin.read(),
                                  "Test write {:06d}".format(i))
 
@@ -155,7 +154,7 @@ class TestTaylorRunAlgo(unittest.TestCase):
             if re.match(r'{:s}_process{:06d}_\d+_stdeo.txt'.format(prefix, loopcount), a_file):
                 found = a_file
         self.assertTrue(found)
-        with io.open(found, 'r') as fhin:
+        with open(found, 'r') as fhin:
             alllines = fhin.readlines()
         self.assertRegex(alllines[0], "^Test print {:06d}$".format(loopcount))
         self.assertRegex(alllines[1], "^.*Test log   {:06d}".format(loopcount))

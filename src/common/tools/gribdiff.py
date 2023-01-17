@@ -6,7 +6,6 @@ TODO: Module documentation.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
 import six
 
 import footprints
@@ -95,7 +94,7 @@ class GRIBDIFF_Plus(GRIBAPI_Tool):
                     self._epycount += 1
                     res = _GRIBDIFF_Plus_Res(rc, True, six.text_type(gdiff))
                     # Save the detailed diff
-                    with io.open(grib1 + "_epygram_diffstats.log", "w") as outfh:
+                    with open(grib1 + "_epygram_diffstats.log", "w") as outfh:
                         outfh.write(gdiff.format_diff(detailed=True))
                 else:
                     res = _GRIBDIFF_Plus_Res(

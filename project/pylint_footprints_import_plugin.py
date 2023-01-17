@@ -15,7 +15,6 @@ if six.PY3:
 else:
     import __builtin__ as builtins
 
-import io
 import glob
 import os
 import sys
@@ -29,7 +28,7 @@ _FP_EXPORT = []
 def register(linter):
     # First, read the footprint dumps Json files
     for colfile in glob.glob('{:s}/tbinterface_*.json'.format(VORTEXBASE)):
-        with io.open(colfile, 'rb') as fd:
+        with open(colfile, 'rb') as fd:
             _FP_EXPORT.append(json.load(fd))
 
 

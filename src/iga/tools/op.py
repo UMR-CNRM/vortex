@@ -6,7 +6,6 @@ TODO: module documentation.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import io
 import re
 from tempfile import mkdtemp
 
@@ -264,7 +263,7 @@ class OpJobAssistant(OpJobAssistantTest):
             tfile = t.env['HOME'] + '/tempo/option_insertion.' + t.env['SLURM_JOB_ID'] + '.txt'
             print(tfile)
             print(option_insertion)
-            with io.open(tfile, "w") as f:
+            with open(tfile, "w") as f:
                 f.write(option_insertion)
 
     def rescue(self):

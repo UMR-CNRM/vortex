@@ -8,7 +8,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import collections
 import copy
-import io
 import re
 
 import footprints
@@ -536,7 +535,7 @@ class Clustering(BlindRun, EcGribDecoMixin):
             namsec[0].rh.save()
             namsec[0].rh.container.cat()
 
-            with io.open(self.fileoutput, 'w') as optFile:
+            with open(self.fileoutput, 'w') as optFile:
                 optFile.write('\n'.join(file_list_cat))
 
     def execute(self, rh, opts):
@@ -548,12 +547,12 @@ class Clustering(BlindRun, EcGribDecoMixin):
         # if not, generate face outputs
         else:
             logger.info("Generating fake outputs with %d members", self.nbmembers)
-            with io.open('ASCII_CLUST', 'w') as fdcl:
+            with open('ASCII_CLUST', 'w') as fdcl:
                 fdcl.write("\n".join(['{0:3d} {1:3d} {0:3d}'.format(i, 1)
                                       for i in range(1, self.nbmembers + 1)]))
-            with io.open('ASCII_RMCLUST', 'w') as fdrm:
+            with open('ASCII_RMCLUST', 'w') as fdrm:
                 fdrm.write("\n".join([six.text_type(i) for i in range(1, self.nbmembers + 1)]))
-            with io.open('ASCII_POPCLUST', 'w') as fdpop:
+            with open('ASCII_POPCLUST', 'w') as fdpop:
                 fdpop.write("\n".join(['1'] * self.nbmembers))
 
     def postfix(self, rh, opts):
@@ -566,16 +565,16 @@ class Clustering(BlindRun, EcGribDecoMixin):
             # Read the clustering information
             if self.system.path.exists('ASCII_CLUST'):
                 # New format for clustering outputs
-                with io.open('ASCII_CLUST', 'r') as fdcl:
+                with open('ASCII_CLUST', 'r') as fdcl:
                     cluster_members = list()
                     cluster_sizes = list()
                     for l in [l.split() for l in fdcl.readlines()]:
                         cluster_members.append(int(l[0]))
                         cluster_sizes.append(int(l[1]))
             else:
-                with io.open('ASCII_RMCLUST', 'r') as fdrm:
+                with open('ASCII_RMCLUST', 'r') as fdrm:
                     cluster_members = [int(m) for m in fdrm.readlines()]
-                with io.open('ASCII_POPCLUST', 'r') as fdpop:
+                with open('ASCII_POPCLUST', 'r') as fdpop:
                     cluster_sizes = [int(s) for s in fdpop.readlines()]
             # Update the population JSON
             mycontent = copy.deepcopy(avail_json[0].rh.contents)

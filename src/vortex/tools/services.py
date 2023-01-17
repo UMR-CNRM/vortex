@@ -11,7 +11,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import contextlib
 import hashlib
-import io
 import pprint
 from email import encoders
 from string import Template
@@ -210,7 +209,7 @@ class MailService(Service):
         """Returns the internal body contents as a MIMEText object."""
         body = self.message
         if self.filename:
-            with io.open(self.filename, 'r', encoding=self.inputs_charset) as tmp:
+            with open(self.filename, 'r', encoding=self.inputs_charset) as tmp:
                 body += tmp.read()
         if six.PY2:
             mimetext = self.get_mimemap().get('text')
@@ -252,11 +251,11 @@ class MailService(Service):
                 mimemap = self.get_mimemap()
                 mimeclass = mimemap.get(maintype, None)
                 if mimeclass:
-                    with io.open(xtra, 'rb') as fp:
+                    with open(xtra, 'rb') as fp:
                         xmsg = mimeclass(fp.read(), _subtype=subtype)
                 else:
                     xmsg = MIMEBase(maintype, subtype)
-                    with io.open(xtra, 'rb') as fp:
+                    with open(xtra, 'rb') as fp:
                         xmsg.set_payload(fp.read())
                     encoders.encode_base64(xmsg)
                 xmsg.add_header('Content-Disposition', 'attachment', filename=xtra)
@@ -280,7 +279,7 @@ class MailService(Service):
                     # (compressed), so use a generic bag-of-bits type.
                     ctype = 'application/octet-stream'
                 maintype, subtype = ctype.split('/', 1)
-                with io.open(xtra, 'rb') as fp:
+                with open(xtra, 'rb') as fp:
                     msg.add_attachment(fp.read(), maintype, subtype,
                                        cte="base64", filename=xtra)
         return msg

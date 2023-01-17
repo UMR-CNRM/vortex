@@ -6,7 +6,6 @@ Utility classes to interact with long running binaries.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
 import socket
 import sys
 
@@ -115,7 +114,7 @@ class ServerSyncSimpleSocket(ServerSyncTool):
         # Create the script that will be called by the server
         t = sessions.current()
         tpl = config.load_template(t, self.tplname)
-        with io.open(self.medium, 'wt') as fd:
+        with open(self.medium, 'wt') as fd:
             fd.write(tpl.substitute(
                 python=sys.executable,
                 address=self._socket.getsockname(),

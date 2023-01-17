@@ -7,7 +7,6 @@ System Addons to support ECMWF' ECFS archiving system.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import contextlib
-import io
 import re
 import six
 import tempfile
@@ -180,7 +179,7 @@ class ECfsTools(addons.Addon):
         else:
             with tempfile.NamedTemporaryFile('w+b') as fhtmp:
                 yield fhtmp.name
-                with io.open(fhtmp.name, 'rb') as fhtmp2:
+                with open(fhtmp.name, 'rb') as fhtmp2:
                     self.sh.copyfileobj(fhtmp2, target)
 
     @fmtshcmd

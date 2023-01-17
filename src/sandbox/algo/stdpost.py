@@ -9,7 +9,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 
 import collections
-import io
 import time
 
 from bronx.fancies import loggers
@@ -73,7 +72,7 @@ class _AbstractGribInfos(AlgoComponent):
         md5file = None
         if isinstance(rh.container.iotarget(), six.string_types):
             md5file = rh.container.localpath() + '.md5'
-            with io.open(md5file, 'w', encoding='utf8') as fhm:
+            with open(md5file, 'w', encoding='utf8') as fhm:
                 fhm.write("{:s} {:s}".format(md5sum, rh.container.basename))
         return md5file
 

@@ -8,7 +8,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 
 import ftplib
-import io
 import tempfile
 
 from bronx.fancies import loggers
@@ -135,7 +134,7 @@ class TestPooledFtp(TestStdFtp):
     def setUp(self):
         super(TestPooledFtp, self).setUp()
         self._fnrc = 'fakenetrc'
-        with io.open(self._fnrc, 'w') as fhnrc:
+        with open(self._fnrc, 'w') as fhnrc:
             fhnrc.write('machine localhost login {:s} password {:s}'
                         .format(self.user, self.password))
         self.sh.chmod(self._fnrc, 0o600)

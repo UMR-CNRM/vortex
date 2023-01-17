@@ -11,7 +11,6 @@ argparse_epilog = '''
 '''
 
 import collections
-import io
 import logging
 import os
 import shutil
@@ -157,12 +156,12 @@ class DefaultExporter(object):
         rst_dir = os.path.dirname(rst_out)
         if not os.path.exists(rst_dir):
             os.makedirs(rst_dir)
-        with io.open(rst_out, 'w', encoding='utf-8') as rstfh:
+        with open(rst_out, 'w', encoding='utf-8') as rstfh:
             rstfh.write(rst)
         # Also write potential image files
         for additional, rawdata in six.iteritems(resources['outputs']):
             add_out = os.path.join(rst_dir, additional)
-            with io.open(add_out, 'wb') as addfh:
+            with open(add_out, 'wb') as addfh:
                 addfh.write(rawdata)
             logger.debug('Additional file writen: %s', add_out)
         logger.info("written: %s (additions: %s)",
@@ -221,7 +220,7 @@ def _tar_notebooks(tarname, files):
     tarmode_extra = ':' + tarext[1:] if tarext in ('.bz2', '.gz') else ''
     if tarmode_extra:
         logger.debug("Enabling compression on the tar file (%s)", tarmode_extra[1:])
-    with io.open(tarname, 'wb') as tarfh:
+    with open(tarname, 'wb') as tarfh:
         tfile = tarfile.open(fileobj=tarfh, mode='w' + tarmode_extra)
         for a_file in files:
             logger.info("Adding %s to the %s Tar file.", a_file, tarname)
@@ -249,7 +248,7 @@ def _index_auto_generate(outputdir, files):
         toc = ('.. toctree::\n   :titlesonly:\n\n' +
                '\n'.join(['   ' + n for n in toindex[radix]]) + '\n\n')
         if os.path.exists(os.path.join(radix, _INDEX_SKEL)):
-            with io.open(os.path.join(radix, _INDEX_SKEL), 'r', encoding='utf-8') as rstfh:
+            with open(os.path.join(radix, _INDEX_SKEL), 'r', encoding='utf-8') as rstfh:
                 full = rstfh.read()
         else:
             if radix == '':
@@ -257,7 +256,7 @@ def _index_auto_generate(outputdir, files):
             else:
                 full = _INDEX_SUB_HEAD.format(sub=radix, ti='#' * len(radix))
         full += toc
-        with io.open(os.path.join(outputdir, radix, 'index.rst'), 'w', encoding='utf-8') as rstfh:
+        with open(os.path.join(outputdir, radix, 'index.rst'), 'w', encoding='utf-8') as rstfh:
             rstfh.write(full)
 
 

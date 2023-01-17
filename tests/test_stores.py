@@ -1,6 +1,5 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
 import os
 import pickle
 import tempfile
@@ -379,7 +378,7 @@ class TestFunctionStore(AbstractTestStores):
         self.assertEqual(st.locate(furi, dict(fmt='ascii')),
                          'sandbox.util.storefunctions.echofunction')
         self.assertTrue(st.get(furi, 'echotest', dict(fmt='ascii')))
-        with io.open('echotest', 'r') as fhe:
+        with open('echotest', 'r') as fhe:
             lines = fhe.readlines()
         self.assertIn('Message #0 is: toto\n', lines)
         self.assertIn('Message #1 is: titi\n', lines)
@@ -393,7 +392,7 @@ class TestFunctionStore(AbstractTestStores):
 class TestFinderStore(AbstractTestStores):
 
     def test_basics(self):
-        with io.open('findertest', 'w') as fhf:
+        with open('findertest', 'w') as fhf:
             fhf.write('findme')
 
         st = fp.proxy.store(scheme='file', netloc='')
@@ -405,7 +404,7 @@ class TestFinderStore(AbstractTestStores):
         self.assertFalse(st.check(fakeuri, dict(fmt='foo')))
         self.assertFalse(st.get(fakeuri, 'toto', dict(fmt='foo')))
         self.assertTrue(st.get(fileuri, 'toto', dict(fmt='foo')))
-        with io.open('toto', 'r') as fhf:
+        with open('toto', 'r') as fhf:
             self.assertEqual(fhf.read(), 'findme')
         self.assertTrue(st.get(fileuri, 'toto', dict(fmt='foo', intent='in')))
         self.assertTrue(st.put('toto', fileuri2, dict(fmt='foo')))

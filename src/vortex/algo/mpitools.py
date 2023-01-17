@@ -73,7 +73,6 @@ Note: Namelists and environment changes are orchestrated as follows:
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
-import io
 import itertools
 import locale
 import re
@@ -591,7 +590,7 @@ class MpiTool(footprints.FootprintBase):
         wtpl = config.load_template(self.ticket,
                                     self._wrapstd_wrapper_tpl,
                                     encoding='utf-8')
-        with io.open(self._wrapstd_wrapper_name, 'w', encoding='utf-8') as fhw:
+        with open(self._wrapstd_wrapper_name, 'w', encoding='utf-8') as fhw:
             fhw.write(
                 wtpl.substitute(
                     python=sys.executable,
@@ -747,7 +746,7 @@ class MpiTool(footprints.FootprintBase):
         wtpl = config.load_template(self.ticket,
                                     self._envelope_wrapper_tpl,
                                     encoding='utf-8')
-        with io.open(self._envelope_wrapper_name, 'w', encoding='utf-8') as fhw:
+        with open(self._envelope_wrapper_name, 'w', encoding='utf-8') as fhw:
             fhw.write(
                 wtpl.substitute(**self._envelope_mkwrapper_tplsubs(todostack,
                                                                    bindingstack))
@@ -802,9 +801,9 @@ class MpiTool(footprints.FootprintBase):
             # Deal with standard output/error files
             for outf in sorted(self.system.glob('vwrap_stdeo.*')):
                 rank = int(outf[12:])
-                with io.open(outf, 'r',
-                             encoding=locale.getlocale()[1] or 'ascii',
-                             errors='replace') as sfh:
+                with open(outf, 'r',
+                          encoding=locale.getlocale()[1] or 'ascii',
+                          errors='replace') as sfh:
                     for (i, l) in enumerate(sfh):
                         if i == 0:
                             self.system.highlight('rank {:d}: stdout/err'.format(rank))
@@ -1426,7 +1425,7 @@ class SRun(ConfigurableMpiTool):
                 else:
                     nodelist.append(base_nodelist[i_rank])
             # Write it to the nodefile
-            with io.open(self._envelope_nodelist_name, 'w') as fhnl:
+            with open(self._envelope_nodelist_name, 'w') as fhnl:
                 fhnl.write("\n".join(nodelist))
             # Generate wrappers
             self._envelope_mkwrapper(cmdl)
@@ -1633,7 +1632,7 @@ class OmpiMpiRun(ConfigurableMpiTool):
                                                   ','.join(slot_strings))
             )
         logger.debug('Here is the rankfile content:\n%s', '\n'.join(rf_strings))
-        with io.open(self._envelope_rankfile_name, mode='w') as tmp_rf:
+        with open(self._envelope_rankfile_name, mode='w') as tmp_rf:
             tmp_rf.write('\n'.join(rf_strings))
         return self._envelope_rankfile_name
 

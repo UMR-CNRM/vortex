@@ -10,7 +10,6 @@ import six
 
 import cmd
 from six.moves import configparser
-import io
 import itertools
 import locale
 import logging
@@ -139,7 +138,7 @@ class UGetShell(cmd.Cmd):
             self._config = configparser.ConfigParser()
         # Read the configuration
         if sh.path.exists(self._config_file):
-            with io.open(self._config_file, 'r') as fhconf:
+            with open(self._config_file, 'r') as fhconf:
                 if six.PY2:
                     self._config.readfp(fhconf)
                 else:
@@ -553,7 +552,7 @@ class UGetShell(cmd.Cmd):
                 self._cliconfig_set('ecmwf_support', mline['value'])
             elif mline['what2'] == 'ftuser':
                 self._locationconfig_set(mline['target'], 'ftuser', mline['user'])
-            with io.open(self._config_file, 'w' + ('b' if six.PY2 else '')) as fpconf:
+            with open(self._config_file, 'w' + ('b' if six.PY2 else '')) as fpconf:
                 self._config.write(fpconf)
 
     def complete_check(self, text, line, begidx, endidx):
@@ -952,7 +951,7 @@ class UGetShell(cmd.Cmd):
                         if not mygenv:
                             self._error("Could not get genv < {:s} >".format(source_element))
                             return False
-                        with io.open(tfile, 'w') as tfilefh:
+                        with open(tfile, 'w') as tfilefh:
                             tfilefh.writelines(['{:s}={:s}\n'.format(k, v)
                                                 for k, v in sorted(mygenv.items()) if k not in ('cycle', )])
                     # The source is a gget data
@@ -998,7 +997,7 @@ class UGetShell(cmd.Cmd):
                     finalenv.write(self._hack_commentline_fmt
                                    .format('genv' if mline['gco'] else 'uenv', mline['baseshort'])
                                    .encode(encoding='utf-8'))
-                    with io.open(tfile, 'rb') as fhini:
+                    with open(tfile, 'rb') as fhini:
                         finalenv.write(fhini.read())
                     finalenv.seek(0)
                     tfile = finalenv

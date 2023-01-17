@@ -6,7 +6,6 @@ Generic Resources and Contents to work with namelists.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
 import re
 import six
 
@@ -325,7 +324,7 @@ class NamelistTerm(Namelist):
             fp = None
 
         try:
-            with io.open('xxt.def', 'r') as f:
+            with open('xxt.def', 'r') as f:
                 lines = f.readlines()
         except IOError:
             logger.error('Could not open file xxt.def')
@@ -553,7 +552,7 @@ class XXTContent(IndexedTable):
                         # Do not waste time on duplicated selects...
                         if tvalue[1] not in select_seen:
                             fortp = NamelistParser()
-                            with io.open(local_guesses[0], 'r') as fd:
+                            with open(local_guesses[0], 'r') as fd:
                                 xx = fortp.parse(fd.read())
                             domains = set()
                             for nb in xx.values():

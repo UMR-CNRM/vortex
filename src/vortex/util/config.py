@@ -12,7 +12,6 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import abc
 import contextlib
-import io
 import itertools
 import re
 import string
@@ -274,7 +273,7 @@ def load_template(t, tplfile, encoding=None, version=None, default_templating='l
         actual_templating = default_templating
         # To determine the encoding & templating open the file with the default
         # encoding (ignoring decoding errors) and look for comments
-        with io.open(tplfile, 'r', errors='replace') as tpfld_tmp:
+        with open(tplfile, 'r', errors='replace') as tpfld_tmp:
             if encoding is None:
                 actual_encoding = tpfld_tmp.encoding
             # Only inspect the fist 10 lines
@@ -292,7 +291,7 @@ def load_template(t, tplfile, encoding=None, version=None, default_templating='l
                     actual_templating = templating_match.group(1)
         # Read the template and delete the encoding line if present
         logger.debug('Opening %s with encoding %s', tplfile, str(actual_encoding))
-        with io.open(tplfile, 'r', encoding=actual_encoding) as tpfld:
+        with open(tplfile, 'r', encoding=actual_encoding) as tpfld:
             tpl_txt = "".join([l for (i, l) in enumerate(tpfld)
                                if i not in ignored_lines])
 
@@ -401,7 +400,7 @@ class GenericReadOnlyConfigParser(object):
             if self.defaultinifile:
                 sitedefaultinifile = glove.siteconf + '/' + self.defaultinifile
                 if local.path.exists(sitedefaultinifile):
-                    with io.open(sitedefaultinifile, 'r', encoding=encoding) as a_fh:
+                    with open(sitedefaultinifile, 'r', encoding=encoding) as a_fh:
                         if _PARSERPY32:
                             self.parser.read_file(a_fh)
                         else:
@@ -449,7 +448,7 @@ class GenericReadOnlyConfigParser(object):
                     raise ValueError('Configuration file ' + sitedefaultinifile + ' not found')
             self.file = ",".join(filestack)
             for a_file in filestack:
-                with io.open(a_file, 'r', encoding=encoding) as a_fh:
+                with open(a_file, 'r', encoding=encoding) as a_fh:
                     if _PARSERPY32:
                         self.parser.read_file(a_fh)
                     else:
@@ -658,7 +657,7 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
 
     def save(self):
         """Write the current state of the configuration in the inital file."""
-        with io.open(self.file.split(",").pop(), 'wb') as configfile:
+        with open(self.file.split(",").pop(), 'wb') as configfile:
             self.write(configfile)
 
     @property

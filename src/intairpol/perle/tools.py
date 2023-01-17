@@ -7,7 +7,6 @@ TODO: Module documentation
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
-import io
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
@@ -339,7 +338,7 @@ class OldPerleLauncher(PerleLauncher):
     def export_cfg(self, filename='PERLE.CFG'):
         """Write raw perle configuration file (old style)."""
 
-        with io.open(filename, 'w') as fd:
+        with open(filename, 'w') as fd:
             fd.write(six.text_type(''.join([
                 x + '\n' for x in [getattr(self, 'dump_' + p, self.dump_void)(getattr(self, p, ''))
                                    for p in self.config['simulation_params']] if len(x) > 0
@@ -358,7 +357,7 @@ class OldPerleLauncher(PerleLauncher):
     def export_env(self, filename='PERLE.ENV'):
         """Write raw perle configuration file (old style)."""
 
-        with io.open(filename, 'w') as fd:
+        with open(filename, 'w') as fd:
             fd.write(six.text_type(''.join([
                 'PERLE_' + a.upper() + '="' + six.text_type(getattr(self, a)) + '"\n'
                 for a in self.footprint_attributes if 'local_' not in a

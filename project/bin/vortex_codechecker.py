@@ -9,7 +9,6 @@ Run various code checkers on the Vortex' repository.
 import abc
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import concurrent.futures
-import io
 import logging
 import os
 import re
@@ -89,7 +88,7 @@ class VortexPythonCode(object):
     def code(self):
         """Read the source file and returns it as a string."""
         if self._code is None:
-            with io.open(self._path, 'r', encoding='utf-8') as fhcode:
+            with open(self._path, 'r', encoding='utf-8') as fhcode:
                 self._code = fhcode.read()
         return self._code
 
@@ -600,7 +599,7 @@ class CheckerConfig(object):
         if not os.path.exists(self._file):
             raise IOError("The configuration file {:s} is missing.".format(self._file))
         # Load the yaml configuration file
-        with io.open(self._file, 'r', encoding='utf-8') as fhconf:
+        with open(self._file, 'r', encoding='utf-8') as fhconf:
             try:
                 self._confdata = yaml.load(fhconf, yaml.SafeLoader)
             except yaml.YAMLError:

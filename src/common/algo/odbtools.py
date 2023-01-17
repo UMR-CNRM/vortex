@@ -9,7 +9,6 @@ import six
 
 from collections import defaultdict
 import copy
-import io
 import re
 import time
 
@@ -481,14 +480,14 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                 # Fill the actual refdata according to information gathered in prepare stage
                 if cycle < 'cy42_op1':
                     if thispack.refdata:
-                        with io.open('refdata', 'w') as fd:
+                        with open('refdata', 'w') as fd:
                             for rdentry in thispack.refdata:
                                 fd.write(six.text_type(rdentry + "\n"))
                         sh.subtitle('Local refdata for: {:s}'.format(odbname))
                         sh.cat('refdata', output=False)
                 # Drive bator with a batormap file (from cy42_op1 onward)
                 else:
-                    with io.open('batormap', 'w') as fd:
+                    with open('batormap', 'w') as fd:
                         for mapentry in sorted(thispack.mapping):
                             fd.write(six.text_type(ObsMapContent.formatted_data(mapentry) + '\n'))
                     sh.subtitle('Local batormap for: {:s}'.format(odbname))
@@ -549,7 +548,7 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
         self.algoassert(self.obsmapout, "At least one non-empty ODB database is expected")
 
         # Generate the output bator_map
-        with io.open('batodb_map.out', 'w') as fd:
+        with open('batodb_map.out', 'w') as fd:
             for x in sorted(self.obsmapout):
                 fd.write(six.text_type(ObsMapContent.formatted_data(x) + '\n'))
 
@@ -558,15 +557,15 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
             rdrh_dict = {y.rh.resource.part: y.rh
                          for y in self.context.sequence.effective_inputs(kind='refdata')
                          if y.rh.resource.part != 'all'}
-            with io.open('refdata_global', 'w') as rdg:
+            with open('refdata_global', 'w') as rdg:
                 for x in sorted(self.obsmapout):
                     if (x.data in rdrh_dict and
                             sh.path.getsize(rdrh_dict[x.data].container.localpath()) > 0):
-                        with io.open(rdrh_dict[x.data].container.localpath(), 'r') as rdl:
+                        with open(rdrh_dict[x.data].container.localpath(), 'r') as rdl:
                             rdg.write(rdl.readline())
                     elif (sh.path.exists('refdata.' + x.data) and
                           sh.path.getsize('refdata.' + x.data) > 0):
-                        with io.open('refdata.' + x.data, 'r') as rdl:
+                        with open('refdata.' + x.data, 'r') as rdl:
                             rdg.write(rdl.readline())
                     else:
                         logger.info("Unable to create a global refdata entry for data=" + x.data)
@@ -718,7 +717,7 @@ class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         with sh.cdcontext(self.layout_new):
             for ccma in sh.glob('{0:s}.*'.format(self.layout_new)):
                 slurp = sh.cat(ccma, outsplit=False).replace(self.layout_new, self.layout_in)
-                with io.open(ccma.replace(self.layout_new, self.layout_in), 'w') as fd:
+                with open(ccma.replace(self.layout_new, self.layout_in), 'w') as fd:
                     fd.write(six.text_type(slurp))
                 sh.rm(ccma)
 

@@ -3,13 +3,13 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import os, sys, io, glob, json, time, datetime
+import os, sys, glob, json, time, datetime
 
 exit_value = 0
 
 sync_name = sys.argv[0].lstrip('./')
 
-with io.open(sync_name + '.log', mode='a', buffering=1) as flog:
+with open(sync_name + '.log', mode='a', buffering=1) as flog:
 
     def logging(*msg):
         if sys.version_info.major == 2:
@@ -37,7 +37,7 @@ with io.open(sync_name + '.log', mode='a', buffering=1) as flog:
     promise_info = None
 
     if os.stat(promise_file).st_size < 4096:
-        with io.open(promise_file, 'r') as fd:
+        with open(promise_file, 'r') as fd:
             promise_info = json.load(fd)
     else:
         logging('Sync size:', 'promise file is far too big')

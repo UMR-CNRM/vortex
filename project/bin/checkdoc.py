@@ -8,7 +8,6 @@ Check the documentation and generates missing RST files.
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import inspect
-import io
 import os
 import re
 import string
@@ -45,7 +44,7 @@ _ALT_AUTHORS = {'bronx': "The Vortex Team & many contributors"}
 
 def process_template(tplname, **subdict):
     tplfile = os.path.join(_DOC_TEMPLATES, tplname)
-    with io.open(tplfile, 'r', encoding='utf-8') as fhd:
+    with open(tplfile, 'r', encoding='utf-8') as fhd:
         tplobj = fhd.read()
     tplobj = string.Template(tplobj)
     return tplobj.substitute(subdict)
@@ -94,7 +93,7 @@ def create_rst(rst, modname, module):
 
     if not os.path.exists(os.path.dirname(rst)):
         os.makedirs(os.path.dirname(rst))
-    with io.open(rst, 'w', encoding='utf-8') as fdoc:
+    with open(rst, 'w', encoding='utf-8') as fdoc:
         fdoc.write(therst)
     return os.path.exists(rst)
 
@@ -105,7 +104,7 @@ def rstfind(pattern, lines):
 
 def inspect_rst(rst, rstloc, report):
     rstnames = set()
-    with io.open(rst, 'r', encoding='utf-8') as fdrst:
+    with open(rst, 'r', encoding='utf-8') as fdrst:
         rstinfo = fdrst.readlines()
         if rstfind('TODO', rstinfo):
             report['todo'].append(rstloc)
@@ -147,7 +146,7 @@ def generate_console_report(report, light=False):
 
 
 def generate_rst_report(rstoutput, report):
-    with io.open(rstoutput, 'w', encoding='utf-8') as fh:
+    with open(rstoutput, 'w', encoding='utf-8') as fh:
         fh.write(process_template('doc_rst_reporthead.tpl'))
         for k, v in sorted(report.items()):
             if k == 'mkrst':

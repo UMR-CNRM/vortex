@@ -7,13 +7,13 @@ Various tools to interact with the SWAPP system.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import contextlib
-import six
 import io
+import six
 import re
 import socket
 import string
-import uuid
 import tempfile
+import uuid
 
 from bronx.datagrip import namelist as fortran
 from bronx.fancies import loggers
@@ -73,7 +73,7 @@ def _olive_jobout_sizecontrol(sh, stepfile, directory=None, extrasuffix=''):
     if mysize > STEPFILE_MAX_SIZE:
         tpl = config.load_template(sessions.current(),
                                    '@olive-swapp-file2big.tpl')
-        with io.open(fullstepfile + '.oversized' + extrasuffix, 'w') as fd:
+        with open(fullstepfile + '.oversized' + extrasuffix, 'w') as fd:
             fd.write(tpl.substitute(
                 filename=fullstepfile + extrasuffix,
                 mysize='{:.1f}'.format(mysize / 1024. / 1024.),
@@ -163,7 +163,7 @@ def olive_jobout_fullsocketsend(sh, env, output, mstep, localout):
     try:
         # Open all file in read mode and accumulate their sizes
         for stepfile in stepfiles:
-            stepfile_fh = io.open(stepfile, 'rb')
+            stepfile_fh = open(stepfile, 'rb')
             stepfiles_fh.append(stepfile_fh)
             stepfiles_size += stepfile_fh.seek(0, io.SEEK_END)
             stepfile_fh.seek(0, io.SEEK_SET)
@@ -213,7 +213,7 @@ def olive_jobout_ectranssend(sh, env, output, mstep, localout):
         fhdir.write(("{:s}:{:s}\n".format(swapp_host, swapp_port)).encode())
         fhdir.write("void_password\n".encode())
         for stepfile in stepfiles:
-            with io.open(stepfile, 'rb') as fhstep:
+            with open(stepfile, 'rb') as fhstep:
                 fhdir.write(fhstep.read() + b"\n")
         fhdir.flush()
 

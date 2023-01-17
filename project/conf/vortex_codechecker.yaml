@@ -77,10 +77,6 @@ checkconfigs:
             vortex.tools.ddhpack: vortex.tools.folder
             vortex.tools.odb: vortex.tools.folder
             vortex.tools.rawfiles: vortex.tools.folder
-           builtinblacklist: &BLT_BL
-            open:
-               why: "use io.open instead in order to improve Python2/3 compatibility"
-               whitelist: [src/common/tools/grib.py, ]
    astro:
       label: "astro"
       checkers:
@@ -88,7 +84,6 @@ checkconfigs:
            importuse_overall_whitelist: *IMP_O_WL
            importuse_local_whitelist: *IMP_L_WL
            importdeprecated: *IMP_DE
-           builtinblacklist: *BLT_BL
 
 places:
    site_mf:  # The place nickname

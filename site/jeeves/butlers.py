@@ -12,7 +12,6 @@ Jeeves inherits both of them and handles the asynchronous multiprocessing.
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import fcntl
-import io
 import json
 import multiprocessing
 import os
@@ -769,7 +768,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         obj = None
         jsonfile = os.path.join(pool.path, item)
         try:
-            with io.open(jsonfile, 'rb') as fd:
+            with open(jsonfile, 'rb') as fd:
                 obj = json.load(fd)
             obj = pools.Request(**obj)
         except (ValueError, AttributeError, OSError):

@@ -10,7 +10,6 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 import six
 from six.moves import filter  # @UnresolvedImport
 
-import io
 import os
 import sys
 import traceback
@@ -91,7 +90,7 @@ class DiscoveredTests(collections_abc.Sequence):
         :rtype: core.TestDriver
         :return: The object representing this configuration file.
         """
-        with io.open(os.path.join(TESTSPATH, tfile), 'r') as fhyaml:
+        with open(os.path.join(TESTSPATH, tfile), 'r') as fhyaml:
             try:
                 tdata = yaml.load(fhyaml, Loader=yaml.SafeLoader)
                 logger.info('%s YAML read in.', tfile)

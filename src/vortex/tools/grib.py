@@ -17,7 +17,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 from six.moves.urllib import parse as urlparse
 
-import io
 import re
 
 from bronx.fancies import loggers
@@ -53,7 +52,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     )
 
     def _std_grib_index_get(self, source):
-        with io.open(source, 'r') as fd:
+        with open(source, 'r') as fd:
             gribparts = fd.read().splitlines()
         return [urlparse.urlparse(url).path for url in gribparts]
 
@@ -63,7 +62,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         gribparts = [six.text_type(urlparse.urlunparse(('file', '', path, '', '', '')))
                      for path in gribpaths]
         tmpfile = destination + self.sh.safe_filesuffix()
-        with io.open(tmpfile, 'w') as fd:
+        with open(tmpfile, 'w') as fd:
             fd.write('\n'.join(gribparts))
         return self.sh.move(tmpfile, destination)
 
@@ -71,7 +70,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         """Check if the given ``source`` is a multipart-GRIB file."""
         rc = False
         if source and isinstance(source, six.string_types) and self.sh.path.exists(source):
-            with io.open(source, 'rb') as fd:
+            with open(source, 'rb') as fd:
                 rc = fd.read(7) == b'file://'
         return rc
 
@@ -168,7 +167,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         """Manually pack a multi GRIB."""
         if isinstance(destination, six.string_types):
             tmpfile = destination + self.sh.safe_filesuffix()
-            with io.open(tmpfile, 'wb') as fd:
+            with open(tmpfile, 'wb') as fd:
                 p = self._pack_stream(source, stdout=fd)
             self.sh.pclose(p)
             if intent == 'in':
@@ -229,7 +228,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                 pieces = self.xgrib_index_get(source)
                 newsources = [six.text_type(self.sh.copy2ftspool(piece)) for piece in pieces]
                 request = newsources[0] + '.request'
-                with io.open(request, 'w') as request_fh:
+                with open(request, 'w') as request_fh:
                     request_fh.writelines('\n'.join(newsources))
                 self.sh.readonly(request)
                 rc = self.sh.ftserv_put(request, destination,

@@ -25,7 +25,6 @@ This module contains the services specifically needed by the operational suite.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import io
 import locale
 import logging
 import random
@@ -1035,7 +1034,7 @@ class DayfileReportService(FileReportService):
             target = final + '.tmp'
 
         self.sh.filecocoon(target)
-        with io.open(target, 'a') as fp:
+        with open(target, 'a') as fp:
             fp.write(self.infos)
         if not self.filename:
             self.sh.mv(target, final)

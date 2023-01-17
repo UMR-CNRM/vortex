@@ -6,8 +6,6 @@ TODO module documentation.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import io
-
 import six
 
 from bronx.fancies import loggers
@@ -22,9 +20,9 @@ def tramsmet_file(filename, filename_transmet, blocksize=67108864):
     :param str filename_transmet: transmet file name
     :param int blocksize: the blocksize for I/O operations
     """
-    with io.open(filename_transmet, 'ab') as f_header:
+    with open(filename_transmet, 'ab') as f_header:
         f_header.write(b'\n\n')
-        with io.open(filename, 'rb') as f:
+        with open(filename, 'rb') as f:
             while True:
                 datablock = f.read(blocksize)
                 if not datablock:

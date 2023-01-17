@@ -11,7 +11,6 @@ from bronx.stdtypes.date import Date, Period, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 from collections import defaultdict
 import footprints
-import io
 from vortex.algo.components import ParaBlindRun, ParaExpresso, TaylorRun, DelayedAlgoComponentError
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
@@ -291,12 +290,12 @@ class _SafranWorker(_S2MWorker):
 
         for op_file in _OP_files_common:
             if not self.system.path.isfile(op_file):
-                with io.open(op_file, 'w') as f:
+                with open(op_file, 'w') as f:
                     f.write(rundir.rstrip('/') + '@\n')
 
         for op_file in _OP_files_individual:
             if not self.system.path.isfile(op_file):
-                with io.open(op_file, 'w') as f:
+                with open(op_file, 'w') as f:
                     f.write(thisdir.rstrip('/') + '@\n')
 
         self.system.remove('sapfich')
@@ -339,7 +338,7 @@ class _SafranWorker(_S2MWorker):
         self.system.remove('sapdat')
 
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
-        with io.open('sapdat', 'w') as d:
+        with open('sapdat', 'w') as d:
             d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
             # In reanalysis execution the RR guess comes from a "weather types" analysis
             d.write('0,0,0\n')
@@ -470,12 +469,12 @@ class InterCEPWorker(_SafranWorker):
 
         for op_file in _OP_files_individual:
             if not self.system.path.isfile(op_file):
-                with io.open(op_file, 'w') as f:
+                with open(op_file, 'w') as f:
                     f.write(thisdir + '@\n')
 
         for op_file in _OP_files_common:
             if not self.system.path.isfile(op_file):
-                with io.open(op_file, 'w') as f:
+                with open(op_file, 'w') as f:
                     f.write(rundir + '@\n')
 
         if self.datebegin < Date(2002, 8, 1):
@@ -498,7 +497,7 @@ class InterCEPWorker(_SafranWorker):
         self.system.remove('sapdat')
 
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
-        with io.open('sapdat', 'w') as d:
+        with open('sapdat', 'w') as d:
             d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
 
 
@@ -524,7 +523,7 @@ class SafraneWorker(_SafranWorker):
                 logger.info('Running date : {0:s}'.format(d.ymdh))
                 self.sapdat(d, nech)
                 # Creation of the 'sapfich' file containing the name of the output file
-                with io.open('sapfich', 'w') as f:
+                with open('sapfich', 'w') as f:
                     f.write('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh))
                 list_name = self.system.path.join(thisdir, self.kind + d.ymdh + '.out')
                 try:
@@ -554,7 +553,7 @@ class SypluieWorker(_SafranWorker):
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
         self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5_ARP')
         # Creation of the 'sapfich' file containing the name of the output file
-        with io.open('sapfich', 'w') as f:
+        with open('sapfich', 'w') as f:
             f.write('SAPLUI5' + dates[-1].ymdh)
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         try:
@@ -574,7 +573,7 @@ class SypluieWorker(_SafranWorker):
         self.system.remove('sapdat')
 
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
-        with io.open('sapdat', 'w') as d:
+        with open('sapdat', 'w') as d:
             d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
             # In reanalysis execution the RR guess comes from a "weather types" analysis
             # Except for more recent years for which ARPEGE rr guess are available
@@ -599,7 +598,7 @@ class SyrpluieWorker(_SafranWorker):
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
         self.get_guess(dates)
         # Creation of the 'sapfich' file containing the name of the output file
-        with io.open('sapfich', 'w') as f:
+        with open('sapfich', 'w') as f:
             f.write('SAPLUI5' + dates[-1].ymdh)
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         mandatory_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
@@ -625,7 +624,7 @@ class SyrpluieWorker(_SafranWorker):
         self.system.remove('sapdat')
 
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
-        with io.open('sapdat', 'w') as d:
+        with open('sapdat', 'w') as d:
             d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
             # In reanalysis execution the RR guess comes from a "weather types" analysis
             # Except for more recent years for which ARPEGE rr guess are available
@@ -825,7 +824,7 @@ class SytistWorker(_SafranWorker):
         self.system.remove('sapdat')
 
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
-        with io.open('sapdat', 'w') as d:
+        with open('sapdat', 'w') as d:
             d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
             if self.execution in ['forecast', 'reforecast']:
                 d.write('0,0,0\n')

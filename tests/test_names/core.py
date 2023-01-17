@@ -11,7 +11,6 @@ from six.moves import urllib
 import collections
 import functools
 import hashlib
-import io
 import os
 import pprint
 
@@ -212,7 +211,7 @@ class TestDriver(object):
                 # Deal with every defined Genv
                 for genv in self._genvs:
                     try:
-                        with io.open(os.path.join(self._registerpath, 'genv', genv), 'r') as fhgenv:
+                        with open(os.path.join(self._registerpath, 'genv', genv), 'r') as fhgenv:
                             genvstuff = [l.rstrip('\n') for l in fhgenv.readlines()]
                     except IOError:
                         logger.error("Genv cycle << %s >> not found.", genv)
@@ -250,7 +249,7 @@ class TestDriver(object):
         stackdump = list()
         for tstack in self._todo:
             stackdump.append(sorted(tstack, key=lambda t: t.desc))
-        with io.open(self._resultfile, 'w') as fhyaml:
+        with open(self._resultfile, 'w') as fhyaml:
             yaml.dump(stackdump, fhyaml, Dumper=TestYamlDumper, default_flow_style=False)
 
     def load_references(self):
@@ -258,7 +257,7 @@ class TestDriver(object):
         self._refs = list()
         if not os.path.isfile(self._resultfile):
             raise TestNamesMissingReferenceError('The {:s} file is missing'.format(self._resultfile))
-        with io.open(self._resultfile, 'r') as fhyaml:
+        with open(self._resultfile, 'r') as fhyaml:
             stackdump = yaml.load(fhyaml, Loader=TestYamlLoader)
         for tstack in stackdump:
             self._refs.append(TestsStack(items=tstack))

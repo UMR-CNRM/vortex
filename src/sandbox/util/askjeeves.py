@@ -6,7 +6,6 @@ A place to test callback functions for Jeeves.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import io
 import json
 import os
 import time
@@ -69,7 +68,7 @@ def test_bar(pnum, ask, config, logger, **kw):
     elif selector == 'slow_write':
         finalpath = ask.data.get('filepath', None)
         temporary = finalpath + '.tmp'
-        with io.open(temporary, 'a+') as fp:
+        with open(temporary, 'a+') as fp:
             for step in range(11):
                 fp.write('step {:02d}\n'.format(step))
                 fp.flush()
@@ -82,7 +81,7 @@ def test_bar(pnum, ask, config, logger, **kw):
         ask_time = ask.data.get('ask_time', 'not specified')
         message = ask.data.get('message', 'no message')
         now_time = time.strftime('%Y%m%d %H:%M:%S', time.localtime())
-        with io.open(filepath, 'a+') as fp:
+        with open(filepath, 'a+') as fp:
             fp.write('test_bar stamp - ask time {} - run time {} - {}\n'.format(ask_time, now_time, message))
         rc, value = True, None
 
@@ -163,7 +162,7 @@ def execute_a_json_askfile(jsonfile):
     """Execute a json file like jeeves would, but in a debuggable direct call."""
 
     # read the json request (jeeves.butlers.Jeeves.json_load())
-    with io.open(os.path.expanduser(jsonfile), 'rb') as fd:
+    with open(os.path.expanduser(jsonfile), 'rb') as fd:
         obj = json.load(fd)
     ask = pools.Request(**obj)
 

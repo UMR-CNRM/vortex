@@ -6,7 +6,6 @@ TODO: module documentation.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import io
 import re
 
 import six
@@ -169,13 +168,13 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     # Save the genv raw output in the specified `genvpath` folder
     sh.mkdir(genvpath)
     genvconf = sh.path.join(genvpath, cycle + '.genv')
-    with io.open(genvconf, mode='w', encoding='utf-8') as fp:
+    with open(genvconf, mode='w', encoding='utf-8') as fp:
         fp.write(six.text_type(genv.as_rawstr(cycle=cycle)))
 
     # Start a log
     if logpath is None:
         logpath = 'freeze_cycle.log'
-    log = io.open(logpath, mode='a', encoding='utf-8')
+    log = open(logpath, mode='a', encoding='utf-8')
     log.write(six.text_type(t.line))
     log.write(six.text_type(t.prompt + ' ' + cycle + ' upgrade ' + date.now().reallynice() + '\n'))
 
@@ -322,7 +321,7 @@ def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopat
         logpath = 'freeze_cycle.log'
     if fake:
         logpath = '/dev/null'
-    log = io.open(logpath, mode='a', encoding='utf-8')
+    log = open(logpath, mode='a', encoding='utf-8')
     log.write(six.text_type(t.line))
     log.write(six.text_type(t.prompt + ' ' + delcycle + ' UNFREEZING ' + date.now().reallynice() + '\n'))
 

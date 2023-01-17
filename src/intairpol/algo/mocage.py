@@ -7,7 +7,6 @@ AlgoComponents to run Mocage in various modes (forecast, assim, ...).
 from __future__ import absolute_import, print_function, division, unicode_literals
 
 import six
-import io
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
@@ -433,7 +432,7 @@ class ControlGuess(Parallel):
 
             # get the first line of relance_clim file
             try:
-                with io.open('relance_clim', 'r') as fnam:
+                with open('relance_clim', 'r') as fnam:
                     lines = fnam.readlines()
                 returncode = lines[0]
                 # total stores the returncode values for each domain
@@ -447,7 +446,7 @@ class ControlGuess(Parallel):
         # if only one guess file is wrong, all domains will be chemical climatologic ones
         logger.info('total %d', total)
         try:
-            with io.open('relance_clim', 'w') as fwnam:
+            with open('relance_clim', 'w') as fwnam:
                 fwnam.write(six.text_type(total))
             sh.title('End of tstrestart : Climatological Inits :  0=No else=yes ')
             sh.cat('relance_clim', output=False)

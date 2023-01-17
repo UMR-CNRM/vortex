@@ -12,7 +12,6 @@ import six
 #: No automatic export
 __all__ = []
 
-import io
 import time
 import footprints
 
@@ -173,8 +172,8 @@ class ConvertSpecWW3AsciiAlgo(BlindRun):
 
         # Geographical selection of the spectra
         for fname in [x.container.filename for x in inputspec]:
-            fout = io.open("output.tmp", 'w')
-            with io.open(fname, 'r') as fin:
+            fout = open("output.tmp", 'w')
+            with open(fname, 'r') as fin:
                 linestr = fin.readline()
                 while linestr:
                     line = linestr.split()
@@ -193,7 +192,7 @@ class ConvertSpecWW3AsciiAlgo(BlindRun):
             fout.close()
             self.system.mv("output.tmp", fname)
 
-        with io.open('list_files', 'w') as flist:
+        with open('list_files', 'w') as flist:
             for fname in [x.container.filename for x in inputspec]:
                 flist.write(fname)
                 flist.write('\n')
@@ -455,7 +454,7 @@ class _InterpolateUGncAlgoWorker(VortexWorkerBlindRun):
                           self.file_in + '.process.d'),
                           uniquelevel_ignore=kwargs.get("uniquelevel_ignore", True))
             untared_files = sh.ls('ww3.*nc')
-            with io.open('interpolateUG_nc.list', 'w') as flist:
+            with open('interpolateUG_nc.list', 'w') as flist:
                 for fname in untared_files:
                     flist.write(fname)
                     flist.write('\n')

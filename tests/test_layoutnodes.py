@@ -2,7 +2,6 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import defaultdict, OrderedDict
-import io
 import tempfile
 import unittest
 
@@ -241,7 +240,7 @@ class TestHeavyNodesStuff(unittest.TestCase):
         self.sh.remove(self.tmpdir)
 
     def dumpconfig(self, what):
-        with io.open(self.jobconfig, 'w', encoding='utf-8') as fhc:
+        with open(self.jobconfig, 'w', encoding='utf-8') as fhc:
             fhc.write(what)
 
     def _void_register(self, cycle):

@@ -13,7 +13,6 @@ It provides shell addons to deal with:
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
 import re
 import six
 
@@ -181,7 +180,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         """Check if the given ``source`` is a multipart-lfi file."""
         rc = False
         if source and isinstance(source, six.string_types) and self.sh.path.exists(source):
-            with io.open(source, 'rb') as fd:
+            with open(source, 'rb') as fd:
                 rc = fd.read(8) == b'LFI_ALTM'
         return rc
 

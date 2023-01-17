@@ -292,7 +292,7 @@ class ExtendedFtplib(object):
         self.stderr('get', source, destination)
         if isinstance(destination, six.string_types):
             self.system.filecocoon(destination)
-            target = io.open(destination, 'wb')
+            target = open(destination, 'wb')
             xdestination = True
         else:
             target = destination
@@ -329,7 +329,7 @@ class ExtendedFtplib(object):
         """
         self.stderr('put', source, destination)
         if isinstance(source, six.string_types):
-            inputsrc = io.open(source, 'rb')
+            inputsrc = open(source, 'rb')
             xsource = True
         else:
             inputsrc = source
@@ -1264,13 +1264,13 @@ class Ssh(object):
     def scpput_stream(self, stream, destination, permissions=None, sshopts=''):
         """Send the ``stream`` to the ``destination``.
 
-        - ``stream`` is a ``file`` (typically returned by io.open(),
+        - ``stream`` is a ``file`` (typically returned by open(),
           or the piped output of a spawned process).
         - ``destination`` is the remote file name.
 
         Return True for ok, False on error.
         """
-        if not isinstance(stream, (file, io.IOBase) if six.PY2 else io.IOBase):
+        if not isinstance(stream, io.IOBase):
             msg = "stream is a {}, should be a <type 'file'>".format(type(stream))
             raise TypeError(msg)
 
@@ -1299,12 +1299,12 @@ class Ssh(object):
         """Send the ``source`` to the ``stream``.
 
         - ``source`` is the remote file name.
-        - ``stream`` is a ``file`` (typically returned by io.open(),
+        - ``stream`` is a ``file`` (typically returned by open(),
           or the piped output of a spawned process).
 
         Return True for ok, False on error.
         """
-        if not isinstance(stream, (file, io.IOBase) if six.PY2 else io.IOBase):
+        if not isinstance(stream, io.IOBase):
             msg = "stream is a {}, should be a <type 'file'>".format(type(stream))
             raise TypeError(msg)
 
@@ -1747,7 +1747,7 @@ class LinuxNetstats(AbstractNetstats):
     @property
     def unprivileged_ports(self):
         if self.__unprivileged_ports is None:
-            with io.open(self._LINUX_LPORT, 'r') as tmprange:
+            with open(self._LINUX_LPORT, 'r') as tmprange:
                 tmpports = [int(x) for x in tmprange.readline().split()]
             unports = set(range(5001, 65536))
             self.__unprivileged_ports = sorted(unports - set(range(tmpports[0], tmpports[1] + 1)))
@@ -1767,12 +1767,12 @@ class LinuxNetstats(AbstractNetstats):
 
     def _generic_netstats(self, proto, rclass):
         tmpports = dict()
-        with io.open(self._LINUX_PORTS_V4[proto], 'r') as netstats:
+        with open(self._LINUX_PORTS_V4[proto], 'r') as netstats:
             netstats.readline()  # Skip the header line
             tmpports[self._LINUX_AF_INET4] = [re.split(r':\b|\s+', x.strip())[1:6]
                                               for x in netstats.readlines()]
         try:
-            with io.open(self._LINUX_PORTS_V6[proto], 'r') as netstats:
+            with open(self._LINUX_PORTS_V6[proto], 'r') as netstats:
                 netstats.readline()  # Skip the header line
                 tmpports[self._LINUX_AF_INET6] = [re.split(r':\b|\s+', x.strip())[1:6]
                                                   for x in netstats.readlines()]

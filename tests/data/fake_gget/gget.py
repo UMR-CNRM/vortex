@@ -12,7 +12,7 @@ _GGET_MANTRA = 'This is a fake gget file.'
 
 
 def fakefile01():
-    with io.open('fakefile.01', 'w') as fhtmp:
+    with open('fakefile.01', 'w') as fhtmp:
         fhtmp.write(_GGET_MANTRA)
 
 
@@ -20,7 +20,7 @@ def fakedir01(dirname='fakedir.01'):
     os.mkdir(dirname)
     os.mkdir(os.path.join(dirname, 'subdir'))
     for f in ('file1', 'file2', 'file3'):
-        with io.open(os.path.join(dirname, f), 'w') as fhtmp:
+        with open(os.path.join(dirname, f), 'w') as fhtmp:
             fhtmp.write(_GGET_MANTRA)
     for f in ('file4', 'file5'):
         os.symlink('./file1', os.path.join(dirname, f))
@@ -32,7 +32,7 @@ def fakedir02():
 
 
 def fakedir01_ext():
-    with io.open('file4', 'w') as fhtmp:
+    with open('file4', 'w') as fhtmp:
         fhtmp.write(_GGET_MANTRA)
 
 

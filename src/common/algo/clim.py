@@ -7,7 +7,6 @@ Common AlgoComponent to build model's climatology files.
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
-import io
 import six
 
 from bronx.datagrip import namelist
@@ -355,7 +354,7 @@ class MakeLAMDomain(AlgoComponent):
         # build geometry
         geometry = build_func(interactive=False, **self.geom_params)
         # summary, plot, namelists:
-        with io.open(self.geometry.tag + '_summary.txt', 'w') as o:
+        with open(self.geometry.tag + '_summary.txt', 'w') as o:
             o.write(six.text_type(dm.output.summary(geometry)))
         if self.illustration:
             dm.output.plot_geometry(geometry,
@@ -564,7 +563,7 @@ class MakeGaussGeometry(Parallel):
         nam['NAMGEM']['RLOCEN'] = math.radians(float(self.pole['lon']))
         nam['NAMGEM']['RSTRET'] = self.stretching
         # numbers of longitudes
-        with io.open('fort.{!s}'.format(self._unit), 'r') as n:
+        with open('fort.{!s}'.format(self._unit), 'r') as n:
             namrgri = namelist.namparse(n)
             nam.merge(namrgri)
         # PGD namelist
@@ -573,17 +572,17 @@ class MakeGaussGeometry(Parallel):
         nam_pgd['NAMGEM'].delvar('NSTTYP')
         nam_pgd['NAMDIM'].delvar('NSMAX')
         nam_pgd['NAMDIM'].delvar('NDLON')
-        with io.open('.'.join([self.geometry.tag,
-                               'namel_buildpgd',
-                               'geoblocks']),
-                     'w') as out:
+        with open('.'.join([self.geometry.tag,
+                            'namel_buildpgd',
+                            'geoblocks']),
+                  'w') as out:
             out.write(nam_pgd.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         # C923 namelist
         del nam['NAM_PGD_GRID']
-        with io.open('.'.join([self.geometry.tag,
-                               'namel_c923',
-                               'geoblocks']),
-                     'w') as out:
+        with open('.'.join([self.geometry.tag,
+                            'namel_c923',
+                            'geoblocks']),
+                  'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         # subtruncated grid for orography
         from common.util.usepygram import epygram_checker
@@ -600,10 +599,10 @@ class MakeGaussGeometry(Parallel):
                                                          grid=self.orography_grid
                                                          )['max']
         nam['NAMDIM']['NSMAX'] = trunc_nsmax
-        with io.open('.'.join([self.geometry.tag,
-                               'namel_c923_orography',
-                               'geoblocks']),
-                     'w') as out:
+        with open('.'.join([self.geometry.tag,
+                            'namel_c923_orography',
+                            'geoblocks']),
+                  'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         # C927 (fullpos) namelist
         nam = namelist.NamelistSet()
@@ -620,10 +619,10 @@ class MakeGaussGeometry(Parallel):
         nrgri = [v for _, v in sorted(namrgri['NAMRGRI'].items())]
         for i in range(len(nrgri)):
             nam['NAMFPG']['NFPRGRI({:>4})'.format(i + 1)] = nrgri[i]
-        with io.open('.'.join([self.geometry.tag,
-                               'namel_c927',
-                               'geoblocks']),
-                     'w') as out:
+        with open('.'.join([self.geometry.tag,
+                            'namel_c927',
+                            'geoblocks']),
+                  'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
 
 

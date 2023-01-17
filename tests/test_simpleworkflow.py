@@ -10,7 +10,6 @@ Vortex features are working correctly.
 When debugging, fix other tests first and only then look at this one !
 """
 
-import io
 import os
 import tempfile
 from unittest import TestCase, main
@@ -285,8 +284,8 @@ class TmpCachePrestagingTool(PrestagingTool):
     def flush(self, email=None):
         """Actually fake prestaging."""
         if len(self):
-            with io.open('prestaging_req_{0.strategy:s}_pri{0.priority:d}.txt'.format(self),
-                         mode='w') as fh_req:
+            with open('prestaging_req_{0.strategy:s}_pri{0.priority:d}.txt'.format(self),
+                      mode='w') as fh_req:
                 fh_req.write('\n'.join(sorted(self.items())))
         return True
 
@@ -568,7 +567,7 @@ class UtSimpleWorkflow(TestCase):
                                              .format(prestaging_p.urgent)))
         self.assertFalse(self.sh.path.exists('prestaging_req_testcache_pri{0:d}.txt'
                                              .format(prestaging_p.low)))
-        with io.open('prestaging_req_testcache_pri{0:d}.txt'.format(prestaging_p.normal)) as fh_req:
+        with open('prestaging_req_testcache_pri{0:d}.txt'.format(prestaging_p.normal)) as fh_req:
             self.assertEqual(fh_req.read(), '\n'.join(sorted([loc0, loc1])))
         verb_description = str(phub)
         self.assertIn(loc0, verb_description)

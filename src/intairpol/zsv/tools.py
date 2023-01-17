@@ -7,7 +7,6 @@ TODO: Module documentation
 from __future__ import absolute_import, print_function, division, unicode_literals
 
 import six
-import io
 
 import bronx.fancies.dump
 from bronx.fancies import loggers
@@ -451,7 +450,7 @@ class ZSVQualityStats(ZSVDriver):
 
     def stats_dump_as_csv(self):
         logger.info('Dump stats as csv <file:%s>', self.stats_csvfile)
-        with io.open(self.stats_csvfile, 'w') as fd:
+        with open(self.stats_csvfile, 'w') as fd:
             for n, site in enumerate(self.sites):
                 fd.write(u'{0:d},{1:s},{2:s}\n'.
                          format(n + 1, site,
@@ -460,7 +459,7 @@ class ZSVQualityStats(ZSVDriver):
 
     def stats_dump_as_txt(self):
         logger.info('Dump stats as txt <file:%s>', self.stats_txtfile)
-        with io.open(self.stats_txtfile, 'w') as fd:
+        with open(self.stats_txtfile, 'w') as fd:
             for n, site in enumerate(self.sites):
                 fd.write(u'{0:d};{1:s};{2:s}\n'.
                          format(n + 1, site,

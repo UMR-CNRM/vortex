@@ -6,8 +6,6 @@ Module needed to work with ARM tools such as Forge.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
-
 from bronx.fancies import loggers
 
 from vortex.util.config import load_template
@@ -68,7 +66,7 @@ class ArmForgeTool(object):
                             encoding='utf-8', version=self._forgeversion)
         sconf = tpl.substitute(sourcedirs='\n'.join(['        <directory>{:s}</directory>'.format(d)
                                                      for d in sources]))
-        with io.open(targetfile, 'w') as fhs:
+        with open(targetfile, 'w') as fhs:
             fhs.write(sconf)
         return targetfile
 

@@ -12,7 +12,6 @@ Created on 13 nov. 2018
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
 import os
 import tarfile
 import tempfile
@@ -123,18 +122,18 @@ class TestCacheStorage(unittest.TestCase):
     ]
 
     def _write_configfiles(self):
-        with io.open('cache-unittest.ini', 'w') as fhc:
+        with open('cache-unittest.ini', 'w') as fhc:
             fhc.write(CACHE_CONFIG)
-        with io.open('cache-marketplace-unittest.ini', 'w') as fhc:
+        with open('cache-marketplace-unittest.ini', 'w') as fhc:
             fhc.write(MARKET_SITECONFIG)
-        with io.open('xbcd-market.ini', 'w') as fhc:
+        with open('xbcd-market.ini', 'w') as fhc:
             fhc.write(MARKET_EXT1)
-        with io.open('utest-market.ini', 'w') as fhc:
+        with open('utest-market.ini', 'w') as fhc:
             fhc.write(MARKET_EXT2)
 
     def _write_testfiles(self):
         self.tfile = 'testfile'
-        with io.open(self.tfile, 'w') as fht:
+        with open(self.tfile, 'w') as fht:
             fht.write('toto')
 
     def _write_testtar_and_dir(self):
@@ -142,7 +141,7 @@ class TestCacheStorage(unittest.TestCase):
         self.ttar = 'testtar.tgz'
         self.sh.mkdir(self.tdir)
         for tf in ('testfile1', 'testfile2', 'testfile3'):
-            with io.open(self.sh.path.join(self.tdir, tf), 'w') as fht:
+            with open(self.sh.path.join(self.tdir, tf), 'w') as fht:
                 fht.write('toto')
         with tarfile.open(name=self.ttar, mode='w:gz') as tfobj:
             tfobj.add(self.tdir)
@@ -170,7 +169,7 @@ class TestCacheStorage(unittest.TestCase):
                             inifile='./cache-[storage].ini')
 
     def assertIsTestFile(self, path):
-        with io.open(path, 'r') as fht:
+        with open(path, 'r') as fht:
             res = fht.read()
         self.assertEqual(res, 'toto')
 

@@ -13,7 +13,6 @@ import six
 
 import contextlib
 import ftplib
-import io
 import tempfile
 
 from bronx.fancies import loggers
@@ -352,7 +351,7 @@ class FolderShell(addons.FtrawEnableAddon):
             newsource = self.sh.copy2ftspool(source, nest=True,
                                              fmt=self.supportedfmt)
             request = self.sh.path.dirname(newsource) + '.request'
-            with io.open(request, 'w') as request_fh:
+            with open(request, 'w') as request_fh:
                 request_fh.write(six.text_type(self.sh.path.dirname(newsource)))
             self.sh.readonly(request)
             rc = self.sh.ftserv_put(request, destination,

@@ -98,7 +98,6 @@ from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import copy
 import importlib
-import io
 import os
 import pprint
 import re
@@ -166,7 +165,7 @@ def load_configfile(filepath):
     if not sh.path.exists(filepath):
         raise IOError('The < {:s} > configuration file does not exists.'.format(filepath))
     logger.info('Reading the < %s > configuration file.', filepath)
-    with io.open(filepath) as fhyaml:
+    with open(filepath) as fhyaml:
         try:
             conf = yaml.load(fhyaml)
         except yaml.YAMLError:

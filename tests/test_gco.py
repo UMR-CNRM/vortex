@@ -1,6 +1,5 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
 import os
 import tempfile
 import unittest
@@ -100,7 +99,7 @@ class TestGcoGget(PrivateCocoonGcoTest):
 
     def assert_mantra(self, somefile):
         self.assertTrue(os.path.isfile(somefile))
-        with io.open(somefile, 'r') as fh_s:
+        with open(somefile, 'r') as fh_s:
             self.assertEqual(fh_s.read(), 'This is a fake gget file.')
 
     def test_central_store_alone(self):
@@ -228,7 +227,7 @@ class TestGcoGget(PrivateCocoonGcoTest):
             self.assertTrue(st.get(uriparse('gget://gco.cache.fr/fakearchive.01.tgz'),
                                    'toto.tgz', dict(intent='inout')))
             # Trash file1...
-            with io.open('file1', 'a') as fh1:
+            with open('file1', 'a') as fh1:
                 fh1.write(' + ExtraStuff')
             # The changed file1 file should not affect things...
             self.assertTrue(st.get(uriparse('gget://gco.cache.fr/fakearchive.01.tgz?dir_extract=1'),
@@ -298,7 +297,7 @@ class TestGcoGget(PrivateCocoonGcoTest):
                                      'al43t2_arome@ifs-op5.01.nam']))
             self.assertTrue(st.get(uriparse('gget://opgco.cache.fr/tampon/fake_resource.01'),
                                    'fake1', dict()))
-            with io.open('fake1') as fhf:
+            with open('fake1') as fhf:
                 self.assertEqual(fhf.read(), 'opgco\n')
             self.assertTrue(st.get(uriparse('gget://opgco.cache.fr/tampon/extract.mars.ifs.01.tgz'),
                                    self.sh.path.join('sub1', 'extract.mars.ifs.01.tgz'), dict()))
@@ -350,7 +349,7 @@ class TestGcoGenv(unittest.TestCase):
         # Test genv autofill
         genv.autofill('cy42_op2.06')
         # Test DSI like autofill
-        with io.open(os.path.join(DATAPATHTEST, 'cy42_peace-op2.01.genv')) as fh:
+        with open(os.path.join(DATAPATHTEST, 'cy42_peace-op2.01.genv')) as fh:
             gdata = fh.read().rstrip('\n').split('\n')
         genv.autofill('cy42_peace-op2.01', gdata)
         # Check keys
@@ -444,7 +443,7 @@ class TestUgetUenv(PrivateCocoonGcoTest):
         # HACK STORE TEST
         # Get a simple file from the hack store
         st.get(uriparse('uget://uget.multi.fr/data/mask.atms.01b@huguette'), 'mask1', dict())
-        with io.open('mask1') as fhm:
+        with open('mask1') as fhm:
             self.assertEqual(fhm.readline().rstrip("\n"), 'hack')
         # Get a tar file but do not expand it because of its name (from hack)
         st.get(uriparse('uget://uget.multi.fr/data/rrtm.const.03hack.tgz@huguette'),
@@ -578,7 +577,7 @@ class TestUgetUenv(PrivateCocoonGcoTest):
         # Idem with extract ?
         st.get(uriparse('uget://uget.multi.fr/data/rrtm.const.02b.tgz@huguette?extract=file1'),
                'file1_extra', dict())
-        with io.open('file1_extra') as fhm:
+        with open('file1_extra') as fhm:
             self.assertEqual(fhm.readline().rstrip("\n"), 'cache')
         # GCO special (see @gget-key-specific-conf.ini) + not yet extracted incache
         st.get(uriparse('uget://uget.multi.fr/data/grib_api.def.02.tgz@huguette'),

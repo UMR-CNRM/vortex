@@ -1010,7 +1010,7 @@ class OSExtended(System):
                 cmdout, cmderr = None, None
         else:
             if isinstance(output, six.string_types):
-                output = io.open(output, outmode)
+                output = open(output, outmode)
             cmdout, cmderr = output, output
         p = None
         try:
@@ -1295,7 +1295,7 @@ class OSExtended(System):
             except Exception:
                 rc = False
         else:
-            fh = io.open(filename, 'a')
+            fh = open(filename, 'a')
             fh.close()
         return rc
 
@@ -1500,7 +1500,7 @@ class OSExtended(System):
         """Check if actual **iocandidate** is a valid filename or io stream."""
         return iocandidate is not None and (
             (isinstance(iocandidate, six.string_types) and self.path.exists(iocandidate)) or
-            isinstance(iocandidate, (file, io.IOBase) if six.PY2 else io.IOBase) or
+            isinstance(iocandidate, io.IOBase) or
             isinstance(iocandidate, six.BytesIO) or isinstance(iocandidate, six.StringIO)
         )
 
@@ -2234,7 +2234,7 @@ class OSExtended(System):
                 if not silent:
                     logger.error('Missing source %s', source)
                 return False
-            source = io.open(self.path.expanduser(source), 'rb')
+            source = open(self.path.expanduser(source), 'rb')
             xsource = True
         else:
             xsource = False
@@ -2247,7 +2247,7 @@ class OSExtended(System):
                 # Write to a temp file
                 original_dest = self.path.expanduser(destination)
                 tmp_dest = self.path.expanduser(destination) + self.safe_filesuffix()
-                destination = io.open(tmp_dest, 'wb')
+                destination = open(tmp_dest, 'wb')
                 xdestination = True
             else:
                 logger.error('Could not create a cocoon for file %s', destination)
@@ -2864,8 +2864,8 @@ class OSExtended(System):
             rc = gateway.dump(obj, destination, **opts)
         else:
             if self.filecocoon(destination):
-                with io.open(self.path.expanduser(destination),
-                             'w' + ('b' if (bytesdump or six.PY2) else '')) as fd:
+                with open(self.path.expanduser(destination),
+                          'w' + ('b' if (bytesdump or six.PY2) else '')) as fd:
                     rc = gateway.dump(obj, fd, **opts)
         return rc
 
@@ -2901,8 +2901,8 @@ class OSExtended(System):
         else:
             if gateway is None:
                 gateway = sys.modules.get(source.split('.')[-1].lower(), yaml)
-            with io.open(self.path.expanduser(source),
-                         'r' + ('b' if bytesload else '')) as fd:
+            with open(self.path.expanduser(source),
+                      'r' + ('b' if bytesload else '')) as fd:
                 obj = gateway.load(fd)
         return obj
 

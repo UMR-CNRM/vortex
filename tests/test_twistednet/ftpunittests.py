@@ -6,7 +6,6 @@ Base classes for unittests that require an FTP server.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
 import tempfile
 import unittest
 
@@ -65,7 +64,7 @@ class FtpBasedTestCase(unittest.TestCase):
     def assertFile(self, path, content, binary=False):
         self.assertTrue(self.sh.path.exists(path),
                         msg="Testing existence of: {:s}".format(path))
-        with io.open(path, 'rb' if binary else 'r') as fhr:
+        with open(path, 'rb' if binary else 'r') as fhr:
             self.assertEqual(fhr.read(), content)
 
     def assertRemote(self, path, content, binary=False):
@@ -79,7 +78,7 @@ class NetrcFtpBasedTestCase(FtpBasedTestCase):
         super(NetrcFtpBasedTestCase, self).setUp()
         # Fake NetRC
         self._fnrc = self.sh.path.join(self.tdir, 'fakenetrc')
-        with io.open(self._fnrc, 'w') as fhnrc:
+        with open(self._fnrc, 'w') as fhnrc:
             fhnrc.write('machine localhost login {:s} password {:s}'
                         .format(self.user, self.password))
         self.sh.chmod(self._fnrc, 0o600)

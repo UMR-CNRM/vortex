@@ -9,7 +9,6 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 import six
 from collections import defaultdict
 from functools import partial
-import io
 
 from bronx.datagrip.namelist import NamelistBlock
 from bronx.fancies import loggers
@@ -69,7 +68,7 @@ class CorrOmegaSurf(Parallel):
         list_file = [six.text_type(filerh.rh.container.localpath()) for filerh in gridrh]
         list_file = "\n".join([six.text_type(len(list_file)), ] + list_file)
 
-        with io.open('fort.2', 'w') as fnam:
+        with open('fort.2', 'w') as fnam:
             fnam.write(list_file)
         sh.cat('fort.2', output=False)
 

@@ -8,7 +8,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 
 import gzip
-import io
 import tarfile
 import tempfile
 
@@ -97,7 +96,7 @@ class TestArchiveStorage(NetrcFtpBasedTestCase):
         self.assertFalse(st.check('some/test/file2'))
         # With compression
         cpipe = compression.CompressionPipeline(self.sh, 'gzip')
-        with io.open('wonderfull_testfile', mode='w+b') as fht:
+        with open('wonderfull_testfile', mode='w+b') as fht:
             fht.write(b'Coucou_Very_Very_Long')
             fht.seek(0)
             fht.flush()

@@ -1,7 +1,6 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import collections
-import io
 import logging
 import os
 import sys
@@ -168,7 +167,7 @@ class TestParallel(unittest.TestCase):
     def assertWrapper(self, mpirankvar, binpaths,
                       tplname='@mpitools/envelope_wrapper_default.tpl',
                       binargs=(), binomp=None, bindinglist=None):
-        with io.open('./global_envelope_wrapper.py') as fhw:
+        with open('./global_envelope_wrapper.py') as fhw:
             wrapper_new = fhw.read()
         wtpl_ref = config.load_template(self.t, tplname, encoding='utf-8')
         wrapper_ref = wtpl_ref.substitute(
@@ -206,7 +205,7 @@ class TestParallel(unittest.TestCase):
                     slots = '{:d}-{:d}'.format(min(bindinglist[r]), max(bindinglist[r]))
             rf_stack.append('rank {:d}=+n{:d} slot={:s}'.format(r, nodelist[r], slots))
         rf_ref = '\n'.join(rf_stack)
-        with io.open('./global_envelope_rankfile') as fhw:
+        with open('./global_envelope_rankfile') as fhw:
             rf_new = fhw.read()
         try:
             return self.assertEqual(rf_new, rf_ref)
@@ -337,7 +336,7 @@ class TestParallel(unittest.TestCase):
         binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 8
         binomp = [10, ] * 8
         self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp)
-        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+        with open('./global_envelope_nodelist', 'r') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0', 'fake1'] * 4)
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10,
@@ -351,7 +350,7 @@ class TestParallel(unittest.TestCase):
         binomp = [10, ] * 8
         bindingl = [list(range(i * 10, (i + 1) * 10)) for i in (0, 0, 1, 1, 2, 2, 3, 3)]
         self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
-        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+        with open('./global_envelope_nodelist', 'r') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0', 'fake1'] * 4)
         # OpenMPI/mpirun
@@ -579,7 +578,7 @@ class TestParallel(unittest.TestCase):
         binomp = [2, ] * 8 + [5, 5]
         bindingl = [[0, 1], [2, 3], [4, 5], [6, 7]] * 2 + [[8, 9, 10, 11, 12]] * 2
         self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
-        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+        with open('./global_envelope_nodelist', 'r') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0'] * 4 + ['fake1'] * 4 + ['fake0', 'fake1'])
         # Companion IO Nodes + distribution
@@ -589,7 +588,7 @@ class TestParallel(unittest.TestCase):
         bindingl = ([[0, 1], [0, 1], [2, 3], [2, 3], [4, 5], [4, 5], [6, 7], [6, 7]] +
                     [[8, 9, 10, 11, 12]] * 2)
         self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
-        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+        with open('./global_envelope_nodelist', 'r') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0', 'fake1'] * 5)
         # OpenMPI + Companion IO Nodes + distribution
@@ -792,7 +791,7 @@ class TestParallel(unittest.TestCase):
                      list(range(30, 35)), list(range(35, 40))] * 3 +
                     [list(range(i * 5, (i + 1) * 5)) for i in range(8)])
         self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
-        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+        with open('./global_envelope_nodelist', 'r') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts,
                              ['fake0'] * 2 + ['fake1'] * 2 + ['fake2'] * 2 + ['fake3'] * 2 +
@@ -868,7 +867,7 @@ class TestParallel(unittest.TestCase):
         _, args = algo._bootstrap_mpitool([bin0, bin1],
                                           dict(mpiopts=dict(np=[8, 4], envelope='auto')))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 13 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
-        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+        with open('./global_envelope_nodelist', 'r') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 4 + ['fake2'] * 4)
         binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
@@ -880,7 +879,7 @@ class TestParallel(unittest.TestCase):
                                           dict(mpiopts=dict(envelope=[dict(nn=2, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 25 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
-        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+        with open('./global_envelope_nodelist', 'r') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 4 + ['fake2'] * 8 + ['fake3'] * 8)
         binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
@@ -892,7 +891,7 @@ class TestParallel(unittest.TestCase):
                                           dict(mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
-        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+        with open('./global_envelope_nodelist', 'r') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 8 + ['fake2'] * 8)
         binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
@@ -907,7 +906,7 @@ class TestParallel(unittest.TestCase):
                                                mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
-        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+        with open('./global_envelope_nodelist', 'r') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 8 + ['fake2'] * 8)
         binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
@@ -923,7 +922,7 @@ class TestParallel(unittest.TestCase):
                                                mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
-        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+        with open('./global_envelope_nodelist', 'r') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 8 + ['fake2'] * 8)
         binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
@@ -941,7 +940,7 @@ class TestParallel(unittest.TestCase):
                                               dict(mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                           dict(nn=2, nnp=8)])))
             self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
-            with io.open('./global_envelope_nodelist', 'r') as fhnl:
+            with open('./global_envelope_nodelist', 'r') as fhnl:
                 hosts = [l.strip('\n') for l in fhnl.readlines()]
             self.assertListEqual(hosts, ['fake0'] + ['fake0', 'fake1', 'fake2'] * 4 + ['fake1', 'fake2'] * 4)
             binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1

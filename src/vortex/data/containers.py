@@ -17,7 +17,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 
 import contextlib
-import io
 import os
 import re
 import tempfile
@@ -675,7 +674,7 @@ class _SingleFileStyle(Container):
         """Returns an active (opened) file descriptor in binary read mode by default."""
         self.close()
         currentpath = self._actualpath if self.cwdtied else os.path.realpath(self.filename)
-        return io.open(currentpath, mode, encoding=encoding)
+        return open(currentpath, mode, encoding=encoding)
 
     def iotarget(self):
         """File container's io target is a plain pathname."""

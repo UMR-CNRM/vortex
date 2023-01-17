@@ -2,7 +2,6 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
 import hashlib
 import os
 import six
@@ -33,7 +32,7 @@ class TestCompression(unittest.TestCase):
         m = hashlib.md5()
         m.update(raw)
         self.testfilesum = m.digest()
-        with io.open("rawtestfile", "wb") as fhtest:
+        with open("rawtestfile", "wb") as fhtest:
             fhtest.write(raw)
 
     def tearDown(self):
@@ -42,7 +41,7 @@ class TestCompression(unittest.TestCase):
 
     def assertDataConsistency(self, source):
         if isinstance(source, six.string_types):
-            with io.open(source, 'rb') as fhin:
+            with open(source, 'rb') as fhin:
                 data = fhin.read()
         else:
             data = source.read()
@@ -58,8 +57,8 @@ class TestCompression(unittest.TestCase):
         cp.file2uncompress('test_g1.gz', 'test_g1')
         self.assertDataConsistency('test_g1')
         # With streams
-        with io.open("test_g2", "wb") as fhout:
-            with io.open(self.testfile) as fhin:
+        with open("test_g2", "wb") as fhout:
+            with open(self.testfile) as fhin:
                 with cp.compress2stream(fhin) as scompressed:
                     with cp.stream2uncompress(fhout) as sdest:
                         self.sh.copyfileobj(scompressed, sdest)
@@ -69,7 +68,7 @@ class TestCompression(unittest.TestCase):
             self.assertEqual(scompressed.size, self.sh.size("test_g1.gz"))
         # --- Basic bzip2 with compression level ---
         cp = CompressionPipeline(self.sh, 'bzip2&complevel=2')
-        with io.open("test_b1", "wb") as fhout:
+        with open("test_b1", "wb") as fhout:
             with cp.compress2stream(self.testfile) as scompressed:
                 with cp.stream2uncompress(fhout) as sdest:
                     self.sh.copyfileobj(scompressed, sdest)
@@ -77,7 +76,7 @@ class TestCompression(unittest.TestCase):
         # --- gzip+bzip2 ---
         cp = CompressionPipeline(self.sh, 'gzip|bzip2&complevel=2')
         self.assertEqual(cp.suffix, ".gz.bz2")
-        with io.open("test_gb1", "wb") as fhout:
+        with open("test_gb1", "wb") as fhout:
             with cp.compress2stream(self.testfile) as scompressed:
                 with cp.stream2uncompress(fhout) as sdest:
                     self.sh.copyfileobj(scompressed, sdest)

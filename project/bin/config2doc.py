@@ -9,7 +9,6 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import importlib
-import io
 import os
 import re
 import sys
@@ -97,7 +96,7 @@ class RstConfigFileParser(object):
         """
         self._conffile = conffile
         self._section_cb = section_cb
-        self._fp = io.open(conffile, 'r', encoding='utf-8')
+        self._fp = open(conffile, 'r', encoding='utf-8')
         self._parser = GenericConfigParser(conffile)
 
     def __del__(self):
@@ -189,7 +188,7 @@ class RstConfigFileParser(object):
 def default_rst(infile, outfile, verbose=0):
     """Default parser."""
     rstparse = RstConfigFileParser(infile)
-    with io.open(outfile, 'w', encoding='utf-8') as outfh:
+    with open(outfile, 'w', encoding='utf-8') as outfh:
         outfh.write(rstparse.parse())
         logger.debug('Resulting ReST written in: {}'.format(outfile))
 
@@ -206,7 +205,7 @@ def geometry_rst(outfile, verbose=0):
     logger.debug('The default geometry file was reloaded')
     # We are now parsing the ini file manually to find RST code
     rstparse = RstConfigFileParser(geofile, section_cb=geometry_easydump)
-    with io.open(outfile, 'w', encoding='utf-8') as outfh:
+    with open(outfile, 'w', encoding='utf-8') as outfh:
         outfh.write(rstparse.parse())
         logger.debug('Resulting ReST written in: {}'.format(outfile))
 
@@ -232,7 +231,7 @@ def configtable_rst(indata, outfile, verbose=0):
 
     # We are now parsing the ini file manually to find RST code
     rstparse = RstConfigFileParser(c_parser.config.file, section_cb=tableitem_easydump)
-    with io.open(outfile, 'w', encoding='utf-8') as outfh:
+    with open(outfile, 'w', encoding='utf-8') as outfh:
         outfh.write(rstparse.parse())
         logger.debug('Resulting ReST written in: {}'.format(outfile))
 

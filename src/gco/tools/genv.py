@@ -6,8 +6,6 @@ TODO: Module documentation.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
-
 from bronx.fancies import loggers
 
 import vortex
@@ -104,12 +102,12 @@ def autofill(cycle, gcout=None, writes_dump=False, cacheroot='.'):
         sh = vortex.sh()
         cachefile = sh.path.join(cacheroot, '{:s}_vortex_genv_cache'.format(cycle))
         if sh.path.isfile(cachefile):
-            with io.open(cachefile, 'r') as genvfh:
+            with open(cachefile, 'r') as genvfh:
                 gcout = [l.rstrip('\n') for l in genvfh.readlines()]
         else:
             gcout = vortex.sh().spawn([actualgenv(), cycle], output=True)
             if writes_dump:
-                with io.open(cachefile, 'w') as genvfh:
+                with open(cachefile, 'w') as genvfh:
                     genvfh.writelines([l + "\n" for l in gcout])
     if gcout:
         gcdict = dict()

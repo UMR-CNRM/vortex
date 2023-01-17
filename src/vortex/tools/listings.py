@@ -5,7 +5,6 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
-import io
 import re
 from collections import OrderedDict, defaultdict, deque
 
@@ -123,9 +122,9 @@ class ArpIfsListingsTool(addons.Addon):
         :rtype: :class:`ArpIfsListingDiff_Status`
         """
 
-        with io.open(listing1, 'r') as fh1:
+        with open(listing1, 'r') as fh1:
             l1_slurp = [l.rstrip("\n") for l in fh1]
-        with io.open(listing2, 'r') as fh2:
+        with open(listing2, 'r') as fh2:
             l2_slurp = [l.rstrip("\n") for l in fh2]
         l1_normset = norms.NormsSet(l1_slurp)
         l2_normset = norms.NormsSet(l2_slurp)
@@ -205,7 +204,7 @@ class ArpifsListingsFormatAdapter(FormatAdapterAbstractImplementation):
     def lines(self):
         """Return an array populated with the listing file lines."""
         if self._lines is None:
-            with io.open(self.filename, self.openmode, encoding='utf-8', errors='replace') as f:
+            with open(self.filename, self.openmode, encoding='utf-8', errors='replace') as f:
                 self._lines = [l.rstrip("\n") for l in f]  # to remove trailing '\n'
         return self._lines
 
@@ -330,7 +329,7 @@ class BdmBufrListingsFormatAdapter(FormatAdapterAbstractImplementation):
     def lines(self):
         """Return an array populated with the listing file lines."""
         if self._lines is None:
-            with io.open(self.filename, self.openmode, encoding='utf-8', errors='replace') as f:
+            with open(self.filename, self.openmode, encoding='utf-8', errors='replace') as f:
                 self._lines = [l.rstrip("\n") for l in f]  # to remove trailing '\n'
         return self._lines
 

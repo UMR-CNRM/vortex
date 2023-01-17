@@ -13,7 +13,6 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import concurrent.futures
 from configparser import ConfigParser
 import contextlib
-import io
 import locale
 import logging
 import os
@@ -654,7 +653,7 @@ def main():
     # Configuration data
     confdata = ContribCheckerConfig(args.vortexpath)
     try:
-        with io.open(args.config, 'r') as fhc:
+        with open(args.config, 'r') as fhc:
             confdata.read_file(fhc, source=args.config)
     except (IOError, OSError):
         logger.error("Could not open the configuration file '%s'", args.config)

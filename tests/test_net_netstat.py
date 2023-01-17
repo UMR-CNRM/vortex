@@ -2,7 +2,6 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
 import os
 import platform
 import tempfile
@@ -104,7 +103,7 @@ class TestFakeLinuxNetstat(unittest.TestCase):
 
     def setUp(self):
         self.lports_f = tempfile.mkstemp(prefix='test_net_lports_')[1]
-        with io.open(self.lports_f, 'w') as fh:
+        with open(self.lports_f, 'w') as fh:
             fh.write(_LPORTS)
         self.ports_v4_f = dict(
             tcp=tempfile.mkstemp(prefix='test_net_tcpv4_')[1],
@@ -113,9 +112,9 @@ class TestFakeLinuxNetstat(unittest.TestCase):
             tcp=tempfile.mkstemp(prefix='test_net_tcpv6_')[1],
             udp=tempfile.mkstemp(prefix='test_net_udpv6_')[1])
         for proto in ('tcp', 'udp'):
-            with io.open(self.ports_v4_f[proto], 'w') as fh:
+            with open(self.ports_v4_f[proto], 'w') as fh:
                 fh.write(_PORTS_V4[proto])
-            with io.open(self.ports_v6_f[proto], 'w') as fh:
+            with open(self.ports_v6_f[proto], 'w') as fh:
                 fh.write(_PORTS_V6[proto])
 
         class FakeLinuxNetstats(LinuxNetstats):

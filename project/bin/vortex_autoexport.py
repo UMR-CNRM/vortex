@@ -21,7 +21,6 @@ from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from configparser import ConfigParser
 import contextlib
 from functools import wraps
-import io
 import logging
 import os
 import pprint
@@ -175,7 +174,7 @@ class GitToolboxProvider(ToolboxProvider):
             logger.info("  Adding logfile to archive")
             os.chdir(self._tmpdir)
             os.makedirs(tarprefix)
-            with io.open(os.path.join(self._tmpdir, tarprefix, 'README.gitlog'), 'wb') as fhlog:
+            with open(os.path.join(self._tmpdir, tarprefix, 'README.gitlog'), 'wb') as fhlog:
                 if branch:
                     fhlog.write(branch)
                     fhlog.write(b"\n")
@@ -709,10 +708,10 @@ class EcAccessEcmwfExportService(ExportService):
         """
         batchsys = self._internals.get('batchsystem', 'default')
         batchtplname = 'autoexport_{}_head_{}.tpl'.format(self._TEMPLATE_ID, batchsys)
-        with io.open(os.path.join(_TEMPLATE_DIR, batchtplname), 'rt', encoding='utf-8') as fhtpl:
+        with open(os.path.join(_TEMPLATE_DIR, batchtplname), 'rt', encoding='utf-8') as fhtpl:
             stpl = fhtpl.read()
         tplname = 'autoexport_{}_sync.tpl'.format(self._TEMPLATE_ID)
-        with io.open(os.path.join(_TEMPLATE_DIR, tplname), 'rt', encoding='utf-8') as fhtpl:
+        with open(os.path.join(_TEMPLATE_DIR, tplname), 'rt', encoding='utf-8') as fhtpl:
             stpl += fhtpl.read()
 
         stpl = ScriptTemplate(stpl)
@@ -747,10 +746,10 @@ class EcAccessEcmwfExportService(ExportService):
         """Create a link from one vortex version to another."""
         batchsys = self._internals.get('batchsystem', 'default')
         batchtplname = 'autoexport_{}_head_{}.tpl'.format(self._TEMPLATE_ID, batchsys)
-        with io.open(os.path.join(_TEMPLATE_DIR, batchtplname), 'rt', encoding='utf-8') as fhtpl:
+        with open(os.path.join(_TEMPLATE_DIR, batchtplname), 'rt', encoding='utf-8') as fhtpl:
             stpl = fhtpl.read()
         tplname = 'autoexport_{}_link.tpl'.format(self._TEMPLATE_ID)
-        with io.open(os.path.join(_TEMPLATE_DIR, tplname), 'rt', encoding='utf-8') as fhtpl:
+        with open(os.path.join(_TEMPLATE_DIR, tplname), 'rt', encoding='utf-8') as fhtpl:
             stpl += fhtpl.read()
 
         stpl = ScriptTemplate(stpl)

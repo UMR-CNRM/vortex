@@ -9,8 +9,8 @@ The user interface for such tools is the :class:`CompressionPipeline`.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from contextlib import contextmanager
-import functools
 import io
+import functools
 import operator
 import six
 
@@ -107,10 +107,10 @@ class CompressionPipeline(object):
     def _openstream(self, local, mode='rb'):
         """If *local* is not an opened file, open it..."""
         if isinstance(local, six.string_types):
-            localfh = io.open(local, mode)
+            localfh = open(local, mode)
             yield localfh
             localfh.close()
-        elif isinstance(local, (file, io.IOBase) if six.PY2 else io.IOBase):
+        elif isinstance(local, io.IOBase):
             yield local
         else:
             raise ValueError("Unknown type for {!s}".format(local))
@@ -166,7 +166,7 @@ class CompressionPipeline(object):
         *local* can be an opened file-like object or a filename.
         *destination* is a filename.
         """
-        with io.open(destination, 'wb') as fhout:
+        with open(destination, 'wb') as fhout:
             with self.compress2stream(local) as fhcompressed:
                 return self._xcopyfileobj(fhcompressed, fhout)
 
@@ -213,7 +213,7 @@ class CompressionPipeline(object):
         *destination* can be an opened file-like object or a filename.
         """
         with self.stream2uncompress(destination) as fhuncompressed:
-            with io.open(local, 'rb') as fhcompressed:
+            with open(local, 'rb') as fhcompressed:
                 return self._xcopyfileobj(fhcompressed, fhuncompressed)
 
 

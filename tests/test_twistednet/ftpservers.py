@@ -167,11 +167,10 @@ class TestFTPServer(object):
 
 
 if __name__ == '__main__':
-    import io
     import shutil
     try:
         os.mkdir('testlogin')
-        with io.open('testlogin/testfile', 'w') as fhtf:
+        with open('testlogin/testfile', 'w') as fhtf:
             fhtf.write("TestFile1")
         with TestFTPServer(2121, '.', 'testlogin', 'aqmp',
                            pass_seq=(AUTH_FAILURE, ))():

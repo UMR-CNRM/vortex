@@ -3,13 +3,13 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import os, sys, io, glob, datetime
+import os, sys, glob, datetime
 
 exit_value = 0
 
 sync_name = sys.argv[0].lstrip('./')
 
-with io.open(sync_name + '.log', 'a') as flog:
+with open(sync_name + '.log', 'a') as flog:
 
     def logging(*msg):
         if sys.version_info.major == 2:

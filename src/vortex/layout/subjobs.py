@@ -10,7 +10,6 @@ import six
 
 import collections
 import contextlib
-import io
 import locale
 import re
 import sys
@@ -181,7 +180,7 @@ class AbstractSubJobLauncher(fp.FootprintBase):
         """
         plocale = locale.getlocale()[1] or 'ascii'
         self.ticket.sh.title('subjob "{:s}" {:s}. Here is the output:'.format(tag, outcome))
-        with io.open(_JOB_STDEO.format(self.fsid, tag), mode='rt', encoding=plocale) as fhst:
+        with open(_JOB_STDEO.format(self.fsid, tag), mode='rt', encoding=plocale) as fhst:
             started = False
             for lst in fhst:
                 if started:
@@ -276,7 +275,7 @@ class SpawnSubJobLauncher(AbstractSubJobLauncher):
     def _actual_launch(self, tag):
         """Just launch the subjob using a subprocess... easy!"""
         sh = self.ticket.sh
-        ofh = io.open(_JOB_STDEO.format(self.fsid, tag), mode='wb')
+        ofh = open(_JOB_STDEO.format(self.fsid, tag), mode='wb')
         p = sh.popen([sys.executable, self.scriptpath], stdout=ofh, stderr=ofh)
         self._outfhs[tag] = ofh
         self._processes[tag] = p
@@ -361,7 +360,7 @@ class AbstractSshSubJobLauncher(AbstractSubJobLauncher):
         self._avnodes = collections.deque(self.nodes)
         # Freeze the root environment in a wrapper
         self._lwrapper = '{:s}.wrap.sh'.format(self.fsid)
-        with io.open(self._lwrapper, 'w', encoding='utf-8') as fhwrap:
+        with open(self._lwrapper, 'w', encoding='utf-8') as fhwrap:
             fhwrap.write('#! /bin/bash\n')
             fhwrap.write('set -x\n')
             fhwrap.write('set -e\n')
@@ -385,7 +384,7 @@ class AbstractSshSubJobLauncher(AbstractSubJobLauncher):
         sh = self.ticket.sh
         thost = self._avnodes.popleft()
         logger.info('"%s" will be used (through SSH).', thost)
-        ofh = io.open(_JOB_STDEO.format(self.fsid, tag), mode='wb')
+        ofh = open(_JOB_STDEO.format(self.fsid, tag), mode='wb')
         cmd = "export VORTEX_SUBJOB_ACTIVATED='{:s}'; ".format(sh.env.VORTEX_SUBJOB_ACTIVATED)
         cmd += ' '.join(["export {:s}='{!s}'; ".format(k, v)
                          for k, v in self._env_lastminute_update(tag, thost)])

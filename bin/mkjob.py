@@ -7,7 +7,6 @@ Generate a script based on the Vortex and Application configuration files."""
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import argparse
-import io
 import locale
 import os
 import re
@@ -80,7 +79,7 @@ def parse_command_line():
     # Si un descriptif est passé manuellement (avec l'option -j) on ne traite que lui
     if not args.job and os.path.isfile(args.file):
         report.append('Generation of the jobs defined in the file : {} \n'.format(args.file))
-        with io.open(args.file, 'r') as fp:
+        with open(args.file, 'r') as fp:
             for line in fp.readlines():
                 if bool(line.rstrip()):
                     a_job = make_cmdline(line.rstrip())
@@ -91,7 +90,7 @@ def parse_command_line():
         a_job = make_cmdline(args.job)
         jobs.append(a_job)
         if args.write:
-            with io.open(args.file, 'a') as fp:
+            with open(args.file, 'a') as fp:
                 fp.write(six.text_type(args.job) + "\n")
 
     if args.add:
@@ -128,7 +127,7 @@ def make_cmdline(description):
 def list_variables():
     t = vortex.ticket()
     core = load_template(t, '@opjob-variables.tpl')
-    with io.open(core.srcfile, 'r') as f:
+    with open(core.srcfile, 'r') as f:
         for line in f:
             print(line.strip())
 
@@ -208,7 +207,7 @@ def makejob(job):
         # Launch the script with the designated wrapper
         if tplconf.get('extra_wrapper_keep', False):
             # In this case, we generate the job file as usual and it is kept
-            with io.open(tplconf['file'], 'w', encoding=tplconf['scriptencoding']) as jobfh:
+            with open(tplconf['file'], 'w', encoding=tplconf['scriptencoding']) as jobfh:
                 jobfh.write(corejob)
             _wrap_launch(tplconf['file'])
         else:
@@ -223,7 +222,7 @@ def makejob(job):
                 t.sh.rm(jobfh.name)
     else:
         # Just create the job file...
-        with io.open(tplconf['file'], 'w', encoding=tplconf['scriptencoding']) as jobfh:
+        with open(tplconf['file'], 'w', encoding=tplconf['scriptencoding']) as jobfh:
             jobfh.write(corejob)
 
     t.sh.header('Job creation completed')

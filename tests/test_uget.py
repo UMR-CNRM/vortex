@@ -5,7 +5,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 
 import contextlib
-import io
 import os
 import re
 import shlex
@@ -109,7 +108,7 @@ class TestUget(unittest.TestCase):
         self.assertTrue(os.path.exists(where),
                         msg="Looking for: {:s}".format(where))
         dfinaltext = dname if dfinaltext is None else dfinaltext
-        with io.open(where, 'r') as fh_d:
+        with open(where, 'r') as fh_d:
             self.assertEqual("Fake data: {:s}".format(dfinaltext),
                              fh_d.read())
 
@@ -138,7 +137,7 @@ class TestUget(unittest.TestCase):
             self.assertRegex(output, r'Archive\s*:\s*MISSING')
             # Fake data
             for dname in ('data1.01', 'data2.01'):
-                with io.open(os.path.join(self.datapath, dname), 'w') as fh_d:
+                with open(os.path.join(self.datapath, dname), 'w') as fh_d:
                     fh_d.write("Fake data: {:s}".format(dname))
             output = u_helper.run_uget('check data data1.01@demo')
             self.assertRegex(output, r'Hack\s*:\s*Ok')
@@ -151,7 +150,7 @@ class TestUget(unittest.TestCase):
             self.assertRegex(output, r'Archive\s*:\s*Ok')
             # Fake env
             for dname in ('env1.01', ):
-                with io.open(os.path.join(self.envpath, dname), 'w') as fh_e:
+                with open(os.path.join(self.envpath, dname), 'w') as fh_e:
                     fh_e.write("\n".join(["FIRSTKEY=uget:data1.01@demo",
                                           "SECONDKEY=uget:data2.01@demo"]))
             # Put env1
@@ -169,13 +168,13 @@ class TestUget(unittest.TestCase):
             self.assertRegex(output, r'FIRSTKEY\s*=\s*uget:data1\.01@demo')
             self.assertRegex(output, r'SECONDKEY\s*=\s*uget:data2\.01@demo')
             u_helper.run_uget('pull data data2.01')
-            with io.open('data2.01', 'r') as fh_d:
+            with open('data2.01', 'r') as fh_d:
                 self.assertEqual('Fake data: data2.01', fh_d.read())
             os.unlink('data2.01')
             # Hack
             u_helper.run_uget('hack env env1.01 into env1.02')
             u_helper.run_uget('hack data data1.01 into data3.01')
-            with io.open(os.path.join(self.envpath, 'env1.02'), 'a') as fh_e:
+            with open(os.path.join(self.envpath, 'env1.02'), 'a') as fh_e:
                 fh_e.write("\nTHIRDKEY=uget:data3.01@demo")
             u_helper.run_uget('push env env1.02@demo')
             u_helper.run_uget('clean_hack')

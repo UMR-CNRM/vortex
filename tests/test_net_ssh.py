@@ -2,7 +2,6 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
 import os
 import platform
 import stat
@@ -63,13 +62,13 @@ class _SshTestBase(unittest.TestCase):
         self.ref2 = self.sh.path.join(self.tmpdir, 'refdata2')
         self.ref1_ct = uuid.uuid4().bytes
         self.ref2_ct = uuid.uuid4().bytes
-        with io.open(self.ref1, 'wb') as fh1:
+        with open(self.ref1, 'wb') as fh1:
             fh1.write(self.ref1_ct)
-        with io.open(self.ref2, 'wb') as fh2:
+        with open(self.ref2, 'wb') as fh2:
             fh2.write(self.ref2_ct)
 
     def _check_against(self, ref, newfile):
-        with io.open(newfile, 'rb') as fhN:
+        with open(newfile, 'rb') as fhN:
             newdata = fhN.read()
         self.assertEqual(ref, newdata)
 
@@ -142,7 +141,7 @@ class TestSsh(_SshTestBase):
         self.assertIsCopy1(self.sh.path.join(dest_cp3bis, self.sh.path.basename(self.ref1)))
 
         # Streaming !
-        with io.open(self.ref2, 'rb') as fh2:
+        with open(self.ref2, 'rb') as fh2:
             self.assertTrue(self.ssh.scpput_stream(fh2, dest_cp2, permissions=0o400))
         self.assertIsCopy2(dest_cp2)
         self.assertEqual(stat.S_IMODE(self.sh.stat(dest_cp2).st_mode), 0o400)
@@ -165,7 +164,7 @@ class TestSsh(_SshTestBase):
         self.assertIsCopy1(self.sh.path.join(dest_cp3, self.sh.path.basename(self.ref1)))
         # Streaming !
         dest_cp2bis = self.sh.path.join(self.tmpdir, 'titi')
-        with io.open(dest_cp2bis, 'wb') as fh2:
+        with open(dest_cp2bis, 'wb') as fh2:
             self.assertTrue(self.ssh.scpget_stream(dest_cp2, fh2))
         self.assertIsCopy1(dest_cp2bis)
         # Nasty characters

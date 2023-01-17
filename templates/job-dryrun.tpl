@@ -2,7 +2,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io, os, sys
+import os, sys
 appbase = os.path.abspath('$appbase')
 vortexbase = os.path.join(appbase, 'vortex')
 # Alter path for current tasks + vortex (mandatory)
@@ -49,7 +49,7 @@ driver = todo.setup(t, **opts)
 driver.setup()
 
 info_file = '{:s}_dryrun_infos.txt'.format(rd_jobname)
-with io.open(info_file, 'w') as fh_i:
+with open(info_file, 'w') as fh_i:
     fh_i.write("The mkjob command argumets where:\n\n".upper())
     fh_i.write("$mkopts" + "\n")
     fh_i.write("\n")

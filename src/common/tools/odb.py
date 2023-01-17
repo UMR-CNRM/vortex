@@ -6,7 +6,6 @@ Common interest classes to help setup the ODB software environment.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-import io
 import re
 import six
 
@@ -124,7 +123,7 @@ class TimeSlots(object):
 
     def as_file(self, date, filename):
         """Fill the specified ``filename`` wih the current list of time slots at this ``date``."""
-        with io.open(filename, 'w') as fd:
+        with open(filename, 'w') as fd:
             for x in self.as_bounds(date):
                 fd.write(six.text_type(x) + '\n')
             nbx = fd.tell()
@@ -270,9 +269,9 @@ class OdbDriver(object):
         return dbpath
 
     def _ioassign_process(self, dbpaths, wmode):
-        with io.open('IOASSIGN', wmode) as fhgather:
+        with open('IOASSIGN', wmode) as fhgather:
             for dbpath in dbpaths:
-                with io.open(self.sh.path.join(dbpath, 'IOASSIGN'), 'r') as fhlay:
+                with open(self.sh.path.join(dbpath, 'IOASSIGN'), 'r') as fhlay:
                     for line in fhlay:
                         fhgather.write(line)
 
@@ -338,10 +337,10 @@ class OdbDriver(object):
             if f in [n.format(layout) for n in ('{:s}.iomap', '{:s}.sch',
                                                 '{:s}.IOASSIGN', 'IOASSIGN.{:s}', 'IOASSIGN')]:
                 tmp_target = self.sh.path.join(dbpath, f + '.tmp_new')
-                with io.open(self.sh.path.join(dbpath, f), 'r') as inodb:
-                    with io.open(tmp_target, 'w') as outodb:
-                        for l in inodb:
-                            outodb.write(l.replace(layout, layout_new))
+                with open(self.sh.path.join(dbpath, f), 'r') as inodb:
+                    with open(tmp_target, 'w') as outodb:
+                        for line in inodb:
+                            outodb.write(line.replace(layout, layout_new))
                 self.sh.mv(tmp_target,
                            self.sh.path.join(dbpath, f.replace(layout, layout_new)))
                 if layout in f:

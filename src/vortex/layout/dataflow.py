@@ -10,7 +10,6 @@ import six
 from six.moves import map  # @UnresolvedImport
 
 from collections import namedtuple, defaultdict
-import io
 import json
 import pprint
 import traceback
@@ -1060,10 +1059,10 @@ class LocalTracker(defaultdict):
         """
         outdict = {loc: entry.dump_as_dict() for loc, entry in six.iteritems(self)}
         if six.PY2:
-            with io.open(filename, 'wb') as fpout:
+            with open(filename, 'wb') as fpout:
                 json.dump(outdict, fpout, indent=2, sort_keys=True)
         else:
-            with io.open(filename, 'w', encoding='utf-8') as fpout:
+            with open(filename, 'w', encoding='utf-8') as fpout:
                 json.dump(outdict, fpout, indent=2, sort_keys=True)
 
     def json_load(self, filename=_default_json_filename):
@@ -1071,7 +1070,7 @@ class LocalTracker(defaultdict):
 
         :param filename: Path to the JSON file.
         """
-        with io.open(filename, 'r', encoding='utf-8') as fpin:
+        with open(filename, 'r', encoding='utf-8') as fpin:
             indict = json.load(fpin)
         # Start from scratch
         self.clear()

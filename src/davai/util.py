@@ -9,7 +9,6 @@ from six.moves.urllib import error as urlerror  # @UnresolvedImport
 from footprints import proxy as fpx
 
 import errno
-import io
 import re
 import tarfile
 import tempfile
@@ -210,7 +209,7 @@ class SummariesStack(object):
             # ensure no new files have been dropped in the stack. To do so, check
             # if an unhandled_flag file exists (use open instead of "stat" since
             # "stat" can be affected by caching effects on network filesystems).
-            with io.open(self.cache.fullpath(item), 'r'):
+            with open(self.cache.fullpath(item), 'r'):
                 pass
         except IOError as ioe:
             if ioe.errno != errno.ENOENT:
@@ -260,7 +259,7 @@ class SummariesStack(object):
             match = self._re_tasksummary.match(f)
             if match:
                 task = match.group('task')
-                with io.open(self.cache.fullpath(f), 'r') as _f:
+                with open(self.cache.fullpath(f), 'r') as _f:
                     ts = json.load(_f)
                 scope = match.group('scope')
                 if scope == 'consistency':  # IGNORED for now

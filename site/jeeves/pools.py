@@ -10,7 +10,6 @@ Handle
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import io
 import json
 import os
 import pwd
@@ -213,7 +212,7 @@ class Request(object):
     def dump(self):
         """Dump request as a json file."""
         self._dumpfiles.append(self.filename())
-        with io.open(self._dumpfiles[-1] + '.tmp', 'wb' if six.PY2 else 'w') as fd:
+        with open(self._dumpfiles[-1] + '.tmp', 'wb' if six.PY2 else 'w') as fd:
             json.dump(self.as_dict(), fd, sort_keys=True, indent=4)
         shutil.move(self._dumpfiles[-1] + '.tmp', self._dumpfiles[-1])
         return True

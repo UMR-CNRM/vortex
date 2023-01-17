@@ -6,7 +6,6 @@ Promethee Application Configuration features.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
 import json
 import six
 import vortex  # noqa: F401
@@ -150,7 +149,7 @@ class ConfigSetPromethee(ConfigSet):
 
         if self.path.isfile(self.jsonconf):
             try:
-                with io.open(self.jsonconf, 'r', encoding='utf-8') as jsonf:
+                with open(self.jsonconf, 'r', encoding='utf-8') as jsonf:
                     self.update(**json.load(jsonf))
             except Exception:
                 logger.error("Failed to retrieve json config", exc_info=True)

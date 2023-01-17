@@ -22,7 +22,6 @@ and  blank lines. The usual separators are allowed (space, tab, newline).
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import argparse
-import io
 import locale
 import os
 import re
@@ -80,7 +79,7 @@ def parse_command_line():
             print()
             print('WARNING : Cycles definition file missing: "{}"'.format(filename))
         else:
-            with io.open(filename, 'r') as fp:
+            with open(filename, 'r') as fp:
                 for line in fp.readlines():
                     args.cycles.extend(line.partition('#')[0].strip().split())
 

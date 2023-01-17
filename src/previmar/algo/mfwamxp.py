@@ -11,7 +11,6 @@ import six
 #: No automatic export
 __all__ = []
 
-import io
 import time
 
 from bronx.datagrip import namelist as bnamelist
@@ -122,10 +121,10 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             if self.system.path.exists(tmpout):
                 self.system.rm(tmpout)
 
-            with io.open(tmpout, 'wb') as outfile:
+            with open(tmpout, 'wb') as outfile:
                 for fname in [x.container.localpath() for x in sorted(windcandidate,
                                                                       key=lambda rh: rh.resource.begintime)]:
-                    with io.open(fname, 'rb') as infile:
+                    with open(fname, 'rb') as infile:
                         outfile.write(infile.read())
 
             # recuperation fcterm
@@ -211,7 +210,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         namcandidate[0].rh.save()
 
         # Tweak Namelist guess dates ad concatenate namcontents
-        with io.open('fort.3', 'w') as fhnam:
+        with open('fort.3', 'w') as fhnam:
             for xguess in self.list_guess:
                 nblock = bnamelist.NamelistBlock('NAOS')
                 nblock["CLSOUT"] = (rhgrib.resource.date + Time(xguess)).compact()
@@ -285,7 +284,7 @@ class MfwamGauss2Grib(ParaBlindRun):
             namcontents = namcandidate[0].rh.contents
             namcontents.setmacro('MEMBER', self.member)
             namcandidate[0].rh.save()
-            with io.open('fort.3', 'w') as fhnam:
+            with open('fort.3', 'w') as fhnam:
                 fhnam.write(namcontents.dumps())
         # case of determinist
         else:

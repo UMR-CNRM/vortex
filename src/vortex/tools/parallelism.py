@@ -120,7 +120,7 @@ class VortexWorkerBlindRun(TaylorVortexWorker):
         :param stdoutfile: Path to the file where the standard/error output will
                            be saved.
         """
-        tmpio = io.open(stdoutfile, 'wb')
+        tmpio = open(stdoutfile, 'wb')
         if not self.system.path.exists('core'):
             self.system.softlink('/dev/null', 'core')
         self.local_spawn_hook()
@@ -163,8 +163,7 @@ class TeeLikeStringIO(io.StringIO):
 
     def record_teefile(self, filename, mode='w', line_buffering=True):
         """Add **filename** to the set of extra logfiles."""
-        self._tees.add(io.open(filename, mode=mode,
-                               buffering=int(line_buffering)))
+        self._tees.add(open(filename, mode=mode, buffering=int(line_buffering)))
 
     def discard_tees(self):
         """Dismiss all of the extra logfiles."""
@@ -183,7 +182,7 @@ class TeeLikeStringIO(io.StringIO):
 
     def filedump(self, filename, mode='w'):
         """Dump all of the captured data to **filename**."""
-        with io.open(filename, mode=mode) as fhdump:
+        with open(filename, mode=mode) as fhdump:
             self.seek(0)
             for line in self:
                 fhdump.write(line)

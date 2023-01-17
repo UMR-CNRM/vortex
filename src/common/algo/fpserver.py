@@ -11,7 +11,6 @@ import six
 
 import collections
 import functools
-import io
 import math
 import re
 from six.moves import filterfalse
@@ -58,7 +57,7 @@ def fullpos_server_flypoll(sh, outputprefix, termfile, directories=('.', ), **kw
                 fpoll_st = FullPosServerFlyPollPersistantState()
             try:
                 if sh.path.exists(termfile):
-                    with io.open(termfile, 'r') as wfh:
+                    with open(termfile, 'r') as wfh:
                         rawcursor = wfh.readline().rstrip('\n')
                     try:
                         cursor = Time(rawcursor)

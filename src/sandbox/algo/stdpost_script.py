@@ -13,7 +13,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 
 import collections
-import io
 import time
 
 from bronx.fancies import loggers
@@ -139,8 +138,8 @@ class GribInfosScript(Expresso, GribInfosScriptMixin):
                     super(GribInfosScript, self).execute(rh, opts)
 
                     # Gather the information for later use
-                    with io.open(self._current_path + '.md5', 'r',
-                                 encoding='utf-8', errors='ignore') as fhmd:
+                    with open(self._current_path + '.md5', 'r',
+                              encoding='utf-8', errors='ignore') as fhmd:
                         md5sum = fhmd.readline().split()[0]
                     with my_rh.container.iod_context():
                         self._gribstack[self._gribkey(my_rh)][my_rh.resource.term.fmthm] = dict(
@@ -201,8 +200,8 @@ class GribInfosParaScriptWorker(VortexWorkerBlindRun):
             thispromise.put(incache=True)
 
         # Gather information
-        with io.open(self.outputfile, 'r',
-                     encoding='utf-8', errors='ignore') as fhmd:
+        with open(self.outputfile, 'r',
+                  encoding='utf-8', errors='ignore') as fhmd:
             md5sum = fhmd.readline().split(' ')[0]
         rdict['infodict'] = dict(
             md5sum=md5sum,

@@ -7,13 +7,11 @@ TODO: Module documentation.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import contextlib
-import io
-
 import six
 
 import ast
 import collections
+import contextlib
 import copy
 import hashlib
 import re
@@ -118,13 +116,13 @@ class _AutoExtractStoreMixin(object):
                 # Empty directory (take it into account)
                 if not files and not dirs:
                     all_files.add(root)
-        with io.open(index_file, 'w', encoding='utf-8') as fh_index:
+        with open(index_file, 'w', encoding='utf-8') as fh_index:
             fh_index.write("\n".join(sorted(all_files)))
         return index_file
 
     @staticmethod
     def _read_directory_index(index_file):
-        with io.open(index_file, 'r', encoding='utf-8') as fh_index:
+        with open(index_file, 'r', encoding='utf-8') as fh_index:
             return set(fh_index.read().split('\n'))
 
     def _do_local_auto_untar(self, local):
