@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various Resources to handle data produce by the obserations monitoring.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 

@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Resources to deal with MOCAGE.CFG used to define point source emission.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.outflow import StaticResource
 from vortex.data.contents import AlmostListContent

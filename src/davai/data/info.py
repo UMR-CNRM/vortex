@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Additional info resources for DAVAI.
 """
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.outflow import StaticResource
 from vortex.data.contents import JsonDictContent

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains example AlgoComponents that deal with a list of gridpoint
 input files (like a real post-procesing task would do).
@@ -8,9 +6,6 @@ The AlgoComponents defined here are very similar to the one defined in
 :mod:`sandbox.algo.stdpost`. However, in this module, an external external
 script is used to do the actual processing.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 
 import collections
 import time
@@ -107,7 +102,7 @@ class GribInfosScript(Expresso, GribInfosScriptMixin):
     ),
 
     def __init__(self, *kargs, **kwargs):
-        super(GribInfosScript, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._current_path = 'unspecified'
         self._gribstack = collections.defaultdict(dict)
 
@@ -135,10 +130,10 @@ class GribInfosScript(Expresso, GribInfosScriptMixin):
                     logger.info('Processing < %s >', self._current_path)
 
                     # Actually launch the script
-                    super(GribInfosScript, self).execute(rh, opts)
+                    super().execute(rh, opts)
 
                     # Gather the information for later use
-                    with open(self._current_path + '.md5', 'r',
+                    with open(self._current_path + '.md5',
                               encoding='utf-8', errors='ignore') as fhmd:
                         md5sum = fhmd.readline().split()[0]
                     with my_rh.container.iod_context():
@@ -184,7 +179,7 @@ class GribInfosParaScriptWorker(VortexWorkerBlindRun):
 
         # Tweak the command line
         for i in range(len(self.progargs)):
-            if isinstance(self.progargs[i], six.string_types):
+            if isinstance(self.progargs[i], str):
                 self.progargs[i] = self.progargs[i].format(inputfile=self.inputfile)
         # Launch the post-processing scripts
         self.local_spawn(stdoutfile=self.inputfile + '.log')
@@ -200,7 +195,7 @@ class GribInfosParaScriptWorker(VortexWorkerBlindRun):
             thispromise.put(incache=True)
 
         # Gather information
-        with open(self.outputfile, 'r',
+        with open(self.outputfile,
                   encoding='utf-8', errors='ignore') as fhmd:
             md5sum = fhmd.readline().split(' ')[0]
         rdict['infodict'] = dict(
@@ -240,7 +235,7 @@ class GribInfosParaScript(ParaExpresso, GribInfosScriptMixin):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(GribInfosParaScript, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._gribstack = collections.defaultdict(dict)
         self._gribkeys_cache = dict()
         self._termkeys_cache = dict()
@@ -251,7 +246,7 @@ class GribInfosParaScript(ParaExpresso, GribInfosScriptMixin):
 
     def _default_rc_action(self, rh, opts, report, rc):
         """Process the worker's result in order to gather information about Grib files."""
-        super(GribInfosParaScript, self)._default_rc_action(rh, opts, report, rc)
+        super()._default_rc_action(rh, opts, report, rc)
         if rc:
             gribkey = self._gribkeys_cache[report['name']]
             termkey = self._termkeys_cache[report['name']]

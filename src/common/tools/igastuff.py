@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import re
-import six
 
 #: No automatic export
 __all__ = []
@@ -118,10 +113,10 @@ def archive_suffix(model, cutoff, date, vconf=None):
                 )
             )
 
-    return six.text_type(rr[(cutoff, date.hour)])
+    return str(rr[(cutoff, date.hour)])
 
 
-class _BaseIgakeyFactory(six.text_type):
+class _BaseIgakeyFactory(str):
     """
     Given the vapp/vconf, returns a default value for the igakey attribute.
 
@@ -142,7 +137,7 @@ class _BaseIgakeyFactory(six.text_type):
             value = cls._keymap.get(val_split.group(1),
                                     {}).get(val_split.group(2),
                                             val_split.group(1))
-        return six.text_type.__new__(cls, value)
+        return str.__new__(cls, value)
 
 
 class IgakeyFactoryArchive(_BaseIgakeyFactory):

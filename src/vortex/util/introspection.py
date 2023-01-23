@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Some convenient functions to explore the source code or its documentation.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 import inspect
@@ -19,7 +15,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class Sherlock(object):
+class Sherlock:
     """Centralized interface to introspection functions."""
 
     def __init__(self, **kw):

@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains the services specifically needed by Olive.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import pprint
 
@@ -35,7 +31,7 @@ class OliveMailService(AbstractRdTemplatedMailService):
     _TEMPLATES_SUBDIR = 'olivemails'
 
     def substitution_dictionary(self, add_ons=None):
-        sdict = super(OliveMailService, self).substitution_dictionary(add_ons=add_ons)
+        sdict = super().substitution_dictionary(add_ons=add_ons)
         if 'flow' in ad.actions and any(ad.flow_status()):
             flowconf = ad.flow_conf(dict())[0]
             flowout = 'unknown'

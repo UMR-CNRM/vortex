@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Abstract for any "Resource" class that deal with some kind of :class:`Script` or
 :class:`Binary` executable.
@@ -13,8 +11,6 @@ Mode specialised version are also provided for various physical models:
 
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from bronx.syntax import mktuple
 import footprints
 
@@ -26,7 +22,7 @@ from vortex.util.config import JacketConfigParser
 __all__ = []
 
 
-class Jacket(object):
+class Jacket:
     """The class definition of in and out resources from a given executable."""
     def __init__(self, afile=None):
         if afile:
@@ -94,7 +90,7 @@ class Script(Executable):
                 values   = ['script'],
             )
         ),
-        fastkeys = set(['language', ]),
+        fastkeys = {'language'},
     )
 
     @property
@@ -123,7 +119,7 @@ class GnuScript(Executable):
                 values   = ['gnuscript', 'argscript'],
             )
         ),
-        fastkeys = set(['kind', 'language']),
+        fastkeys = {'kind', 'language'},
     )
 
     @property

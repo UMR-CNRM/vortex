@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Standard services to be used by user defined actions.
 
@@ -7,16 +5,12 @@ With the abstract class Service (inheritating from FootprintBase)
 a default Mail Service is provided.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
+from configparser import NoOptionError, NoSectionError
 import contextlib
 import hashlib
 import pprint
-from email import encoders
 from string import Template
 
-import six
-from six.moves.configparser import NoOptionError, NoSectionError
 
 import footprints
 from bronx.fancies import loggers
@@ -60,7 +54,7 @@ class Service(footprints.FootprintBase):
         t = sessions.current()
         glove = kw.pop('glove', t.glove)
         sh = kw.pop('sh', t.system())
-        super(Service, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._glove = glove
         self._sh = sh
 
@@ -131,7 +125,7 @@ class MailService(Service):
                 optional = True,
                 default  = '',
                 alias    = ('contents', 'body'),
-                type     = six.text_type,
+                type     = str,
             ),
             filename = dict(
                 optional = True,
@@ -144,7 +138,7 @@ class MailService(Service):
                 alias    = ('files', 'attach'),
             ),
             subject = dict(
-                type     = six.text_type,
+                type     = str,
             ),
             smtpserver = dict(
                 optional = True,
@@ -185,88 +179,20 @@ class MailService(Service):
         """Return True if any character in string is not ascii-7."""
         return not all(ord(c) < 128 for c in string)
 
-    def get_mimemap(self):
-        """Construct and return a map of MIME types.
-
-        Used only with Python2 (email.mime is deprecated).
-        """
-        assert six.PY2, "Python2 only method"
-        try:
-            self._mimemap
-        except AttributeError:
-            from email.mime.audio import MIMEAudio
-            from email.mime.image import MIMEImage
-            from email.mime.text import MIMEText
-            self._mimemap = dict(
-                text=MIMEText,
-                image=MIMEImage,
-                audio=MIMEAudio
-            )
-        finally:
-            return self._mimemap
-
     def get_message_body(self):
         """Returns the internal body contents as a MIMEText object."""
         body = self.message
         if self.filename:
-            with open(self.filename, 'r', encoding=self.inputs_charset) as tmp:
+            with open(self.filename, encoding=self.inputs_charset) as tmp:
                 body += tmp.read()
-        if six.PY2:
-            mimetext = self.get_mimemap().get('text')
-            if self.is_not_plain_ascii(body):
-                return mimetext(body.encode(self.charset), 'plain', self.charset)
-            else:
-                return mimetext(body, 'plain')
-        else:
-            from email.message import EmailMessage
-            msg = EmailMessage()
-            msg.set_content(body, subtype="plain",
-                            charset=(self.charset if self.is_not_plain_ascii(body) else 'us-ascii'))
-            return msg
+        from email.message import EmailMessage
+        msg = EmailMessage()
+        msg.set_content(body, subtype="plain",
+                        charset=(self.charset if self.is_not_plain_ascii(body) else 'us-ascii'))
+        return msg
 
     def as_multipart(self, msg):
         """Build a new multipart mail with default text contents and attachments."""
-        return self.as_multipart_py2(msg) if six.PY2 else self.as_multipart_py3(msg)
-
-    def as_multipart_py2(self, msg):
-        """Build a new multipart mail with default text contents and attachments.
-
-        Used only with Python2 (email.mime is deprecated).
-        """
-        from email.mime.base import MIMEBase
-        from email.mime.multipart import MIMEMultipart
-        multi = MIMEMultipart()
-        multi.attach(msg)
-        for xtra in self.attachments:
-            if isinstance(xtra, MIMEBase):
-                multi.attach(xtra)
-            elif self.sh.path.isfile(xtra):
-                import mimetypes
-                ctype, encoding = mimetypes.guess_type(xtra)
-                if ctype is None or encoding is not None:
-                    # No guess could be made, or the file is encoded
-                    # (compressed), so use a generic bag-of-bits type.
-                    ctype = 'application/octet-stream'
-                maintype, subtype = ctype.split('/', 1)
-                mimemap = self.get_mimemap()
-                mimeclass = mimemap.get(maintype, None)
-                if mimeclass:
-                    with open(xtra, 'rb') as fp:
-                        xmsg = mimeclass(fp.read(), _subtype=subtype)
-                else:
-                    xmsg = MIMEBase(maintype, subtype)
-                    with open(xtra, 'rb') as fp:
-                        xmsg.set_payload(fp.read())
-                    encoders.encode_base64(xmsg)
-                xmsg.add_header('Content-Disposition', 'attachment', filename=xtra)
-                multi.attach(xmsg)
-        return multi
-
-    def as_multipart_py3(self, msg):
-        """Build a new multipart mail with default text contents and attachments.
-
-        Used only with Python3.
-        """
         from email.message import MIMEPart
         for xtra in self.attachments:
             if isinstance(xtra, MIMEPart):
@@ -285,11 +211,7 @@ class MailService(Service):
         return msg
 
     def _set_header(self, msg, header, value):
-        if self.is_not_plain_ascii(value) and six.PY2:
-            from email.header import Header
-            msg[header] = Header(value, self.charset, header_name=header)
-        else:
-            msg[header] = value
+        msg[header] = value
 
     def set_headers(self, msg):
         """Put on the current message the header items associated to footprint attributes."""
@@ -434,7 +356,7 @@ class SSHProxy(Service):
 
     def __init__(self, *args, **kw):
         logger.debug('Remote command proxy init %s', self.__class__)
-        super(SSHProxy, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         hostname, virtualnode = self._actual_hostname()
         extra_sshopts = None if self.sshopts is None else ' '.join(self.sshopts)
         self._sshobj = self.sh.ssh(hostname, sshopts=extra_sshopts,
@@ -582,7 +504,7 @@ class HideService(Service):
             '.'.join((
                 'HIDDEN',
                 date.now().strftime('%Y%m%d%H%M%S.%f'),
-                'P{0:06d}'.format(self.sh.getpid()),
+                'P{:06d}'.format(self.sh.getpid()),
                 hashlib.md5(self.sh.path.abspath(filename).encode(encoding='utf-8')).hexdigest()
             ))
         )
@@ -590,7 +512,7 @@ class HideService(Service):
         return destination
 
 
-class Directory(object):
+class Directory:
     """
     A class to represent and use mail aliases.
 
@@ -630,7 +552,7 @@ class Directory(object):
     def __str__(self):
         return '\n'.join(sorted(
             ['{}: {}'.format(k, ' '.join(sorted(v)))
-             for (k, v) in six.iteritems(self.aliases)]
+             for (k, v) in self.aliases.items()]
         ))
 
     def _flatten(self):
@@ -640,14 +562,14 @@ class Directory(object):
         while changed:
             changed = False
             count += 1
-            for kref, vref in six.iteritems(self.aliases):
+            for kref, vref in self.aliases.items():
                 if kref in vref:
                     logger.error('Cycle detected in the aliases directory.\n'
                                  'offending key: %s.\n'
                                  'directory being flattened:\n%s',
                                  str(kref), str(self))
                     raise ValueError('Cycle for key <{}> in directory definition'.format(kref))
-                for k, v in six.iteritems(self.aliases):
+                for k, v in self.aliases.items():
                     if kref in v:
                         v -= {kref}
                         v |= vref
@@ -742,7 +664,7 @@ class TemplatedMailService(MailService):
 
     def __init__(self, *args, **kw):
         ticket = kw.pop('ticket', sessions.get())
-        super(TemplatedMailService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._ticket = ticket
         logger.debug('TemplatedMail init for id <%s>', self.id)
 
@@ -752,11 +674,11 @@ class TemplatedMailService(MailService):
 
     def header(self):
         """String prepended to the message body."""
-        return u''
+        return ''
 
     def trailer(self):
         """String appended to the message body."""
-        return u''
+        return ''
 
     def get_catalog_section(self):
         """Read section <id> (a dict-like) from the catalog."""
@@ -877,7 +799,7 @@ class TemplatedMailService(MailService):
         tpldict = self.substitution_dictionary(add_ons)
         # Convert everything to unicode
         for k in tpldict.keys():
-            tpldict[k] = six.text_type(tpldict[k])
+            tpldict[k] = str(tpldict[k])
 
         self.message = self.get_message(tpldict)
         if self.message is None:
@@ -907,7 +829,7 @@ class TemplatedMailService(MailService):
             add_ons.update(arg)
         rc = False
         if self.prepare(add_ons) and not self.dryrun:
-            rc = super(TemplatedMailService, self).__call__()
+            rc = super().__call__()
         return rc
 
 
@@ -924,7 +846,7 @@ class AbstractRdTemplatedMailService(TemplatedMailService):
                                                                    self.sh.default_target.hostname)
 
     def substitution_dictionary(self, add_ons=None):
-        sdict = super(AbstractRdTemplatedMailService, self).substitution_dictionary(add_ons=add_ons)
+        sdict = super().substitution_dictionary(add_ons=add_ons)
         sdict['jobid'] = self.sh.guess_job_identifier()
         # Try to detect MTOOL data (this may be empty if MTOOL is not used):
         if self.env.MTOOL_STEP:

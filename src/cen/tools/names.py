@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Specific namebuilders for CEN flow resources.
 
 The main specificity is the date managment in file names : CEN files are
 often associated to a period rather than a given time.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
@@ -24,7 +20,7 @@ class AbstractActualCenNameBuilder(AbstractActualVortexNameBuilder):
     _abstract = True
 
     def __init__(self, *args, **kw):
-        super(AbstractActualCenNameBuilder, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.setdefault(cen_rawbasename=None)
 
     # A Vortex pathname may include the following bits

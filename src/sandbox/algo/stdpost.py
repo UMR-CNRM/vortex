@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains example AlgoComponents that deal with a list of gridpoint
 input files (like a real post-procesing task would do).
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 
 import collections
 import time
@@ -48,7 +43,7 @@ class _AbstractGribInfos(AlgoComponent):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(_AbstractGribInfos, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._gribstack = collections.defaultdict(dict)
 
     @property
@@ -70,7 +65,7 @@ class _AbstractGribInfos(AlgoComponent):
     def _dump_indiviudal_md5_file(self, rh, md5sum):
         """Dump a md5 file alongside the input data."""
         md5file = None
-        if isinstance(rh.container.iotarget(), six.string_types):
+        if isinstance(rh.container.iotarget(), str):
             md5file = rh.container.localpath() + '.md5'
             with open(md5file, 'w', encoding='utf8') as fhm:
                 fhm.write("{:s} {:s}".format(md5sum, rh.container.basename))
@@ -159,7 +154,7 @@ class GribInfosArbitraryOrder(_AbstractGribInfos):
 
     def _dump_indiviudal_md5_file(self, rh, md5sum):
         """Dump a md5 file alongside the input data."""
-        md5file = super(GribInfosArbitraryOrder, self)._dump_indiviudal_md5_file(rh, md5sum)
+        md5file = super()._dump_indiviudal_md5_file(rh, md5sum)
         if md5file is not None:
             # Check if the md5file is promised and acts accordingly
             expected = [x for x in self.promises

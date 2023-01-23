@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
-
 """
 Actions specific to operational needs.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-import six
+import collections.abc
 
 import footprints
-from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from vortex.data.handlers import Handler
 from vortex.toolbox import sessions
@@ -29,13 +24,13 @@ class SendAlarm(Action):
     """
 
     def __init__(self, kind='alarm', service='sendalarm', active=False):
-        super(SendAlarm, self).__init__(kind=kind, active=active, service=service)
+        super().__init__(kind=kind, active=active, service=service)
 
     def service_info(self, **kw):
         """Avoid forcing the user to tell it's hostname."""
         sh = sessions.system()
         kw.setdefault('hostname', sh.hostname)
-        return super(SendAlarm, self).service_info(**kw)
+        return super().service_info(**kw)
 
 
 class Route(TunableAction):
@@ -44,7 +39,7 @@ class Route(TunableAction):
     """
 
     def __init__(self, kind='route', service=None, active=False):
-        super(Route, self).__init__(kind=kind, active=active, service=service)
+        super().__init__(kind=kind, active=active, service=service)
 
 
 class DMTEvent(Action):
@@ -53,7 +48,7 @@ class DMTEvent(Action):
     """
 
     def __init__(self, kind='dmt', service='dmtevent', active=False):
-        super(DMTEvent, self).__init__(kind=kind, active=active, service=service)
+        super().__init__(kind=kind, active=active, service=service)
 
 
 class OpMail(TemplatedMail):
@@ -63,8 +58,8 @@ class OpMail(TemplatedMail):
 
     def __init__(self, kind='opmail', service='opmail', active=False,
                  directory=None, catalog=None, inputs_charset=None):
-        super(OpMail, self).__init__(kind=kind, active=active, service=service,
-                                     catalog=catalog, inputs_charset=inputs_charset)
+        super().__init__(kind=kind, active=active, service=service,
+                         catalog=catalog, inputs_charset=inputs_charset)
         self.directory = directory or Directory('@{:s}-address-book.ini'.format(kind),
                                                 encoding=inputs_charset)
         self.catalog = catalog or GenericConfigParser('@opmail-inventory.ini',
@@ -76,7 +71,7 @@ class OpMail(TemplatedMail):
         kw.setdefault('directory', self.directory)
         kw.setdefault('catalog', self.catalog)
         kw.setdefault('inputs_charset', self.inputs_charset)
-        return super(OpMail, self).service_info(**kw)
+        return super().service_info(**kw)
 
     def execute(self, *args, **kw):
         """
@@ -102,7 +97,7 @@ class OpPhase(TunableAction):
     def __init__(self, configuration, kind='phase', service=None, active=False):
         if configuration is None:
             raise ValueError("The configuration argument cannot be `None`")
-        super(OpPhase, self).__init__(configuration=configuration, kind=kind, active=active, service=service)
+        super().__init__(configuration=configuration, kind=kind, active=active, service=service)
         self._rhtodo = list()
         self._rhdone = list()
 
@@ -140,7 +135,7 @@ class OpPhase(TunableAction):
         """
 
         def isiterable(item):
-            return isinstance(item, collections_abc.Iterable) and not isinstance(item, six.string_types)
+            return isinstance(item, collections.abc.Iterable) and not isinstance(item, str)
 
         def flatten(iterable):
             """Recursively flattens an iterable.
@@ -149,8 +144,7 @@ class OpPhase(TunableAction):
             """
             for item in iterable:
                 if isiterable(item):
-                    for p in flatten(item):
-                        yield p
+                    yield from flatten(item)
                 else:
                     yield item
 

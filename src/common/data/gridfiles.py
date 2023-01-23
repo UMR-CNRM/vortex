@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Resources associated with the handling of gridded data (other than full model states).
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
@@ -92,7 +88,7 @@ class AbstractGridpoint(GeoFlowResource):
 
     def namebuilding_info(self):
         """Generic information, radical = ``grid``."""
-        ninfo = super(AbstractGridpoint, self).namebuilding_info()
+        ninfo = super().namebuilding_info()
         if self.origin in ('stat_ad', ):
             # For new ``origin`` please use this code path... Please, no more
             # weird logic like the one hard-coded in the else statement !

@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
 """
 This module handles store objects in charge of physically accessing resources.
 Store objects use the :mod:`footprints` mechanism.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import defaultdict
 import contextlib
@@ -51,7 +48,7 @@ def observer_board(obsname=None):
     return observer.get(tag=obsname)
 
 
-class _SetAsideStoreMixin(object):
+class _SetAsideStoreMixin:
     """
     This Mixin is intended to work with store-like classes. It provides the
     necessary methods to take care of the "setaside" urlquery option.
@@ -139,7 +136,7 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
     def __init__(self, *args, **kw):
         logger.debug('Abstract store init %s', self.__class__)
         sh = kw.pop('system', sessions.system())
-        super(Store, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._sh = sh
         self._observer = observer_board()
         self._observer.notify_new(self, dict())
@@ -192,7 +189,7 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
 
     def enforce_readonly(self):
         if self.readonly:
-            raise IOError('This store is in readonly mode')
+            raise OSError('This store is in readonly mode')
 
     @staticmethod
     def _verbose_log(options, level, *kargs, **kwargs):
@@ -329,12 +326,12 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
                 tempcontainer = footprints.proxy.container(shouldfly=True, mode='rb')
                 try:
                     rc = callback(remote, tempcontainer.iotarget(), options)
-                except (OSError, IOError, ExecutionError):
+                except (OSError, ExecutionError):
                     # This may happen if the user has insufficient rights on
                     # the current directory
                     tempcontainer = footprints.proxy.container(incore=True, mode='w+b')
                     rc = callback(remote, tempcontainer.iotarget(), options)
-            except (OSError, IOError, ExecutionError):
+            except (OSError, ExecutionError):
                 logger.warning('Something went very wrong when fetching the hash file ! (assuming rc=False)')
                 rc = False
             # check the hash key
@@ -481,7 +478,7 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
     def __init__(self, *args, **kw):
         logger.debug('Abstract multi store init %s', self.__class__)
         sh = kw.pop('system', sessions.system())
-        super(MultiStore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._sh = sh
         self._openedstores = self.loadstores()
         self.delayed = False
@@ -675,7 +672,7 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
                                                    (options.get('intent', CACHE_GET_INTENT_DEFAULT) !=
                                                     CACHE_PUT_INTENT)) or
                                                   refill_in_progress)
-                        except (ExecutionError, IOError, OSError) as e:
+                        except (ExecutionError, OSError) as e:
                             logger.error("An ExecutionError happened during the refill: %s", str(e))
                             logger.error("This error is ignored... but that's ugly !")
                 if refill_in_progress:
@@ -802,7 +799,7 @@ class ArchiveStore(Store):
         self._archive = None
         self._actual_storage = None
         self._actual_storetube = None
-        super(ArchiveStore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._actual_storage = self.storage
         self._actual_storetube = self.storetube
         self._actual_export_mapping = None
@@ -813,7 +810,7 @@ class ArchiveStore(Store):
 
     @property
     def tracking_extraargs(self):
-        tea = super(ArchiveStore, self).tracking_extraargs
+        tea = super().tracking_extraargs
         if self.storage:
             tea['storage'] = self.storage
         return tea
@@ -1025,7 +1022,7 @@ def _default_remoteconfig_dict():
     return dict(restrict=None, seen=False)
 
 
-class ConfigurableArchiveStore(object):
+class ConfigurableArchiveStore:
     """Generic Archive Store with the ability to read a configuration file.
 
     This is a mixin class...
@@ -1098,7 +1095,7 @@ class ConfigurableArchiveStore(object):
         try:
             tempcontainer = footprints.proxy.container(shouldfly=True)
             remotecfg_parser = self._get_remote_config(tempstore, url, tempcontainer)
-        except (OSError, IOError):
+        except OSError:
             # This may happen if the user has insufficient rights on
             # the current directory
             retry = True
@@ -1129,7 +1126,7 @@ class ConfigurableArchiveStore(object):
                         global_confdict['locations'][s_loc][s_entry] = s_data
             r_confdict['seen'] = True
         else:
-            raise IOError("The remote configuration {:s} couldn't be found."
+            raise OSError("The remote configuration {:s} couldn't be found."
                           .format(r_confdict['uri']))
 
     def _load_config(self, conf, tlocation):
@@ -1258,7 +1255,7 @@ class ConfigurableArchiveStore(object):
             # Read the storeroot from the configuration data
             st_root = self._actual_fromconf(uuid, 'storeroot')
             if st_root is None:
-                raise IOError("No valid storeroot could be found.")
+                raise OSError("No valid storeroot could be found.")
             # The location may be an alias: find the real username
             realname = self._actual_fromconf(uuid, 'realname')
             if realname is None:
@@ -1318,7 +1315,7 @@ class CacheStore(Store):
     def __init__(self, *args, **kw):
         del self.cache
         logger.debug('Generic cache store init %s', self.__class__)
-        super(CacheStore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -1476,7 +1473,7 @@ class PromiseStore(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         logger.debug('Abstract promise store init %s', self.__class__)
         sh = kw.pop('system', sessions.system())
-        super(PromiseStore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._sh = sh
 
         # Assume that the actual scheme is the current scheme without "x" prefix
@@ -1568,7 +1565,7 @@ class PromiseStore(footprints.FootprintBase):
         logger.info('Try promise from store %s', self.promise)
         try:
             rc = self.promise.get(remote.copy(), local, options)
-        except (IOError, OSError) as e:
+        except OSError as e:
             # If something goes wrong, assume that the promise file had been
             # deleted during the execution of self.promise.check (which can cause
             # IOError or OSError to be raised).
@@ -1596,7 +1593,7 @@ class PromiseStore(footprints.FootprintBase):
         try:
             rc = (self.promise.has_fast_check and
                   self.promise.check(remote.copy(), options))
-        except (IOError, OSError) as e:
+        except OSError as e:
             logger.debug('An error occurred while checking for the promise file: %s', str(e))
             logger.debug('Assuming this is a negative result...')
             rc = False
@@ -1611,7 +1608,7 @@ class PromiseStore(footprints.FootprintBase):
         logger.info('Try promise from store %s', self.promise)
         try:
             rc = self.promise.get(remote.copy(), local, options)
-        except (IOError, OSError) as e:
+        except OSError as e:
             logger.debug('An error occurred while fetching the promise file: %s', str(e))
             logger.debug('Assuming this is a negative result...')
             rc = False

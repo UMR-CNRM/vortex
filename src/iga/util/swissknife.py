@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: module documentation.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import re
-
-import six
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
@@ -60,7 +54,7 @@ def slurm_parameters(t, **kw):
     return slurm, kw
 
 
-class MonthlyItem(object):
+class MonthlyItem:
     r"""
     Describe a loop-generated family of files for gget.
 
@@ -105,7 +99,7 @@ class MonthlyItem(object):
             yield value + self.fmt.format(num)
 
 
-class MonthlyHandler(object):
+class MonthlyHandler:
     """
     Deal with gget monthly definitions (See also ``MonthlyItem``).
 
@@ -169,14 +163,14 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     sh.mkdir(genvpath)
     genvconf = sh.path.join(genvpath, cycle + '.genv')
     with open(genvconf, mode='w', encoding='utf-8') as fp:
-        fp.write(six.text_type(genv.as_rawstr(cycle=cycle)))
+        fp.write(str(genv.as_rawstr(cycle=cycle)))
 
     # Start a log
     if logpath is None:
         logpath = 'freeze_cycle.log'
     log = open(logpath, mode='a', encoding='utf-8')
-    log.write(six.text_type(t.line))
-    log.write(six.text_type(t.prompt + ' ' + cycle + ' upgrade ' + date.now().reallynice() + '\n'))
+    log.write(str(t.line))
+    log.write(str(t.prompt + ' ' + cycle + ' upgrade ' + date.now().reallynice() + '\n'))
 
     # Remove unwanted definitions
     for prefix in ('PACK', 'SRC'):
@@ -245,7 +239,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 
                 except Exception as error:
                     print(error)
-                    log.write(six.text_type('Caught Exception: ' + str(error) + '\n'))
+                    log.write(str('Caught Exception: ' + str(error) + '\n'))
                     if verbose:
                         print('failed &', end=' ')
                     details['failed'].append(name)
@@ -253,7 +247,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
                         print('continue')
                     else:
                         print('abort')
-                        log.write(six.text_type('Aborted on ' + name + '\n'))
+                        log.write(str('Aborted on ' + name + '\n'))
                         log.close()
                         raise
 
@@ -261,9 +255,9 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
         print(t.line)
 
     for k, v in details.items():
-        log.write(six.text_type('Number of items ' + k + ' = ' + str(len(v)) + '\n'))
+        log.write(str('Number of items ' + k + ' = ' + str(len(v)) + '\n'))
         for item in v:
-            log.write(six.text_type(' > ' + item + '\n'))
+            log.write(str(' > ' + item + '\n'))
 
     log.close()
 
@@ -322,8 +316,8 @@ def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopat
     if fake:
         logpath = '/dev/null'
     log = open(logpath, mode='a', encoding='utf-8')
-    log.write(six.text_type(t.line))
-    log.write(six.text_type(t.prompt + ' ' + delcycle + ' UNFREEZING ' + date.now().reallynice() + '\n'))
+    log.write(str(t.line))
+    log.write(str(t.prompt + ' ' + delcycle + ' UNFREEZING ' + date.now().reallynice() + '\n'))
 
     decrease = 0
     details = dict(removed=list(), failed=list())
@@ -369,9 +363,9 @@ def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopat
         print(t.line)
 
     for k, v in details.items():
-        log.write(six.text_type('Number of items ' + k + ' = ' + str(len(v)) + '\n'))
+        log.write(str('Number of items ' + k + ' = ' + str(len(v)) + '\n'))
         for item in v:
-            log.write(six.text_type(' > ' + item + '\n'))
+            log.write(str(' > ' + item + '\n'))
 
     log.close()
 

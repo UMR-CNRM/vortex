@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 S2M executions flow resources.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time
@@ -29,7 +25,7 @@ class SafranObsDateError(ValueError):
     """General content error."""
 
     def __init__(self, allowedhours):
-        super(SafranObsDateError, self).__init__(
+        super().__init__(
             'SAFRAN guess are synoptic, therefore the hour must be in {!s}'.
             format(rangex(allowedhours))
         )
@@ -441,7 +437,7 @@ class SafranObsRaw(ObsRaw):
         prefix = self.cendev_map.get(self.part, self.part[0].upper())
         allowed = rangex(self.cendev_hours.get(self.part, self.cendev_hours['default']))
         if self.part == 'nebulosity':
-            return '{0:s}{1:s}.tgz'.format(prefix, self.date.yymd)
+            return '{:s}{:s}.tgz'.format(prefix, self.date.yymd)
         elif self.date.hour in allowed:
             return prefix + self.date.yymdh
         else:

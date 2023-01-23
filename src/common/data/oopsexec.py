@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various Resources for executables used by the OOPS software.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 from vortex.data.executables import NWPModel
 from gco.syntax.stdattrs import gvar, arpifs_cycle, executable_flavour_deco
@@ -72,5 +68,5 @@ class OOPSTestComponent(OOPSBinary):
         cmdline = ''
         if test_type is not None:
             cmdline += '-t {} '.format(test_type)
-        cmdline += super(OOPSTestComponent, self).command_line(configfile)
+        cmdline += super().command_line(configfile)
         return cmdline

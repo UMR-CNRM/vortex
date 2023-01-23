@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Miscellaneous utilities for PreviMar.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from . import FileGeneration
 

@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Hooks for special DAVAI processings.
 """
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import json
 

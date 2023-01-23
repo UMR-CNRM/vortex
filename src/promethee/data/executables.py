@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Promethee executable script.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.executables import Script
 

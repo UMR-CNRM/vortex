@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains the generic interface used for ECtrans and ECfs.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 
 import re
 import itertools
@@ -15,7 +10,7 @@ from bronx.fancies import loggers
 logger = loggers.getLogger(__name__)
 
 
-class ECMWFInterface(object):
+class ECMWFInterface:
     """Generic Python interface at ECMWF."""
 
     def __init__(self, system, command, command_interface):
@@ -132,15 +127,11 @@ class ECfs(ECMWFInterface):
     """Python interface for ECfs"""
 
     def __init__(self, system):
-        super(ECfs, self).__init__(system=system,
-                                   command="ecfs",
-                                   command_interface=True)
+        super().__init__(system=system, command="ecfs", command_interface=True)
 
 
 class ECtrans(ECMWFInterface):
     """Python interface for ECtrans"""
 
     def __init__(self, system):
-        super(ECtrans, self).__init__(system=system,
-                                      command="ectrans",
-                                      command_interface=False)
+        super().__init__(system=system, command="ectrans", command_interface=False)

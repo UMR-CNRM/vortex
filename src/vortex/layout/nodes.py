@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This modules defines the base nodes of the logical layout
 for any :mod:`vortex` experiment.
@@ -9,9 +7,6 @@ features of :class:`Node` and :class:`Driver` objects. The examples provided
 with the Vortex source code (see :ref:`examples_jobs`) may shed some light on
 interesting features.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 
 import collections
 import contextlib
@@ -113,8 +108,8 @@ class NiceLayout(observer.Observer):
         titlecallback(msg)
         if kw:
             maxlen = max([len(x) for x in kw.keys()])
-            for k, v in sorted(six.iteritems(kw)):
-                print(' +', k.ljust(maxlen), '=', six.text_type(v))
+            for k, v in sorted(kw.items()):
+                print(' +', k.ljust(maxlen), '=', str(v))
             print()
         else:
             print(" + ...\n")
@@ -415,8 +410,7 @@ class Node(getbytag.GetByTag, NiceLayout):
         self._contents[:] = []
 
     def __iter__(self):
-        for node in self.contents:
-            yield node
+        yield from self.contents
 
     @property
     def fail_at_the_end(self):
@@ -801,7 +795,7 @@ class Family(Node):
 
     def __init__(self, **kw):
         logger.debug('Family init %s', repr(self))
-        super(Family, self).__init__(kw)
+        super().__init__(kw)
         nodes = kw.pop('nodes', list())
         self.options = kw.copy()
 
@@ -814,7 +808,7 @@ class Family(Node):
                 fcount += 1
                 self._contents.append(
                     Family(
-                        tag='{0:s}.f{1:02d}'.format(self.tag, fcount),
+                        tag='{:s}.f{:02d}'.format(self.tag, fcount),
                         ticket=self.ticket,
                         nodes=x,
                         **kw
@@ -826,7 +820,7 @@ class Family(Node):
         return 'family'
 
     def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
-        baseargs = super(Family, self)._args_loopclone(tagsuffix, extras)
+        baseargs = super()._args_loopclone(tagsuffix, extras)
         baseargs['nodes'] = [node.loopclone(tagsuffix, extras) for node in self._contents]
         return baseargs
 
@@ -871,7 +865,7 @@ class Family(Node):
 
             def node_recurse(some_node):
                 """Recursively find tags."""
-                o_set = set([some_node.tag, ])
+                o_set = {some_node.tag}
                 for snode in some_node.contents:
                     o_set = o_set | node_recurse(snode)
                 return o_set
@@ -940,12 +934,12 @@ class LoopFamily(Family):
         self._loopneedprev = kw.pop('loopneedprev', False)
         self._loopneednext = kw.pop('loopneednext', False)
         # Generic init...
-        super(LoopFamily, self).__init__(**kw)
+        super().__init__(**kw)
         # Initialisation stuff
         self._actual_content = None
 
     def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
-        baseargs = super(LoopFamily, self)._args_loopclone(tagsuffix, extras)
+        baseargs = super()._args_loopclone(tagsuffix, extras)
         baseargs['loopconf'] = ','.join(self._loopconf)
         baseargs['loopvariable'] = ','.join(self._loopvariable)
         baseargs['loopsuffix'] = self._loopsuffix
@@ -1010,12 +1004,12 @@ class WorkshareFamily(Family):
         # Maximum number of workshares
         self._worksharelimit = kw.pop('worksharelimit', None)
         # Generic init
-        super(WorkshareFamily, self).__init__(**kw)
+        super().__init__(**kw)
         # Initialisation stuff
         self._actual_content = None
 
     def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
-        baseargs = super(WorkshareFamily, self)._args_loopclone(tagsuffix, extras)
+        baseargs = super()._args_loopclone(tagsuffix, extras)
         baseargs['workshareconf'] = ','.join(self._workshareconf)
         baseargs['worksharename'] = ','.join(self._worksharename)
         baseargs['worksharesize'] = self._worksharesize
@@ -1027,14 +1021,14 @@ class WorkshareFamily(Family):
         if self._actual_content is None:
             # Find the population sizes and workshares size/number
             populations = [self.conf.get(lc) for lc in self._workshareconf]
-            n_population = set([len(p) for p in populations])
+            n_population = {len(p) for p in populations}
             if not (len(n_population) == 1):
                 raise RuntimeError('Inconsistent sizes in "workshareconf" lists')
             n_population = n_population.pop()
             # Number of workshares if worksharesize alone is considered
             sb_ws_number = n_population // self._worksharesize
             # Workshare limit
-            if isinstance(self._worksharelimit, six.string_types):
+            if isinstance(self._worksharelimit, str):
                 lb_ws_number = int(self.conf.get(self._worksharelimit))
             else:
                 lb_ws_number = self._worksharelimit or sb_ws_number
@@ -1063,13 +1057,13 @@ class Task(Node):
 
     def __init__(self, **kw):
         logger.debug('Task init %s', repr(self))
-        super(Task, self).__init__(kw)
+        super().__init__(kw)
         self.steps = kw.pop('steps', tuple())
         self.fetch = kw.pop('fetch', 'fetch')
         self.compute = kw.pop('compute', 'compute')
         self.backup = kw.pop('backup', 'backup')
         self.options = kw.copy()
-        if isinstance(self.steps, six.string_types):
+        if isinstance(self.steps, str):
             self.steps = tuple(self.steps.replace(' ', '').split(','))
 
     @property
@@ -1077,7 +1071,7 @@ class Task(Node):
         return 'task'
 
     def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
-        baseargs = super(Task, self)._args_loopclone(tagsuffix, extras)
+        baseargs = super()._args_loopclone(tagsuffix, extras)
         baseargs['steps'] = self.steps
         baseargs['fetch'] = self.fetch
         baseargs['compute'] = self.compute
@@ -1286,7 +1280,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
                 fcount += 1
                 self._contents.append(
                     Family(
-                        tag='{0:s}.f{1:02d}'.format(self.tag, fcount),
+                        tag='{:s}.f{:02d}'.format(self.tag, fcount),
                         ticket=self.ticket,
                         nodes=x,
                         ** dict(self._options)

@@ -1,13 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Resources to handle observations files in various formats.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import six
-from six.moves import filter  # @UnresolvedImport
 
 import re
 from collections import namedtuple
@@ -290,7 +283,7 @@ class VarBCContent(AlmostListContent):
     _diffable = False
 
     def __init__(self, **kw):
-        super(VarBCContent, self).__init__(**kw)
+        super().__init__(**kw)
         self._parsed_data = None
         self._do_delayed_slurp = None
 
@@ -473,8 +466,8 @@ class ObsRefContent(TextContent):
     @classmethod
     def formatted_data(self, item):
         """Return a formatted string."""
-        return '{0:8s} {1:8s} {2:16s} {3:s} {4!s}'.format(
-            item.data, item.fmt, item.instr, six.text_type(item.date), item.time
+        return '{:8s} {:8s} {:16s} {:s} {!s}'.format(
+            item.data, item.fmt, item.instr, str(item.date), item.time
         )
 
 
@@ -554,7 +547,7 @@ class ObsMapContent(TextContent):
     def __init__(self, **kw):
         kw.setdefault('discarded', set())
         kw.setdefault('only', None)
-        super(ObsMapContent, self).__init__(**kw)
+        super().__init__(**kw)
 
     @property
     def discarded(self):
@@ -596,23 +589,23 @@ class ObsMapContent(TextContent):
     @classmethod
     def formatted_data(self, item):
         """Return a formatted string."""
-        return '{0:12s} {1:12s} {2:12s} {3:s}'.format(item.odb, item.data, item.fmt, item.instr)
+        return '{:12s} {:12s} {:12s} {:s}'.format(item.odb, item.data, item.fmt, item.instr)
 
     def odbset(self):
         """Return set of odb values."""
-        return set([x.odb for x in self])
+        return {x.odb for x in self}
 
     def dataset(self):
         """Return set of data values."""
-        return set([x.data for x in self])
+        return {x.data for x in self}
 
     def fmtset(self):
         """Return set of format values."""
-        return set([x.fmt for x in self])
+        return {x.fmt for x in self}
 
     def instrset(self):
         """Return set of instrument values."""
-        return set([x.instr for x in self])
+        return {x.instr for x in self}
 
     def datafmt(self, data):
         """Return format associated to specified ``data``."""

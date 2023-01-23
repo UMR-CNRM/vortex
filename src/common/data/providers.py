@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Common Providers.
 
@@ -7,10 +5,6 @@ For now, only the BDPE access is available here (Base de Donnée des Produits É
 This provider should work both on Soprano servers and on HPC, be it experimentally for
 certain parameters combinations.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-import six
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Time
@@ -129,7 +123,7 @@ class BdpeProvider(Provider):
 
     def __init__(self, *args, **kw):
         logger.debug('BDPE provider init %s', self.__class__)
-        super(BdpeProvider, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._actual_config = self.config
         if self._actual_config is None:
             self._actual_config = GenericConfigParser(inifile=self.inifile)
@@ -174,8 +168,8 @@ class BdpeProvider(Provider):
             raise BdpeConfigurationError(fmt.format(self.bdpeid, self.config.file))
 
         # resource description: rely on the footprint_export (also used to JSONise resources).
-        rsrcdict = {k: six.text_type(v)
-                    for k, v in six.iteritems(resource.footprint_export())}
+        rsrcdict = {k: str(v)
+                    for k, v in resource.footprint_export().items()}
 
         # check the BDPE pairs against the resource's
         for (k, v) in self._actual_config.items(self.bdpeid):
@@ -185,4 +179,4 @@ class BdpeProvider(Provider):
                 fmt = 'Bad value for key "{}": rsrc="{}" bdpe="{}"'
                 raise BdpeMismatchError(fmt.format(k, rsrcdict[k], v))
 
-        return super(BdpeProvider, self).uri(resource)
+        return super().uri(resource)

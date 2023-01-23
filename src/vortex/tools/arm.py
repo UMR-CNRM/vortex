@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Module needed to work with ARM tools such as Forge.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
@@ -16,7 +12,7 @@ __all__ = ['ArmForgeTool']
 logger = loggers.getLogger(__name__)
 
 
-class ArmForgeTool(object):
+class ArmForgeTool:
     """Work with the ARM tools such as DDT & MAP."""
 
     def __init__(self, ticket):

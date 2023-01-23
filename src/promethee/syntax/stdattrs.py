@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Promethee standard attributes.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 from bronx.stdtypes.date import Time

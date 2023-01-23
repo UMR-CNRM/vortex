@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various Post-Processing AlgoComponents.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 
 import collections
 import json
@@ -316,10 +311,10 @@ class Fa2Grib(ParaBlindRun):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(Fa2Grib, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         self.system.remove(self.fortinput)
         self.env.DR_HOOK_NOT_MPI = 1
-        self.system.subtitle('{0:s} : directory listing (pre-run)'.format(self.realkind))
+        self.system.subtitle('{:s} : directory listing (pre-run)'.format(self.realkind))
         self.system.dir(output=False, fatal=False)
 
     def execute(self, rh, opts):
@@ -346,12 +341,12 @@ class Fa2Grib(ParaBlindRun):
                     file_in = s.rh.container.localpath()
                     # Find the name of the output file
                     if s.rh.provider.member is not None:
-                        file_out = 'GRIB{0:s}_{1!s}+{2:s}'.format(s.rh.resource.geometry.area,
-                                                                  s.rh.provider.member,
-                                                                  s.rh.resource.term.fmthm)
+                        file_out = 'GRIB{:s}_{!s}+{:s}'.format(s.rh.resource.geometry.area,
+                                                               s.rh.provider.member,
+                                                               s.rh.resource.term.fmthm)
                     else:
-                        file_out = 'GRIB{0:s}+{1:s}'.format(s.rh.resource.geometry.area,
-                                                            s.rh.resource.term.fmthm)
+                        file_out = 'GRIB{:s}+{:s}'.format(s.rh.resource.geometry.area,
+                                                          s.rh.resource.term.fmthm)
                     logger.info("Adding input file %s to the job list", file_in)
                     self._add_instructions(common_i,
                                            dict(name=[file_in, ],
@@ -369,14 +364,14 @@ class Fa2Grib(ParaBlindRun):
 
         self._default_post_execute(rh, opts)
 
-        for failed_file in [e.section.rh.container.localpath() for e in six.itervalues(bm.failed)]:
+        for failed_file in [e.section.rh.container.localpath() for e in bm.failed.values()]:
             logger.error("We were unable to fetch the following file: %s", failed_file)
             if self.fatal:
                 self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
                                            traceback=False)
 
         if tmout:
-            raise IOError("The waiting loop timed out")
+            raise OSError("The waiting loop timed out")
 
 
 class StandaloneGRIBFilter(TaylorRun):
@@ -411,8 +406,8 @@ class StandaloneGRIBFilter(TaylorRun):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(StandaloneGRIBFilter, self).prepare(rh, opts)
-        self.system.subtitle('{0:s} : directory listing (pre-run)'.format(self.realkind))
+        super().prepare(rh, opts)
+        self.system.subtitle('{:s} : directory listing (pre-run)'.format(self.realkind))
         self.system.dir(output=False, fatal=False)
 
     def execute(self, rh, opts):
@@ -458,14 +453,14 @@ class StandaloneGRIBFilter(TaylorRun):
 
         self._default_post_execute(rh, opts)
 
-        for failed_file in [e.section.rh.container.localpath() for e in six.itervalues(bm.failed)]:
+        for failed_file in [e.section.rh.container.localpath() for e in bm.failed.values()]:
             logger.error("We were unable to fetch the following file: %s", failed_file)
             if self.fatal:
                 self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
                                            traceback=False)
 
         if tmout:
-            raise IOError("The waiting loop timed out")
+            raise OSError("The waiting loop timed out")
 
 
 class AddField(BlindRun):
@@ -496,7 +491,7 @@ class AddField(BlindRun):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(AddField, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         self.system.remove(self.fortinput)
         self.env.DR_HOOK_NOT_MPI = 1
 
@@ -517,8 +512,8 @@ class AddField(BlindRun):
         srcrh.sort(key=lambda rh: rh.resource.term)
 
         for r in srcrh:
-            self.system.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
-                                                                           r.resource.term.fmthm))
+            self.system.title('Loop on domain {:s} and term {:s}'.format(r.resource.geometry.area,
+                                                                         r.resource.term.fmthm))
 
             # Some cleaning
             self.system.remove(self.fortinput)
@@ -530,21 +525,21 @@ class AddField(BlindRun):
 
             # Standard execution
             opts['loop'] = r.resource.term
-            super(AddField, self).execute(rh, opts)
+            super().execute(rh, opts)
 
             # Some cleaning
             self.system.rmall('DAPDIR', self.fortinput, self.fortoutput)
 
     def postfix(self, rh, opts):
         """Post add cleaning."""
-        super(AddField, self).postfix(rh, opts)
+        super().postfix(rh, opts)
         self.system.remove(self.fortnam)
 
 
 class DegradedDiagPEError(AlgoComponentError):
     """Exception raised when some of the members are missing in the calculations."""
     def __init__(self, ginfo, missings):
-        super(DegradedDiagPEError, self).__init__()
+        super().__init__()
         self._ginfo = ginfo
         self._missings = missings
 
@@ -611,9 +606,9 @@ class DiagPE(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
 
     def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""
-        super(DiagPE, self).spawn_hook()
+        super().spawn_hook()
         if self.system.path.exists('fort.4'):
-            self.system.subtitle('{0:s} : dump namelist <fort.4>'.format(self.realkind))
+            self.system.subtitle('{:s} : dump namelist <fort.4>'.format(self.realkind))
             self.system.cat('fort.4', output=False)
 
     def _actual_execute(self, gmembers, ifilters, filters, basedate, finalterm, rh, opts, gang):
@@ -628,10 +623,10 @@ class DiagPE(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
         members = set(gmembers)  # gmembers is mutable: we need a copy of it (hence the explicit set())
         missing_members = dict()
         for subgang in gang.memberslist:
-            smembers = set([s.section.rh.provider.member for s in subgang.memberslist
-                            if s.state == EntrySt.available])
-            ufomembers = set([s.section.rh.provider.member for s in subgang.memberslist
-                              if s.state == EntrySt.ufo])
+            smembers = {s.section.rh.provider.member for s in subgang.memberslist
+                        if s.state == EntrySt.available}
+            ufomembers = {s.section.rh.provider.member for s in subgang.memberslist
+                          if s.state == EntrySt.ufo}
             missing_members[subgang.nickname] = gmembers - smembers - ufomembers
             members &= smembers
         # Record an error
@@ -698,10 +693,10 @@ class DiagPE(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
 
         # Standard execution
         opts['loop'] = myterm
-        super(DiagPE, self).execute(rh, opts)
+        super().execute(rh, opts)
 
-        actualname = r'{0:s}_{1:s}\+{2:s}'.format(self._method2output_map[self.method],
-                                                  mygeometry.area, myterm.fmthm)
+        actualname = r'{:s}_{:s}\+{:s}'.format(self._method2output_map[self.method],
+                                               mygeometry.area, myterm.fmthm)
         # Find out the output file and filter it
         filtered_out = list()
         if len(filters):
@@ -792,7 +787,7 @@ class DiagPE(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
                 except IndexError:
                     current_gang[geometry] = None
 
-            while any([g is not None for g in six.itervalues(current_gang)]):
+            while any([g is not None for g in current_gang.values()]):
 
                 for geometry, a_gang in [(g, current_gang[g]) for g in geometries
                                          if (current_gang[g] is not None and
@@ -809,7 +804,7 @@ class DiagPE(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
 
                 if not (bm.all_done or any(gang is not None and
                                            gang.state is not GangSt.ufo
-                                           for gang in six.itervalues(current_gang))):
+                                           for gang in current_gang.values())):
                     # Timeout ?
                     bm.is_timedout(self.timeout, IOError)
                     # Wait a little bit :-)
@@ -869,7 +864,7 @@ class _DiagPIDecoMixin(AlgoComponentDecoMixin):
     def _spawn_pihook(self):
         """Usually a good habit to dump the fort.4 namelist."""
         if self.system.path.exists('fort.4'):
-            self.system.subtitle('{0:s} : dump namelist <fort.4>'.format(self.realkind))
+            self.system.subtitle('{:s} : dump namelist <fort.4>'.format(self.realkind))
             self.system.cat('fort.4', output=False)
 
     _MIXIN_PREPARE_HOOKS = (_prepare_pihook, )
@@ -921,8 +916,8 @@ class _DiagPIDecoMixin(AlgoComponentDecoMixin):
 
         for sec in srcsec:
             r = sec.rh
-            self.system.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
-                                                                           r.resource.term.fmthm))
+            self.system.title('Loop on domain {:s} and term {:s}'.format(r.resource.geometry.area,
+                                                                         r.resource.term.fmthm))
             # Tweak the namelist
             namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
             for nam in [x.rh for x in namsec if 'NAM_PARAM' in x.rh.contents]:
@@ -977,8 +972,8 @@ class _DiagPIDecoMixin(AlgoComponentDecoMixin):
             opts['loop'] = r.resource.term
             super(self.__class__, self).execute(rh, opts)
 
-            actualname = r'GRIB[-_A-Z]+{0:s}\+{1:s}(?:_member\d+)?$'.format(r.resource.geometry.area,
-                                                                            r.resource.term.fmthm)
+            actualname = r'GRIB[-_A-Z]+{:s}\+{:s}(?:_member\d+)?$'.format(r.resource.geometry.area,
+                                                                          r.resource.term.fmthm)
             # Find out the output file and filter it
             filtered_out = list()
             if len(gfilter):
@@ -1061,7 +1056,7 @@ class Fa2GaussGrib(BlindRun, DrHookDecoMixin):
             with open('fort.4', 'w') as namfd:
                 namfd.write(nb.dumps())
 
-            self.system.header('{0:s} : local namelist {1:s} dump'.format(self.realkind, 'fort.4'))
+            self.system.header('{:s} : local namelist {:s} dump'.format(self.realkind, 'fort.4'))
             self.system.cat('fort.4', output=False)
 
             # Expect the input FP file source to be there...
@@ -1071,7 +1066,7 @@ class Fa2GaussGrib(BlindRun, DrHookDecoMixin):
             self.system.softlink(r.container.localpath(), self.fortinput)
 
             # Standard execution
-            super(Fa2GaussGrib, self).execute(rh, opts)
+            super().execute(rh, opts)
 
             # Freeze the current output
             if self.system.path.exists(thisoutput):
@@ -1124,15 +1119,15 @@ class Reverser(BlindRun, DrHookDecoMixin):
         param = param[0].rh
         paramct = param.contents
         dictkeyvalue = dict()
-        dictkeyvalue[r'param_iter'] = six.text_type(self.param_iter)
-        dictkeyvalue[r'condlim'] = six.text_type(self.condlim)
-        dictkeyvalue[r'ano_type'] = six.text_type(self.ano_type)
+        dictkeyvalue[r'param_iter'] = str(self.param_iter)
+        dictkeyvalue[r'condlim'] = str(self.condlim)
+        dictkeyvalue[r'ano_type'] = str(self.ano_type)
         paramct.setitems(dictkeyvalue)
         param.save()
         logger.info("Here is the parameter file (after substitution):")
         param.container.cat()
         # Call the parent's prepare
-        super(Reverser, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
 
 class DegradedEnsembleDiagError(AlgoComponentError):
@@ -1177,7 +1172,7 @@ class PyEnsembleDiag(Expresso):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(PyEnsembleDiag, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._cl_args = dict()
 
     def spawn_command_options(self):
@@ -1204,7 +1199,7 @@ class PyEnsembleDiag(Expresso):
         )
 
         # Actualy run the post-processing script
-        super(PyEnsembleDiag, self).execute(rh, opts)
+        super().execute(rh, opts)
 
         # The diagnostic output may be promised
         for thispromise in [x for x in self.promises

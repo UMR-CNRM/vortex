@@ -1,14 +1,10 @@
-# -*- coding: utf-8 -*-
-
 """
 Some useful hooks.
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
+import collections.abc
 import functools
 
-from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period, Time
 
@@ -92,7 +88,7 @@ def _new_static_cutoff_dispencer(base_date, cutoffs_def):
 
     if not isinstance(base_date, Date):
         base_date = Date(base_date)
-    if isinstance(cutoffs_def, collections_abc.Mapping):
+    if isinstance(cutoffs_def, collections.abc.Mapping):
         cutoffs_def = {(k if isinstance(k, Period) else x_period(k)): v
                        for k, v in cutoffs_def.items()}
         cutoffs = {base_date + k: v for k, v in cutoffs_def.items()}

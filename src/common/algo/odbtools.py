@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 AlgoComponents to work with Observational DataBases.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-import six
 
 from collections import defaultdict
 import copy
@@ -40,7 +35,7 @@ class Raw2OdbExecutionError(ExecutionError):
 
     def __init__(self, odb_database):
         self.odb_database = odb_database
-        super(Raw2OdbExecutionError, self).__init__('Raw2odb execution failed.')
+        super().__init__('Raw2odb execution failed.')
 
     def __str__(self):
         return ("Error while running bator for ODB database < {:s} >"
@@ -209,7 +204,7 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                          'Binary', 'Bator', 'Batodb']
 
     def __init__(self, *kargs, **kwargs):
-        super(Raw2ODBparallel, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self.para_synthesis = dict()
         self.obspack = dict()
         self.obsmapout = list()
@@ -343,7 +338,7 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                           if (obs.rh.resource.part == imap.data and
                               obs.rh.container.actualfmt.lower() == imap.fmt.lower())]
             if not candidates:
-                errmsg = 'No input obsfile could match [data:{0:s}/fmt:{1:s}]'.format(imap.data, imap.fmt)
+                errmsg = 'No input obsfile could match [data:{:s}/fmt:{:s}]'.format(imap.data, imap.fmt)
                 if self.mapall:
                     raise ValueError(errmsg)
                 else:
@@ -365,7 +360,7 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
             logger.info('Inspect not mapped obs ' + thispart)
             if thispart not in self.obspack:
                 thisfmt = notmap.rh.container.actualfmt.upper()
-                thismsg = 'standalone obs entry [data:{0:s} / fmt:{1:s}]'.format(thispart, thisfmt)
+                thismsg = 'standalone obs entry [data:{:s} / fmt:{:s}]'.format(thispart, thisfmt)
                 if self.maponly:
                     logger.warning('Ignore ' + thismsg)
                 else:
@@ -388,7 +383,7 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                 self.env[var] = value
 
         # Let ancestors handling most of the env setting
-        super(Raw2ODBparallel, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         self.env.update(
             BATOR_NBPOOL=self.npool,
             BATODB_NBPOOL=self.npool,
@@ -411,7 +406,7 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
 
     def spawn_command_options(self):
         """Any data useful to build the command line."""
-        opts_dict = super(Raw2ODBparallel, self).spawn_command_options()
+        opts_dict = super().spawn_command_options()
         opts_dict['dataid'] = self.dataid
         opts_dict['date'] = self.date
         return opts_dict
@@ -482,14 +477,14 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                     if thispack.refdata:
                         with open('refdata', 'w') as fd:
                             for rdentry in thispack.refdata:
-                                fd.write(six.text_type(rdentry + "\n"))
+                                fd.write(str(rdentry + "\n"))
                         sh.subtitle('Local refdata for: {:s}'.format(odbname))
                         sh.cat('refdata', output=False)
                 # Drive bator with a batormap file (from cy42_op1 onward)
                 else:
                     with open('batormap', 'w') as fd:
                         for mapentry in sorted(thispack.mapping):
-                            fd.write(six.text_type(ObsMapContent.formatted_data(mapentry) + '\n'))
+                            fd.write(str(ObsMapContent.formatted_data(mapentry) + '\n'))
                     sh.subtitle('Local batormap for: {:s}'.format(odbname))
                     sh.cat('batormap', output=False)
 
@@ -530,7 +525,7 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
         self._default_post_execute(rh, post_opts)
 
     def _default_rc_action(self, rh, opts, report, rc):
-        super(Raw2ODBparallel, self)._default_rc_action(rh, opts, report, rc)
+        super()._default_rc_action(rh, opts, report, rc)
         my_report = report['report'].get('synthesis', None)
         if my_report:
             opts['synthesis'][my_report.pop('base')] = my_report
@@ -550,7 +545,7 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
         # Generate the output bator_map
         with open('batodb_map.out', 'w') as fd:
             for x in sorted(self.obsmapout):
-                fd.write(six.text_type(ObsMapContent.formatted_data(x) + '\n'))
+                fd.write(str(ObsMapContent.formatted_data(x) + '\n'))
 
         # Generate a global refdata (if cycle allows it and if possible)
         if rh.resource.cycle < 'cy42_op1':
@@ -561,11 +556,11 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                 for x in sorted(self.obsmapout):
                     if (x.data in rdrh_dict and
                             sh.path.getsize(rdrh_dict[x.data].container.localpath()) > 0):
-                        with open(rdrh_dict[x.data].container.localpath(), 'r') as rdl:
+                        with open(rdrh_dict[x.data].container.localpath()) as rdl:
                             rdg.write(rdl.readline())
                     elif (sh.path.exists('refdata.' + x.data) and
                           sh.path.getsize('refdata.' + x.data) > 0):
-                        with open('refdata.' + x.data, 'r') as rdl:
+                        with open('refdata.' + x.data) as rdl:
                             rdg.write(rdl.readline())
                     else:
                         logger.info("Unable to create a global refdata entry for data=" + x.data)
@@ -605,11 +600,11 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
         for (row, srep) in sorted(self.para_synthesis.items(), key=lambda x: x[1]['time_start']):
             print(rfmt.format(row, srep['time_start'],
                               convert_bytes_in_unit(srep['mem_expected'], 'GiB'),
-                              srep['time_real'], six.text_type(srep['sched_id'])))
+                              srep['time_real'], str(srep['sched_id'])))
 
         print('\nThe memory limit was set to: {:.1f} GiB'.format(self.effective_maxmem / 1024.))
 
-        super(Raw2ODBparallel, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
@@ -678,7 +673,7 @@ class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         )
 
         # Let ancesters handling most of the env setting
-        super(OdbAverage, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
     def spawn_command_options(self):
         """Prepare command line options to binary."""
@@ -708,22 +703,22 @@ class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         mask[0].container.cat()
 
         # Standard execution
-        super(OdbAverage, self).execute(rh, opts)
+        super().execute(rh, opts)
 
     def postfix(self, rh, opts):
         """Post shuffle / average cleaning."""
         sh = self.system
 
         with sh.cdcontext(self.layout_new):
-            for ccma in sh.glob('{0:s}.*'.format(self.layout_new)):
+            for ccma in sh.glob('{:s}.*'.format(self.layout_new)):
                 slurp = sh.cat(ccma, outsplit=False).replace(self.layout_new, self.layout_in)
                 with open(ccma.replace(self.layout_new, self.layout_in), 'w') as fd:
-                    fd.write(six.text_type(slurp))
+                    fd.write(str(slurp))
                 sh.rm(ccma)
 
         sh.mv(self.layout_new, self.layout_in + '.' + self.bingo.rh.resource.part)
 
-        super(OdbAverage, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class OdbCompress(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
@@ -771,7 +766,7 @@ class OdbCompress(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         self.odb_rw_or_overwrite_method(* obsall)
 
         # Let ancesters handling most of the env setting
-        super(OdbCompress, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
     def spawn_command_options(self):
         """Prepare command line options to binary."""
@@ -846,7 +841,7 @@ class OdbMatchup(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         sh.cp(sh.path.join(ecma_path, 'ECMA.dd'), sh.path.join(ccma_path, 'ECMA.dd'))
 
         # Let ancesters handling most of the env setting
-        super(OdbMatchup, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # Fix the input database intent
         self.odb_rw_or_overwrite_method(ecma)
@@ -897,7 +892,7 @@ class OdbReshuffle(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         ]
 
         # Find the input layout
-        in_layout = set([x.rh.resource.layout for x in self.obs_in_parts])
+        in_layout = {x.rh.resource.layout for x in self.obs_in_parts}
         if len(in_layout) != 1:
             raise ValueError('Incoherent layout in input databases or no input databases')
         self.layout_in = in_layout.pop()
@@ -910,7 +905,7 @@ class OdbReshuffle(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         # prepare the ouputs' directory
         self.system.mkdir(self._OUT_DIRECTORY)
 
-        super(OdbReshuffle, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
     def execute(self, rh, opts):
         """Loop on available databases."""
@@ -931,7 +926,7 @@ class OdbReshuffle(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
             # no idea why but...
             self.odb_rw_or_overwrite_method(a_db)
 
-            super(OdbReshuffle, self).execute(rh, opts)
+            super().execute(rh, opts)
 
             # CCMA -> ECMA
             self.odb.change_layout(self._BARE_OUT_LAYOUT, self.layout_in, ccma_path)
@@ -989,6 +984,6 @@ class FlagsCompute(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
             # Path to the IOASSIGN file
             self.env.IOASSIGN = self.system.path.join(ecma.container.abspath, 'IOASSIGN')
             # Let ancesters handling most of the env setting
-            super(FlagsCompute, self).execute(rh, opts)
+            super().execute(rh, opts)
             # Rename the output file according to the name of the part of the observations treated
             self.system.mv('BDM_CQ', '_'.join(['BDM_CQ', ecma.resource.part]))

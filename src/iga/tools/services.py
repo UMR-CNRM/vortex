@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains the services specifically needed by the operational suite.
   * Alarm sends messages to the syslog system for monitoring.
@@ -23,8 +21,6 @@ This module contains the services specifically needed by the operational suite.
   * formatted dayfile logging with :class:`DayfileReportService`
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import locale
 import logging
 import random
@@ -33,8 +29,7 @@ import socket
 from logging.handlers import SysLogHandler
 from pprint import pformat
 
-import six
-from six import StringIO
+from io import StringIO
 
 import footprints
 import vortex
@@ -82,7 +77,7 @@ class LogFacility(int):
     """
 
     def __new__(cls, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             value = value.lower()
             if value.startswith('log_'):
                 value = value[4:]
@@ -97,7 +92,7 @@ class LogFacility(int):
 
     def name(self):
         """Reverse access: deduce the name from the integer value."""
-        for s, n in six.iteritems(SysLogHandler.facility_names):
+        for s, n in SysLogHandler.facility_names.items():
             if self == n:
                 return s
         raise ValueError('Not a SysLog facility value: {!s}'.format(self))
@@ -203,7 +198,7 @@ class AlarmProxyService(AlarmService):
         info = 'Alarm Proxy Service',
         attr = dict(
             issyslognode = dict(
-                values   = [six.text_type(False), ],
+                values   = [str(False), ],
                 default  = '[systemtarget:issyslognode]',
                 optional = True
             ),
@@ -280,7 +275,7 @@ class AlarmLogService(AlarmService):
                 access   = 'rwx',
             ),
             issyslognode = dict(
-                values   = [six.text_type(True), ],
+                values   = [str(True), ],
                 default  = '[systemtarget:issyslognode]',
                 optional = True
             ),
@@ -317,7 +312,7 @@ class AlarmRemoteService(AlarmService):
                 default  = socket.SOCK_DGRAM,
             ),
             issyslognode = dict(
-                values   = [six.text_type(True), ],
+                values   = [str(True), ],
                 default  = '[systemtarget:issyslognode]',
                 optional = True
             ),
@@ -413,7 +408,7 @@ class RoutingService(Service):
 
     def __init__(self, *args, **kw):
         logger.debug('RoutingService init %s', self.__class__)
-        super(RoutingService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         if self.filterdefinition is not None:
             if not self.defer:
                 raise ValueError('Data Filtering is only allowed in deferred mode')
@@ -603,7 +598,7 @@ class RoutingUpstreamService(RoutingService):
 
     def __init__(self, *args, **kw):
         logger.debug('RoutingUpstreamService init %s', self.__class__)
-        super(RoutingUpstreamService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     def get_logline(self):
         """Build the line to send to the IGA log file."""
@@ -634,7 +629,7 @@ class BdmService(RoutingUpstreamService):
 
     def __init__(self, *args, **kw):
         logger.debug('BdmService init %s', self.__class__)
-        super(BdmService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -664,7 +659,7 @@ class BdapService(RoutingUpstreamService):
 
     def __init__(self, *args, **kw):
         logger.debug('BdapService init %s', self.__class__)
-        super(BdapService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -698,7 +693,7 @@ class FtpProService(BdapService):
 
     def __init__(self, *args, **kw):
         logger.debug('FtpProService init %s', self.__class__)
-        super(FtpProService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -752,7 +747,7 @@ class BdpeService(RoutingService):
 
     def __init__(self, *args, **kw):
         logger.debug('BdpeService init %s', self.__class__)
-        super(BdpeService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.inifile = '@opbdpe.ini'
         self.iniparser = GenericReadOnlyConfigParser(self.inifile)
 
@@ -761,7 +756,7 @@ class BdpeService(RoutingService):
         """Return the actual routing key to use for the 'router_pe' call."""
 
         rule = self.iniparser.get(self.soprano_target, 'rule_exclude')
-        if re.match(rule, six.text_type(self.productid)):
+        if re.match(rule, str(self.productid)):
             msg = 'Pas de routage du produit {productid} sur {soprano_target} ({filename})'.format(
                 productid=self.productid,
                 filename=self.filename,
@@ -775,7 +770,7 @@ class BdpeService(RoutingService):
 
     def __call__(self):
         """The actual call to the service."""
-        rc = super(BdpeService, self).__call__()
+        rc = super().__call__()
         if rc:
             self.bdpe_log()
         return rc
@@ -858,7 +853,7 @@ class TransmetService(BdpeService):
 
     def __init__(self, *args, **kw):
         logger.debug('Transmet init %s', self.__class__)
-        super(TransmetService, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._filename_transmet = None
 
     @property
@@ -887,7 +882,7 @@ class TransmetService(BdpeService):
         # don't call property routing_name in defer mode : it makes an expensive
         # copy of the file being routed, better left to the jeeves async context
         if self.defer or self.routing_name:
-            return super(TransmetService, self).__call__()
+            return super().__call__()
         return False
 
 
@@ -986,10 +981,10 @@ class DayfileReportService(FileReportService):
             date.now().strftime('%Y%m%d%H%M%S.%f'),
             '_',
             self.env.get('SLURM_JOBID', ''),
-            six.text_type(self.sh.getpid()),
+            str(self.sh.getpid()),
             '_',
             '1' if 'DEBUT' in self.mode else '0',
-            six.text_type(random.random()),
+            str(random.random()),
         ])
         final = self.sh.path.join(
             self.actual_value(
@@ -1061,7 +1056,7 @@ class SMSOpService(SMS):
         else:
             stamp = date.now().compact()
             self.variable(varname, stamp)
-            self.label('etat', six.text_type(status) + ': ' + stamp + ' ' + six.text_type(comment))
+            self.label('etat', str(status) + ': ' + stamp + ' ' + str(comment))
 
     def close_init(self, *args):
         """Set starting date as a XCDP variable."""
@@ -1102,7 +1097,7 @@ class EcFlowOpService(EcFlow):
             stamp = date.now().compact()
             ecf_path = self.env.get('ECF_NAME')
             self.alter('change', 'variable', varname, stamp, ecf_path)
-            self.label('etat', six.text_type(status) + ': ' + stamp + ' ' + six.text_type(comment))
+            self.label('etat', str(status) + ': ' + stamp + ' ' + str(comment))
 
     def close_init(self, *args):
         """Set starting date as a EcFlowView variable."""
@@ -1171,7 +1166,7 @@ class DMTEventService(Service):
 
     def get_dmtinfo(self):
         """The pair of usefull information to forward to monitor."""
-        return [self.resource_name, six.text_type(self.resource_flag)]
+        return [self.resource_name, str(self.resource_flag)]
 
     def get_cmdline(self):
         """Complete command line that runs the soprano command."""
@@ -1216,7 +1211,7 @@ class OpMailService(TemplatedMailService):
     _TEMPLATES_SUBDIR = 'opmails'
 
     def substitution_dictionary(self, add_ons=None):
-        sdict = super(OpMailService, self).substitution_dictionary(add_ons=add_ons)
+        sdict = super().substitution_dictionary(add_ons=add_ons)
         if 'OP_RUNDATE' in sdict:
             sdict.setdefault('RESEAU', sdict['OP_RUNDATE'].hh)
         if 'LOG' in sdict:
@@ -1254,7 +1249,7 @@ class OpMailService(TemplatedMailService):
     def __call__(self, *args):
         """Main action as inherited, and prompts.
         """
-        rc = super(OpMailService, self).__call__(*args)
+        rc = super().__call__(*args)
         if not rc:
             ad.prompt(
                 comment='OpMailService: mail was not sent.',

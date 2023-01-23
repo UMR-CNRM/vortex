@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
+import io
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time
@@ -26,7 +22,7 @@ def EchoData(options):
         date = "{}".format(rhdict.get('resource', {}).get('date', ''))
         run = Date(date).hh
         term = "{}".format(Time(rhdict.get('options', {}).get('term', '')))
-        term_hh = six.text_type(term)[:-3]
+        term_hh = str(term)[:-3]
         chaine = "{}".format(rhdict.get('options', {}).get('chaine_utilise', '')).upper()[:1]
 
         # recuperation info conf
@@ -75,7 +71,7 @@ def EchoData(options):
 
         # initial initial_w : Echeance pour Generation des fichiers guess (h).
         # En general initial_w et initial sont identiques;
-        outstr += six.text_type(Initial) + "  " + six.text_type(Initial_w) + "\n"
+        outstr += str(Initial) + "  " + str(Initial_w) + "\n"
 
         # PR (Prevision) ou AA (Analyse)
         outstr += mod + "\n"
@@ -85,7 +81,7 @@ def EchoData(options):
         outstr += "200402090000\n"
 
         # Echeance resultat debut et fin (h)
-        outstr += six.text_type(deb_res) + "  " + six.text_type(fin_res) + "\n"
+        outstr += str(deb_res) + "  " + str(fin_res) + "\n"
 
         # frequence forcage (min)
         outstr += freq_forcage + "\n"
@@ -106,7 +102,7 @@ def EchoData(options):
         outstr += write_wind_txt
 
     # NB: The result have to be a file like object !
-    return six.BytesIO(outstr.encode(encoding='utf_8'))
+    return io.BytesIO(outstr.encode(encoding='utf_8'))
 
 
 def RulesGribFunction(options):
@@ -122,4 +118,4 @@ def RulesGribFunction(options):
     outstr += "}"
 
     # NB: The result have to be a file like object !
-    return six.BytesIO(outstr.encode(encoding='utf_8'))
+    return io.BytesIO(outstr.encode(encoding='utf_8'))

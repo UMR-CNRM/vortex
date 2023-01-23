@@ -1,18 +1,15 @@
-# -*- coding: utf-8 -*-
 """
 Functions and classes used by other modules from package.
 """
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-from six.moves.urllib import error as urlerror  # @UnresolvedImport
 
 from footprints import proxy as fpx
 
 import errno
+import json
 import re
 import tarfile
 import tempfile
-import json
+from urllib import error as urlerror
 
 from bronx.fancies import loggers
 
@@ -162,7 +159,7 @@ def set_env4git():
                                                 'git-core')
 
 
-class SummariesStack(object):
+class SummariesStack:
 
     summaries_stack_dir = 'summaries_stack'
     unhandled_flag = 'unhandled_items.whitness'
@@ -209,9 +206,9 @@ class SummariesStack(object):
             # ensure no new files have been dropped in the stack. To do so, check
             # if an unhandled_flag file exists (use open instead of "stat" since
             # "stat" can be affected by caching effects on network filesystems).
-            with open(self.cache.fullpath(item), 'r'):
+            with open(self.cache.fullpath(item)):
                 pass
-        except IOError as ioe:
+        except OSError as ioe:
             if ioe.errno != errno.ENOENT:
                 raise ioe
             return False
@@ -259,7 +256,7 @@ class SummariesStack(object):
             match = self._re_tasksummary.match(f)
             if match:
                 task = match.group('task')
-                with open(self.cache.fullpath(f), 'r') as _f:
+                with open(self.cache.fullpath(f)) as _f:
                     ts = json.load(_f)
                 scope = match.group('scope')
                 if scope == 'consistency':  # IGNORED for now

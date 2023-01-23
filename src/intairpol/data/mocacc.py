@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Resources used with MOCAGE Accident (tarfiles, txtfiles, json).
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.contents import JsonDictContent, AlmostListContent
 from vortex.data.geometries import LonlatGeometry
@@ -233,14 +229,14 @@ class ExtraConfMocaccContent(JsonDictContent):
         for (idx, geom) in enumerate(self._data["geometries_moc"]):
             if idx == 0:
                 area = "M_GLOB"
-                tag = "mocacc-global-domain-{0:3.1f}".format(geom["resolution"])
-                info = "Global {0:3.1f} degree domain for MOCAGE Accident".format(
+                tag = "mocacc-global-domain-{:3.1f}".format(geom["resolution"])
+                info = "Global {:3.1f} degree domain for MOCAGE Accident".format(
                     geom["resolution"]
                 )
             else:
-                area = "M_NST{0}".format(idx)
-                tag = "mocacc-nested-domain{0}-{1:5.3f}".format(idx, geom["resolution"])
-                info = "Nested {0:5.3f} degree domain for MOCAGE Accident".format(
+                area = "M_NST{}".format(idx)
+                tag = "mocacc-nested-domain{}-{:5.3f}".format(idx, geom["resolution"])
+                info = "Nested {:5.3f} degree domain for MOCAGE Accident".format(
                     geom["resolution"]
                 )
 
@@ -270,17 +266,17 @@ class ExtraConfMocaccContent(JsonDictContent):
         geometries = []
         for (idx, geom) in enumerate(self._data["geometries_bdap_nwp"]):
             if idx == 0:
-                area = "GLOB-{0:3.1f}-BDAPNWP".format(geom["resolution"])
+                area = "GLOB-{:3.1f}-BDAPNWP".format(geom["resolution"])
                 tag = "nwp_global_domain_from_bdap"
-                info = "Global {0:3.1f} degree domain of NWP used for MOCAGE Accident".format(
+                info = "Global {:3.1f} degree domain of NWP used for MOCAGE Accident".format(
                     geom["resolution"]
                 )
             else:
-                area = "NESTED{0}-{1:5.3f}-NWPBDAP".format(idx, geom["resolution"])
-                tag = "nwp_nested_domain_{0}_{1:5.3f}_from_bdap".format(
+                area = "NESTED{}-{:5.3f}-NWPBDAP".format(idx, geom["resolution"])
+                tag = "nwp_nested_domain_{}_{:5.3f}_from_bdap".format(
                     idx, geom["resolution"]
                 )
-                info = "Nested {0:5.3f} degree domain of NWP used for MOCAGE Accident".format(
+                info = "Nested {:5.3f} degree domain of NWP used for MOCAGE Accident".format(
                     geom["resolution"]
                 )
 

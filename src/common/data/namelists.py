@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 Generic Resources and Contents to work with namelists.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import re
-import six
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Time, Date
@@ -27,12 +22,12 @@ __all__ = []
 
 logger = loggers.getLogger(__name__)
 
-KNOWN_NAMELIST_MACROS = set(['NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
-                             'NBPROCIN', 'NBPROCOUT', 'IDAT', 'CEXP',
-                             'TIMESTEP', 'FCSTOP', 'NMODVAL', 'NBE', 'SEED',
-                             'MEMBER', 'NUMOD', 'OUTPUTID', 'NRESX', 'PERTURB',
-                             'JOUR', 'RES', 'LLADAJ', 'LLADMON', 'LLFLAG',
-                             'LLARO', 'LLVRP', 'LLCAN'])
+KNOWN_NAMELIST_MACROS = {'NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
+                         'NBPROCIN', 'NBPROCOUT', 'IDAT', 'CEXP',
+                         'TIMESTEP', 'FCSTOP', 'NMODVAL', 'NBE', 'SEED',
+                         'MEMBER', 'NUMOD', 'OUTPUTID', 'NRESX', 'PERTURB',
+                         'JOUR', 'RES', 'LLADAJ', 'LLADMON', 'LLFLAG',
+                         'LLARO', 'LLVRP', 'LLCAN'}
 
 
 class NamelistPack(ModelResource):
@@ -90,7 +85,7 @@ class NamelistContent(AlmostDictContent):
         kw.setdefault('remove', set())
         kw.setdefault('parser', None)
         kw.setdefault('data', NamelistSet())
-        super(NamelistContent, self).__init__(**kw)
+        super().__init__(**kw)
         self._declaredmacros = set(self._macros.keys())
 
     def toremove(self, bname):
@@ -146,7 +141,7 @@ class NamelistContent(AlmostDictContent):
             container.rewind()
             try:
                 namset = self._parser.parse(container.read())
-            except (ValueError, IOError) as e:
+            except (ValueError, OSError) as e:
                 raise NamelistContentError('Could not parse container contents: {!s}'.format(e))
         self._data = namset
         for macro, value in self._macros.items():
@@ -324,9 +319,9 @@ class NamelistTerm(Namelist):
             fp = None
 
         try:
-            with open('xxt.def', 'r') as f:
+            with open('xxt.def') as f:
                 lines = f.readlines()
-        except IOError:
+        except OSError:
             logger.error('Could not open file xxt.def')
             raise
 
@@ -482,7 +477,7 @@ class XXTContent(IndexedTable):
     """Indexed table of selection namelist used by inlined fullpos forecasts."""
 
     def __init__(self, *kargs, **kwargs):
-        super(XXTContent, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._cachedomains = None
         self._cachedomains_term = None
 
@@ -508,7 +503,7 @@ class XXTContent(IndexedTable):
                 t = Time(t)
             except (ValueError, TypeError):
                 return None
-            tkey = self.get(t.fmthm, self.get(six.text_type(t.hour), None))
+            tkey = self.get(t.fmthm, self.get(str(t.hour), None))
             if tkey is None:
                 logger.warning('No entry found in the XXT file for term = %s.', t.fmthm)
             else:
@@ -541,7 +536,7 @@ class XXTContent(IndexedTable):
 
             select_seen = dict()
             for a_term in [x for x in allterms if x <= maxterm]:
-                tvalue = self.get(a_term.fmthm, self.get(six.text_type(a_term.hour), None))
+                tvalue = self.get(a_term.fmthm, self.get(str(a_term.hour), None))
                 sh = sessions.system()
                 if tvalue[0] is not None:
                     local_guesses = [tvalue[0], 'fpselect_' + a_term.fmthm]
@@ -552,7 +547,7 @@ class XXTContent(IndexedTable):
                         # Do not waste time on duplicated selects...
                         if tvalue[1] not in select_seen:
                             fortp = NamelistParser()
-                            with open(local_guesses[0], 'r') as fd:
+                            with open(local_guesses[0]) as fd:
                                 xx = fortp.parse(fd.read())
                             domains = set()
                             for nb in xx.values():
@@ -563,7 +558,7 @@ class XXTContent(IndexedTable):
                             domains = select_seen[tvalue[1]]
                         mapdom[a_term.fmthm] = list(domains)
                         if a_term.minute == 0:
-                            mapdom[six.text_type(a_term.hour)] = list(domains)
+                            mapdom[str(a_term.hour)] = list(domains)
 
             self._cachedomains_term = maxterm
             self._cachedomains = mapdom

@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Functions and tools to handle resources names or other kind of names.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import re
 import sys
-
-import six
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time
@@ -213,7 +207,7 @@ def global_pnames(provider, resource):
 
 def clim_bdap_bnames(resource, provider):
     if 'arome' in resource.model:
-        localname = 'BDAP_frangp_isba' + six.text_type(resource.month)
+        localname = 'BDAP_frangp_isba' + str(resource.month)
     elif resource.model == 'aladin':
         if "08" in resource.geometry.rnice:
             # clim_dap.caled01.m01
@@ -224,17 +218,17 @@ def clim_bdap_bnames(resource, provider):
             igadomain = "caled"
         else:
             raise ValueError('Could not evaluate <igadomain> in {!r}'.format(resource.geometry))
-        localname = 'clim_dap' + "." + igadomain + resolution + '.m' + six.text_type(resource.month)
+        localname = 'clim_dap' + "." + igadomain + resolution + '.m' + str(resource.month)
     else:
-        localname = 'const.clim.' + resource.geometry.area + '_m' + six.text_type(resource.month)
+        localname = 'const.clim.' + resource.geometry.area + '_m' + str(resource.month)
     return localname
 
 
 def clim_model_bnames(resource, provider):
     if resource.model == 'arome' or resource.model == 'aladin':
-        localname = 'clim_' + resource.geometry.area + '_isba' + six.text_type(resource.month)
+        localname = 'clim_' + resource.geometry.area + '_isba' + str(resource.month)
     elif resource.model == 'arpege':
-        localname = 'clim_t' + six.text_type(resource.truncation) + '_isba' + six.text_type(resource.month)
+        localname = 'clim_t' + str(resource.truncation) + '_isba' + str(resource.month)
     else:
         raise ValueError('Unknown model {:s} in clim_model_bnames'.format(resource.model))
     return localname
@@ -284,7 +278,7 @@ def analysis_bnames(resource, provider):
         if mode == 'ana':
             suffix = resource.date.ymdh
         # s_init_sort_cep_OIN_ana.2017070900     (T0)
-        return 's_init_sort_' + config + '.' + six.text_type(suffix)
+        return 's_init_sort_' + config + '.' + str(suffix)
     elif resource.model == 'mfwam' and resource.filling == 'surf':
         suffix = resource.date.ymdhms
         suffix2 = resource.term.fmtraw2
@@ -310,7 +304,7 @@ def historic_bnames(resource, provider):
 
         if mode is None:
             term0 = resource.term.hour
-            delta = 'PT' + six.text_type(term0) + 'H'
+            delta = 'PT' + str(term0) + 'H'
             date_val = (resource.date + delta).ymdh
             config = provider.vconf[4:] + region
         else:
@@ -324,10 +318,10 @@ def historic_bnames(resource, provider):
         else:
             if mode is None:
                 deltatime = Time(72)
-                suffix = '.{0:03d}'.format((resource.term + deltatime).hour)
+                suffix = '.{:03d}'.format((resource.term + deltatime).hour)
             else:
-                suffix = '.{0:03d}'.format(resource.term.hour)
-        return '{0:s}_{1:s}.{2:s}{3:s}'.format(prefix, config, date_val, suffix)
+                suffix = '.{:03d}'.format(resource.term.hour)
+        return '{:s}_{:s}.{:s}{:s}'.format(prefix, config, date_val, suffix)
 
     if resource.model == 'mfwam':
         if hasattr(resource, 'fields'):
@@ -360,7 +354,7 @@ def pts_bnames(resource, provider):
             config = provider.vconf[-3:] + region + mode
 
         if resource.fields == '_huv.txt':
-            return '_huv_{0:s}.txt'.format(config)
+            return '_huv_{:s}.txt'.format(config)
         else:
             return resource.fields + '_' + config
 
@@ -371,8 +365,8 @@ def bufr_bnames(resource, provider):
         mode_map = dict(fc='prv', an='ana')
         region = region_map.get(provider.vconf[:3], provider.vconf[:3])
         mode = mode_map.get(provider.vconf[4:][:2], None)
-        return '{0:s}_{1:03d}_{2:s}_{3:d}{4:s}.bfr'.format(mode, resource.timeslot.hour, provider.vconf[-3:],
-                                                           int(resource.date.hh), region)
+        return '{:s}_{:03d}_{:s}_{:d}{:s}.bfr'.format(mode, resource.timeslot.hour, provider.vconf[-3:],
+                                                      int(resource.date.hh), region)
 
 
 def SurgesResultNative_bnames(resource, provider):
@@ -402,7 +396,7 @@ def SurgesWw3coupling_bnames(resource, provider):
 
 def AltidataWave_bnames(resource, provider):
     if resource.model == 'mfwam':
-        return 'altidata_{0:s}'.format(resource.date.ymdhm)
+        return 'altidata_{:s}'.format(resource.date.ymdhm)
 
 
 def histsurf_bnames(resource, provider):
@@ -451,9 +445,9 @@ def gridpoint_bnames(resource, provider):
         if resource.model == 'arpege':
             prefix, suffix = gribNames(cutoff, reseau, model, provider.member,
                                        vapp=provider.vapp, vconf=provider.vconf)
-            nw_term = "{0:03d}".format(resource.term.hour)
+            nw_term = "{:03d}".format(resource.term.hour)
             if provider.member is not None:
-                localname = prefix + '_' + suffix + '_' + six.text_type(provider.member)
+                localname = prefix + '_' + suffix + '_' + str(provider.member)
                 localname += '_' + resource.geometry.area + '_' + resource.term.fmthour
             else:
                 if resource.term.fmthour == '0108' and prefix == 'PE':
@@ -468,7 +462,7 @@ def gridpoint_bnames(resource, provider):
             mode_map = dict(fc='prv', an='ana')
             region = region_map.get(provider.vconf[:3], provider.vconf[:3])
             mode = mode_map.get(provider.vconf[4:][:2], None)
-            localname = '{0:s}_{1:s}_{2:02d}{3:s}.{4:03d}.grb'.format(
+            localname = '{:s}_{:s}_{:02d}{:s}.{:03d}.grb'.format(
                 mode,
                 provider.vconf[-3:],
                 int(resource.date.hh),
@@ -479,12 +473,12 @@ def gridpoint_bnames(resource, provider):
         elif resource.model == 'mfwam':
             logger.info("resourceterm %s", resource.term.hour)
             if provider.vconf == 'globalcep01':
-                if six.text_type(resource.deltabegin.hour) == '0':
-                    return 'windandice{0:s}_{1:s}'.format('2', resource.date.ymdhm)
+                if str(resource.deltabegin.hour) == '0':
+                    return 'windandice{:s}_{:s}'.format('2', resource.date.ymdhm)
                 else:
-                    return 'windandice{0:s}_{1:s}'.format('3', resource.date.ymdhm)
+                    return 'windandice{:s}_{:s}'.format('3', resource.date.ymdhm)
             else:
-                return 'windandice_{0:s}'.format(resource.date.ymdhm)
+                return 'windandice_{:s}'.format(resource.date.ymdhm)
         else:
             return None
     else:
@@ -506,7 +500,7 @@ def varbc_bnames(resource, provider):
         localname = 'VARBC.merge.{!s}'.format(reseau)
     else:
         if model == "arome":
-            localname = 'VARBC.cycle' + suffix + '. ' + six.text_type(resource.date.ymdhms)
+            localname = 'VARBC.cycle' + suffix + '. ' + str(resource.date.ymdhms)
         elif model == "arpege":
             localname = 'VARBC.cycle.r{!s}'.format(reseau)
 
@@ -521,7 +515,7 @@ def boundary_bnames(resource, provider):
         else:
             is_court = resource.date.hour == 0
         _, suffix = gribNames(cutoff, reseau, model, force_courtfr=is_court)
-        nw_term = "{0:03d}".format(term.hour)
+        nw_term = "{:03d}".format(term.hour)
         localname = 'ELSCFAROMALBC' + nw_term + '.' + suffix
     elif resource.model == 'mocage':
         localname = 'RUN1_SM' + resource.geometry.area + '+' \
@@ -532,11 +526,11 @@ def boundary_bnames(resource, provider):
             nw_term = "0000"
         else:
             nw_date = resource.date.ymdh
-            nw_term = "{0:04d}".format(resource.term.hour)
+            nw_term = "{:04d}".format(resource.term.hour)
         localname = 'FBI' + nw_date + nw_term
     else:
         _, suffix = faNames(cutoff, reseau, model)
-        nw_term = "{0:03d}".format(resource.term.hour)
+        nw_term = "{:03d}".format(resource.term.hour)
         localname = 'ELSCFALADALBC' + nw_term + '.' + suffix
     return localname
 
@@ -570,21 +564,21 @@ def bgstderr_bnames(resource, provider):
 def observations_bnames(resource, provider):
     fmt, part = resource.nativefmt, resource.part
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
-    day = six.text_type(resource.date.day)
+    day = str(resource.date.day)
     u_prefix, suffix = gribNames(cutoff, reseau, model)  # @UnusedVariable
     dico_names = {
         'obsoul': 'obsoul' + '.' + part + '.' + suffix,
         'ecma': {
-            'surf': 'ECMA.surf' + '.' + six.text_type(int(reseau)) + '.' + six.text_type(reseau) + '.tar',
-            'conv': 'ECMA.conv' + '.' + day + '.' + six.text_type(reseau) + '.tar',
-            'prof': 'ECMA.prof' + '.' + day + '.' + six.text_type(reseau) + '.tar',
+            'surf': 'ECMA.surf' + '.' + str(int(reseau)) + '.' + str(reseau) + '.tar',
+            'conv': 'ECMA.conv' + '.' + day + '.' + str(reseau) + '.tar',
+            'prof': 'ECMA.prof' + '.' + day + '.' + str(reseau) + '.tar',
         }
 
     }
     localname = dico_names[fmt][0] + '.' + part + '.'
     logger.debug('localname %s', localname)
     if dico_names[fmt][1]:
-        localname += six.text_type(day) + '.' + suffix + dico_names[fmt][1]
+        localname += str(day) + '.' + suffix + dico_names[fmt][1]
     else:
         localname += suffix
     return localname
@@ -645,11 +639,11 @@ def global_snames(resource, provider):
             if vapp == 'pprod':
                 if vconf == 'ecmwf2mf@determ':
                     bname = 'cep_ifs_' + str(resource.date) + '_' + resource.geometry.area \
-                            + '_ECH{0:04d}'.format(resource.term.hour) + '.X.grb'
+                            + '_ECH{:04d}'.format(resource.term.hour) + '.X.grb'
                 elif vconf == 'ecmwf2mf@eps':
                     bname = 'cep_eps_' + str(resource.date) \
-                            + '_MB{0:02d}_'.format(provider.member) + resource.geometry.area \
-                            + '_ECH{0:04d}'.format(resource.term.hour) + '.X.grb'
+                            + '_MB{:02d}_'.format(provider.member) + resource.geometry.area \
+                            + '_ECH{:04d}'.format(resource.term.hour) + '.X.grb'
             # Others
             else:
                 # For MACC forecast (camsfcst)
@@ -662,7 +656,7 @@ def global_snames(resource, provider):
         elif vconf in ['pg1@pa', 'pg1@pagrex', 'pg1@parome', 'pg1@multimod']:
             bname = ('pg1_' + re.split('@', vconf)[1] + '_' + str(resource.date) +
                      '_' + resource.geometry.area +
-                     '_ECH{0:04d}'.format(resource.term.hour) + '.X.grb')
+                     '_ECH{:04d}'.format(resource.term.hour) + '.X.grb')
 
     elif resource.realkind == 'chemical_bc':
         if resource.model == 'mocage':

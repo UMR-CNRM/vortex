@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Resources needed to build the Ensemble Prediction System.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import copy
 
@@ -101,11 +97,11 @@ class SingularVector(Historic):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'SVARPE' + '{0:03d}'.format(self.number) + '+0000'
+        return 'SVARPE' + '{:03d}'.format(self.number) + '+0000'
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'SVARPE' + '{0:03d}'.format(self.number) + '+0000'
+        return 'SVARPE' + '{:03d}'.format(self.number) + '+0000'
 
 
 @use_flow_logs_stack
@@ -170,9 +166,9 @@ class SampleContent(JsonDictContent):
     @secure_getattr
     def __getattr__(self, attr):
         # Return an access function that corresponds to the key in "drawing"
-        drawing_keys = set([item
-                            for d in self.data.get('drawing', []) if isinstance(d, dict)
-                            for item in d.keys()])
+        drawing_keys = {item
+                        for d in self.data.get('drawing', []) if isinstance(d, dict)
+                        for item in d.keys()}
         if attr in drawing_keys:
             def _attr_access(g, x):
                 elt = self.drawing(g, x)
@@ -181,15 +177,15 @@ class SampleContent(JsonDictContent):
                 # * An integer if 'number' is in the 'untouched' list
                 # * A dictionary
                 if elt is None:
-                    choices = set([d[attr] for d in self.data['drawing']])
+                    choices = {d[attr] for d in self.data['drawing']}
                     return None if len(choices) > 1 else choices.pop()
                 else:
                     return elt[attr] if isinstance(elt, dict) else None
             return _attr_access
         # Return an access function that corresponds to the key in "population"
-        population_keys = set([item
-                              for d in self.data.get('population', []) if isinstance(d, dict)
-                              for item in d.keys()])
+        population_keys = {item
+                           for d in self.data.get('population', []) if isinstance(d, dict)
+                           for item in d.keys()}
         if attr in population_keys:
             def _attr_access(g, x):
                 n = g.get('number', x.get('number', None))
@@ -199,15 +195,15 @@ class SampleContent(JsonDictContent):
                     return self.data['population'][n - 1][attr]
             return _attr_access
         # Returns the list of drawn keys
-        listing_keys = set([item + 's'
-                            for d in self.data.get('drawing', []) if isinstance(d, dict)
-                            for item in d.keys()])
+        listing_keys = {item + 's'
+                        for d in self.data.get('drawing', []) if isinstance(d, dict)
+                        for item in d.keys()}
         if attr in listing_keys:
             return [d[attr[:-1]] for d in self.data['drawing']]
         # Return the list of available keys
-        listing_keys = set([item + 's'
-                            for d in self.data['population'] if isinstance(d, dict)
-                            for item in d.keys()])
+        listing_keys = {item + 's'
+                        for d in self.data['population'] if isinstance(d, dict)
+                        for item in d.keys()}
         if attr in listing_keys:
             return [d[attr[:-1]] for d in self.data['population']]
         raise AttributeError()

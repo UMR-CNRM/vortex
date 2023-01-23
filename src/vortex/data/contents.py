@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 A handful of abstract and generic :class:`DataContent` classes designed to access
 and modify data of a given "Resource".
@@ -9,18 +7,14 @@ These classes are not meant to be used directly. To retrieve a
 :data:`vortex.data.handlers.Handler.contents` property.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-
 import collections
 from string import Template
 
 from bronx.fancies import loggers
-import footprints
 from bronx.stdtypes.dictionaries import ReadOnlyDict
 from bronx.stdtypes.xtemplates import DefaultTemplate
 from bronx.syntax.decorators import secure_getattr
+import footprints
 
 from vortex import sessions
 
@@ -35,7 +29,7 @@ class DataContentError(ValueError):
     pass
 
 
-class DataContent(object):
+class DataContent:
     """Root class for data contents used by resources."""
 
     _diffable = False
@@ -45,7 +39,7 @@ class DataContent(object):
         self._data = None
         self._metadata = ReadOnlyDict()
         self._size = 0
-        for k, v in six.iteritems(kw):
+        for k, v in kw.items():
             self.__dict__['_' + k] = v
 
     @secure_getattr
@@ -93,7 +87,7 @@ class DataContent(object):
                          'The check will always succeed...')
         delta = delta or {}
         outcome = True
-        for mkey, mval in six.iteritems(self.metadata):
+        for mkey, mval in self.metadata.items():
             if hasattr(resource, mkey):
                 cval = getattr(resource, mkey)
                 if mkey in delta:
@@ -168,7 +162,7 @@ class AlmostDictContent(DataContent):
     _diffable = True
 
     def __init__(self, **kw):
-        super(AlmostDictContent, self).__init__(**kw)
+        super().__init__(**kw)
         if self._data is None:
             self._data = dict()
 
@@ -189,8 +183,7 @@ class AlmostDictContent(DataContent):
         return len(self._data)
 
     def __iter__(self):
-        for t in self._data.keys():
-            yield t
+        yield from self._data.keys()
 
     def __contains__(self, item):
         return self.fmtkey(item) in self._data
@@ -239,7 +232,7 @@ class JsonDictContent(AlmostDictContent):
 
     def __init__(self, **kw):
         self._bronx_tpl = None
-        super(JsonDictContent, self).__init__(** kw)
+        super().__init__(** kw)
 
     def slurp(self, container):
         """Get data from the ``container``."""
@@ -264,7 +257,7 @@ class JsonDictContent(AlmostDictContent):
         container.close()
         # In Python 2, json.dumps returns 'str', not unicode...
         with container.iod_context():
-            with container.preferred_decoding(byte=False if six.PY3 else True):
+            with container.preferred_decoding(byte=False):
                 with container.preferred_write():
                     iod = container.iodesc()
                     t.sh.json_dump(self.data, iod, indent=4)
@@ -283,7 +276,7 @@ class AlmostListContent(DataContent):
 
     def __init__(self, **kw):
         self._maxprint = kw.pop('maxprint', 20)
-        super(AlmostListContent, self).__init__(**kw)
+        super().__init__(**kw)
         if self._data is None:
             self._data = list()
 
@@ -312,8 +305,7 @@ class AlmostListContent(DataContent):
         return len(self.data)
 
     def __iter__(self):
-        for t in self.data:
-            yield t
+        yield from self.data
 
     def __call__(self):
         return self.data
@@ -378,14 +370,14 @@ class TextContent(AlmostListContent):
 
     def __init__(self, **kw):
         kw.setdefault('fmt', None)
-        super(TextContent, self).__init__(**kw)
+        super().__init__(**kw)
 
     def __str__(self):
         if len(self) > self.maxprint:
             catlist = self[0:3] + ['...'] + self[-3:]
         else:
             catlist = self[:]
-        return '\n'.join([six.text_type(x) for x in catlist])
+        return '\n'.join([str(x) for x in catlist])
 
     def slurp(self, container):
         with container.preferred_decoding(byte=False):
@@ -395,7 +387,7 @@ class TextContent(AlmostListContent):
     def formatted_data(self, item):
         """Return a formatted string according to optional internal fmt."""
         if self._fmt is None:
-            return ' '.join([six.text_type(x) for x in item])
+            return ' '.join([str(x) for x in item])
         else:
             return self._fmt.format(*item)
 
@@ -417,7 +409,7 @@ class DataRaw(AlmostListContent):
     def __init__(self, data=None, window=0, datafmt=None):
         if not data and window:
             data = collections.deque(maxlen=window)
-        super(DataRaw, self).__init__(data=data, window=window, datafmt=datafmt)
+        super().__init__(data=data, window=window, datafmt=datafmt)
 
     def slurp(self, container):
         with container.preferred_decoding(byte=False):
@@ -441,7 +433,7 @@ class DataTemplate(DataContent):
         with container.preferred_decoding(byte=False):
             container.rewind()
             self._data = container.read()
-            super(DataTemplate, self).slurp(container)
+            super().slurp(container)
 
     def setitems(self, keyvaluedict):
         """
@@ -465,7 +457,7 @@ class FormatAdapter(DataContent):
     """Adapter to objects that could manage a dedicated format."""
 
     def __init__(self, **kw):
-        super(FormatAdapter, self).__init__(**kw)
+        super().__init__(**kw)
         if self._data is None and footprints.proxy.dataformats is None:
             logger.warning('No collector for data formats')
             self._datafmt = None
@@ -532,7 +524,7 @@ class MetaDataReader(footprints.FootprintBase):
     def __init__(self, *kargs, **kwargs):
         self._content_in = None
         self._datahide = None
-        super(MetaDataReader, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
 
     @property
     def _data(self):
@@ -560,12 +552,6 @@ class MetaDataReader(footprints.FootprintBase):
 
     def items(self):
         """Iterate over the metadata."""
-        if six.PY3:
-            return self.iteritems()
-        else:
-            return {k: v for k, v in self.iteritems()}
-
-    def iteritems(self):
         for k in self:
             yield k, self[k]
 
@@ -576,7 +562,7 @@ class MetaDataReader(footprints.FootprintBase):
             return repr(self._data)
 
     def __str__(self):
-        return six.text_type(self._data)
+        return str(self._data)
 
 
 class FormatAdapterAbstractImplementation(footprints.FootprintBase):

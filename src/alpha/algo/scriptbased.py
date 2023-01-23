@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Add some args when the script shell is executed.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
@@ -43,7 +39,7 @@ class AlphaScript(Expresso):
 
     def prepare(self, rh, opts):
         """Setup things prior to run"""
-        super(AlphaScript, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         if self.promises:
             self.io_poll_kwargs = dict(domain=rh.provider.vconf)
             self.flyput = True

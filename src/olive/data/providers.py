@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Various research specific providers (to be used in the SWAPP/Olive system).
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 import re
 
 from bronx.fancies import loggers
@@ -64,7 +59,7 @@ class Olive(Provider):
 
     def __init__(self, *args, **kw):
         logger.debug('Olive experiment provider init %s', self.__class__)
-        super(Olive, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     def scheme(self, resource):
         """Default scheme is ``olive``."""
@@ -87,7 +82,7 @@ class Olive(Provider):
     def basename(self, resource):
         """Add block information to resource mailbox... just in case..."""
         resource.mailbox.update(block=self.block)
-        bname = super(Olive, self).basename(resource)
+        bname = super().basename(resource)
         resource.mailbox.clear()
         return bname
 
@@ -151,13 +146,13 @@ class OpArchive(Provider):
                     default = '',
                 )
             ),
-            fastkeys = set(['suite', 'vconf']),
+            fastkeys = {'suite', 'vconf'},
         )
     ]
 
     def __init__(self, *args, **kw):
         logger.debug('Old archive provider init %s', self.__class__)
-        super(OpArchive, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -240,7 +235,7 @@ class OpArchive(Provider):
                     rr = archive_suffix(resource.model, resource.cutoff,
                                         resource.date, vconf=self.vconf)
                     if getattr(self, keyattr) == 'pearp':
-                        fuzzy = '_'.join(('fc', rr, six.text_type(self.member),
+                        fuzzy = '_'.join(('fc', rr, str(self.member),
                                           resource.geometry.area, resource.term.fmthour))
                     elif getattr(self, keyattr) in ('surcotes', 'surcotes_oi'):
                         if (getattr(self, keyattr) == 'surcotes' and self.vconf[-3:] == 'aro' and
@@ -255,7 +250,7 @@ class OpArchive(Provider):
                             fuzzy = '.'.join((fuzzyname('prefix', 'gridpoint', 'hycom_grb'), config,
                                               resource.date.ymdh[4:], fuzzyname('suffix', 'gridpoint', 'hycom_grb')))
                     else:
-                        t = '{0:03d}'.format(resource.term.hour)
+                        t = '{:03d}'.format(resource.term.hour)
                         fuzzy = fuzzyname('prefix', 'gridpoint', self.suite) + rr + t + resource.geometry.area
                 elif entry == 'errgribfix':
                     fuzzy = 'errgribvor'
@@ -271,7 +266,7 @@ class OpArchive(Provider):
                     fuzzy = fuzzyname(entry, resource.realkind, getattr(self, keyattr))
                 bname = bname.replace(i, fuzzy)
             else:
-                bname = bname.replace(i, six.text_type(getattr(self, s1)))
+                bname = bname.replace(i, str(getattr(self, s1)))
 
         return bname
 
@@ -282,10 +277,10 @@ class OpArchive(Provider):
         if self.opdelta is not None:
             rdate = rdate + self.opdelta
         suite = suite_map.get(self.suite, self.suite)
-        yyyy = six.text_type(rdate.year)
-        mm = '{0:02d}'.format(rdate.month)
-        dd = '{0:02d}'.format(rdate.day)
-        rr = 'r{0:d}'.format(rdate.hour)
+        yyyy = str(rdate.year)
+        mm = '{:02d}'.format(rdate.month)
+        dd = '{:02d}'.format(rdate.day)
+        rr = 'r{:d}'.format(rdate.hour)
         rdir = rinfo.get('{0.vapp:s}_{0.vconf:s}_directory'.format(self),
                          rinfo.get('directory', ''))
 
@@ -334,7 +329,7 @@ class OpArchiveCourt(OpArchive):
 
     def pathinfo(self, resource):
         """Force cutoff to be ``court``."""
-        rinfo = super(OpArchiveCourt, self).pathinfo(resource)
+        rinfo = super().pathinfo(resource)
         rinfo['cutoff'] = 'court'
         return rinfo
 
@@ -352,7 +347,7 @@ class RemoteGenericSet(Remote):
         priority = dict(
             level = footprints.priorities.top.TOOLBOX
         ),
-        fastkeys = set(['remote', 'setcontent']),
+        fastkeys = {'remote', 'setcontent'},
     )
 
     def pathname(self, resource):
@@ -385,7 +380,7 @@ class RemoteBinset(RemoteGenericSet):
 
     def basename(self, resource):
         """OS basename of the ``remote`` attribute."""
-        gvar = six.text_type(resource.basename('genv')).lower()
+        gvar = str(resource.basename('genv')).lower()
         if not self.config.has_section(self.binmap):
             raise ValueError("The {:s} binmap do not exists.".format(self.binmap))
         return self.config.get(self.binmap, gvar)
@@ -407,7 +402,7 @@ class RemoteExtractSet(RemoteGenericSet):
 
     def basename(self, resource):
         """OS basename of the ``remote`` attribute."""
-        extractquery = six.text_type(resource.urlquery('gget'))
+        extractquery = str(resource.urlquery('gget'))
         source = self._RE_EXTRACT.search(extractquery)
         if source:
             return source.group(1)

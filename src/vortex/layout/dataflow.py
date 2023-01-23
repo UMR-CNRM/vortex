@@ -1,21 +1,15 @@
-# -*- coding: utf-8 -*-
-
 """
 This modules defines the low level physical layout for data handling.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-from six.moves import map  # @UnresolvedImport
-
 from collections import namedtuple, defaultdict
+import collections.abc
 import json
 import pprint
+import re
 import traceback
 import weakref
 
-from bronx.compat.moves import collections_abc, re_Pattern
 from bronx.fancies import loggers
 from bronx.patterns import observer
 from bronx.syntax import mktuple
@@ -65,7 +59,7 @@ def stripargs_section(**kw):
     return (opts, kw)
 
 
-class _ReplaceSectionArgs(object):
+class _ReplaceSectionArgs:
     """
     Trigger the footprint's replacement mechanism on some of the section arguments.
     """
@@ -97,7 +91,7 @@ class _ReplaceSectionArgs(object):
 _default_replace_section_args = _ReplaceSectionArgs()
 
 
-class Section(object):
+class Section:
     """Low level unit to handle a resource."""
 
     def __init__(self, **kw):
@@ -343,8 +337,7 @@ class Sequence(observer.Observer):
         observer.get(tag=_RHANDLERS_OBSBOARD).unregister(self)
 
     def __iter__(self):
-        for s in self.sections:
-            yield s
+        yield from self.sections
 
     def __call__(self):
         return self.sections[:]
@@ -430,11 +423,11 @@ class Sequence(observer.Observer):
     @staticmethod
     def _fuzzy_match(stuff, allowed):
         """Check if ``stuff`` is in ``allowed``. ``allowed`` may contain regex."""
-        if (isinstance(allowed, six.string_types) or
-                not isinstance(allowed, collections_abc.Iterable)):
+        if (isinstance(allowed, str) or
+                not isinstance(allowed, collections.abc.Iterable)):
             allowed = [allowed, ]
         for pattern in allowed:
-            if ((isinstance(pattern, re_Pattern) and pattern.search(stuff)) or
+            if ((isinstance(pattern, re.Pattern) and pattern.search(stuff)) or
                     (pattern == stuff)):
                 return True
         return False
@@ -534,8 +527,7 @@ class Sequence(observer.Observer):
     def coherentgroup_iter(self, cgroup):
         """Iterate over sections belonging to a given coherentgroup."""
         c_sections = self._coherentgroups[cgroup]
-        for s in c_sections:
-            yield s
+        yield from c_sections
 
     def section_updstage(self, a_section, info):
         """
@@ -609,7 +601,7 @@ InputsReportStatus = InputsReportStatusTupple(PRESENT='present', EXPECTED='expec
                                               UNUSED='unused')
 
 
-class SequenceInputsReport(object):
+class SequenceInputsReport:
     """Summarize data about inputs (missing resources, alternates, ...)."""
 
     _TranslateStage = dict(get=InputsReportStatus.PRESENT, expected=InputsReportStatus.EXPECTED,
@@ -669,7 +661,7 @@ class SequenceInputsReport(object):
             only = list(InputsReportStatus)
         else:
             # Convert a single string to a list
-            if isinstance(only, six.string_types):
+            if isinstance(only, str):
                 only = [only, ]
             # Check that the provided statuses exist
             if not all([f in InputsReportStatus for f in only]):
@@ -735,35 +727,20 @@ class SequenceInputsReport(object):
         return outstack
 
 
-def _str2unicode(jsencode):
-    """Convert all the strings to Unicode."""
-    if not six.PY2:
-        return jsencode
-    if isinstance(jsencode, dict):
-        return {_str2unicode(key): _str2unicode(value)
-                for key, value in six.iteritems(jsencode)}
-    elif isinstance(jsencode, list):
-        return [_str2unicode(value) for value in jsencode]
-    elif isinstance(jsencode, str):
-        return six.text_type(jsencode)
-    else:
-        return jsencode
-
-
 def _fast_clean_uri(store, remote):
     """Clean a URI so that it can be compared with a JSON load version."""
     qsl = remote['query'].copy()
     qsl.update({'storearg_{:s}'.format(k): v
                 for k, v in store.tracking_extraargs.items()})
-    return _str2unicode({u'scheme': six.text_type(store.scheme),
-                         u'netloc': six.text_type(store.netloc),
-                         u'path': six.text_type(remote['path']),
-                         u'params': six.text_type(remote['params']),
-                         u'query': qsl,
-                         u'fragment': six.text_type(remote['fragment'])})
+    return {'scheme': str(store.scheme),
+            'netloc': str(store.netloc),
+            'path': str(remote['path']),
+            'params': str(remote['params']),
+            'query': qsl,
+            'fragment': str(remote['fragment'])}
 
 
-class LocalTrackerEntry(object):
+class LocalTrackerEntry:
     """Holds the data for a given local container.
 
     It includes data for two kinds of "actions": get/put. For each "action",
@@ -810,7 +787,7 @@ class LocalTrackerEntry(object):
         stage = info['stage']
         if self._check_action(stage):
             if 'hook' in info:
-                self._data['hook'][stage].append(self._jsonize((info['hook'])))
+                self._data['hook'][stage].append(self._jsonize(info['hook']))
             elif not info.get('insitu', False):
                 # We are using as_dict since this may be written to a JSON file
                 self._data['rhdict'][stage].append(self._clean_rhdict(rh.as_dict()))
@@ -923,7 +900,7 @@ class LocalTrackerEntry(object):
     def _grep_stuff(self, internal, action, skeleton=dict()):
         stack = []
         for element in self._data[internal][action]:
-            if isinstance(element, collections_abc.Mapping):
+            if isinstance(element, collections.abc.Mapping):
                 succeed = True
                 for key, val in skeleton.items():
                     succeed = succeed and ((key in element) and (element[key] == val))
@@ -955,7 +932,7 @@ class LocalTracker(defaultdict):
     _default_json_filename = 'local-tracker-state.json'
 
     def __init__(self):
-        super(LocalTracker, self).__init__()
+        super().__init__()
         # This hash table will be used to speedup searches
         self._uri_map = defaultdict(lambda: defaultdict(weakref.WeakSet))
 
@@ -994,13 +971,13 @@ class LocalTracker(defaultdict):
         :param info: Info dictionary sent by the :class:`~vortex.data.handlers.Handler` object
         """
         lpath = rh.container.iotarget()
-        if isinstance(lpath, six.string_types):
+        if isinstance(lpath, str):
             if info.get('clear', False):
                 self.pop(lpath, None)
             else:
                 self[lpath].update_rh(rh, info)
         else:
-            logger.debug('The iotarget is not a six.text_type: skipped in %s',
+            logger.debug('The iotarget is not a str: skipped in %s',
                          self.__class__)
 
     def update_store(self, store, info):
@@ -1021,11 +998,11 @@ class LocalTracker(defaultdict):
                 for atracker in list(self._uri_map['put'][huri]):
                     atracker._check_uri_remote_delete(clean_uri)
         else:
-            if isinstance(lpath, six.string_types):
+            if isinstance(lpath, str):
                 clean_uri = _fast_clean_uri(store, info['remote'])
                 self[lpath]._update_store(info, clean_uri)
             else:
-                logger.debug("The iotarget isn't a six.text_type: It will be skipped in %s",
+                logger.debug("The iotarget isn't a str: It will be skipped in %s",
                              self.__class__)
 
     def is_tracked_input(self, local):
@@ -1034,13 +1011,13 @@ class LocalTracker(defaultdict):
 
         :param local: Local name of the input that will be checked
         """
-        return (isinstance(local, six.string_types) and
+        return (isinstance(local, str) and
                 (local in self) and
                 (self[local].latest_rhdict('get')))
 
     def _grep_stuff(self, internal, action, skeleton=dict()):
         stack = []
-        for entry in six.itervalues(self):
+        for entry in self.values():
             stack.extend(entry._grep_stuff(internal, action, skeleton))
         return stack
 
@@ -1057,29 +1034,25 @@ class LocalTracker(defaultdict):
 
         :param filename: Path to the JSON file.
         """
-        outdict = {loc: entry.dump_as_dict() for loc, entry in six.iteritems(self)}
-        if six.PY2:
-            with open(filename, 'wb') as fpout:
-                json.dump(outdict, fpout, indent=2, sort_keys=True)
-        else:
-            with open(filename, 'w', encoding='utf-8') as fpout:
-                json.dump(outdict, fpout, indent=2, sort_keys=True)
+        outdict = {loc: entry.dump_as_dict() for loc, entry in self.items()}
+        with open(filename, 'w', encoding='utf-8') as fpout:
+            json.dump(outdict, fpout, indent=2, sort_keys=True)
 
     def json_load(self, filename=_default_json_filename):
         """Restore the object using a JSON file.
 
         :param filename: Path to the JSON file.
         """
-        with open(filename, 'r', encoding='utf-8') as fpin:
+        with open(filename, encoding='utf-8') as fpin:
             indict = json.load(fpin)
         # Start from scratch
         self.clear()
-        for loc, adict in six.iteritems(indict):
+        for loc, adict in indict.items():
             self[loc].load_from_dict(adict)
 
     def append(self, othertracker):
         """Append the content of another LocalTracker object into this one."""
-        for loc, entry in six.iteritems(othertracker):
+        for loc, entry in othertracker.items():
             self[loc].append(entry)
 
     def datastore_inplace_overwrite(self, other):
@@ -1089,8 +1062,8 @@ class LocalTracker(defaultdict):
 
     def __str__(self):
         out = ''
-        for loc, entry in six.iteritems(self):
-            entryout = six.text_type(entry)
+        for loc, entry in self.items():
+            entryout = str(entry)
             if entryout:
                 out += "========== {} ==========\n{}".format(loc, entryout)
         return out

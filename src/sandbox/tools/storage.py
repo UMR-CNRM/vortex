@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains "fake" storage tools for demonstration purposes.
 """
@@ -66,7 +64,7 @@ class DemoArchive(Archive):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(DemoArchive, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._entry = None
 
     @property

@@ -1,10 +1,4 @@
-# -*- coding: utf-8 -*-
-
 """Algo components for MOCAGE Accident."""
-
-
-from __future__ import absolute_import, print_function, division, unicode_literals
-
 
 from collections import defaultdict
 
@@ -56,7 +50,7 @@ class MakeFm(Parallel):
     @staticmethod
     def _res_to_str(res):
         """Str from float resolution."""
-        return "{0:06.3f}".format(res)
+        return "{:06.3f}".format(res)
 
     @staticmethod
     def _fix_nam_macro(rh, macro, value):
@@ -194,12 +188,12 @@ class MakeFm(Parallel):
 
     def prepare(self, rh, opts):
         """Drhook should not try to initialise MPI."""
-        super(MakeFm, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         self.export("drhook_not_mpi")
 
     def postfix(self, rh, opts):
         # We always call the superclass
-        super(MakeFm, self).postfix(rh, opts)
+        super().postfix(rh, opts)
         # Just to see what happened
         self.system.header("We are all done !")
 
@@ -209,7 +203,7 @@ class MakeFm(Parallel):
             self._create_makefm_nml(
                 res_dict["gribs"], res_dict["bdap_nwp_geom"], res_dict["mocage_geom"]
             )
-            super(MakeFm, self).execute(rh, opts)
+            super().execute(rh, opts)
 
 
 class AbstractMocaccRoot(Parallel):
@@ -270,7 +264,7 @@ class AbstractMocaccRoot(Parallel):
             self.flyput = False
         if self.extrasetup:
             self.export(self.extrasetup)
-        super(AbstractMocaccRoot, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
     def _prepare_mocage_fc_namelist_YYYYMMDD(self, namrh, first, last):
         """Fix the YYYYn MMn and DDn namelist macros."""
@@ -335,7 +329,7 @@ class MocaccForecast(AbstractMocaccRoot):
         """Prepare the synchronisation with next tasks."""
         # to control synchronisation and promised files : use the script in iopoll method
         # The script executed via iopoll method returns the list of promised files ready
-        super(MocaccForecast, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         if self.promises:
             self.io_poll_kwargs = dict(
                 witness=self.iopoll_witness,
@@ -373,9 +367,9 @@ class MocaccForecast(AbstractMocaccRoot):
     def _sorted_inputs_validities(self):
         """Build a sorted list of validities."""
         return sorted(
-            set(
-                [sec.rh.resource.date + sec.rh.resource.term for sec in self._fm_inputs]
-            ),
+            {
+                sec.rh.resource.date + sec.rh.resource.term for sec in self._fm_inputs
+            },
             reverse=self.transinv,
         )
 
@@ -383,7 +377,7 @@ class MocaccForecast(AbstractMocaccRoot):
     def _sorted_inputs_geometries(self):
         """Build a sorted list of forcing files geometries."""
         return sorted(
-            set([sec.rh.resource.geometry for sec in self._fm_inputs]),
+            {sec.rh.resource.geometry for sec in self._fm_inputs},
             key=lambda x: x.resolution,
             reverse=True,
         )
@@ -403,7 +397,7 @@ class MocaccForecast(AbstractMocaccRoot):
             )
             table_str += "{0:02d}.212, {0:02d}.213, 0 , 0.0, ".format(numpoll + 1)
             table_str += "true, 1, 0, 0, true, false, 222.0, 0.0, 0.0, 0.0, "
-            table_str += "'{0}', '{1}'\n".format(identstat, pollname)
+            table_str += "'{}', '{}'\n".format(identstat, pollname)
 
         self.system.highlight("table_mocage_chem.txt content")
 
@@ -421,7 +415,7 @@ class MocaccForecast(AbstractMocaccRoot):
         # Configuration file
         ct_extra_conf = self._get_single_rh("ExtraConf").contents
 
-        polls = ["POLLUT{0:02d}".format(i + 1) for i in range(0, nbpolls)]
+        polls = ["POLLUT{:02d}".format(i + 1) for i in range(0, nbpolls)]
         # geometries sorted by resolution
         geoms = self._sorted_inputs_geometries
 
@@ -450,15 +444,15 @@ class MocaccForecast(AbstractMocaccRoot):
         i = 0
         for geom in geoms:
             i += 1
-            nb = namrh.contents.newblock("PARAM_G{0}".format(i))
-            nb["NTRA{0}".format(i)] = nbpolls
-            nb["NSLS{0}".format(i)] = 0
-            nb["NEMI{0}".format(i)] = nbpolls
-            nb["NDEP{0}".format(i)] = nbpolls
-            nb["LONM{0}".format(i)] = geom.nlon
-            nb["LATM{0}".format(i)] = geom.nlat
-            nb["LONF{0}".format(i)] = geom.nlon
-            nb["LATF{0}".format(i)] = geom.nlat
+            nb = namrh.contents.newblock("PARAM_G{}".format(i))
+            nb["NTRA{}".format(i)] = nbpolls
+            nb["NSLS{}".format(i)] = 0
+            nb["NEMI{}".format(i)] = nbpolls
+            nb["NDEP{}".format(i)] = nbpolls
+            nb["LONM{}".format(i)] = geom.nlon
+            nb["LATM{}".format(i)] = geom.nlat
+            nb["LONF{}".format(i)] = geom.nlon
+            nb["LATF{}".format(i)] = geom.nlat
 
         namrh.save()
 
@@ -503,7 +497,7 @@ class MocaccForecast(AbstractMocaccRoot):
             )
 
             for grid in fms:
-                empty_hm = "HM{0}+{1}".format(grid.area, self.basedate.ymdh)
+                empty_hm = "HM{}+{}".format(grid.area, self.basedate.ymdh)
 
                 fm_r = usepygram.epygram.formats.resource(
                     filename=fms[grid][0], openmode="r"
@@ -522,14 +516,14 @@ class MocaccForecast(AbstractMocaccRoot):
 
                 for poll in range(1, nbpolls + 1):
                     for level in range(1, nb_levels + 1):
-                        fid = "L{0:03d}POLLUT{1:02d}".format(level, poll)
+                        fid = "L{:03d}POLLUT{:02d}".format(level, poll)
                         field.fid = {"FA": fid}
                         hm_r.writefield(field)
 
                 fm_r.close()
                 hm_r.close()
 
-                self.system.highlight("{0} succesfully created".format(empty_hm))
+                self.system.highlight("{} succesfully created".format(empty_hm))
 
     def execute(self, rh, opts):
         """Standard execution."""
@@ -549,7 +543,7 @@ class MocaccForecast(AbstractMocaccRoot):
 
         self._prepare_mocage_fc_namelist(nbpolls)
 
-        super(MocaccForecast, self).execute(rh, opts)
+        super().execute(rh, opts)
 
 
 class PostMocacc(AlgoComponent):
@@ -681,7 +675,7 @@ class PostMocacc(AlgoComponent):
             self.grab(sec, comment="Grib1 format from netcdf forecasts")
 
             sh.title(
-                "Loop on domain {0:s} and term {1:s}".format(
+                "Loop on domain {:s} and term {:s}".format(
                     r.resource.geometry.area, r.resource.term.fmthm
                 )
             )
@@ -690,7 +684,7 @@ class PostMocacc(AlgoComponent):
             # for the same geometry, for temporal integration
             if r.resource.geometry in latest_by_geom and not transinv:
                 logger.info(
-                    "Time integration using {0!s} as initial state".format(
+                    "Time integration using {!s} as initial state".format(
                         latest_by_geom[r.resource.geometry]
                     )
                 )
@@ -745,7 +739,7 @@ class PostMocacc(AlgoComponent):
                     files_to_add.append(self.hpc_done)
                     files_to_add.append(self.restart_json)
 
-                sh.title("tar in {0}".format(tarname))
+                sh.title("tar in {}".format(tarname))
                 sh.tar(tarname, *files_to_add)
 
                 # To allow flying routing via hook on promise

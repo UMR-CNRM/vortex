@@ -6,9 +6,9 @@ This package handles some common targets used at Meteo France.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import six
 import collections
 import contextlib
+import io
 import ftplib
 import re
 import shlex
@@ -303,7 +303,7 @@ class HendrixPrestagingTool(PrestagingTool):
                                      'MIG'])
         logger.info('Prestaging to %s: Uploading %s',
                     self.storage, self.system.path.join(self.hendrix_stagedir, request_filename))
-        request_data = six.BytesIO()
+        request_data = io.BytesIO()
         request_data.write(('\n'.join(request)).encode(encoding='utf_8'))
         request_data.seek(0)
         try:

@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation
 """
-
-from __future__ import absolute_import, print_function, division, unicode_literals
-
-import six
 
 import bronx.fancies.dump
 from bronx.fancies import loggers
@@ -101,7 +95,7 @@ class ZSVDriver(AirTool):
 
     def __init__(self, *args, **kw):
         """Few extra setup for connexions."""
-        super(ZSVDriver, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.inline = None
         self.archive = None
         self.setup_done = False
@@ -133,7 +127,7 @@ class ZSVDriver(AirTool):
         logger.debug('Configuration defaults: %s', self.config)
 
         # populate actual options with defaults
-        for k, v in six.iteritems(self.config):
+        for k, v in self.config.items():
             if not hasattr(self, k) or getattr(self, k) is None:
                 setattr(self, k, v)
 
@@ -212,7 +206,7 @@ class ZSVQualityStats(ZSVDriver):
 
     def __init__(self, *args, **kw):
         """Setup the log level right from the start."""
-        super(ZSVQualityStats, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._actual_dates = dict()
         self._stats = dict()
         self._iqs = None
@@ -452,18 +446,18 @@ class ZSVQualityStats(ZSVDriver):
         logger.info('Dump stats as csv <file:%s>', self.stats_csvfile)
         with open(self.stats_csvfile, 'w') as fd:
             for n, site in enumerate(self.sites):
-                fd.write(u'{0:d},{1:s},{2:s}\n'.
+                fd.write('{0:d},{1:s},{2:s}\n'.
                          format(n + 1, site,
-                                ','.join([six.text_type(round(self._stats[site][iq].get('P' + ival, 0), 6))
+                                ','.join([str(round(self._stats[site][iq].get('P' + ival, 0), 6))
                                           for iq in self.iqs for ival in ('A', 'B', 'C')])))
 
     def stats_dump_as_txt(self):
         logger.info('Dump stats as txt <file:%s>', self.stats_txtfile)
         with open(self.stats_txtfile, 'w') as fd:
             for n, site in enumerate(self.sites):
-                fd.write(u'{0:d};{1:s};{2:s}\n'.
+                fd.write('{0:d};{1:s};{2:s}\n'.
                          format(n + 1, site,
-                                ';'.join([six.text_type(round(self._stats[site][iq].get('P' + ival, 0), 6))
+                                ';'.join([str(round(self._stats[site][iq].get('P' + ival, 0), 6))
                                           .replace('.', ',')
                                           for iq in self.iqs for ival in ('A', 'B', 'C')])))
 
@@ -515,7 +509,7 @@ class ZSVQualityStats(ZSVDriver):
         self.compute(site)
 
     def complete(self):
-        super(ZSVQualityStats, self).complete()
+        super().complete()
         if self.verbose:
             print(bronx.fancies.dump.fulldump(self.record))
         if self.update:

@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 A collection of Tasks decorators (to add usual inputs/outputs to existing classes).
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 from bronx.fancies import loggers
 

@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various Resources for executables used in demo jobs.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 
 from vortex.data.executables import Script
 from gco.syntax.stdattrs import gvar
@@ -44,4 +39,4 @@ class StdpostScript(Script):
         extra_args = []
         if 'todo' in opts:
             extra_args.append(opts['todo'])  # The name of the file to work on
-        return ' '.join([super(StdpostScript, self).command_line(**opts), ] + extra_args)
+        return ' '.join([super().command_line(**opts), ] + extra_args)

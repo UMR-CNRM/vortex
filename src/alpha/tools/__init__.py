@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Miscellaneous tools for Alpha
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 #: No automatic export
 __all__ = []

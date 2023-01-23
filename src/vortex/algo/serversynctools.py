@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Utility classes to interact with long running binaries.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import socket
 import sys
@@ -52,7 +48,7 @@ class ServerSyncTool(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         logger.debug('Server Synchronisation Tool init %s', self.__class__)
         self._check_callback = lambda: True
-        super(ServerSyncTool, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     def set_servercheck_callback(self, cb):
         """Set a callback method that will be called to check the server state."""
@@ -100,12 +96,12 @@ class ServerSyncSimpleSocket(ServerSyncTool):
     )
 
     def __init__(self, *args, **kw):
-        super(ServerSyncSimpleSocket, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         # Create the socket
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             self._socket.bind((socket.getfqdn(), 0))
-        except socket.error:
+        except OSError:
             self._socket.bind(('localhost', 0))
         self._socket.settimeout(self.checkinterval)
         self._socket.listen(1)
@@ -114,7 +110,7 @@ class ServerSyncSimpleSocket(ServerSyncTool):
         # Create the script that will be called by the server
         t = sessions.current()
         tpl = config.load_template(t, self.tplname)
-        with open(self.medium, 'wt') as fd:
+        with open(self.medium, 'w') as fd:
             fd.write(tpl.substitute(
                 python=sys.executable,
                 address=self._socket.getsockname(),
@@ -157,7 +153,7 @@ class ServerSyncSimpleSocket(ServerSyncTool):
                 self._socket_conn = None
         if self._socket_conn is None:
             if self.raiseonexit:
-                raise IOError('Apparently the server died.')
+                raise OSError('Apparently the server died.')
             else:
                 logger.info('The server stopped.')
         else:

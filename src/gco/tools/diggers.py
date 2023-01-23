@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 utility classes to information on the availability of some resources.
 
@@ -7,10 +5,6 @@ utility classes to information on the availability of some resources.
              will be made in future versions. DO NOT USE YET.
 
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 
 from bronx.fancies import loggers
 import footprints
@@ -39,7 +33,7 @@ class Digger(footprints.FootprintBase):
 
     def __init__(self, *args, **kw):
         logger.debug('Abstract digger init %s', self.__class__)
-        super(Digger, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.clear_stack()
 
     def clear_stack(self):
@@ -184,7 +178,7 @@ class OpDigger(Digger):
             rst = rst.st_size
         except AttributeError:
             pass
-        return six.text_type(rst)
+        return str(rst)
 
     def lookup(self, **kw):
         """Give a look to the expected candidates for the specified resource."""
@@ -197,12 +191,12 @@ class OpDigger(Digger):
             for h in sorted(guess[d].keys()):
                 self.delayed_print(' ' * 3, tmc.ok('+ ' + h))
                 for r in guess[d][h]:
-                    self.delayed_print(' ' * 5, '[{0:s}]'.format(', '.join(r)))
+                    self.delayed_print(' ' * 5, '[{:s}]'.format(', '.join(r)))
                     (vapp, vconf, cutoff, basedate, location, status) = r
                     if status in ('ok', 'notyet'):
                         rh = self.getrh(vapp, vconf, cutoff, basedate, h, location, kw)
                         if rh is not None:
-                            rst = '[{0:s}]'.format(self.getstnice(rh.check())) if kw['check'] else ''
+                            rst = '[{:s}]'.format(self.getstnice(rh.check())) if kw['check'] else ''
                             self.delayed_print(' ' * 5, '-', tmc.warning(rh.locate()), rst)
         return self.stack
 
@@ -258,7 +252,7 @@ class OpDigger(Digger):
                             start, end, extra = self.get_extra_time(thisrun, shelf, term)
                             expected = thisdate + start + extra
                             r = (vapp, vconf, cutoff, shelf, expected.isoformat())
-                            self.delayed_print(' ' * 5, '[{0:s}]'.format(', '.join(r)))
+                            self.delayed_print(' ' * 5, '[{:s}]'.format(', '.join(r)))
                             rh = self.getrh(vapp, vconf, cutoff, thisdate, term, shelf, kw)
                             if rh is not None:
                                 rst = ''
@@ -268,7 +262,7 @@ class OpDigger(Digger):
                                         rst = (date.Date(float(rst.st_ctime)) - expected).time().fmthm
                                     except AttributeError:
                                         pass
-                                    rst = '[{0!s}]'.format(rst)
+                                    rst = '[{!s}]'.format(rst)
                                 self.delayed_print(' ' * 5, '-', tmc.warning(rh.locate()), rst)
         return self.stack
 
@@ -289,7 +283,7 @@ class NamDigger(Digger):
 
     def __init__(self, *args, **kw):
         logger.debug('Abstract nam digger init %s', self.__class__)
-        super(NamDigger, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._rh = None
         self._domains = None
 

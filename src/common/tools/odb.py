@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 Common interest classes to help setup the ODB software environment.
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import re
-import six
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date as bdate
@@ -24,11 +19,11 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class TimeSlots(object):
+class TimeSlots:
     """Handling of assimilation time slots."""
 
     def __init__(self, nslot=7, start='-PT3H', window='PT6H', chunk=None, center=True):
-        if isinstance(nslot, six.string_types):
+        if isinstance(nslot, str):
             info = [x.strip() for x in nslot.split('/')]
             nslot = info[0]
             if len(info) > 1:
@@ -46,11 +41,11 @@ class TimeSlots(object):
         self.window = bdate.Period(window)
         if chunk is None:
             cslot = self.nslot - 1 if self.center else self.nslot
-            chunk = 'PT' + six.text_type((self.window.length // max(1, cslot)) // 60) + 'M'
+            chunk = 'PT' + str((self.window.length // max(1, cslot)) // 60) + 'M'
         self.chunk = self.window if self.nslot < 2 else bdate.Period(chunk)
 
     def __eq__(self, other):
-        if isinstance(other, six.string_types):
+        if isinstance(other, str):
             try:
                 other = TimeSlots(other)
             except ValueError:
@@ -68,7 +63,7 @@ class TimeSlots(object):
                                                       chunky)
 
     def __repr__(self, *args, **kwargs):
-        return super(TimeSlots, self).__repr__()[:-1] + ' | {!s}>'.format(self)
+        return super().__repr__()[:-1] + ' | {!s}>'.format(self)
 
     def as_slots(self):
         """Return a list of slots in seconds."""
@@ -125,12 +120,12 @@ class TimeSlots(object):
         """Fill the specified ``filename`` wih the current list of time slots at this ``date``."""
         with open(filename, 'w') as fd:
             for x in self.as_bounds(date):
-                fd.write(six.text_type(x) + '\n')
+                fd.write(str(x) + '\n')
             nbx = fd.tell()
         return nbx
 
 
-class OdbDriver(object):
+class OdbDriver:
     """A dedicated class for handling some ODB settings."""
 
     def __init__(self, cycle, sh=None, env=None, target=None):
@@ -241,7 +236,7 @@ class OdbDriver(object):
             self.sh.spawn([iocreate_path,
                            '-d' + dbpath,
                            '-l' + layout,
-                           '-n' + six.text_type(npool)],
+                           '-n' + str(npool)],
                           output=False)
         return dbpath
 
@@ -271,7 +266,7 @@ class OdbDriver(object):
     def _ioassign_process(self, dbpaths, wmode):
         with open('IOASSIGN', wmode) as fhgather:
             for dbpath in dbpaths:
-                with open(self.sh.path.join(dbpath, 'IOASSIGN'), 'r') as fhlay:
+                with open(self.sh.path.join(dbpath, 'IOASSIGN')) as fhlay:
                     for line in fhlay:
                         fhgather.write(line)
 
@@ -337,7 +332,7 @@ class OdbDriver(object):
             if f in [n.format(layout) for n in ('{:s}.iomap', '{:s}.sch',
                                                 '{:s}.IOASSIGN', 'IOASSIGN.{:s}', 'IOASSIGN')]:
                 tmp_target = self.sh.path.join(dbpath, f + '.tmp_new')
-                with open(self.sh.path.join(dbpath, f), 'r') as inodb:
+                with open(self.sh.path.join(dbpath, f)) as inodb:
                     with open(tmp_target, 'w') as outodb:
                         for line in inodb:
                             outodb.write(line.replace(layout, layout_new))
@@ -465,8 +460,8 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
         Look into the **odsections** section list in order to find the current
         run date and ODB database layout.
         """
-        alllayouts = set([s.rh.resource.layout for s in odbsections])
-        alldates = set([s.rh.resource.date for s in odbsections])
+        alllayouts = {s.rh.resource.layout for s in odbsections}
+        alldates = {s.rh.resource.date for s in odbsections}
         if len(alllayouts) != 1:
             raise AlgoComponentError("Inconsistent ODB layouts")
         if len(alldates) != 1:

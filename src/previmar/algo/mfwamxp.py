@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Algo for MFWAM production.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 
 #: No automatic export
 __all__ = []
@@ -89,14 +83,14 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
 
     def spawn_hook(self):
         """"""
-        super(Mfwam, self).spawn_hook()
+        super().spawn_hook()
         if self.system.path.exists('fort.3'):
-            self.system.subtitle('{0:s} : dump namelist <fort.3>'.format(self.realkind))
+            self.system.subtitle('{:s} : dump namelist <fort.3>'.format(self.realkind))
             self.system.cat('fort.3', output=False)
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(Mfwam, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # setup MPI compatibilite
         self.env.update(
@@ -163,7 +157,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                                                               kind=('namelist'))
 
         if len(namcandidate) != 1:
-            raise IOError("No or too much namelists for MFWAM")
+            raise OSError("No or too much namelists for MFWAM")
         namcontents = namcandidate[0].rh.contents
 
         namcontents.setmacro('CBPLTDT', datedebana.compact())  # debut analyse
@@ -228,7 +222,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         """Manually call the iopoll method to deal with the latest files."""
         if self.flyput:
             self.manual_flypolling_job()
-        super(Mfwam, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class MfwamGauss2Grib(ParaBlindRun):
@@ -290,7 +284,7 @@ class MfwamGauss2Grib(ParaBlindRun):
         else:
             for dom in self.grid:
                 if not self.system.path.exists("./grids/" + dom + ".nam"):
-                    raise IOError("./grids/" + dom + ".nam must exist.")
+                    raise OSError("./grids/" + dom + ".nam must exist.")
 
         # Monitor for the input files
         bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
@@ -317,14 +311,14 @@ class MfwamGauss2Grib(ParaBlindRun):
 
         self._default_post_execute(rh, opts)
 
-        for failed_file in [e.section.rh.container.localpath() for e in six.itervalues(bm.failed)]:
+        for failed_file in [e.section.rh.container.localpath() for e in bm.failed.values()]:
             logger.error("We were unable to fetch the following file: %s", failed_file)
             if self.fatal:
                 self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
                                            traceback=False)
 
         if tmout:
-            raise IOError("The waiting loop timed out")
+            raise OSError("The waiting loop timed out")
 
 
 class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
@@ -378,7 +372,7 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
                 # execution
                 self.local_spawn("output.{:s}.log".format(dom))
                 # copie output
-                output_file = "reg{0:s}_{1:s}".format(self.file_out, dom)
+                output_file = "reg{:s}_{:s}".format(self.file_out, dom)
                 sh.mv(self.fortoutput, sh.path.join(cwd, output_file), fmt='grib')
                 output_files.add(sh.path.join(cwd, output_file))
 
@@ -443,14 +437,14 @@ class CompressionGribAlgo(ParaBlindRun):
 
         self._default_post_execute(rh, opts)
 
-        for failed_file in [e.section.rh.container.localpath() for e in six.itervalues(bm.failed)]:
+        for failed_file in [e.section.rh.container.localpath() for e in bm.failed.values()]:
             logger.error("We were unable to fetch the following file: %s", failed_file)
             if self.fatal:
                 self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
                                            traceback=False)
 
         if tmout:
-            raise IOError("The waiting loop timed out")
+            raise OSError("The waiting loop timed out")
 
 
 class _CompressionGribAlgoWorker(VortexWorkerBlindRun):
@@ -481,7 +475,7 @@ class _CompressionGribAlgoWorker(VortexWorkerBlindRun):
 
             sh.softlink(sh.path.join(cwd, self.file_in), self.file_in)
             self.local_spawn("output.log")
-            output_file = "{0:s}.comp".format(self.file_in)
+            output_file = "{:s}.comp".format(self.file_in)
             sh.mv(output_file, sh.path.join(cwd, output_file), fmt='grib')
             output_files.add(sh.path.join(cwd, output_file))
 

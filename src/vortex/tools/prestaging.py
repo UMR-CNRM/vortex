@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Advanced tools that deal with resources pre-staging.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import namedtuple
 
@@ -83,7 +79,7 @@ class PrestagingTool(footprints.FootprintBase, Catalog):
         raise NotImplementedError()
 
 
-class PrivatePrestagingHub(object):
+class PrivatePrestagingHub:
     """
     Manages pre-staging request by forwarding them to the appropriate
     :class:`PrestagingTool` object.
@@ -147,8 +143,8 @@ class PrivatePrestagingHub(object):
         return todo
 
     def __repr__(self, *args, **kwargs):
-        return ('{0:s} | n_prestagingtools={1:d}>'
-                .format(super(PrivatePrestagingHub, self).__repr__().rstrip('>'),
+        return ('{:s} | n_prestagingtools={:d}>'
+                .format(super().__repr__().rstrip('>'),
                         len(self._prestagingtools)))
 
     def __str__(self):

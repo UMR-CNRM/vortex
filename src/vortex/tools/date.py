@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Classes and functions form this module are dedicated to the manipulation of
 date and time quantities.
@@ -7,8 +5,6 @@ date and time quantities.
 It is kept for backward compatibility, however :mod:`bronx.stdtypes.date` should
 be used now and on.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import sys
 

@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Ctpini files.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 from bronx.fancies import loggers
 
@@ -125,7 +121,7 @@ class GridPointCtpini(GridPoint):
 
     def namebuilding_info(self):
         """Generic information, radical = ``grid``."""
-        ninfo = super(GridPointCtpini, self).namebuilding_info()
+        ninfo = super().namebuilding_info()
         if self.origin == 'ctpini' and self.run_ctpini is not None:
             source = [self.model, self.origin, self.parameter, self.run_ctpini]
         else:

@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 Class decorators used in abstract footprints defined in :mod:`vortex.syntax.stdattr`
 in order to alter resource's behaviours to be consistent with the added
 attribute.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 
 def namebuilding_insert(targetkey, valuecb, none_discard=False, setdefault=False):

@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Interface to SMS commands.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import contextlib
 import functools
-import six
 
 from bronx.fancies import loggers
 import footprints
@@ -37,7 +32,7 @@ class Scheduler(Service):
 
     def __init__(self, *args, **kw):
         logger.debug('Scheduler init %s', self.__class__)
-        super(Scheduler, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def env(self):
@@ -90,7 +85,7 @@ class EcmwfLikeScheduler(Scheduler):
         """Possibly export the provided variables and return a dictionary of positioned variables."""
         if kwenv:
             for schedvar in [x.upper() for x in kwenv.keys() if x.upper().startswith(self.env_pattern)]:
-                self.env[schedvar] = six.text_type(kwenv[schedvar])
+                self.env[schedvar] = str(kwenv[schedvar])
         subenv = dict()
         for schedvar in [x for x in self.env.keys() if x.startswith(self.env_pattern)]:
             subenv[schedvar] = self.env.get(schedvar)
@@ -98,8 +93,8 @@ class EcmwfLikeScheduler(Scheduler):
 
     def info(self):
         """Dump current defined variables."""
-        for schedvar, schedvalue in six.iteritems(self.conf(dict())):
-            print('{0:s}="{1!s}"'.format(schedvar, schedvalue))
+        for schedvar, schedvalue in self.conf(dict()).items():
+            print('{:s}="{!s}"'.format(schedvar, schedvalue))
 
     def __call__(self, *args):
         """By default call the :meth:`info` method."""
@@ -209,7 +204,7 @@ class SMS(EcmwfLikeScheduler):
 
     def __init__(self, *args, **kw):
         logger.debug('SMS scheduler client init %s', self)
-        super(SMS, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._actual_rootdir = self.rootdir
         if self._actual_rootdir is None:
             thistarget = self.sh.default_target
@@ -229,7 +224,7 @@ class SMS(EcmwfLikeScheduler):
 
     def cmd_rename(self, cmd):
         """Remap command name. Strip any sms prefix."""
-        cmd = super(SMS, self).cmd_rename(cmd)
+        cmd = super().cmd_rename(cmd)
         while cmd.startswith('sms'):
             cmd = cmd[3:]
         return cmd
@@ -249,14 +244,14 @@ class SMS(EcmwfLikeScheduler):
     @contextlib.contextmanager
     def child_session_setup(self):
         """Setup the path to the SMS client."""
-        with super(SMS, self).child_session_setup() as setup_rc:
+        with super().child_session_setup() as setup_rc:
             self.env.SMSACTUALPATH = self._actual_rootdir
             yield setup_rc
 
     @contextlib.contextmanager
     def wrap_actual_child_command(self, kwoptions):
         """Last minute wrap before binary child command."""
-        with super(SMS, self).wrap_actual_child_command(kwoptions) as wrapp_rc:
+        with super().wrap_actual_child_command(kwoptions) as wrapp_rc:
             upd_env = dict()
             if not kwoptions.get('critical', True):
                 upd_env['SMSDENIED'] = 1
@@ -292,7 +287,7 @@ class SMSColor(SMS):
     @contextlib.contextmanager
     def wrap_actual_child_command(self, kwoptions):
         """Last minute wrap before binary child command."""
-        with super(SMSColor, self).wrap_actual_child_command(kwoptions) as wrapp_rc:
+        with super().wrap_actual_child_command(kwoptions) as wrapp_rc:
             print("SMS COLOR")
             yield wrapp_rc
 
@@ -325,7 +320,7 @@ class EcFlow(EcmwfLikeScheduler):
 
     def __init__(self, *args, **kw):
         logger.debug('EcFlow scheduler client init %s', self)
-        super(EcFlow, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._actual_clientpath = self.clientpath
 
     def path(self):
@@ -346,7 +341,7 @@ class EcFlow(EcmwfLikeScheduler):
     @contextlib.contextmanager
     def child_session_setup(self):
         """Setup a SSH tunnel if necessary."""
-        with super(EcFlow, self).child_session_setup() as setup_rc:
+        with super().child_session_setup() as setup_rc:
             if setup_rc and not self.sh.default_target.isnetworknode:
                 tunnel = None
                 # wait and retries from config
@@ -382,7 +377,7 @@ class EcFlow(EcmwfLikeScheduler):
     @contextlib.contextmanager
     def wrap_actual_child_command(self, kwoptions):
         """Last minute wrap before binary child command."""
-        with super(EcFlow, self).wrap_actual_child_command(kwoptions) as wrapp_rc:
+        with super().wrap_actual_child_command(kwoptions) as wrapp_rc:
             upd_env = dict()
             if not kwoptions.get('critical', True):
                 upd_env['{:s}DENIED'.format(self.env_pattern)] = 1
@@ -403,7 +398,7 @@ class EcFlow(EcmwfLikeScheduler):
                 args.extend(options[1:])
         else:
             args.append('--{:s}'.format(cmd))
-        args = [six.text_type(a) for a in args]
+        args = [str(a) for a in args]
         logger.info('Issuing the ecFlow command: %s', ' '.join(args[1:]))
         return self.sh.spawn(args, output=False, fatal=critical)
 

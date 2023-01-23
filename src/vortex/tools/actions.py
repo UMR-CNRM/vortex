@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Module managing the sending of messages.
 Default action classes must provide four methods: on, off, status, execute.
@@ -8,8 +6,6 @@ status of the action. As far as the execute function is concerned,
 it must deal with the data (given to realize the action) and the action
 to be processed: e.g. mail, routing, alarm.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import bronx.stdtypes.catalog
 import footprints
@@ -25,7 +21,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class Action(object):
+class Action:
     """
     An ``Action`` object is intended to produce a dedicated service through a simple command
     which internally refers to the :meth:`execute` method.
@@ -144,7 +140,7 @@ class TunableAction(Action):
     """
 
     def __init__(self, configuration=None, **kwargs):
-        super(TunableAction, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._tuning = dict()
         self._conf_section = configuration
         self._conf_dict = None
@@ -181,7 +177,7 @@ class TunableAction(Action):
     def service_info(self, **kw):
         for k, v in self._get_config_dict().items():
             kw.setdefault(k, v)
-        return super(TunableAction, self).service_info(**kw)
+        return super().service_info(**kw)
 
     def tune(self, section=None, **kw):
         """Add options to override the .ini file configuration.
@@ -199,7 +195,7 @@ class TunableAction(Action):
 
     def info(self):
         """Informative string (may serve debugging purposes)."""
-        s = super(TunableAction, self).info() + ' - tunable\n'
+        s = super().info() + ' - tunable\n'
         mix = dict()
         mix.update(self._conf_items)
         mix.update(self._tuning)
@@ -235,7 +231,7 @@ class SendMail(Action):
     """
 
     def __init__(self, kind='mail', service='sendmail', active=True, quoteprintable=True):
-        super(SendMail, self).__init__(kind=kind, active=active, service=service)
+        super().__init__(kind=kind, active=active, service=service)
         if quoteprintable:
             from email import charset
             charset.add_charset('utf-8', charset.QP, charset.QP, 'utf-8')
@@ -248,8 +244,8 @@ class TemplatedMail(TunableAction):
     """
     def __init__(self, kind='templatedmail', service='templatedmail', active=True,
                  catalog=None, inputs_charset=None):
-        super(TemplatedMail, self).__init__(configuration=None, kind=kind, active=active,
-                                            service=service)
+        super().__init__(configuration=None, kind=kind, active=active,
+                         service=service)
         self.catalog = catalog or GenericConfigParser('@{:s}-inventory.ini'.format(kind),
                                                       encoding=inputs_charset)
         self.inputs_charset = inputs_charset
@@ -258,7 +254,7 @@ class TemplatedMail(TunableAction):
         """Kindly propose the permanent directory and catalog to the final service"""
         kw.setdefault('catalog', self.catalog)
         kw.setdefault('inputs_charset', self.inputs_charset)
-        return super(TemplatedMail, self).service_info(**kw)
+        return super().service_info(**kw)
 
     def execute(self, *args, **kw):
         """
@@ -280,7 +276,7 @@ class Report(TunableAction):
     """
 
     def __init__(self, kind='report', service='sendreport', active=True):
-        super(Report, self).__init__(kind=kind, active=active, service=service)
+        super().__init__(kind=kind, active=active, service=service)
 
 
 class SSH(Action):
@@ -289,7 +285,7 @@ class SSH(Action):
     """
 
     def __init__(self, kind='ssh', service='ssh', active=True):
-        super(SSH, self).__init__(kind=kind, active=active, service=service)
+        super().__init__(kind=kind, active=active, service=service)
 
 
 class AskJeeves(TunableAction):
@@ -298,7 +294,7 @@ class AskJeeves(TunableAction):
     """
 
     def __init__(self, kind='jeeves', service='askjeeves', active=True):
-        super(AskJeeves, self).__init__(configuration=None, kind=kind, active=active, service=service)
+        super().__init__(configuration=None, kind=kind, active=active, service=service)
 
     def execute(self, *args, **kw):
         """Generic method to perform the action through a service."""
@@ -318,7 +314,7 @@ class Prompt(Action):
     """
 
     def __init__(self, kind='prompt', service='prompt', active=True):
-        super(Prompt, self).__init__(kind=kind, active=active, service=service)
+        super().__init__(kind=kind, active=active, service=service)
 
     def execute(self, *args, **kw):
         """Do nothing but prompt the actual arguments."""
@@ -351,8 +347,7 @@ class FlowSchedulerGateway(Action):
         """
         if service is None:
             raise ValueError('The service name must be provided')
-        super(FlowSchedulerGateway, self).__init__(
-            kind=kind, active=active, service=service, permanent=permanent)
+        super().__init__(kind=kind, active=active, service=service, permanent=permanent)
 
     def gateway(self, *args, **kw):
         """Ask the Scheduler to run any (but known) command."""
@@ -380,17 +375,17 @@ class SmsGateway(FlowSchedulerGateway):
     """Send a child command to an SMS server."""
 
     def __init__(self, kind='sms', service='sms', active=True, permanent=True):
-        super(SmsGateway, self).__init__(kind=kind, active=active, service=service, permanent=permanent)
+        super().__init__(kind=kind, active=active, service=service, permanent=permanent)
 
 
 class EcflowGateway(FlowSchedulerGateway):
     """Send a child command to an Ecflow server."""
 
     def __init__(self, kind='ecflow', service='ecflow', active=True, permanent=True):
-        super(EcflowGateway, self).__init__(kind=kind, active=active, service=service, permanent=permanent)
+        super().__init__(kind=kind, active=active, service=service, permanent=permanent)
 
 
-class SpooledActions(object):
+class SpooledActions:
     """
     Delayed action to be processed.
     """
@@ -435,7 +430,7 @@ class Dispatcher(bronx.stdtypes.catalog.Catalog):
 
     def __init__(self, **kw):
         logger.debug('Action dispatcher init %s', self)
-        super(Dispatcher, self).__init__(**kw)
+        super().__init__(**kw)
 
     @property
     def actions(self):

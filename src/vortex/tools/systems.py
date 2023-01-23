@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """
 This package handles system interfaces objects that are in charge of
@@ -21,15 +20,15 @@ When working with System objects, preferentialy use high-level methods such as
 
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from collections import namedtuple
 import contextlib
 import errno
 import filecmp
+import ftplib
 import functools
 import glob
 import hashlib
+import importlib
 import io
 import json
 import locale
@@ -43,7 +42,6 @@ import re
 import resource
 import shutil
 import signal
-import six
 import socket
 import stat
 import subprocess
@@ -53,7 +51,6 @@ import tempfile
 import threading
 import time
 
-import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes import date
 from bronx.stdtypes.history import History
@@ -61,16 +58,15 @@ from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
 from bronx.system.cpus import LinuxCpusInfo
 from bronx.system.memory import LinuxMemInfo
 from bronx.system.numa import LibNumaNodesInfo
-from bronx.syntax.decorators import secure_getattr
+from bronx.syntax.decorators import nicedeco_plusdoc, secure_getattr
 from bronx.syntax.externalcode import ExternalCodeImportChecker
+import footprints
 from vortex.gloves import Glove
 from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp, AutoRetriesFtp, FtpConnectionPool, DEFAULT_FTP_PORT
 from vortex.tools.net import AssistedSsh, LinuxNetstats
 from vortex.tools.compression import CompressionPipeline
-from bronx.syntax.decorators import nicedeco_plusdoc
 from vortex.syntax.stdattrs import DelayedInit
-import ftplib
 
 #: No automatic export
 __all__ = []
@@ -160,7 +156,7 @@ class CopyTreeError(OSError):
     pass
 
 
-class CdContext(object):
+class CdContext:
     """
     Context manager for temporarily changing the working directory.
 
@@ -180,7 +176,7 @@ class CdContext(object):
 
     def __enter__(self):
         if self.newpath not in ('', '.'):
-            self.oldpath = self.sh.getcwdu() if six.PY2 else self.sh.getcwd()
+            self.oldpath = self.sh.getcwd()
             self.sh.cd(self.newpath, create=self.create)
 
     def __exit__(self, etype, value, traceback):  # @UnusedVariable
@@ -188,17 +184,6 @@ class CdContext(object):
             self.sh.cd(self.oldpath)
             if self.clean_onexit:
                 self.sh.rm(self.newpath)
-
-
-def setlocale(category, localename=None):
-    """Older Python2 insist on localename being an str and not unicode.
-
-    This was fixed somewhere between Python 2.7.5 and 2.7.12
-    and should be removed some day.
-    """
-    if localename:
-        return locale.setlocale(category, str(localename))
-    return locale.setlocale(category)
 
 
 @contextlib.contextmanager
@@ -221,15 +206,15 @@ def LocaleContext(category, localename=None, uselock=False):
     """
     lock = LOCALE_LOCK if uselock else NullContext()
     with lock:
-        previous = setlocale(category)
+        previous = locale.setlocale(category)
         try:
-            yield setlocale(category, localename)
+            yield locale.setlocale(category, localename)
         finally:
             locale.setlocale(category, previous)
 
 
 @functools.total_ordering
-class PythonSimplifiedVersion(object):
+class PythonSimplifiedVersion:
     """
     Type that holds a simplified representation of the Python's version
 
@@ -269,14 +254,14 @@ class PythonSimplifiedVersion(object):
         return self.version > other.version
 
     def __str__(self):
-        return '.'.join([six.text_type(d) for d in self.version])
+        return '.'.join([str(d) for d in self.version])
 
     def __repr__(self):
         return '<{} | {!s}>'.format(object.__repr__(self).lstrip('<').rstrip('>'), self)
 
     def export_dict(self):
         """The pure dict/json output is the raw integer"""
-        return six.text_type(self)
+        return str(self)
 
 
 class System(footprints.FootprintBase):
@@ -391,12 +376,12 @@ class System(footprints.FootprintBase):
         self.__dict__['_xtrack'] = dict()
         self.__dict__['_history'] = History(tag='shell')
         self.__dict__['_rclast'] = 0
-        self.__dict__['prompt'] = six.text_type(kw.pop('prompt', ''))
+        self.__dict__['prompt'] = str(kw.pop('prompt', ''))
         for flag in ('trace', 'timer'):
             self.__dict__[flag] = kw.pop(flag, False)
         for flag in ('output', ):
             self.__dict__[flag] = kw.pop(flag, True)
-        super(System, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -432,7 +417,7 @@ class System(footprints.FootprintBase):
         """Extend the current external attribute resolution to **obj** (module or object)."""
         if obj is not None:
             if hasattr(obj, 'kind'):
-                for k, v in six.iteritems(self._xtrack):
+                for k, v in self._xtrack.items():
                     if hasattr(v, 'kind'):
                         if hasattr(self, k):
                             delattr(self, k)
@@ -488,7 +473,7 @@ class System(footprints.FootprintBase):
             def osproxy(*args, **kw):
                 cmd = [key]
                 cmd.extend(args)
-                cmd.extend(['{0:s}={1:s}'.format(x, str(kw[x])) for x in kw.keys()])
+                cmd.extend(['{:s}={:s}'.format(x, str(kw[x])) for x in kw.keys()])
                 self.stderr(*cmd)
                 return actualattr(*args, **kw)
 
@@ -506,12 +491,12 @@ class System(footprints.FootprintBase):
         count, justnow, = self.history.append(*args)
         if self.trace:
             if self.trace == 'log':
-                logger.info('[sh:#%d] %s', count, ' '.join([six.text_type(x) for x in args]))
+                logger.info('[sh:#%d] %s', count, ' '.join([str(x) for x in args]))
             else:
                 sys.stderr.write(
-                    "* [{0:s}][{1:d}] {2:s}\n".format(
+                    "* [{:s}][{:d}] {:s}\n".format(
                         justnow.strftime('%Y/%m/%d-%H:%M:%S'), count,
-                        ' '.join([six.text_type(x) for x in args])
+                        ' '.join([str(x) for x in args])
                     )
                 )
 
@@ -540,7 +525,7 @@ class System(footprints.FootprintBase):
         :param str tchar: The character used to frame the title text
         :param int autolen: The title width
         """
-        if isinstance(textlist, six.string_types):
+        if isinstance(textlist, str):
             textlist = (textlist,)
         if autolen:
             nbc = autolen
@@ -591,10 +576,10 @@ class System(footprints.FootprintBase):
             if not prompt:
                 prompt = self.prompt
             if prompt:
-                prompt = six.text_type(prompt) + ' '
+                prompt = str(prompt) + ' '
             else:
                 prompt = ''
-            print(prompt + six.text_type(text))
+            print(prompt + str(text))
             if xline:
                 print(tchar * nbc)
         self.flush_stdall()
@@ -640,7 +625,7 @@ class System(footprints.FootprintBase):
         env = self.env
         label = env.PBS_JOBID or env.SLURM_JOB_ID or 'localpid'
         if label == 'localpid':
-            label = six.text_type(self.getpid())
+            label = str(self.getpid())
         return label
 
     def vortex_modules(self, only='.'):
@@ -693,7 +678,7 @@ class System(footprints.FootprintBase):
                     self.import_module(modname)
                     extras.append(modname)
                 except ValueError as err:
-                    logger.critical('systems_reload: cannot import module %s (%s)' % (modname, str(err)))
+                    logger.critical('systems_reload: cannot import module %s (%s)', modname, str(err))
         return extras
 
     # Redefinition of methods of the resource package...
@@ -732,6 +717,22 @@ class System(footprints.FootprintBase):
             pid = self._rl.RUSAGE_SELF
         self.stderr('getrusage', pid)
         return self._rl.getrusage(pid)
+
+    def import_module(self, modname):
+        """Import the module named **modname** with :mod:`importlib` package."""
+        importlib.import_module(modname)
+        return sys.modules.get(modname)
+
+    def import_function(self, funcname):
+        """Import the function named **funcname** qualified by a proper module name package."""
+        thisfunc = None
+        if '.' in funcname:
+            thismod = self.import_module('.'.join(funcname.split('.')[:-1]))
+            if thismod:
+                thisfunc = getattr(thismod, funcname.split('.')[-1], None)
+        else:
+            logger.error('Bad function path name <%s>' % funcname)
+        return thisfunc
 
 
 class OSExtended(System):
@@ -779,7 +780,7 @@ class OSExtended(System):
         # Hardlinks behaviour...
         self.allow_cross_users_links = True
         # Go for the superclass' constructor
-        super(OSExtended, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         # Initialise possibly missing objects
         self.__dict__['_cpusinfo'] = None
         self.__dict__['_numainfo'] = None
@@ -991,7 +992,7 @@ class OSExtended(System):
                 localenv.update(taskset_env)
             else:
                 logger.warning("CPU binding is not available on this platform")
-        if isinstance(args, six.string_types):
+        if isinstance(args, str):
             if taskset:
                 args = taskset_cmd + ' ' + args
             if self.timer:
@@ -1009,7 +1010,7 @@ class OSExtended(System):
             else:
                 cmdout, cmderr = None, None
         else:
-            if isinstance(output, six.string_types):
+            if isinstance(output, str):
                 output = open(output, outmode)
             cmdout, cmderr = output, output
         p = None
@@ -1079,7 +1080,7 @@ class OSExtended(System):
                         p.stdout.close()
                     if p.stderr:
                         p.stderr.close()
-            elif isinstance(output, six.string_types):
+            elif isinstance(output, str):
                 output.close()
             elif isinstance(output, io.IOBase):
                 output.flush()
@@ -1106,7 +1107,7 @@ class OSExtended(System):
             output = self.output
         self.stderr('pwd')
         try:
-            realpwd = self._os.getcwdu() if six.PY2 else self._os.getcwd()
+            realpwd = self._os.getcwd()
         except OSError as e:
             logger.error('getcwdu failed: %s.', str(e))
             return None
@@ -1141,22 +1142,10 @@ class OSExtended(System):
         :param dir: The temporary directory will be created in that directory
         """
         self.stderr('temporary_dir_context starts', suffix)
-        if six.PY2:
-            self.stderr('mkdtemp', suffix, prefix, dir)
-            if suffix is None:
-                suffix = ''
-            if prefix is None:
-                prefix = 'tmp'
-            tmp_dir = tempfile.mkdtemp(suffix=suffix, prefix=prefix, dir=dir)
-            try:
-                yield tmp_dir
-            finally:
-                self.rm(tmp_dir)
-        else:
-            self.stderr('tempfile.TemporaryDirectory', suffix, prefix, dir)
-            with tempfile.TemporaryDirectory(suffix=suffix, prefix=prefix, dir=dir) as tmp_dir:
-                yield tmp_dir
-                self.stderr('tempfile.TemporaryDirectory cleanup', tmp_dir)
+        self.stderr('tempfile.TemporaryDirectory', suffix, prefix, dir)
+        with tempfile.TemporaryDirectory(suffix=suffix, prefix=prefix, dir=dir) as tmp_dir:
+            yield tmp_dir
+            self.stderr('tempfile.TemporaryDirectory cleanup', tmp_dir)
 
     @contextlib.contextmanager
     def temporary_dir_cdcontext(self, suffix=None, prefix=None, dir=None):
@@ -1270,18 +1259,6 @@ class OSExtended(System):
     def usr_file(self, filename):
         """Return whether or not **filename** belongs to the current user."""
         return self._os.stat(filename).st_uid == self._os.getuid()
-
-    def which(self, command):
-        """Clone of the eponymous unix command."""
-        self.stderr('which', command)
-        if command.startswith('/'):
-            if self.xperm(command):
-                return command
-        else:
-            for xpath in self.env.path.split(':'):
-                fullcmd = os.path.join(xpath, command)
-                if self.xperm(fullcmd):
-                    return fullcmd
 
     def touch(self, filename):
         """Clone of the eponymous unix command."""
@@ -1486,7 +1463,7 @@ class OSExtended(System):
         if cmdline is None:
             cmdline = sys.argv[1:]
         opts.update(dict([x.split('=') for x in cmdline]))
-        for k, v in six.iteritems(opts):
+        for k, v in opts.items():
             if v not in (None, True, False):
                 if istrue.match(v):
                     opts[k] = True
@@ -1499,9 +1476,9 @@ class OSExtended(System):
     def is_iofile(self, iocandidate):
         """Check if actual **iocandidate** is a valid filename or io stream."""
         return iocandidate is not None and (
-            (isinstance(iocandidate, six.string_types) and self.path.exists(iocandidate)) or
+            (isinstance(iocandidate, str) and self.path.exists(iocandidate)) or
             isinstance(iocandidate, io.IOBase) or
-            isinstance(iocandidate, six.BytesIO) or isinstance(iocandidate, six.StringIO)
+            isinstance(iocandidate, io.BytesIO) or isinstance(iocandidate, io.StringIO)
         )
 
     @contextlib.contextmanager
@@ -1627,7 +1604,7 @@ class OSExtended(System):
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             uncompress the data during the file transfer (default: *None*).
         """
-        if isinstance(destination, six.string_types):  # destination may be Virtual
+        if isinstance(destination, str):  # destination may be Virtual
             self.rm(destination)
         hostname = self.fix_fthostname(hostname)
         ftp = self.ftp(hostname, logname, port=port)
@@ -1684,7 +1661,7 @@ class OSExtended(System):
                 finally:
                     ftp.close()
         else:
-            raise IOError('No such file or directory: {!r}'.format(source))
+            raise OSError('No such file or directory: {!r}'.format(source))
         return rc
 
     def ftspool_cache(self):
@@ -1709,7 +1686,7 @@ class OSExtended(System):
 
     def ftserv_allowed(self, source, destination):
         """Given **source** and **destination**, is FtServ usable ?"""
-        return isinstance(source, six.string_types) and isinstance(destination, six.string_types)
+        return isinstance(source, str) and isinstance(destination, str)
 
     def ftserv_put(self, source, destination, hostname=None, logname=None, port=None,
                    specialshell=None, sync=False):
@@ -1741,9 +1718,9 @@ class OSExtended(System):
                 except ExecutionError:
                     rc = False
             else:
-                raise IOError('No such file or directory: {!s}'.format(source))
+                raise OSError('No such file or directory: {!s}'.format(source))
         else:
-            raise IOError('Source or destination is not a plain file path: {!r}'.format(source))
+            raise OSError('Source or destination is not a plain file path: {!r}'.format(source))
         return rc
 
     def ftserv_get(self, source, destination, hostname=None, logname=None, port=None):
@@ -1766,9 +1743,9 @@ class OSExtended(System):
                 except ExecutionError:
                     rc = False
             else:
-                raise IOError('Could not cocoon: {!s}'.format(destination))
+                raise OSError('Could not cocoon: {!s}'.format(destination))
         else:
-            raise IOError('Source or destination is not a plain file path: {!r}'.format(source))
+            raise OSError('Source or destination is not a plain file path: {!r}'.format(source))
         return rc
 
     def ftserv_batchget(self, source, destination, hostname=None, logname=None, port=None):
@@ -1779,7 +1756,7 @@ class OSExtended(System):
         if all([self.ftserv_allowed(s, d) for s, d in zip(source, destination)]):
             for d in destination:
                 if not self.filecocoon(d):
-                    raise IOError('Could not cocoon: {!s}'.format(d))
+                    raise OSError('Could not cocoon: {!s}'.format(d))
             extras = list()
             hostname = self.fix_fthostname(hostname, fatal=False)
             logname = self.fix_ftuser(hostname, logname, fatal=False)
@@ -1826,7 +1803,7 @@ class OSExtended(System):
                             break
                     x_rc.append(my_rc)
         else:
-            raise IOError('Source or destination is not a plain file path: {!r}'.format(source))
+            raise OSError('Source or destination is not a plain file path: {!r}'.format(source))
         return x_rc
 
     def rawftput_worthy(self, source, destination):
@@ -1912,7 +1889,7 @@ class OSExtended(System):
         :param CompressionPipeline cpipeline: unused (kept for compatibility)
         """
         if cpipeline is not None:
-            raise IOError("cpipeline is not supported by this method.")
+            raise OSError("cpipeline is not supported by this method.")
         return self.ftserv_get(source, destination, hostname, logname, port=port)
 
     @fmtshcmd
@@ -1928,7 +1905,7 @@ class OSExtended(System):
         :param CompressionPipeline cpipeline: unused (kept for compatibility)
         """
         if cpipeline is not None:
-            raise IOError("cpipeline is not supported by this method.")
+            raise OSError("cpipeline is not supported by this method.")
         return self.ftserv_batchget(source, destination, hostname, logname, port=port)
 
     def smartftget(self, source, destination, hostname=None, logname=None, port=None,
@@ -2028,7 +2005,7 @@ class OSExtended(System):
         logname = self.fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
-        if isinstance(source, six.string_types) and cpipeline is None:
+        if isinstance(source, str) and cpipeline is None:
             self.stderr('scpput', source, destination, msg)
             return ssh.scpput(source, destination)
         else:
@@ -2055,7 +2032,7 @@ class OSExtended(System):
         logname = self.fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
-        if isinstance(destination, six.string_types) and cpipeline is None:
+        if isinstance(destination, str) and cpipeline is None:
             self.stderr('scpget', source, destination, msg)
             return ssh.scpget(source, destination)
         else:
@@ -2125,7 +2102,7 @@ class OSExtended(System):
     def safe_filesuffix(self):
         """Returns a file suffix that should be unique across the system."""
         return '.'.join((date.now().strftime('_%Y%m%d_%H%M%S_%f'),
-                         self.hostname, 'p{0:06d}'.format(self._os.getpid()),))
+                         self.hostname, 'p{:06d}'.format(self._os.getpid()),))
 
     def _validate_symlink_below(self, symlink, valid_below):
         """
@@ -2229,7 +2206,7 @@ class OSExtended(System):
         the operation is atomic.
         """
         self.stderr('hybridcp', source, destination)
-        if isinstance(source, six.string_types):
+        if isinstance(source, str):
             if not self.path.exists(source):
                 if not silent:
                     logger.error('Missing source %s', source)
@@ -2242,7 +2219,7 @@ class OSExtended(System):
                 source.seek(0)
             except AttributeError:
                 logger.warning('Could not rewind io source before cp: ' + str(source))
-        if isinstance(destination, six.string_types):
+        if isinstance(destination, str):
             if self.filecocoon(destination):
                 # Write to a temp file
                 original_dest = self.path.expanduser(destination)
@@ -2311,7 +2288,7 @@ class OSExtended(System):
                         try:
                             logger.warning('Replacing the orignal file with a copy...')
                             self.move(destination, source)
-                        except IOError as ebis:
+                        except OSError as ebis:
                             if ebis.errno == errno.EACCES:
                                 # Permission denied
                                 logger.warning('No permissions to create a copy of the source file (%s)',
@@ -2426,7 +2403,7 @@ class OSExtended(System):
         directory some restrictions apply (see :meth:`rawcp`)
         """
         self.stderr('smartcp', source, destination)
-        if not isinstance(source, six.string_types) or not isinstance(destination, six.string_types):
+        if not isinstance(source, str) or not isinstance(destination, str):
             return self.hybridcp(source, destination)
         source = self.path.expanduser(source)
         if not self.path.exists(source):
@@ -2513,7 +2490,7 @@ class OSExtended(System):
         The fastest option should be used...
         """
         self.stderr('cp', source, destination)
-        if not isinstance(source, six.string_types) or not isinstance(destination, six.string_types):
+        if not isinstance(source, str) or not isinstance(destination, str):
             return self.hybridcp(source, destination, silent=silent)
         if not self.path.exists(source):
             if not silent:
@@ -2570,7 +2547,7 @@ class OSExtended(System):
         to :meth:`safepath`).
         """
         ok = True
-        if isinstance(pathlist, six.string_types):
+        if isinstance(pathlist, str):
             pathlist = [pathlist]
         for pname in pathlist:
             for entry in filter(lambda x: self.safepath(x, safedirs), self.glob(pname)):
@@ -2656,7 +2633,7 @@ class OSExtended(System):
     @contextlib.contextmanager
     def secure_directory_move(self, destination):
         with self.lockdir_context(destination + '.vortex-lockdir', sloppy=True):
-            do_cleanup = (isinstance(destination, six.string_types) and
+            do_cleanup = (isinstance(destination, str) and
                           self.path.exists(destination))
             if do_cleanup:
                 # Warning: Not an atomic portion of code (sorry)
@@ -2677,9 +2654,9 @@ class OSExtended(System):
         :param destination: The destination object (file, directory, File-like object, ...)
         """
         self.stderr('mv', source, destination)
-        if not isinstance(source, six.string_types) or not isinstance(destination, six.string_types):
+        if not isinstance(source, str) or not isinstance(destination, str):
             self.hybridcp(source, destination)
-            if isinstance(source, six.string_types):
+            if isinstance(source, str):
                 return self.remove(source)
         else:
             return self.move(source, destination)
@@ -2821,11 +2798,11 @@ class OSExtended(System):
 
     def is_tarname(self, objname):
         """Check if a ``objname`` is a string with ``.tar`` suffix."""
-        return isinstance(objname, six.string_types) and (objname.endswith('.tar') or
-                                                          objname.endswith('.tar.gz') or
-                                                          objname.endswith('.tgz') or
-                                                          objname.endswith('.tar.bz2') or
-                                                          objname.endswith('.tbz'))
+        return isinstance(objname, str) and (objname.endswith('.tar') or
+                                             objname.endswith('.tar.gz') or
+                                             objname.endswith('.tgz') or
+                                             objname.endswith('.tar.bz2') or
+                                             objname.endswith('.tbz'))
 
     def tarname_radix(self, objname):
         """Remove any ``.tar`` specific suffix."""
@@ -2865,7 +2842,7 @@ class OSExtended(System):
         else:
             if self.filecocoon(destination):
                 with open(self.path.expanduser(destination),
-                          'w' + ('b' if (bytesdump or six.PY2) else '')) as fd:
+                          'w' + ('b' if bytesdump else '')) as fd:
                     rc = gateway.dump(obj, fd, **opts)
         return rc
 
@@ -2987,7 +2964,7 @@ class OSExtended(System):
         """
         cp = CompressionPipeline(self, pipelinedesc)
         if destination is None:
-            if isinstance(source, six.string_types):
+            if isinstance(source, str):
                 destination = source + cp.suffix
             else:
                 raise ValueError("If destination is omitted, source must be a filename.")
@@ -3002,7 +2979,7 @@ class OSExtended(System):
         """
         cp = CompressionPipeline(self, pipelinedesc)
         if destination is None:
-            if isinstance(source, six.string_types):
+            if isinstance(source, str):
                 if source.endswith(cp.suffix):
                     destination = source[:-len(cp.suffix)]
                 else:
@@ -3047,14 +3024,8 @@ class OSExtended(System):
                 # since we need to get an error if the target directory already
                 # exists
                 self._os.mkdir(ldir)
-            # Note: OSError + errno check is used to be compatible with Python2.7
-            #       in Python3, it will be wiser to catch directly FileExistsError
-            except OSError as os_e:
-                # To be safe, check the error code carefully
-                if os_e.errno == errno.EEXIST:
-                    rc = False
-                else:
-                    raise
+            except FileExistsError as os_e:
+                rc = False
             else:
                 rc = True
         return rc
@@ -3066,14 +3037,8 @@ class OSExtended(System):
         """
         try:
             self.rmdir(ldir)
-        # Note: OSError + errno check is used to be compatible with Python2.7
-        #       in Python3, it will be wiser to catch directly FileNotFoundError
-        except OSError as os_e:
-            if os_e.errno == errno.ENOENT:
-                # If the directory was already deleted, ok ignore the error
-                logger.warning("'%s' did not exists... that's odd", ldir)
-            else:
-                raise
+        except FileNotFoundError:
+            logger.warning("'%s' did not exists... that's odd", ldir)
 
     @contextlib.contextmanager
     def lockdir_context(self, ldir,
@@ -3149,83 +3114,8 @@ class OSExtended(System):
         self._lockdir_destroy(ldir)
 
 
-_python27_fp = footprints.Footprint(info='An abstract footprint to be used with the Python27 Mixin',
-                                    only=dict(
-                                        after_python=PythonSimplifiedVersion('2.7.0'),
-                                        before_python=PythonSimplifiedVersion('3.4.0')
-                                    ))
-
-
-class Python27(object):
-    """Python features starting from version 2.7."""
-
-    def import_module(self, modname):
-        """Import the module named **modname** with :mod:`importlib` package."""
-        try:
-            import importlib
-        except ImportError:
-            logger.critical('Could not load importlib')
-            raise
-        except Exception:
-            logger.critical('Unexpected error: %s', sys.exc_info()[0])
-            raise
-        else:
-            importlib.import_module(modname)
-        return sys.modules.get(modname)
-
-    def import_function(self, funcname):
-        """Import the function named **funcname** qualified by a proper module name package."""
-        thisfunc = None
-        if '.' in funcname:
-            thismod = self.import_module('.'.join(funcname.split('.')[:-1]))
-            if thismod:
-                thisfunc = getattr(thismod, funcname.split('.')[-1], None)
-        else:
-            logger.error('Bad function path name <%s>' % funcname)
-        return thisfunc
-
-    def which(self, cmd, mode=os.F_OK | os.X_OK, path=None):
-        """Given a command, mode, and a PATH string, return the path which
-        conforms to the given mode on the PATH, or None if there is no such
-        file.
-
-        `mode` defaults to os.F_OK | os.X_OK. `path` defaults to the result
-        of os.environ.get("PATH"), or can be overridden with a custom search
-        path.
-
-        :note: this is a copy of the Python3.7 code (with the Windows part
-               removed)
-        """
-        # Check that a given file can be accessed with the correct mode.
-        def _access_check(fn, mode):
-            return (self.path.exists(fn) and self.access(fn, mode) and
-                    not self.path.isdir(fn))
-
-        # If we're given a path with a directory part, look it up directly rather
-        # than referring to PATH directories. This includes checking relative to the
-        # current directory, e.g. ./script
-        if self.path.dirname(cmd):
-            if _access_check(cmd, mode):
-                return cmd
-            return None
-
-        if path is None:
-            path = self.env.get("PATH", self.defpath)
-        if not path:
-            return None
-        path = path.split(self.pathsep)
-        files = [cmd]
-
-        seen = set()
-        for adir in path:
-            normdir = self.path.normcase(adir)
-            if normdir not in seen:
-                seen.add(normdir)
-                for thefile in files:
-                    name = self.path.join(adir, thefile)
-                    if _access_check(name, mode):
-                        return name
-        return None
+class Python34:
+    """Python features starting from version 3.4."""
 
     def netcdf_diff(self, netcdf1, netcdf2, **kw):
         """Difference between two NetCDF files.
@@ -3270,11 +3160,6 @@ _python34_fp = footprints.Footprint(info='An abstract footprint to be used with 
                                     ))
 
 
-class Python34(Python27):
-    """Python features starting from version 3.4."""
-    pass
-
-
 class Garbage(OSExtended):
     """
     Default system class for weird systems.
@@ -3298,16 +3183,7 @@ class Garbage(OSExtended):
     def __init__(self, *args, **kw):
         """Gateway to parent method after debug logging."""
         logger.debug('Garbage system init %s', self.__class__)
-        super(Garbage, self).__init__(*args, **kw)
-
-
-class Garbage27(Garbage, Python27):
-    """Default system class for weird systems with python version >= 2.7 < 3.4"""
-
-    _footprint = [
-        _python27_fp,
-        dict(info = 'Garbage base system with an aging Python version')
-    ]
+        super().__init__(*args, **kw)
 
 
 class Garbage34p(Garbage, Python34):
@@ -3341,7 +3217,7 @@ class Linux(OSExtended):
         """
         logger.debug('Linux system init %s', self.__class__)
         self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
-        super(Linux, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.__dict__['_cpusinfo'] = LinuxCpusInfo()
         try:
             self.__dict__['_numainfo'] = LibNumaNodesInfo()
@@ -3431,24 +3307,15 @@ class Linux(OSExtended):
         cmdl = list()
         env = dict()
         if method == 'taskset':
-            cmdl += ['taskset', '--cpu-list', ','.join([six.text_type(c) for c in cpus])]
+            cmdl += ['taskset', '--cpu-list', ','.join([str(c) for c in cpus])]
         elif method == 'gomp':
-            env['GOMP_CPU_AFFINITY'] = ' '.join([six.text_type(c) for c in cpus])
+            env['GOMP_CPU_AFFINITY'] = ' '.join([str(c) for c in cpus])
         elif method.startswith('omp'):
             env['OMP_PLACES'] = ','.join(['{{{:d}}}'.format(c) for c in cpus])
             if method.endswith('verbose'):
                 env['OMP_DISPLAY_ENV'] = 'TRUE'
                 env['OMP_DISPLAY_AFFINITY'] = 'TRUE'
         return (True, cmdl, env)
-
-
-class Linux27(Linux, Python27):
-    """Linux system with python version >= 2.7 and < 3.4"""
-
-    _footprint = [
-        _python27_fp,
-        dict(info = 'Linux based system with an aging Python version')
-    ]
 
 
 class Linux34p(Linux, Python34):
@@ -3479,7 +3346,7 @@ class LinuxDebug(Linux34p):
     def __init__(self, *args, **kw):
         """Gateway to parent method after debug logging."""
         logger.debug('LinuxDebug system init %s', self.__class__)
-        super(LinuxDebug, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -3511,7 +3378,7 @@ class Macosx(OSExtended):
         """
         logger.debug('Darwin system init %s', self.__class__)
         self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
-        super(Macosx, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -3521,15 +3388,6 @@ class Macosx(OSExtended):
     def default_syslog(self):
         """Address to use in logging.handler.SysLogHandler()."""
         return '/var/run/syslog'
-
-
-class Macosx27(Macosx, Python27):
-    """Mac under MacOSX with python version >= 2.7 and < 3.4"""
-
-    _footprint = [
-        _python27_fp,
-        dict(info = 'Apple Mac computer under Macosx with an aging Python version')
-    ]
 
 
 class Macosx34p(Macosx, Python34):

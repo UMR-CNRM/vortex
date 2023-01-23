@@ -1,18 +1,13 @@
-# -*- coding: utf-8 -*-
-
 """
 This module provides some pre-defined attributes descriptions or combined sets
 of attributes description that could be used in the footprint definition of any
 class which follow the :class:`footprints.Footprint` syntax.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import copy
 import re
 
 import footprints
-import six
 from bronx.stdtypes.date import Date, Month, Time
 from bronx.syntax.decorators import secure_getattr
 from bronx.system import hash as hashutils
@@ -59,7 +54,7 @@ knownfmt = {
 notinrepr = {'kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'}
 
 
-class DelayedEnvValue(object):
+class DelayedEnvValue:
     """
     Store an environment variable name and compute its value when needed,
     *e.g.* in a footprint evaluation.
@@ -91,7 +86,7 @@ class DelayedEnvValue(object):
         return self.footprint_value()
 
 
-class DelayedInit(object):
+class DelayedInit:
     """
     Delays the proxied object creation until it's actually accessed.
     *e.g.* in a footprint evaluation.
@@ -108,13 +103,13 @@ class DelayedInit(object):
         return getattr(self.__proxied, name)
 
     def __repr__(self):
-        orig = re.sub('^<(.*)>$', r'\1', super(DelayedInit, self).__repr__())
+        orig = re.sub('^<(.*)>$', r'\1', super().__repr__())
         return '<{:s} | proxied={:s}>'.format(orig,
                                               'Not yet Initialised' if self.__proxied is None
                                               else repr(self.__proxied))
 
     def __str__(self):
-        return repr(self) if self.__proxied is None else six.text_type(self.__proxied)
+        return repr(self) if self.__proxied is None else str(self.__proxied)
 
 
 class FmtInt(int):
@@ -137,7 +132,7 @@ class FmtInt(int):
         return '{0:{fmt}d}'.format(value, fmt=self._fmt)
 
 
-class XPid(six.text_type):
+class XPid(str):
     """Basestring wrapper for experiment ids (abstract)."""
     pass
 
@@ -148,11 +143,11 @@ class LegacyXPid(XPid):
     def __new__(cls, value):
         if len(value) != 4 or '@' in value:
             raise ValueError('XPid should be a 4 digits string')
-        return six.text_type.__new__(cls, value.upper())
+        return str.__new__(cls, value.upper())
 
     def isoper(self):
         """Return true if current value looks like an op id."""
-        return six.text_type(self) in opsuites
+        return str(self) in opsuites
 
 
 class FreeXPid(XPid):
@@ -164,7 +159,7 @@ class FreeXPid(XPid):
         if not cls._re_valid.match(value):
             raise ValueError('XPid should be something like "id@location" (not "{:s}")'
                              .format(value))
-        return six.text_type.__new__(cls, value)
+        return str.__new__(cls, value)
 
     @property
     def id(self):
@@ -188,14 +183,14 @@ def any_vortex_xpid(xpidguess):
 
 
 #: The list of operational experiment names.
-opsuites = set([LegacyXPid(x) for x in (['OPER', 'DBLE', 'TEST', 'MIRR'] +
-                                        ['OP{0:02d}'.format(i) for i in range(100)])])
+opsuites = {LegacyXPid(x) for x in (['OPER', 'DBLE', 'TEST', 'MIRR'] +
+                                    ['OP{:02d}'.format(i) for i in range(100)])}
 
 #: The list of experiemnt names dedicated to Vortex' demos
 demosuites = {LegacyXPid('DEMO'), LegacyXPid('DREF')}
 
 
-class Namespace(six.text_type):
+class Namespace(str):
     """Basestring wrapper for namespaces (as net domains)."""
 
     def __new__(cls, value):
@@ -215,7 +210,7 @@ class Namespace(six.text_type):
             port = None
         if 0 < value.count('.') < 2:
             raise ValueError('Namespace should contain one or at least 3 fields')
-        thisns = six.text_type.__new__(cls, value)
+        thisns = str.__new__(cls, value)
         thisns._port = int(port) if port else None
         thisns._user = netuser
         thisns._pass = netpass
@@ -254,7 +249,7 @@ class Latitude(float):
     """Bounded floating point value with N-S nice representation."""
 
     def __new__(cls, value):
-        value = six.text_type(value).lower()
+        value = str(value).lower()
         if value.endswith('n'):
             value = value[:-1]
         elif value.endswith('s'):
@@ -267,7 +262,7 @@ class Latitude(float):
 
     def nice(self):
         ns = 'N' if self >= 0 else 'S'
-        return six.text_type(self).strip('-') + ns
+        return str(self).strip('-') + ns
 
     @property
     def hemisphere(self):
@@ -278,7 +273,7 @@ class Longitude(float):
     """Bounded floating point value with E-W nice representation."""
 
     def __new__(cls, value):
-        value = six.text_type(value).lower()
+        value = str(value).lower()
         if value.endswith('e'):
             value = value[:-1]
         elif value.endswith('w'):
@@ -291,7 +286,7 @@ class Longitude(float):
 
     def nice(self):
         ns = 'E' if self >= 0 else 'W'
-        return six.text_type(self).strip('-') + ns
+        return str(self).strip('-') + ns
 
     @property
     def hemisphere(self):
@@ -631,4 +626,4 @@ def show():
         lambda x: x.startswith('a_') or type(dmod[x]) == footprints.Footprint,
         dmod.keys()
     )):
-        print('{0} ( {1} ) :\n  {2}\n'.format(stda, type(dmod[stda]).__name__, dmod[stda]))
+        print('{} ( {} ) :\n  {}\n'.format(stda, type(dmod[stda]).__name__, dmod[stda]))

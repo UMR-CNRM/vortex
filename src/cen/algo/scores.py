@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Algo components for ESCROC scores.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.compat import random
 from bronx.fancies import loggers
@@ -75,7 +71,7 @@ class Escroc_Score_Member(TaylorVortexWorker):
         rdict = dict(rc=True)
 
         list_pro = ["PRO_" + self.datebegin.ymdh + "_" + self.dateend.ymdh +
-                    '_mb{0:04d}'.format(member) + ".nc" for member in self.members]
+                    '_mb{:04d}'.format(member) + ".nc" for member in self.members]
         print(list_pro)
         E = ESCROC_list_scores()
         rdict["scores"] = E.compute_scores_allmembers(list_pro, "obs_insitu.nc",
@@ -141,17 +137,17 @@ class Escroc_Score_Ensemble(TaylorRun):
 
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super(Escroc_Score_Ensemble, self)._default_common_instructions(rh, opts)
+        ddict = super()._default_common_instructions(rh, opts)
         for attribute in ["datebegin", "dateend", "list_var", "list_scores"]:
             ddict[attribute] = getattr(self, attribute)
         return ddict
 
     def _default_pre_execute(self, rh, opts):
-        super(Escroc_Score_Ensemble, self)._default_pre_execute(rh, opts)
+        super()._default_pre_execute(rh, opts)
         self.local_members = self.split_members_by_task()
 
     def _default_post_execute(self, rh, opts):
-        super(Escroc_Score_Ensemble, self)._default_post_execute(rh, opts)
+        super()._default_post_execute(rh, opts)
         import numpy as np
         report = self._boss.get_report()
 
@@ -259,7 +255,7 @@ class Escroc_Score_Subensemble(TaylorVortexWorker):
         rdict = dict(rc=True)
 
         list_pro = ["PRO_" + self.datebegin.ymdh + "_" + self.dateend.ymdh +
-                    '_mb{0:04d}'.format(member) + ".nc" for member in self.members]
+                    '_mb{:04d}'.format(member) + ".nc" for member in self.members]
         print(list_pro)
         for var in self.list_var:
             E = ESCROC_EnsembleScores(list_pro, "obs_insitu.nc", var)
@@ -333,13 +329,13 @@ class Escroc_Optim_Ensemble(TaylorRun):
 
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super(Escroc_Optim_Ensemble, self)._default_common_instructions(rh, opts)
+        ddict = super()._default_common_instructions(rh, opts)
         for attribute in ["datebegin", "dateend", "list_var", "list_scores"]:
             ddict[attribute] = getattr(self, attribute)
         return ddict
 
     def _default_pre_execute(self, rh, opts):
-        super(Escroc_Optim_Ensemble, self)._default_pre_execute(rh, opts)
+        super()._default_pre_execute(rh, opts)
         if len(self.members) < 35:
             nmembers = len(self.members)
         else:
@@ -347,7 +343,7 @@ class Escroc_Optim_Ensemble(TaylorRun):
         self.local_members = self.select_random_members(nmembers=nmembers, niter=self.niter)
 
     def _default_post_execute(self, rh, opts):
-        super(Escroc_Optim_Ensemble, self)._default_post_execute(rh, opts)
+        super()._default_post_execute(rh, opts)
         import numpy as np
         report = self._boss.get_report()
 

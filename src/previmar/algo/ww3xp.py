@@ -1,13 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 Algo for WW3 production.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 
 #: No automatic export
 __all__ = []
@@ -87,18 +80,18 @@ class Ww3(Parallel, grib.EcGribDecoMixin):
 
     def prepare(self, rh, opts):
         """Setup promises and namelists."""
-        super(Ww3, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         # Activate promises if need be
         if self.promises:
             self.io_poll_sleep = 15
-            sstepout = '{0:d}'.format(self.stepout.length // 3600)
-            sanaterm = '{0:d}'.format(self.anaterm.hour)
+            sstepout = '{:d}'.format(self.stepout.length // 3600)
+            sanaterm = '{:d}'.format(self.anaterm.hour)
             self.io_poll_kwargs = dict(datpivot=self.datpivot.ymdh, stepout=sstepout, anaterm=sanaterm)
             self.flyput = True
         # Tweak Namelist parameters
         namcandidate = self.context.sequence.effective_inputs(role=('NamelistShel', ))
         if len(namcandidate) != 1:
-            raise IOError("No or too much namelists for WW3_shel")
+            raise OSError("No or too much namelists for WW3_shel")
 
         namcontents = namcandidate[0].rh.contents
         rundate = self.datpivot
@@ -126,7 +119,7 @@ class Ww3(Parallel, grib.EcGribDecoMixin):
         """Manually call the iopoll method to deal with the latest files."""
         if self.flyput:
             self.manual_flypolling_job()
-        super(Ww3, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class ConvertSpecWW3AsciiAlgo(BlindRun):
@@ -166,14 +159,14 @@ class ConvertSpecWW3AsciiAlgo(BlindRun):
 
     def prepare(self, rh, opts):
         """Create list_files file."""
-        super(ConvertSpecWW3AsciiAlgo, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         inputspec = [x.rh for x in self.context.sequence.effective_inputs(role=('BoundarySpectra', ))]
 
         # Geographical selection of the spectra
         for fname in [x.container.filename for x in inputspec]:
             fout = open("output.tmp", 'w')
-            with open(fname, 'r') as fin:
+            with open(fname) as fin:
                 linestr = fin.readline()
                 while linestr:
                     line = linestr.split()
@@ -222,11 +215,11 @@ class Ww3_ounpAlgo(BlindRun):
 
     def prepare(self, rh, opts):
         """Setup the namelist."""
-        super(Ww3_ounpAlgo, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         namcandidate = self.context.sequence.effective_inputs(role=('NamelistWw3Ounp'),)
         if len(namcandidate) != 1:
-            raise IOError("No or too much namelists for WW3_ounp")
+            raise OSError("No or too much namelists for WW3_ounp")
 
         namcontents = namcandidate[0].rh.contents
         rundate = self.rundate
@@ -290,13 +283,13 @@ class AbstractWw3ParaBlindRun(ParaBlindRun):
 
         self._default_post_execute(rh, opts)
 
-        for failed_file in [e.section.rh.container.localpath() for e in six.itervalues(bm.failed)]:
+        for failed_file in [e.section.rh.container.localpath() for e in bm.failed.values()]:
             logger.error("We were unable to fetch the following file: %s", failed_file)
             self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
                                        traceback=False)
 
         if tmout:
-            raise IOError("The waiting loop timed out")
+            raise OSError("The waiting loop timed out")
 
 
 class Ww3_ounfAlgo(AbstractWw3ParaBlindRun):
@@ -361,7 +354,7 @@ class _Ww3_ounfAlgoWorker(VortexWorkerBlindRun):
         logger.info("Extraction of netcdf of %s", self.file_in)
         namcandidate = self.context.sequence.effective_inputs(role=('NamelistWw3Ounf'),)
         if len(namcandidate) != 1:
-            raise IOError("No or too much namelists for WW3_ounf")
+            raise OSError("No or too much namelists for WW3_ounf")
         nam_file = namcandidate[0].rh.container.localpath()
         namcontents = namcandidate[0].rh.contents
 
@@ -382,7 +375,7 @@ class _Ww3_ounfAlgoWorker(VortexWorkerBlindRun):
             new_nam.close()
             # execution
             self.local_spawn("output.log")
-            tarname = 'ww3_grd_nc_{0:s}.tar'.format(self.dateval.ymdh)
+            tarname = 'ww3_grd_nc_{:s}.tar'.format(self.dateval.ymdh)
             sh.tar(tarname, 'ww3.*.nc')
             sh.mv(tarname, cwd)
             output_files.add(tarname)
@@ -460,10 +453,10 @@ class _InterpolateUGncAlgoWorker(VortexWorkerBlindRun):
                     flist.write('\n')
             for i in self.grid:
                 with sh.cdcontext(cwdp, create=False):
-                    file_grd_in = "interpolateUG_{0:s}.grd".format(i)
+                    file_grd_in = "interpolateUG_{:s}.grd".format(i)
                     file_grd_out = "interpolateUG.grd"
                     sh.cp(sh.path.join(cwd, file_grd_in), sh.path.join(cwdp, file_grd_out), fmt='grd')
-                    file_inp_in = "interpolateUG_nc_{0:s}.inp".format(i)
+                    file_inp_in = "interpolateUG_nc_{:s}.inp".format(i)
                     file_inp_out = "interpolateUG_nc.inp"
                     sh.cp(sh.path.join(cwd, file_inp_in), sh.path.join(cwdp, file_inp_out), fmt='inp')
                     self.local_spawn("output.log")
@@ -473,7 +466,7 @@ class _InterpolateUGncAlgoWorker(VortexWorkerBlindRun):
             # Prepare the archive of interpolated outputs
             for fname in untared_files:
                 sh.rm(fname)
-            tarname = 'ww3_reg_nc_{0:s}.tar'.format(self.dateval.ymdh)
+            tarname = 'ww3_reg_nc_{:s}.tar'.format(self.dateval.ymdh)
             sh.tar(tarname, 'ww3.*.nc')
             sh.mv(tarname, cwd)
             output_files.add(tarname)
@@ -585,12 +578,12 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
         logger.info("Conversion of %s", self.file_in)
         namcandidate = self.context.sequence.effective_inputs(role=('NamelistNcGrb'),)
         if len(namcandidate) != 1:
-            raise IOError("No or too much namelists for WW3_ncgrb")
+            raise OSError("No or too much namelists for WW3_ncgrb")
         namcontents = namcandidate[0].rh.contents
         nam_file = namcandidate[0].rh.container.localpath()
         constcandidate = self.context.sequence.effective_inputs(role=('ConstantData'),)
         if len(constcandidate) != 1:
-            raise IOError("No or too much constant files for convertion to grib")
+            raise OSError("No or too much constant files for convertion to grib")
         consttar = constcandidate[0].rh.container.localpath()
         headconst = consttar.split('_')[0] + '_' + consttar.split('_')[1]
         # Retrieve of bathy files if present
@@ -612,14 +605,14 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
                 dom_name = head_filename[4:]
                 param = fname.split('_')[1]
                 param = param.split('.')[0]
-                file_cst = "{0:s}_{1:s}".format(headconst, param)
+                file_cst = "{:s}_{:s}".format(headconst, param)
                 term = (self.dateval - self.datpivot).total_seconds()
                 # Split the case of analysis and forecast
                 if term <= 0:
-                    fic_prod = "{0:s}_{1:s}_{2:s}.grb".format(head_filename, param, self.dateval.ymdh)
+                    fic_prod = "{:s}_{:s}_{:s}.grb".format(head_filename, param, self.dateval.ymdh)
                 else:
-                    fic_prod = "{0:s}_{1:s}_{2:s}{3:04d}.grb".format(head_filename, param, self.datpivot.ymdh,
-                                                                     int(term / 3600))
+                    fic_prod = "{:s}_{:s}_{:s}{:04d}.grb".format(head_filename, param, self.datpivot.ymdh,
+                                                                 int(term / 3600))
                 # set of namelist
                 namcontents.setmacro("NOM_PARAM", param)
                 namcontents.setmacro('FILENAME', fname)
@@ -636,22 +629,22 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
                 new_nam = footprints.proxy.container(filename=nam_file, format='ascii')
                 namcontents.rewrite(new_nam)
                 new_nam.close()
-                self.local_spawn("output_{0:s}.log".format(fname))
+                self.local_spawn("output_{:s}.log".format(fname))
             # Split the case of analysis and forecast
             for dom in self.header:
                 if term <= 0:
-                    fic_prod = "ww3.{0:s}_{1:s}.grb".format(dom, self.dateval.ymdh)
+                    fic_prod = "ww3.{:s}_{:s}.grb".format(dom, self.dateval.ymdh)
                 else:
-                    fic_prod = "ww3.{0:s}_{1:s}{2:04d}.grb".format(dom, self.datpivot.ymdh,
-                                                                   int(term / 3600))
+                    fic_prod = "ww3.{:s}_{:s}{:04d}.grb".format(dom, self.datpivot.ymdh,
+                                                                int(term / 3600))
 
                 # At 0h hindcast bathy should be added if present
                 if self.dateval.ymdh == self.datpivot.ymdh and len(bathycandidate) > 0:
                     for bathy in bathycandidate:
                         if bathy.rh.resource.header == dom:
-                            sh.mv(sh.path.join(cwd, bathy.rh.container.localpath()), "ww3.{0:s}_bathy.grb".format(dom))
+                            sh.mv(sh.path.join(cwd, bathy.rh.container.localpath()), "ww3.{:s}_bathy.grb".format(dom))
 
-                sh.cat('ww3.{0:s}*grb'.format(dom), output=sh.path.join(cwd, fic_prod))
+                sh.cat('ww3.{:s}*grb'.format(dom), output=sh.path.join(cwd, fic_prod))
                 output_files.add(fic_prod)
 
         # Deal with promised resources

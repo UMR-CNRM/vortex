@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Resources to handle any boundary conditions data for a coupled model.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
@@ -104,7 +100,7 @@ class _AbstractLAMBoundary(GeoFlowResource):
         if isinstance(self.geometry, LonlatGeometry):
             lgeo = [self.geometry.area, self.geometry.rnice]
         else:
-            lgeo = super(_AbstractLAMBoundary, self)._geo2basename_info(add_stretching)
+            lgeo = super()._geo2basename_info(add_stretching)
         return lgeo
 
 

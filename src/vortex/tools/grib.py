@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Module needed to interact with GRIB files.
 
@@ -12,10 +10,7 @@ It also provdes an AlgoComponent's Mixin to properly setup the environment
 when using the grib_api or ecCodes libraries.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 import re
 
@@ -52,14 +47,14 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     )
 
     def _std_grib_index_get(self, source):
-        with open(source, 'r') as fd:
+        with open(source) as fd:
             gribparts = fd.read().splitlines()
         return [urlparse.urlparse(url).path for url in gribparts]
 
     xgrib_index_get = _std_grib_index_get
 
     def _std_grib_index_write(self, destination, gribpaths):
-        gribparts = [six.text_type(urlparse.urlunparse(('file', '', path, '', '', '')))
+        gribparts = [str(urlparse.urlunparse(('file', '', path, '', '', '')))
                      for path in gribpaths]
         tmpfile = destination + self.sh.safe_filesuffix()
         with open(tmpfile, 'w') as fd:
@@ -69,7 +64,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     def is_xgrib(self, source):
         """Check if the given ``source`` is a multipart-GRIB file."""
         rc = False
-        if source and isinstance(source, six.string_types) and self.sh.path.exists(source):
+        if source and isinstance(source, str) and self.sh.path.exists(source):
             with open(source, 'rb') as fd:
                 rc = fd.read(7) == b'file://'
         return rc
@@ -113,7 +108,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         # Might be multipart
         if self.is_xgrib(source):
             rc = True
-            if isinstance(destination, six.string_types) and not pack:
+            if isinstance(destination, str) and not pack:
                 with self.sh.mute_stderr():
                     idx = self._std_grib_index_get(source)
                     destdir = self.sh.path.abspath(self.sh.path.expanduser(destination) + ".d")
@@ -165,7 +160,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
 
     def xgrib_pack(self, source, destination, intent='in'):
         """Manually pack a multi GRIB."""
-        if isinstance(destination, six.string_types):
+        if isinstance(destination, str):
             tmpfile = destination + self.sh.safe_filesuffix()
             with open(tmpfile, 'wb') as fd:
                 p = self._pack_stream(source, stdout=fd)
@@ -187,7 +182,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                 if self.xgrib_pack(source, destination):
                     return destination
                 else:
-                    raise IOError('XGrib packing failed')
+                    raise OSError('XGrib packing failed')
             else:
                 return destination
         else:
@@ -200,7 +195,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         """On the fly packing and ftp."""
         if self.is_xgrib(source):
             if cpipeline is not None:
-                raise IOError("It's not allowed to compress xgrib files.")
+                raise OSError("It's not allowed to compress xgrib files.")
             hostname = self.sh.fix_fthostname(hostname)
             ftp = self.sh.ftp(hostname, logname, port=port)
             if ftp:
@@ -222,11 +217,11 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         """Use ftserv as much as possible."""
         if self.is_xgrib(source):
             if cpipeline is not None:
-                raise IOError("It's not allowed to compress xgrib files.")
+                raise OSError("It's not allowed to compress xgrib files.")
             if self.sh.ftraw and self.rawftshell is not None:
                 # Copy the GRIB pieces individually
                 pieces = self.xgrib_index_get(source)
-                newsources = [six.text_type(self.sh.copy2ftspool(piece)) for piece in pieces]
+                newsources = [str(self.sh.copy2ftspool(piece)) for piece in pieces]
                 request = newsources[0] + '.request'
                 with open(request, 'w') as request_fh:
                     request_fh.writelines('\n'.join(newsources))
@@ -254,7 +249,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         """On the fly packing and scp."""
         if self.is_xgrib(source):
             if cpipeline is not None:
-                raise IOError("It's not allowed to compress xgrib files.")
+                raise OSError("It's not allowed to compress xgrib files.")
             logname = self.sh.fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
             ssh = self.sh.ssh(hostname, logname)
             permissions = ssh.get_permissions(source)
@@ -283,7 +278,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         """
         if self.is_xgrib(source):
             if cpipeline is not None:
-                raise IOError("It's not allowed to compress xgrib files.")
+                raise OSError("It's not allowed to compress xgrib files.")
             psource = source + self.sh.safe_filesuffix()
             try:
                 rc = self.xgrib_pack(source=source,
@@ -317,7 +312,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         """
         if self.is_xgrib(source):
             if cpipeline is not None:
-                raise IOError("It's not allowed to compress xgrib files.")
+                raise OSError("It's not allowed to compress xgrib files.")
             psource = source + self.sh.safe_filesuffix()
             try:
                 rc = self.xgrib_pack(source=source,
@@ -504,7 +499,7 @@ class GRIBAPI_Tool(addons.Addon):
 
     def __init__(self, *args, **kw):
         """Addon initialisation."""
-        super(GRIBAPI_Tool, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         # Additionaly, check for the GRIB_API_ROOTDIR key in the config file
         if self.path is None and self.cfginfo is not None:
             tg = self.sh.default_target
@@ -515,7 +510,7 @@ class GRIBAPI_Tool(addons.Addon):
     def _spawn_wrap(self, cmd, **kw):
         """Internal method calling standard shell spawn."""
         cmd[0] = 'bin' + self.sh.path.sep + cmd[0]
-        return super(GRIBAPI_Tool, self)._spawn_wrap(cmd, **kw)
+        return super()._spawn_wrap(cmd, **kw)
 
     def _actual_diff(self, grib1, grib2, skipkeys, **kw):
         """Run the actual GRIBAPI command."""

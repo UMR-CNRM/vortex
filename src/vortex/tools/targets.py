@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 This package handles targets computers objects that could in charge of
 hosting a specific execution. Target objects use the :mod:`footprints` mechanism.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import contextlib
 import logging
@@ -30,7 +26,7 @@ def default_fqdn():
     """Tries to find the Fully-Qualified Domain Name of the host."""
     try:
         fqdn = socket.getfqdn()
-    except socket.error:
+    except OSError:
         fqdn = platform.node()
     return fqdn
 
@@ -97,7 +93,7 @@ class Target(fp.FootprintBase):
 
     def __init__(self, *args, **kw):
         logger.debug('Abstract target computer init %s', self.__class__)
-        super(Target, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._actualconfig = self.userconfig
         self._specialnodes = None
         self._sepcialnodesaliases = None
@@ -145,7 +141,7 @@ class Target(fp.FootprintBase):
         """
         my_glove_rk = '@' + sessions.current().glove.realkind
         if ':' in key:
-            section, option = [x.strip() for x in key.split(':', 1)]
+            section, option = (x.strip() for x in key.split(':', 1))
             # Check if an override section exists
             sections = [x for x in (section + my_glove_rk, section)
                         if x in self.config.sections()]
@@ -211,10 +207,10 @@ class Target(fp.FootprintBase):
     def sections(self):
         """Returns the list of sections contained in the config file."""
         my_glove_rk = '@' + sessions.current().glove.realkind
-        return sorted(set([self._re_glove_rk_id.sub(r'\1', x)
-                           for x in self.config.sections()
-                           if ((not self._re_glove_rk_id.match(x)) or
-                               x.endswith(my_glove_rk))]))
+        return sorted({self._re_glove_rk_id.sub(r'\1', x)
+                       for x in self.config.sections()
+                       if ((not self._re_glove_rk_id.match(x)) or
+                           x.endswith(my_glove_rk))})
 
     def options(self, key):
         """For a given section, returns the list of available options.

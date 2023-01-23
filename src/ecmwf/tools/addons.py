@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various addons needed to work confortably at ECMWF.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.tools.addons import AddonGroup
 

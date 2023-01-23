@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 This package defines a class for default contexts used
 by a PoolWorker process of the Jeeves daemon.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import logging
-
-import six
 
 from bronx.fancies import loggers
 
@@ -42,11 +36,11 @@ class AttrDict(dict):
     """
 
     def __init__(self, *args, **kwargs):
-        super(AttrDict, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__dict__ = self
 
 
-class VortexWorker(object):
+class VortexWorker:
     """Context for a vortex session handled by an asynchronous process such as Jeeves.
 
     An _oper_ profile should be used from Jeeves: the default is to use a _research_ profile.
@@ -103,12 +97,7 @@ class VortexWorker(object):
         return AttrDict(ask.data)
 
     def reset_loggers(self, logger):
-        if six.PY2:
-            # NB: Nothing to do with Python3 since the root logger that was
-            #     setup by the logfacility is already being used by
-            #     bronx.fancies.loggers and more generally logging
-            loggers.setLogMethods(logger, methods=('debug', 'info', 'warning'))
-        if not self.verbose and six.PY3:
+        if not self.verbose:
             # footprints & bronx can be very talkative... we try to limit that !
             global_level = logger.getEffectiveLevel()
             f_logger = loggers.getLogger('footprints')
@@ -146,20 +135,7 @@ class VortexWorker(object):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         """Well... nothing much to do..."""
         if exc_value is not None:
-            if six.PY2:
-                import traceback
-                tb_sep = '-' * 80 + "\n"
-                tb_str = str(exc_value) + "\n"
-                if hasattr(exc_value, 'message') and exc_value.message:
-                    tb_str += '{sep:s}Exception message: {exc.message:s}\n{sep:s}'.format(
-                        sep=tb_sep, exc=exc_value
-                    )
-                tb_str += '{sep:s}{tb:s}\n{sep:s}'.format(
-                    sep=tb_sep, tb=traceback.format_tb(exc_traceback)
-                )
-                self.logger.critical('VORTEX exits on error. Traceback gives:\n%s', tb_str)
-            else:
-                self.logger.critical('VORTEX exits on error', exc_info=exc_value)
+            self.logger.critical('VORTEX exits on error', exc_info=exc_value)
             self.rc = False
         else:
             self.logger.debug('VORTEX exits nicely.')

@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-
 """Utility classes to read and compare IFS/Arpege listings."""
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
 import re
@@ -25,7 +21,7 @@ def use_in_shell(sh, **kw):
     return footprints.proxy.addon(**kw)
 
 
-class ArpIfsListingDiff_Result(object):
+class ArpIfsListingDiff_Result:
     """Holds the detailed results of a listing comparison."""
 
     def __init__(self, norms_eq, jos_eq, jos_diff):
@@ -34,7 +30,7 @@ class ArpIfsListingDiff_Result(object):
         self._jos_diff = jos_diff
 
     def __str__(self):
-        return '{0:s} | NormsOk={1:b} JoTablesOk={2:b}>'.format(
+        return '{:s} | NormsOk={:b} JoTablesOk={:b}>'.format(
             repr(self).rstrip('>'),
             all(self._norms_eq.values()),
             all(self._jos_eq.values())
@@ -76,7 +72,7 @@ class ArpIfsListingDiff_Result(object):
             print("No Jo-Tables were found or the number of Jo-Tables do not match.")
 
 
-class ArpIfsListingDiff_Status(object):
+class ArpIfsListingDiff_Status:
     """Holds the status of a listing comparison."""
 
     def __init__(self, norms_eq, jos_eq, jos_diff):
@@ -85,16 +81,12 @@ class ArpIfsListingDiff_Status(object):
         self._result = ArpIfsListingDiff_Result(norms_eq, jos_eq, jos_diff)
 
     def __str__(self):
-        return '{0:s} | rc={1:b}>'.format(repr(self).rstrip('>'), bool(self))
+        return '{:s} | rc={:b}>'.format(repr(self).rstrip('>'), bool(self))
 
     @property
     def result(self):
         """Return the detailed results of the comparison."""
         return self._result
-
-    def __nonzero__(self):
-        """Python2 compatibility."""
-        return self.__bool__()
 
     def __bool__(self):
         return bool(self._norms_ok and self._jos_ok)
@@ -122,9 +114,9 @@ class ArpIfsListingsTool(addons.Addon):
         :rtype: :class:`ArpIfsListingDiff_Status`
         """
 
-        with open(listing1, 'r') as fh1:
+        with open(listing1) as fh1:
             l1_slurp = [l.rstrip("\n") for l in fh1]
-        with open(listing2, 'r') as fh2:
+        with open(listing2) as fh2:
             l2_slurp = [l.rstrip("\n") for l in fh2]
         l1_normset = norms.NormsSet(l1_slurp)
         l2_normset = norms.NormsSet(l2_slurp)
@@ -188,7 +180,7 @@ class ArpifsListingsFormatAdapter(FormatAdapterAbstractImplementation):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(ArpifsListingsFormatAdapter, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._lines = None
         self._normset = None
         self._jotables = None
@@ -255,7 +247,7 @@ class ArpifsListingsFormatAdapter(FormatAdapterAbstractImplementation):
         return len(self.lines)
 
 
-class ListBasedCutoffDispenser(object):
+class ListBasedCutoffDispenser:
     """
     From a dictionary of cutoff times (probably read from an extraction listing,
     see :class:`BdmBufrListingsFormatAdapter`), for a given *obstype*, find the
@@ -319,7 +311,7 @@ class BdmBufrListingsFormatAdapter(FormatAdapterAbstractImplementation):
                                  re.IGNORECASE)
 
     def __init__(self, *kargs, **kwargs):
-        super(BdmBufrListingsFormatAdapter, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._lines = None
         self._cutoffs = defaultdict(deque)
         if not self.fmtdelayedopen:

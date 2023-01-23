@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 A set of AlgoComponents interrogating various databases.
 """
-
-from __future__ import division, print_function, absolute_import, unicode_literals
 
 import copy
 
@@ -445,7 +441,7 @@ class GetBDMBufr(Expresso, _GetBDMDecoMixin):
         Prepare the launch of the script
         """
         # Do the standard pre-treatment
-        super(GetBDMBufr, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # Some exports to be done
         self._verbose_env_export('EXTR_ENV', self.extra_env_opt)
@@ -492,7 +488,7 @@ class GetBDMOulan(BlindRun, _GetBDMDecoMixin):
     def prepare(self, rh, opts):
         """Prepare the execution of the Oulan extraction binary."""
         # Do the standard pre-treatment
-        super(GetBDMOulan, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # Export additional variables
         self._verbose_env_export('DB_FILE', self.db_file)

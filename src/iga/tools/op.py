@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: module documentation.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import re
 from tempfile import mkdtemp
-
-import six
 
 import bronx.stdtypes.date
 import vortex
@@ -65,11 +59,11 @@ class OpJobAssistantTest(JobAssistant):
             prompt=vortex.__prompt__
         )
 
-        return super(OpJobAssistantTest, self)._early_session_setup(t, **kw)
+        return super()._early_session_setup(t, **kw)
 
     def _env_setup(self, t, **kw):
         """OP session's environment setup."""
-        super(OpJobAssistantTest, self)._env_setup(t, **kw)
+        super()._env_setup(t, **kw)
 
         t.sh.header('OP env setup')
 
@@ -149,7 +143,7 @@ class OpJobAssistantTest(JobAssistant):
         t.env.setvar("SNOWTOOLS_CEN", t.env.get('OP_ROOTAPP', '/home/ch/mxpt001/vortex') + '/snowtools')
 
     def _extra_session_setup(self, t, **kw):
-        super(OpJobAssistantTest, self)._extra_session_setup(t, **kw)
+        super()._extra_session_setup(t, **kw)
 
         t.sh.highlight('Setting up the actual running directory')
 
@@ -160,14 +154,14 @@ class OpJobAssistantTest(JobAssistant):
         logger.info('Current rundir <%s>', t.rundir)
 
     def _toolbox_setup(self, t, **kw):
-        super(OpJobAssistantTest, self)._toolbox_setup(t, **kw)
+        super()._toolbox_setup(t, **kw)
         vortex.toolbox.defaults(
             sender='admin_prod_sc@meteo.fr',
         )
 
     def _actions_setup(self, t, **kw):
         """Setup the OP action dispatcher."""
-        super(OpJobAssistantTest, self)._actions_setup(t, **kw)
+        super()._actions_setup(t, **kw)
 
         t.sh.highlight('Setting up OP Actions')
 
@@ -191,7 +185,7 @@ class OpJobAssistantTest(JobAssistant):
 
     def _system_setup(self, t, **kw):
         """Set usual settings for the system shell."""
-        super(OpJobAssistantTest, self)._system_setup(t, **kw)
+        super()._system_setup(t, **kw)
         t.sh.allow_cross_users_links = False
 
     def register_cycle(self, cycle):
@@ -220,7 +214,7 @@ class OpJobAssistantTest(JobAssistant):
         ad.report(kind='dayfile', mode='FIN')
         ad.ecflow_complete()
         print('Well done IGA !')
-        super(OpJobAssistantTest, self).complete()
+        super().complete()
 
     def rescue(self):
         """Exit from OP session after a crash but simulating a happy ending.
@@ -229,10 +223,10 @@ class OpJobAssistantTest(JobAssistant):
         """
         ad.ecflow_abort()
         print('Bad luck...')
-        super(OpJobAssistantTest, self).rescue()
+        super().rescue()
 
     def finalise(self):
-        super(OpJobAssistantTest, self).finalise()
+        super().finalise()
         print('Bye bye Op...')
 
 
@@ -247,7 +241,7 @@ class OpJobAssistant(OpJobAssistantTest):
     )
 
     def finalise(self):
-        super(OpJobAssistant, self).finalise()
+        super().finalise()
         t = vortex.ticket()
         ad.phase_flush()
         if 'DMT_PATH_EXEC' in t.env():
@@ -269,10 +263,10 @@ class OpJobAssistant(OpJobAssistantTest):
     def rescue(self):
         """Something goes wrong... so, do your best to save current state."""
         ad.report(kind='dayfile', mode='ERREUR')
-        super(OpJobAssistant, self).rescue()
+        super().rescue()
 
 
-class _ReportContext(object):
+class _ReportContext:
     """Context manager that prints a report."""
 
     def __init__(self, task, ticket):
@@ -297,7 +291,7 @@ class InputReportContext(_ReportContext):
                  alternate_tplid='mode_secours',
                  nonfatal_tplid='input_nonfatal_error',
                  fatal_tplid='input_error'):
-        super(InputReportContext, self).__init__(task, ticket)
+        super().__init__(task, ticket)
         self._alternate_tplid = alternate_tplid
         self._nonfatal_tplid = nonfatal_tplid
         self._fatal_tplid = fatal_tplid
@@ -332,7 +326,7 @@ class OutputReportContext(_ReportContext):
     """Context manager that prints a report on outputs."""
 
     def __init__(self, task, ticket, fatal_tplid='output_error'):
-        super(OutputReportContext, self).__init__(task, ticket)
+        super().__init__(task, ticket)
         self._fatal_tplid = fatal_tplid
 
     def _report(self, t, try_ok=True, **kw):
@@ -363,7 +357,7 @@ def filteractive(rsrc, dic):
     """This function returns the filter status."""
     filter_active = True
     if dic is not None:
-        for key, ok_values in six.iteritems(dic):
+        for key, ok_values in dic.items():
             if not get_resource_value(rsrc, key) in ok_values:
                 logger.info('filter not active: key %s has value %s, accepted values: %s',
                             key, get_resource_value(rsrc, key), ok_values)

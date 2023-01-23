@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
 
@@ -52,7 +48,7 @@ def agt_actual_command(sh, binary_name, args, extraenv=None):
                'base_transfert_agent', 'DIAP_AGENT_NUMPROG_AGENT']
     context = ' ; '.join(["export {}={}".format(key, config.get('agt', key))
                           for key in cfgkeys])
-    if extraenv is not None and isinstance(extraenv, collections.Mapping):
+    if extraenv is not None and isinstance(extraenv, collections.abc.Mapping):
         context = ' ; '.join([context, ] +
                              ["export {}={}".format(key.upper(), value)
                               for (key, value) in extraenv.items()])

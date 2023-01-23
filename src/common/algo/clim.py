@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 Common AlgoComponent to build model's climatology files.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import copy
-import six
 
 from bronx.datagrip import namelist
 from bronx.fancies import loggers
@@ -87,7 +82,7 @@ class C923(IFSParallel):
     )
 
     def prepare(self, rh, opts):
-        super(C923, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         # check PGD if needed
         if self.orog_in_pgd:
             pgd = self.context.sequence.effective_inputs(role=('Pgd',))
@@ -112,7 +107,7 @@ class C923(IFSParallel):
         return namrh_list
 
     def prepare_namelist_delta(self, rh, namcontents, namlocal):
-        super(C923, self).prepare_namelist_delta(rh, namcontents, namlocal)
+        super().prepare_namelist_delta(rh, namcontents, namlocal)
         namcontents['NAMMCC']['N923'] = self.step
         namcontents.setmacro('LPGD', self.orog_in_pgd)
         return True
@@ -140,7 +135,7 @@ class FinalizePGD(AlgoComponent):
     )
 
     def __init__(self, *args, **kwargs):
-        super(FinalizePGD, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         from common.util.usepygram import epygram_checker
         ev = '1.2.14'
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
@@ -157,7 +152,7 @@ class FinalizePGD(AlgoComponent):
         pgdin = self.context.sequence.effective_inputs(role=('InputPGD',))
         self.algoassert(len(pgdin) == 1, "One and only one InputPGD has to be provided")
         if self.system.path.exists(self.pgd_out_name):
-            raise IOError("The output pgd file {!r} already exists.".format(self.pgd_out_name))
+            raise OSError("The output pgd file {!r} already exists.".format(self.pgd_out_name))
         # copy fields
         with epy_env_prepare(self.ticket):
             epyclim = clim[0].rh.contents.data
@@ -202,7 +197,7 @@ class SetFilteredOrogInPGD(AlgoComponent):
     )
 
     def __init__(self, *args, **kwargs):
-        super(SetFilteredOrogInPGD, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         from common.util.usepygram import epygram_checker
         ev = '1.3.2'
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
@@ -314,7 +309,7 @@ class MakeLAMDomain(AlgoComponent):
     )
 
     def __init__(self, *args, **kwargs):
-        super(MakeLAMDomain, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         from common.util.usepygram import epygram_checker
         ev = '1.2.14'
         if self.e_zone_in_pgd:
@@ -355,7 +350,7 @@ class MakeLAMDomain(AlgoComponent):
         geometry = build_func(interactive=False, **self.geom_params)
         # summary, plot, namelists:
         with open(self.geometry.tag + '_summary.txt', 'w') as o:
-            o.write(six.text_type(dm.output.summary(geometry)))
+            o.write(str(dm.output.summary(geometry)))
         if self.illustration:
             dm.output.plot_geometry(geometry,
                                     lonlat_included=lonlat_included,
@@ -475,7 +470,7 @@ class MakeGaussGeometry(Parallel):
     )
 
     def __init__(self, *args, **kwargs):
-        super(MakeGaussGeometry, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         from common.util.usepygram import epygram_checker
         ev = '1.2.14'
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
@@ -514,17 +509,17 @@ class MakeGaussGeometry(Parallel):
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
-        options = {'t': six.text_type(self.truncation),
-                   'g': six.text_type(self.latitudes),
-                   'l': six.text_type(self.longitudes),
-                   'f': six.text_type(self._unit)}
+        options = {'t': str(self.truncation),
+                   'g': str(self.latitudes),
+                   'l': str(self.longitudes),
+                   'f': str(self._unit)}
         options_dict = {'orthogonality': 'o',
                         'aliasing': 'a',
                         'oddity': 'n',
                         'verbosity': 'v'}
         for k in options_dict.keys():
             if getattr(self, k) is not None:
-                options[options_dict[k]] = six.text_type(getattr(self, k))
+                options[options_dict[k]] = str(getattr(self, k))
         return options
 
     def postfix(self, rh, opts):
@@ -542,7 +537,7 @@ class MakeGaussGeometry(Parallel):
                                   self.pole)
         else:
             self._old_internal_postfix(rh, opts)
-        super(MakeGaussGeometry, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
     def _old_internal_postfix(self, rh, opts):
         """Complete and write namelists."""
@@ -563,7 +558,7 @@ class MakeGaussGeometry(Parallel):
         nam['NAMGEM']['RLOCEN'] = math.radians(float(self.pole['lon']))
         nam['NAMGEM']['RSTRET'] = self.stretching
         # numbers of longitudes
-        with open('fort.{!s}'.format(self._unit), 'r') as n:
+        with open('fort.{!s}'.format(self._unit)) as n:
             namrgri = namelist.namparse(n)
             nam.merge(namrgri)
         # PGD namelist
@@ -700,7 +695,7 @@ class MakeBDAPDomain(AlgoComponent):
     )
 
     def __init__(self, *args, **kwargs):
-        super(MakeBDAPDomain, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         from common.util.usepygram import epygram_checker
         ev = '1.2.14'
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
@@ -779,7 +774,7 @@ class AddPolesToGLOB(TaylorRun):
     )
 
     def __init__(self, *args, **kwargs):
-        super(AddPolesToGLOB, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         from common.util.usepygram import epygram_checker
         ev = '1.3.4'
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
@@ -872,7 +867,7 @@ class Festat(Parallel):
         namcontents.rewrite(input_namelist.container)
         self._nb_input_files = i
         # Call the super class
-        super(Festat, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
     def postfix(self, rh, opts):
         # Rename stabal files
@@ -896,7 +891,7 @@ class Festat(Parallel):
                 self.system.mv(file, diaexpl_dir_name + "/")
             self.system.tar(diaexpl_dir_name + ".tar", diaexpl_dir_name)
         # Call the superclass
-        super(Festat, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class Fediacov(Parallel):
@@ -922,4 +917,4 @@ class Fediacov(Parallel):
                 self.system.mv(file, "diag/")
             self.system.tar("diag.tar", "diag")
         # Call the superclass
-        super(Fediacov, self).postfix(rh, opts)
+        super().postfix(rh, opts)

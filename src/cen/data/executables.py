@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Specific CEN executables.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 

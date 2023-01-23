@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 This module defines classes in charge of launching sub-jobs. This allow for a
 rough parallelisation at job's level.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 
 import collections
 import contextlib
@@ -109,7 +104,7 @@ class AbstractSubJobLauncher(fp.FootprintBase):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(AbstractSubJobLauncher, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._ticket = None
         self._watermark = 0
         self._running = dict()
@@ -180,7 +175,7 @@ class AbstractSubJobLauncher(fp.FootprintBase):
         """
         plocale = locale.getlocale()[1] or 'ascii'
         self.ticket.sh.title('subjob "{:s}" {:s}. Here is the output:'.format(tag, outcome))
-        with open(_JOB_STDEO.format(self.fsid, tag), mode='rt', encoding=plocale) as fhst:
+        with open(_JOB_STDEO.format(self.fsid, tag), encoding=plocale) as fhst:
             started = False
             for lst in fhst:
                 if started:
@@ -188,8 +183,6 @@ class AbstractSubJobLauncher(fp.FootprintBase):
                         if not ignore_end:
                             break
                     else:
-                        if six.PY2:
-                            lst = lst.encode(plocale)
                         sys.stdout.write(lst)
                 else:
                     started = lst == _LOG_CAPTURE_START
@@ -249,7 +242,7 @@ class SpawnSubJobLauncher(AbstractSubJobLauncher):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(SpawnSubJobLauncher, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._outfhs = dict()
         self._processes = dict()
         self._nvcores = None
@@ -266,7 +259,7 @@ class SpawnSubJobLauncher(AbstractSubJobLauncher):
 
     def _new_ticket_hook(self, t):
         """Tries to find out the number of virtual cores available."""
-        super(SpawnSubJobLauncher, self)._new_ticket_hook(t)
+        super()._new_ticket_hook(t)
         if self.limit is None and t.sh.cpus_info is not None:
             self._nvcores = t.sh.cpus_info.nphysical_cores
             logger.info('"spawn" subjob launcher set to %d (i.e the number of virtual cores)',
@@ -321,7 +314,7 @@ class AbstractSshSubJobLauncher(AbstractSubJobLauncher):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(AbstractSshSubJobLauncher, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self.nodes = list()
         self._avnodes = collections.deque()
         self._outfhs = dict()
@@ -346,7 +339,7 @@ class AbstractSshSubJobLauncher(AbstractSubJobLauncher):
 
     def _new_ticket_hook(self, t):
         """Common initialisations."""
-        super(AbstractSshSubJobLauncher, self)._new_ticket_hook(t)
+        super()._new_ticket_hook(t)
         self.nodes = self._find_raw_nodes_list(t)
         # Several tasks may be launched on a single node
         self.nodes = self.nodes * self.taskspn
@@ -439,9 +432,9 @@ class SlurmSshSubJobLauncher(AbstractSshSubJobLauncher):
 
     def _env_variables_iterator(self, t):
         """Return the environment variables that will be used."""
-        blacklist = set(["SLURM_{:s}".format(s)
-                         for s in ('NNODES', 'JOB_NNODES', 'JOB_NUM_NODES',
-                                   'NODELIST', 'JOB_NODELIST')])
+        blacklist = {"SLURM_{:s}".format(s)
+                     for s in ('NNODES', 'JOB_NNODES', 'JOB_NUM_NODES',
+                               'NODELIST', 'JOB_NODELIST')}
         slurmnodes_ids = re.compile(r'(\(x\d+\))$')
         for k, v in t.topenv.items():
             if k not in blacklist:

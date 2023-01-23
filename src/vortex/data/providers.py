@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Abstract and generic classes provider for any "Provider". "Provider" objects,
 describe where are stored the data.
@@ -8,13 +6,11 @@ Of course, the :class:`Vortex` abstract provider is a must see. It has three
 declinations depending on the experiment indentifier type.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import collections
 import operator
 import os.path
 import re
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 from bronx.fancies import loggers
 from bronx.syntax.parsing import StringDecoder
@@ -65,19 +61,19 @@ class Provider(footprints.FootprintBase):
                 alias    = ('user', 'logname')
             ),
         ),
-        fastkeys = set(['namespace', ]),
+        fastkeys = {'namespace'},
     )
 
     def __init__(self, *args, **kw):
         logger.debug('Abstract provider init %s', self.__class__)
-        super(Provider, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     def _str_more(self):
         """Additional information to print representation."""
         try:
-            return 'namespace=\'{0:s}\''.format(self.namespace)
+            return 'namespace=\'{:s}\''.format(self.namespace)
         except AttributeError:
-            return super(Provider, self)._str_more()
+            return super()._str_more()
 
     @property
     def realkind(self):
@@ -173,7 +169,7 @@ class Magic(Provider):
                     doc_visibility  = footprints.doc.visibility.GURU,
                 ),
             ),
-            fastkeys = set(['magic', ]),
+            fastkeys = {'magic'},
         )
     ]
 
@@ -214,12 +210,12 @@ class Remote(Provider):
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
         ),
-        fastkeys = set(['remote', ]),
+        fastkeys = {'remote'},
     )
 
     def __init__(self, *args, **kw):
         logger.debug('Remote provider init %s', self.__class__)
-        super(Remote, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -227,7 +223,7 @@ class Remote(Provider):
 
     def _str_more(self):
         """Additional information to print representation."""
-        return 'path=\'{0:s}\''.format(self.remote)
+        return 'path=\'{:s}\''.format(self.remote)
 
     def scheme(self, resource):
         """The Remote scheme is its tube."""
@@ -306,13 +302,13 @@ class Vortex(Provider):
                     doc_visibility = footprints.doc.visibility.GURU,
                 ),
             ),
-            fastkeys = set(['block', 'experiment']),
+            fastkeys = {'block', 'experiment'},
         )
     ]
 
     def __init__(self, *args, **kw):
         logger.debug('Vortex experiment provider init %s', self.__class__)
-        super(Vortex, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         if self.namebuild is not None:
             if self.namebuild not in self._CUSTOM_NAME_BUILDERS:
                 builder = fpx.vortexnamebuilder(name=self.namebuild)
@@ -340,9 +336,9 @@ class Vortex(Provider):
     def _str_more(self):
         """Additional information to print representation."""
         try:
-            return 'namespace=\'{0:s}\' block=\'{1:s}\''.format(self.namespace, self.block)
+            return 'namespace=\'{:s}\' block=\'{:s}\''.format(self.namespace, self.block)
         except AttributeError:
-            return super(Vortex, self)._str_more()
+            return super()._str_more()
 
     def scheme(self, resource):
         """Default: ``vortex``."""
@@ -447,9 +443,9 @@ class Vortex(Provider):
 
     def urlquery(self, resource):
         """Construct the urlquery (taking into account stacked storage)."""
-        s_urlquery = super(Vortex, self).urlquery(resource)
+        s_urlquery = super().urlquery(resource)
         if s_urlquery:
-            uqs = urlparse.parse_qs(super(Vortex, self).urlquery(resource))
+            uqs = urlparse.parse_qs(super().urlquery(resource))
         else:
             uqs = dict()
         # Deal with stacked storage
@@ -517,7 +513,7 @@ class VortexFreeStd(Vortex):
     _redirect_filter_re = re.compile(r'\s*(?P<key>\S+)_(?P<op>lt|le|eq|ne|gt|ge|in)\s*$')
 
     def __init__(self, *kargs, **kwargs):
-        super(VortexFreeStd, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._experiment_conf = None
         self._actual_experiment_cache = dict()
 
@@ -604,7 +600,7 @@ class VortexFreeStd(Vortex):
                         remotecfg_parser = None
                         try:
                             remotecfg_parser = self._get_remote_config(tempstore, url, tempcontainer)
-                        except (OSError, IOError):
+                        except OSError:
                             # This may happen if the user has insufficient rights on
                             # the current directory
                             retry = True

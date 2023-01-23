@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various tools related to the IFS code.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
@@ -19,7 +15,7 @@ from gco.syntax.stdattrs import arpifs_cycle
 logger = loggers.getLogger(__name__)
 
 
-class _IfsOutputsTimesListDesc(object):
+class _IfsOutputsTimesListDesc:
     """Convert the input data to Time objects."""
 
     def __init__(self, attr, doc):
@@ -60,7 +56,7 @@ class IfsOutputsAbstractConfigurator(footprints.FootprintBase):
     ]
 
     def __init__(self, * kargs, ** kwargs):
-        super(IfsOutputsAbstractConfigurator, self).__init__(* kargs, ** kwargs)
+        super().__init__(* kargs, ** kwargs)
         self._tlists_store = dict()
 
     modelstate = _IfsOutputsTimesListDesc(

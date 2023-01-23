@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-import six
+import io
 
 #: No automatic export
 __all__ = []
@@ -35,4 +31,4 @@ def echofunction(options):
     for i, msg in enumerate(msgs):
         outstr += "\nMessage #{:d} is: {:s}\n".format(i, msg)
     # NB: The result have to be a file like object !
-    return six.BytesIO(outstr.encode(encoding='utf_8'))
+    return io.BytesIO(outstr.encode(encoding='utf_8'))

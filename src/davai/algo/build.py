@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 DAVAI sources build (branch export, compilation&link) AlgoComponents.
 """
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import tempfile
 from contextlib import contextmanager

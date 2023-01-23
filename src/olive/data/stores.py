@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
 """
 Various research specific stores (to be used in the SWAPP/Olive system).
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 
 import copy
 import hashlib
@@ -26,7 +21,7 @@ logger = loggers.getLogger(__name__)
 rextract = re.compile('^extract=(.*)$')
 
 
-class StoreGlue(object):
+class StoreGlue:
     """Defines a way to glue stored objects together."""
 
     def __init__(self, gluemap=None):
@@ -45,7 +40,7 @@ class StoreGlue(object):
 
     def as_dump(self):
         """Return a nicely formated class name for dump in footprint."""
-        return six.text_type(self.gluemap)
+        return str(self.gluemap)
 
     def sections(self):
         """Returns a list of available glue section names. Mostly file archive names."""
@@ -93,8 +88,8 @@ class StoreGlue(object):
         """
         if item not in self._cross:
             self._cross[item] = dict()
-            for section, contents in six.iteritems(self.as_dict()):
-                for option, desc in six.iteritems(contents):
+            for section, contents in self.as_dict().items():
+                for option, desc in contents.items():
                     if item in desc:
                         if desc[item] not in self._cross[item]:
                             self._cross[item][desc[item]] = list()
@@ -148,7 +143,7 @@ class IniStoreGlue(StoreGlue):
 
     def __init__(self, inifile=None):
         logger.debug('IniStoreGlue init %s', self.__class__)
-        super(IniStoreGlue, self).__init__(config.DelayedConfigParser(inifile))
+        super().__init__(config.DelayedConfigParser(inifile))
 
 
 class OliveArchiveStore(ArchiveStore):
@@ -173,7 +168,7 @@ class OliveArchiveStore(ArchiveStore):
 
     def __init__(self, *args, **kw):
         logger.debug('Olive archive store init %s', self.__class__)
-        super(OliveArchiveStore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def _actual_mappingroot(self):
@@ -269,7 +264,7 @@ class OliveCacheStore(CacheStore):
 
     def __init__(self, *args, **kw):
         logger.debug('Olive cache store init %s', self.__class__)
-        super(OliveCacheStore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     def olivecheck(self, remote, options):
         """Gateway to :meth:`incachecheck`."""
@@ -349,7 +344,7 @@ class OpArchiveStore(ArchiveStore):
 
     def __init__(self, *args, **kw):
         logger.debug('Archive store init %s', self.__class__)
-        super(OpArchiveStore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     def _op_find_stuff(self, remote, options, netpath=True):
         l_remote = copy.copy(remote)
@@ -483,7 +478,7 @@ class OpCacheStore(CacheStore):
 
     def __init__(self, *args, **kw):
         logger.debug('OP cache store init %s', self.__class__)
-        super(OpCacheStore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     def opcheck(self, remote, options):
         """Gateway to :meth:`incachecheck`."""

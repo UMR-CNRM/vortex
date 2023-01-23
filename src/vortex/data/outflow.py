@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Abstract class for any model specific and/or domain specific "Resource".
 
@@ -8,8 +6,6 @@ Abstract class for any model specific and/or domain specific "Resource".
     * :class:`ModelGeoResource`: Specific to a a given model and horizontal geometry.
 
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from .resources import Resource
 from .geometries import hgeometry_deco

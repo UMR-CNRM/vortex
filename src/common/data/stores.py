@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
 """
@@ -6,10 +5,6 @@ Common stores.
 
 For now, only the BDPE store is available here, dedicated to BDPE extraction.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-import six
 
 import footprints
 import vortex
@@ -75,7 +70,7 @@ class BdpeStore(Store):
         """Real extraction from the BDPE database."""
 
         # Check that local is a file (i.e not a virtual container)
-        if not isinstance(local, six.string_types):
+        if not isinstance(local, str):
             raise TypeError('The BDPE provider can not deal with virtual containers')
 
         # remote['path'] looks like '/OPER_SEC_DEV_True_10_3/20151105T0000P/BDPE_42+06:00'

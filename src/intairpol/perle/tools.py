@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
@@ -31,32 +25,32 @@ EMISSION_TYPES = dict(
 )
 
 
-class SimulationLevel(six.text_type):
+class SimulationLevel(str):
     """TODO: Class documentation."""
 
     def __new__(cls, value):
-        value = six.text_type(value).upper()
+        value = str(value).upper()
         for k in SIMULATION_LEVELS.keys():
             if k.startswith(value):
                 value = k
                 break
-        for i, l in {six.text_type(v): k for k, v in SIMULATION_LEVELS.items()}.items():
+        for i, l in {str(v): k for k, v in SIMULATION_LEVELS.items()}.items():
             if value == i:
                 value = l
                 break
         if value not in SIMULATION_LEVELS:
             raise ValueError('Not a valid SimulationLevel: ' + value)
-        return six.text_type.__new__(cls, value)
+        return str.__new__(cls, value)
 
     def __int__(self):
         return SIMULATION_LEVELS[self]
 
 
-class EmissionType(six.text_type):
+class EmissionType(str):
     """TODO: Class documentation."""
 
     def __new__(cls, value):
-        value = six.text_type(value).lower()
+        value = str(value).lower()
         for k in EMISSION_TYPES.keys():
             if k.startswith(value):
                 value = k
@@ -67,7 +61,7 @@ class EmissionType(six.text_type):
                 break
         if value not in EMISSION_TYPES:
             raise ValueError('Not a valid EmissionType: ' + value)
-        return six.text_type.__new__(cls, value)
+        return str.__new__(cls, value)
 
     def french(self):
         return EMISSION_TYPES[self]
@@ -314,11 +308,11 @@ class OldPerleLauncher(PerleLauncher):
             logger.error('Incompatible level values <bottom:%d> <top:%d>',
                          self.emission_bottom, self.emission_top)
             raise ValueError('Incompatible level values ' +
-                             six.text_type(self.emission_bottom) + '-' +
-                             six.text_type(self.emission_top))
+                             str(self.emission_bottom) + '-' +
+                             str(self.emission_top))
 
     def dump_void(self, value):
-        return six.text_type(value)
+        return str(value)
 
     def dump_date_begin(self, value):
         return value.compact()
@@ -339,7 +333,7 @@ class OldPerleLauncher(PerleLauncher):
         """Write raw perle configuration file (old style)."""
 
         with open(filename, 'w') as fd:
-            fd.write(six.text_type(''.join([
+            fd.write(str(''.join([
                 x + '\n' for x in [getattr(self, 'dump_' + p, self.dump_void)(getattr(self, p, ''))
                                    for p in self.config['simulation_params']] if len(x) > 0
             ])))
@@ -358,11 +352,11 @@ class OldPerleLauncher(PerleLauncher):
         """Write raw perle configuration file (old style)."""
 
         with open(filename, 'w') as fd:
-            fd.write(six.text_type(''.join([
-                'PERLE_' + a.upper() + '="' + six.text_type(getattr(self, a)) + '"\n'
+            fd.write(str(''.join([
+                'PERLE_' + a.upper() + '="' + str(getattr(self, a)) + '"\n'
                 for a in self.footprint_attributes if 'local_' not in a
             ])))
-            fd.write(six.text_type('\n'.join([
+            fd.write(str('\n'.join([
                 'PERLE_VERSION=' + self.get_family_tag(),
                 'PERLE_XTAG=' + self.xtag,
                 'PERLE_REMOTE_HOST=' + self.sh.hostname,

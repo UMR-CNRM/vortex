@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Advanced tools that deals with delayed actions.
 
@@ -54,8 +52,6 @@ Example::
 
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from collections import namedtuple, defaultdict
 import multiprocessing
 import os
@@ -94,7 +90,7 @@ def get_hub(**kw):
     return DelayedActionsHub(**kw)
 
 
-class DelayedAction(object):
+class DelayedAction:
     """Simple object describing one action to be performed."""
 
     def __init__(self, obsboard, r_id, request):
@@ -197,7 +193,7 @@ class AbstractDelayedActionsHandler(footprints.FootprintBase, observer.Observer)
     )
 
     def __init__(self, *args, **kw):
-        super(AbstractDelayedActionsHandler, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._resultsmap = dict()
         self._history = PrivateHistory(timer=True)
         self.observerboard.register(self)
@@ -383,7 +379,7 @@ class DemoSleepDelayedActionHandler(AbstractDelayedActionsHandler):
         self._ppool.close()
         self._ppool.terminate()
         self._ppool = None
-        super(DemoSleepDelayedActionHandler, self).destroy()
+        super().destroy()
 
     def _create_delayed_action(self, r_id, request):
         """Start the asynchronous processing."""
@@ -446,7 +442,7 @@ class AbstractFtpArchiveDelayedGetHandler(AbstractFileBasedDelayedActionsHandler
             if target == v.request[0]:
                 return None
         # Ok, let's proceed...
-        return super(AbstractFtpArchiveDelayedGetHandler, self).register(request)
+        return super().register(request)
 
     @property
     def _ftp_hostinfos(self):
@@ -510,7 +506,7 @@ class RawFtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
                     rc = self.system.batchrawftget(sources, destinations,
                                                    hostname=hostname, logname=self.logname, port=port,
                                                    ** extras)
-                except (OSError, IOError):
+                except OSError:
                     rc = [None, ] * len(sources)
                 for i, k in enumerate(a_todolist):
                     if rc[i] is True:
@@ -522,7 +518,7 @@ class RawFtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
         return rc
 
 
-class PrivateDelayedActionsHub(object):
+class PrivateDelayedActionsHub:
     """
     Manages all of the delayed actions request by forwarding them to the appropriate
     :class:`AbstractDelayedActionsHandler` object.
@@ -650,8 +646,8 @@ class PrivateDelayedActionsHub(object):
         self._stagedir = None
 
     def __repr__(self):
-        return ('{0:s} | n_delayedactionshandlers={1:d}>'
-                .format(super(PrivateDelayedActionsHub, self).__repr__().rstrip('>'),
+        return ('{:s} | n_delayedactionshandlers={:d}>'
+                .format(super().__repr__().rstrip('>'),
                         len(self._delayedactionshandlers)))
 
     def __str__(self):

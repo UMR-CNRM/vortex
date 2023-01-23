@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Various tools to interact with the SWAPP system.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import contextlib
 import io
-import six
 import re
 import socket
 import string
@@ -142,7 +137,7 @@ def olive_jobout_socketsend(sh, env, output, mstep, localout):
     client_socket, user, localhost = _olive_jobout_getsocket(sh, env)
     rc = 0
     if client_socket:
-        message = "user:{0:s}\nhost:{1:s}\nname:{2:s}\nfile:{3:s}\nlout:{4:s}\nstep:{5:s}\n".format(
+        message = "user:{:s}\nhost:{:s}\nname:{:s}\nfile:{:s}\nlout:{:s}\nstep:{:s}\n".format(
             user, localhost, env.SMSNAME, output, localout, mstep
         ).encode('ascii', 'replace')
         sh.stderr(['client_socket', 'send', str(message)])
@@ -172,7 +167,7 @@ def olive_jobout_fullsocketsend(sh, env, output, mstep, localout):
         rc = 0
         if client_socket:
             # Send the header
-            message = "user:{0:s}\nhost:{1:s}\nname:{2:s}\nfile:{3:s}\nlout:{4:s}\nstep:{5:d}\n".format(
+            message = "user:{:s}\nhost:{:s}\nname:{:s}\nfile:{:s}\nlout:{:s}\nstep:{:d}\n".format(
                 user, localhost, env.SMSNAME, output, 'socket', stepfiles_size
             ).encode('ascii', 'replace')
             sh.stderr(['client_socket', 'send', str(message)])
@@ -211,7 +206,7 @@ def olive_jobout_ectranssend(sh, env, output, mstep, localout):
         # Create the directive file...
         fhdir.write((output + "\n").encode())
         fhdir.write(("{:s}:{:s}\n".format(swapp_host, swapp_port)).encode())
-        fhdir.write("void_password\n".encode())
+        fhdir.write(b"void_password\n")
         for stepfile in stepfiles:
             with open(stepfile, 'rb') as fhstep:
                 fhdir.write(fhstep.read() + b"\n")
@@ -238,7 +233,7 @@ def olive_enforce_oneshot(identifier):
 @contextlib.contextmanager
 def _olive_readonly_gnam_context(sh, container):
     """If the container is readonly, move the file first."""
-    is_readonly = (isinstance(container.iotarget(), six.string_types) and
+    is_readonly = (isinstance(container.iotarget(), str) and
                    not sh.wperm(container.localpath()))
     if is_readonly:
         tmp_ro_file = container.localpath() + sh.safe_filesuffix()
@@ -297,7 +292,7 @@ def olive_generic_hook_factory(body):
         localenv.verbose(True, t.sh)
         with localenv:
             jail = dict(t=t, rh=rh, sh=t.sh, env=localenv, )
-            six.exec_(bytecode, jail)
+            exec(bytecode, jail)
 
     return olive_generic_hook
 

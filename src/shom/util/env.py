@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Utilities about the environment.
 """

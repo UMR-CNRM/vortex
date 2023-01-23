@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Resources to deal with mocage accident executables.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.executables import BlackBox
 from vortex.syntax.stdattrs import model

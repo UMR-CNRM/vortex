@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 DAVAI expertise AlgoComponents.
 """
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from footprints import FPList, FPDict
 from bronx.fancies import loggers

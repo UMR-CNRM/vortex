@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Common AlgoComponents for OOPS.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import itertools
 from collections import OrderedDict, defaultdict, namedtuple
@@ -39,11 +35,10 @@ class EnsSizeAlgoComponentError(AlgoComponentError):
         self.nominal_ens_size = nominal_ens_size
         self.actual_ens_size = actual_ens_size
         self.min_ens_size = min_ens_size
-        super(EnsSizeAlgoComponentError, self).__init__('{:d} found ({:d} required)'
-                                                        .format(actual_ens_size, min_ens_size))
+        super().__init__('{:d} found ({:d} required)'.format(actual_ens_size, min_ens_size))
 
     def __reduce__(self):
-        red = list(super(EnsSizeAlgoComponentError, self).__reduce__())
+        red = list(super().__reduce__())
         red[1] = (self.nominal_ens_size, self.actual_ens_size, self.min_ens_size)
         return tuple(red)
 
@@ -407,9 +402,9 @@ class OOPSIncrementalDecoMixin(AlgoComponentDecoMixin):
     def _incremental_deco_setup(self, rh, opts):  # @UnusedVariable
         """Set up the incremental DA settings in config and namelists."""
         if self.incremental_tsteps or self.incremental_niters:
-            sizes = set([len(t) for t in [self.incremental_tsteps,
-                                          self.incremental_niters,
-                                          self.incremental_geos] if t])
+            sizes = {len(t) for t in [self.incremental_tsteps,
+                                      self.incremental_niters,
+                                      self.incremental_geos] if t}
             if len(sizes) != 1:
                 raise ValueError('Inconsistent sizes between incr_tsteps and incr_niters')
             actual_tsteps = [float(t) for t in (self.incremental_tsteps or ())]
@@ -474,7 +469,7 @@ class OOPSParallel(Parallel,
 
     def __init__(self, *kargs, **kwargs):
         """Declare some hidden attributes for a later use."""
-        super(OOPSParallel, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._oops_cycle = None
         self._generic_config_subs = dict()
         self._individual_config_subs = OrderedDict()
@@ -487,7 +482,7 @@ class OOPSParallel(Parallel,
 
     def valid_executable(self, rh):
         """Be sure that the specified executable has a cycle attribute."""
-        valid = super(OOPSParallel, self).valid_executable(rh)
+        valid = super().valid_executable(rh)
         if hasattr(rh.resource, 'cycle'):
             self._oops_cycle = rh.resource.cycle
             return valid
@@ -497,7 +492,7 @@ class OOPSParallel(Parallel,
 
     def prepare(self, rh, opts):
         """Preliminary setups."""
-        super(OOPSParallel, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         # Look for channels namelists and set appropriate links
         self.setchannels()
         # Register all of the config files
@@ -510,7 +505,7 @@ class OOPSParallel(Parallel,
         """Perform configuration file rendering before executing the binary."""
         self.do_config_rendering()
         self.do_namelist_rendering()
-        super(OOPSParallel, self).spawn_hook()
+        super().spawn_hook()
 
     def spawn_command_options(self):
         """Prepare options for the binary's command line."""
@@ -651,7 +646,7 @@ class OOPSODB(OOPSParallel, odb.OdbComponentDecoMixin):
 
     def prepare(self, rh, opts):
         """Setup ODB stuff."""
-        super(OOPSODB, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         sh = self.system
 
         # Looking for input observations

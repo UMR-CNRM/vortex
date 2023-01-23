@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Resources to handle any NWP model state variable.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
@@ -253,7 +249,7 @@ class Historic(GeoFlowResource):
             lgeo = [self.geometry.area, self.geometry.rnice]
             return lgeo
         else:
-            return super(Historic, self)._geo2basename_info(add_stretching=add_stretching)
+            return super()._geo2basename_info(add_stretching=add_stretching)
 
 
 @namebuilding_insert('filtername', lambda s: s.subset)
@@ -318,8 +314,8 @@ class BiasDFI(GeoFlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'BIASDFI+{0:04d}'.format(self.term.hour)
+        return 'BIASDFI+{:04d}'.format(self.term.hour)
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'BIASDFI{0:s}+{1:04d}'.format(self.model[:4].upper(), self.term.hour)
+        return 'BIASDFI{:s}+{:04d}'.format(self.model[:4].upper(), self.term.hour)

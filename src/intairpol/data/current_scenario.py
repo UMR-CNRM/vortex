@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Current scenario to keep track of running scenario in operation
 (where xpid is constant).
@@ -7,9 +5,6 @@ Current scenario to keep track of running scenario in operation
 Successive tasks need to retrieve this current scenario to fetch
 ressource created earlier (with the same scenario)
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 
 from vortex.data.contents import JsonDictContent
 from vortex.data.outflow import ModelResource

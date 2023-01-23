@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 This module defines generic classes that are used to check the state of a list of
 sections
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-from six.moves import queue
+import queue
 
 from collections import defaultdict, namedtuple, OrderedDict
 from itertools import islice, compress
@@ -52,7 +47,7 @@ class LayoutMonitorError(Exception):
     pass
 
 
-class _StateFull(object):
+class _StateFull:
     """Defines an abstract interface: a class with a state."""
 
     _mystates = EntrySt  # The name of possible states
@@ -85,7 +80,7 @@ class _StateFull(object):
     state = property(_get_state, _set_state, doc="The entry's state.")
 
 
-class _StateFullMembersList(object):
+class _StateFullMembersList:
     """Defines an abstract interface: a class with members."""
 
     _mstates = EntrySt  # The name of possible member's states
@@ -112,8 +107,7 @@ class _StateFullMembersList(object):
         queue to another. That's why it's not public.
         """
         for st in self._mstates:
-            for e in self._members[st]:
-                yield e
+            yield from self._members[st]
 
     @property
     def memberslist(self):
@@ -156,7 +150,7 @@ class _MonitorSilencer(ParallelSilencer):
 
     def export_result(self, key, ts, prevstate, state):
         """Returns the recorded data, plus state related informations."""
-        return dict(report=super(_MonitorSilencer, self).export_result(),
+        return dict(report=super().export_result(),
                     name="Input #{!s}".format(key), key=key,
                     prevstate=prevstate, state=state, timestamp=ts)
 
@@ -281,8 +275,7 @@ class ManualInputMonitor(_StateFullMembersList):
         queue to another. That's why it's not public.
         """
         for st in self._mstates:
-            for e in six.itervalues(self._members[st]):
-                yield e
+            yield from self._members[st].values()
 
     def _find_state(self, e, onfails=EntrySt.failed):
         """Find the entry's state given the section's stage."""
@@ -332,7 +325,7 @@ class ManualInputMonitor(_StateFullMembersList):
 
                 # Crawl into the ufo list
                 # Always process the first self._crawling_threshold elements
-                for k, e in islice(six.iteritems(self._members[EntrySt.ufo]),
+                for k, e in islice(self._members[EntrySt.ufo].items(),
                                    self._crawling_threshold):
                     if self._mpquit.is_set():  # Are we ordered to stop ?
                         break
@@ -355,7 +348,7 @@ class ManualInputMonitor(_StateFullMembersList):
 
                 # Crawl into the chosen items of the expected list
                 (visited, found, kangaroo_incr) = (0, 0, 0)
-                for i, (k, e) in enumerate(compress(six.iteritems(self._members[EntrySt.expected]),
+                for i, (k, e) in enumerate(compress(self._members[EntrySt.expected].items(),
                                                     exp_compress)):
                     if self._mpquit.is_set():  # Are we ordered to stop ?
                         break
@@ -502,7 +495,7 @@ class ManualInputMonitor(_StateFullMembersList):
             logger.error("The waiting loop timed out (%d seconds)", timeout)
             logger.error("The following files are still unaccounted for: %s",
                          ",".join([e.section.rh.container.localpath()
-                                   for e in six.itervalues(self.expected)]))
+                                   for e in self.expected.values()]))
             rc = True
         if rc and exception is not None:
             raise exception("The waiting loop timed-out")
@@ -665,10 +658,10 @@ class BasicGang(_Gang):
         self.waitlimit = waitlimit
         self._waitlimit_timer = None
         self._firstseen = None
-        super(BasicGang, self).__init__()
+        super().__init__()
 
     def _state_changed(self, previous, new):
-        super(BasicGang, self)._state_changed(previous, new)
+        super()._state_changed(previous, new)
         # Remove the waitlimit timer
         if self._waitlimit_timer is not None and not self._ufo_members:
             self._waitlimit_timer.cancel()
@@ -708,7 +701,7 @@ class BasicGang(_Gang):
 
     def add_member(self, *members):
         with self._t_lock:
-            super(BasicGang, self).add_member(*members)
+            super().add_member(*members)
             if self._firstseen is None and any([m.state == self._mstates.available
                                                 for m in members]):
                 self._firstseen = time.time()
@@ -716,7 +709,7 @@ class BasicGang(_Gang):
 
     def updobsitem(self, item, info):
         with self._t_lock:
-            super(BasicGang, self).updobsitem(item, info)
+            super().updobsitem(item, info)
             if (self._firstseen is None and
                     info['state'] == self._mstates.available):
                 self._firstseen = time.time()
@@ -832,7 +825,7 @@ class AutoMetaGang(MetaGang):
                              for key in grouping_keys])
             mdict[entryid].append(entry)
         # Finalise the Gangs setup and use them...
-        for entryid, members in six.iteritems(mdict):
+        for entryid, members in mdict.items():
             gang = BasicGang(waitlimit=waitlimit,
                              minsize=len(members) - allowmissing)
             gang.add_member(* members)

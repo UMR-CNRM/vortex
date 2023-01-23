@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Algo Components for ensemble S2M simulations.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period, tomorrow
@@ -16,8 +12,6 @@ from vortex.syntax.stdattrs import a_date
 from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 from vortex.tools.systems import ExecutionError
 from vortex.util.helpers import InputCheckerError
-
-import six
 
 logger = loggers.getLogger(__name__)
 
@@ -135,7 +129,7 @@ class _S2MWorker(VortexWorkerBlindRun):
                 self.system.cp(local, dest)
 
     def postfix(self):
-        self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.kind))
+        self.system.subtitle('{:s} : directory listing (post-run)'.format(self.kind))
 
 
 class GuessWorker(_S2MWorker):
@@ -164,7 +158,7 @@ class GuessWorker(_S2MWorker):
 
     def vortex_task(self, **kwargs):
         ebauche = self.find_ebauche()
-        super(GuessWorker, self).vortex_task(ebauche=ebauche)
+        super().vortex_task(ebauche=ebauche)
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         ebauche = kwargs['ebauche']
@@ -172,7 +166,7 @@ class GuessWorker(_S2MWorker):
             self.system.symlink(self.system.path.join(rundir, ebauche), ebauche)
         self.link_ifnotprovided(self.system.path.join(rundir, 'METADATA.grib'), 'METADATA.grib')
         for suffix in ['dbf', 'prj', 'qgs', 'qpj', 'shp', 'shx']:
-            shapefile = 'massifs_safran.{0:s}'.format(suffix)
+            shapefile = 'massifs_safran.{:s}'.format(suffix)
             self.link_ifnotprovided(self.system.path.join(rundir, shapefile), shapefile)
         list_name = self.system.path.join(thisdir, self.kind + '.out')
         # La chaine en double 2021/2022 produit des fichiers GRIB eclatés,
@@ -231,7 +225,7 @@ class _SafranWorker(_S2MWorker):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(_SafranWorker, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self.set_actual_period()
 
     def set_actual_period(self):
@@ -300,7 +294,7 @@ class _SafranWorker(_S2MWorker):
 
         self.system.remove('sapfich')
 
-        print('Running task {0:s}'.format(self.kind))
+        print('Running task {:s}'.format(self.kind))
         for day, dates in self.days.items():
             nech = len(dates) if len(dates) == 9 else 5
             self.sapdat(dates[-1], nech)
@@ -339,7 +333,7 @@ class _SafranWorker(_S2MWorker):
 
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
         with open('sapdat', 'w') as d:
-            d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
+            d.write(thisdate.strftime('%y,%m,%d,%H,') + str(nech) + '\n')
             # In reanalysis execution the RR guess comes from a "weather types" analysis
             d.write('0,0,0\n')
             d.write('3,1,3,3\n')
@@ -352,13 +346,13 @@ class _SafranWorker(_S2MWorker):
         # de précipittion cumulées dès lors qu'une échéance 6h est absente.
         cumul = False
         for i, date in enumerate(dates):
-            p = '{0:s}{1:s}'.format(prefix, date.yymdh)
+            p = '{:s}{:s}'.format(prefix, date.yymdh)
             # Cas d'un fichier P ou E unique par echeance et utilisable par SAFRAN
             if self.system.path.exists(p) and not self.system.path.islink(p):
                 actual_dates.append(date)
             # Cas d'un fichier P ou E nommé avec l'annee sur 4 digits (simulations Benedicte)
-            elif self.system.path.exists('{0:s}{1:s}'.format(prefix, date.ymdh)):
-                self.link_in('{0:s}{1:s}'.format(prefix, date.ymdh), prefix + date.yymdh)
+            elif self.system.path.exists('{:s}{:s}'.format(prefix, date.ymdh)):
+                self.link_in('{:s}{:s}'.format(prefix, date.ymdh), prefix + date.yymdh)
                 actual_dates.append(date)
             # Recherche d'un fichier P ou E correspondant à la date voulue en fonction du type d'execution
             else:
@@ -381,7 +375,7 @@ class _SafranWorker(_S2MWorker):
                     #        but used to take he forecasts from (D-1, 18:00) lead time before the 2022
                     #        PNT DBLE chain. This code works for both cases
                     d = date - Period(hours=6)
-                    oldp = '{0:s}{1:s}_{2!s}'.format(prefix, d.yymdh, 6)
+                    oldp = '{:s}{:s}_{!s}'.format(prefix, d.yymdh, 6)
                     if self.system.path.exists(oldp) and not cumul:
                         # This part is still necessary for the ARPEGE-based member that uses 6h assimilation guess
                         # from (D-1, 6:00) to (D, 6:00)
@@ -409,7 +403,7 @@ class _SafranWorker(_S2MWorker):
                         # Avoid to take the first P file of the next day
                         # Check for a 6-hour analysis
                         d = date - Period(hours=6)
-                        oldp = '{0:s}{1:s}_{2!s}'.format(prefix, d.yymdh, 6)
+                        oldp = '{:s}{:s}_{!s}'.format(prefix, d.yymdh, 6)
                         if self.system.path.exists(oldp):
                             self.link_in(oldp, p)
                             actual_dates.append(date)
@@ -421,7 +415,7 @@ class _SafranWorker(_S2MWorker):
                         t = 0
                 while not self.system.path.islink(p) and (t <= 102):
                     d = date - Period(hours=t)
-                    oldp = '{0:s}{1:s}_{2!s}'.format(prefix, d.yymdh, t)
+                    oldp = '{:s}{:s}_{!s}'.format(prefix, d.yymdh, t)
                     if self.system.path.exists(oldp):
                         self.link_in(oldp, p)
                         actual_dates.append(date)
@@ -439,7 +433,7 @@ class _SafranWorker(_S2MWorker):
             if prefix == 'P':
                 actual_dates = self.get_guess(dates, prefix='E', fatal=False)
             else:
-                logger.warning('No guess files found for date {0:s}, '.format(date.ymdh) +
+                logger.warning('No guess files found for date {:s}, '.format(date.ymdh) +
                                'SAFRAN will run with climatological guess')
                 actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
 
@@ -478,7 +472,7 @@ class InterCEPWorker(_SafranWorker):
                     f.write(rundir + '@\n')
 
         if self.datebegin < Date(2002, 8, 1):
-            print('Running task {0:s}'.format(self.kind))
+            print('Running task {:s}'.format(self.kind))
             rundate = self.datebegin.replace(hour=self.day_begins_at)
             while rundate <= self.dateend and rundate < Date(2002, 8, 1):
                 self.sapdat(rundate)
@@ -498,7 +492,7 @@ class InterCEPWorker(_SafranWorker):
 
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
         with open('sapdat', 'w') as d:
-            d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
+            d.write(thisdate.strftime('%y,%m,%d,%H,') + str(nech) + '\n')
 
 
 class SafraneWorker(_SafranWorker):
@@ -516,15 +510,15 @@ class SafraneWorker(_SafranWorker):
         nech = len(dates) if len(dates) == 9 else 5
         self.get_guess(dates)
         mandatory_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
-        rdict, go = self.check_mandatory_resources(rdict, ['P{0:s}'.format(d.yymdh)
+        rdict, go = self.check_mandatory_resources(rdict, ['P{:s}'.format(d.yymdh)
                                                            for d in mandatory_dates])
         if go:
             for d in dates:
-                logger.info('Running date : {0:s}'.format(d.ymdh))
+                logger.info('Running date : {:s}'.format(d.ymdh))
                 self.sapdat(d, nech)
                 # Creation of the 'sapfich' file containing the name of the output file
                 with open('sapfich', 'w') as f:
-                    f.write('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh))
+                    f.write('SAFRANE_d{!s}_{:s}'.format(day, d.ymdh))
                 list_name = self.system.path.join(thisdir, self.kind + d.ymdh + '.out')
                 try:
                     self.local_spawn(list_name)
@@ -532,7 +526,7 @@ class SafraneWorker(_SafranWorker):
                     # if self.execution in ['reanalysis', 'reforecast']:
                     #     self.system.remove(list_name)
                 except ExecutionError:
-                    self.system.remove('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh))
+                    self.system.remove('SAFRANE_d{!s}_{:s}'.format(day, d.ymdh))
                     rdict['rc'] = S2MExecutionError(self.progname, self.deterministic,
                                                     self.subdir,
                                                     self.datebegin, self.dateend)
@@ -574,7 +568,7 @@ class SypluieWorker(_SafranWorker):
 
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
         with open('sapdat', 'w') as d:
-            d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
+            d.write(thisdate.strftime('%y,%m,%d,%H,') + str(nech) + '\n')
             # In reanalysis execution the RR guess comes from a "weather types" analysis
             # Except for more recent years for which ARPEGE rr guess are available
             if self.execution == 'reanalysis' and self.datebegin < Date(2017, 8, 1, 0):
@@ -602,7 +596,7 @@ class SyrpluieWorker(_SafranWorker):
             f.write('SAPLUI5' + dates[-1].ymdh)
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         mandatory_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
-        rdict, go = self.check_mandatory_resources(rdict, ['P{0:s}'.format(d.yymdh)
+        rdict, go = self.check_mandatory_resources(rdict, ['P{:s}'.format(d.yymdh)
                                                            for d in mandatory_dates])
         if go:
             try:
@@ -625,7 +619,7 @@ class SyrpluieWorker(_SafranWorker):
 
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
         with open('sapdat', 'w') as d:
-            d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
+            d.write(thisdate.strftime('%y,%m,%d,%H,') + str(nech) + '\n')
             # In reanalysis execution the RR guess comes from a "weather types" analysis
             # Except for more recent years for which ARPEGE rr guess are available
             if self.execution == 'reanalysis' and self.datebegin < Date(2017, 8, 1, 0):
@@ -647,10 +641,10 @@ class SyvaprWorker(_SafranWorker):
     )
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
-        rdict, go = self.check_mandatory_resources(rdict, ['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh) for d in dates])
+        rdict, go = self.check_mandatory_resources(rdict, ['SAFRANE_d{!s}_{:s}'.format(day, d.ymdh) for d in dates])
         if go:
             for j, d in enumerate(dates):
-                self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
+                self.link_in('SAFRANE_d{!s}_{:s}'.format(day, d.ymdh), 'SAFRAN' + str(j + 1))
             self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5')
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
             try:
@@ -659,8 +653,8 @@ class SyvaprWorker(_SafranWorker):
                 # if self.execution in ['reanalysis', 'reforecast']:
                 #     self.system.remove(list_name)
                 for suffix in ['HA', 'HS', 'NA', 'TA', 'TS', 'UA', 'US', 'VA', 'VS']:
-                    self.mv_if_exists('SAF4D_{0:s}'.format(suffix),
-                                      'SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh))
+                    self.mv_if_exists('SAF4D_{:s}'.format(suffix),
+                                      'SAF4D_{:s}_{:s}'.format(suffix, dates[-1].ymdh))
             except ExecutionError:
                 rdict['rc'] = S2MExecutionError(self.progname, False, self.subdir,
                                                 self.datebegin, self.dateend)
@@ -683,12 +677,12 @@ class SyvafiWorker(_SafranWorker):
     )
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
-        # if self.check_mandatory_resources(rdict, ['SAPLUI5' + six.text_type(day), ]):
+        # if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day), ]):
         for j, d in enumerate(dates):
-            self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
+            self.link_in('SAFRANE_d{!s}_{:s}'.format(day, d.ymdh), 'SAFRAN' + str(j + 1))
         self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5')
         for suffix in ['HA', 'HS', 'NA', 'TA', 'TS', 'UA', 'US', 'VA', 'VS']:
-            self.link_in('SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh), 'SAF4D_{0:s}'.format(suffix))
+            self.link_in('SAF4D_{:s}_{:s}'.format(suffix, dates[-1].ymdh), 'SAF4D_{:s}'.format(suffix))
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         try:
             self.local_spawn(list_name)
@@ -763,9 +757,9 @@ class SytistWorker(_SafranWorker):
             self.system.remove('FORCING_postes.nc')
 
         self.mv_if_exists('FORCING_massif.nc',
-                          'FORCING_massif_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
+                          'FORCING_massif_{:s}_{:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
         self.mv_if_exists('FORCING_postes.nc',
-                          'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
+                          'FORCING_postes_{:s}_{:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
 
         if self.execution in ['analysis', 'reanalysis']:
             # Ensure that at least one listing file has been created, otherwise the tar command raises an
@@ -774,7 +768,7 @@ class SytistWorker(_SafranWorker):
             # This issue has been identified when trying the #2079 vortex issue that should allow the task
             # to go on until produced resources are archived even if some members have crashed.
             if len(self.system.ffind('liste_obs*')) > 0:
-                self.system.tar('liste_obs_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h),
+                self.system.tar('liste_obs_{:s}_{:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h),
                                 'liste_obs*')
         # Ensure that at least one listing file has been created, otherwise the tar command raises an
         # ExecutionError that isn't filtered by the DelayedAlgoError mechanism and make the algo component
@@ -782,14 +776,14 @@ class SytistWorker(_SafranWorker):
         # This issue has been identified when trying the #2079 vortex issue that should allow the task
         # to go on until produced resources are archived even if some members have crashed.
         if len(self.system.ffind('*.out')) > 0:
-            self.system.tar('listings_safran_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h),
+            self.system.tar('listings_safran_{:s}_{:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h),
                             '*.out')
 
-        super(SytistWorker, self).postfix()
+        super().postfix()
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         self.system.remove('sapfich')
-        print('Running task {0:s}'.format(self.kind))
+        print('Running task {:s}'.format(self.kind))
         for day, dates in self.days.items():
             nech = len(dates) if len(dates) == 9 else 5
             self.sapdat(dates[-1], nech)
@@ -803,13 +797,13 @@ class SytistWorker(_SafranWorker):
         self.link_in('SAPLUI5_ARP' + dates[-1].ymdh, 'SAPLUI5_ARP')
         self.link_in('SAPLUI5_ANA' + dates[-1].ymdh, 'SAPLUI5_ANA')
         for suffix in ['HA', 'HS', 'NA', 'TA', 'TS', 'UA', 'US', 'VA', 'VS']:
-            self.link_in('SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh), 'SAF4D_{0:s}'.format(suffix))
+            self.link_in('SAF4D_{:s}_{:s}'.format(suffix, dates[-1].ymdh), 'SAF4D_{:s}'.format(suffix))
         rdict, go = self.check_mandatory_resources(rdict,
-                                                   ['SAPLUI5'] + ['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh)
+                                                   ['SAPLUI5'] + ['SAFRANE_d{!s}_{:s}'.format(day, d.ymdh)
                                                                   for d in dates])
         if go:
             for j, d in enumerate(dates):
-                self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
+                self.link_in('SAFRANE_d{!s}_{:s}'.format(day, d.ymdh), 'SAFRAN' + str(j + 1))
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
             try:
                 self.local_spawn(list_name)
@@ -825,14 +819,14 @@ class SytistWorker(_SafranWorker):
 
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
         with open('sapdat', 'w') as d:
-            d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
+            d.write(thisdate.strftime('%y,%m,%d,%H,') + str(nech) + '\n')
             if self.execution in ['forecast', 'reforecast']:
                 d.write('0,0,0\n')
             elif self.execution in ['analysis', 'reanalysis']:
                 d.write('0,1,0\n')
             d.write('3,1,3,3\n')
             d.write('0\n')
-            d.write('1,1,{0!s}\n'.format(self.posts))
+            d.write('1,1,{!s}\n'.format(self.posts))
 
 
 class S2MExecutionError(ExecutionError):
@@ -844,14 +838,14 @@ class S2MExecutionError(ExecutionError):
         self.subdir = subdir
         self.datebegin = datebegin
         self.dateend = dateend
-        super(S2MExecutionError, self).__init__(self.model + ' execution failed.')
+        super().__init__(self.model + ' execution failed.')
 
     def __str__(self):
         return ("Error while running " + self.model + " for member " + self.subdir + " for period " +
                 self.datebegin.ymdh + " - " + self.dateend.ymdh)
 
     def __reduce__(self):
-        red = list(super(S2MExecutionError, self).__reduce__())
+        red = list(super().__reduce__())
         red[1] = tuple([self.model, self.deterministic, self.subdir, self.datebegin,
                         self.dateend])  # Les arguments qui seront passes a __init__
         return tuple(red)
@@ -871,7 +865,7 @@ class S2MMissingDeterministicError(DelayedAlgoComponentError):
         return "Unable to find the mandatory resource of role : " + self.role
 
     def __reduce__(self):
-        red = list(super(S2MMissingDeterministicError, self).__reduce__())
+        red = list(super().__reduce__())
         red[1] = tuple([self.role, self.deterministic])
         return tuple(red)
 
@@ -1289,7 +1283,7 @@ class PrepareForcingWorker(TaylorVortexWorker):
         return rdict
 
     def postfix(self):
-        self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.kind))
+        self.system.subtitle('{:s} : directory listing (post-run)'.format(self.kind))
         for line in self.system.dir():
             print(line)
 
@@ -1316,12 +1310,12 @@ class Guess(ParaExpresso):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(Guess, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         self.env.DR_HOOK_NOT_MPI = 1
 
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super(Guess, self)._default_common_instructions(rh, opts)
+        ddict = super()._default_common_instructions(rh, opts)
         ddict['interpreter'] = self.interpreter
         ddict['reforecast'] = self.reforecast
         return ddict
@@ -1332,7 +1326,7 @@ class Guess(ParaExpresso):
         if concat != 'METADATA.grib':
             self.system.rm('METADATA.grib', fmt='grib')
             self.system.mv(concat, 'METADATA.grib', fmt='grib')
-        super(Guess, self)._default_pre_execute(rh, opts)
+        super()._default_pre_execute(rh, opts)
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
@@ -1453,12 +1447,12 @@ class S2MComponent(ParaBlindRun):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(S2MComponent, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         self.env.DR_HOOK_NOT_MPI = 1
 
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super(S2MComponent, self)._default_common_instructions(rh, opts)
+        ddict = super()._default_common_instructions(rh, opts)
         for attribute in self.footprint_attributes:
             ddict[attribute] = getattr(self, attribute)
         return ddict
@@ -1802,11 +1796,11 @@ class SurfexComponent(S2MComponent):
 
     def get_subdirs(self, rh, opts):
         if self.kind == "escroc":
-            subdirs = ['mb{0:04d}'.format(m) for m in self.members]
+            subdirs = ['mb{:04d}'.format(m) for m in self.members]
         elif self.kind == 'croco':
-            subdirs = ['mb{0:04d}'.format(m) for m in range(self.startmbnode, self.startmbnode + len(self.members))]
+            subdirs = ['mb{:04d}'.format(m) for m in range(self.startmbnode, self.startmbnode + len(self.members))]
         else:
-            subdirs = super(SurfexComponent, self).get_subdirs(rh, opts)
+            subdirs = super().get_subdirs(rh, opts)
 
             if len(self.geometry_in) > 1:
                 # In the case of a postes geometry, there are 3 effective inputs with forcing file role
@@ -1860,12 +1854,12 @@ class PrepareForcingComponent(TaylorRun):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(PrepareForcingComponent, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         self.env.DR_HOOK_NOT_MPI = 1
 
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super(PrepareForcingComponent, self)._default_common_instructions(rh, opts)
+        ddict = super()._default_common_instructions(rh, opts)
         for attribute in self.footprint_attributes:
             ddict[attribute] = getattr(self, attribute)
         return ddict
@@ -1949,7 +1943,7 @@ class SurfexComponentMultiDates(SurfexComponent):
 
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super(SurfexComponentMultiDates, self)._default_common_instructions(rh, opts)
+        ddict = super()._default_common_instructions(rh, opts)
         ddict.pop('datebegin')
         ddict.pop('dateend')
         ddict.pop('dateinit')
@@ -2025,7 +2019,7 @@ class ExtractForcingWorker(PrepareForcingWorker):
     )
 
     def _prepare_forcing_innertask(self, rundir, thisdir, dir_file_1, rdict):
-        return super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
+        return super()._prepare_forcing_task(rundir, thisdir, rdict)
 
     def _prepare_forcing_task(self, rundir, thisdir, rdict):
         datebegin_str = self.datebegin.strftime('%Y%m%d%H')

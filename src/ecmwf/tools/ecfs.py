@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 System Addons to support ECMWF' ECFS archiving system.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import contextlib
 import re
-import six
 import tempfile
 
 from bronx.fancies import loggers
@@ -161,7 +156,7 @@ class ECfsTools(addons.Addon):
 
     @contextlib.contextmanager
     def _ecfscp_xsource(self, source):
-        if isinstance(source, six.string_types):
+        if isinstance(source, str):
             with self._ecfspath_normalize(source) as source:
                 yield source
         else:
@@ -173,7 +168,7 @@ class ECfsTools(addons.Addon):
 
     @contextlib.contextmanager
     def _ecfscp_xtarget(self, target):
-        if isinstance(target, six.string_types):
+        if isinstance(target, str):
             with self._ecfspath_normalize(target, intent='out') as target:
                 yield target
         else:

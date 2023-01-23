@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
@@ -70,7 +66,7 @@ def nicedump(**kw):
     ldump = list()
     c = contents(**kw)
     if c:
-        ldump = ['{0:s}="{1:s}"'.format(k, ' '.join(v if type(v) is list else [v]))
+        ldump = ['{:s}="{:s}"'.format(k, ' '.join(v if type(v) is list else [v]))
                  for k, v in sorted(c.items())]
     return ldump
 
@@ -102,7 +98,7 @@ def autofill(cycle, gcout=None, writes_dump=False, cacheroot='.'):
         sh = vortex.sh()
         cachefile = sh.path.join(cacheroot, '{:s}_vortex_genv_cache'.format(cycle))
         if sh.path.isfile(cachefile):
-            with open(cachefile, 'r') as genvfh:
+            with open(cachefile) as genvfh:
                 gcout = [l.rstrip('\n') for l in genvfh.readlines()]
         else:
             gcout = vortex.sh().spawn([actualgenv(), cycle], output=True)

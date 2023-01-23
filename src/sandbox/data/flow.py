@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.flow import PeriodFlowResource
 

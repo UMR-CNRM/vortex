@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
 """
 TODO: module documentation.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import copy
 
@@ -121,7 +118,7 @@ class IgaFinder(Finder):
 
     def __init__(self, *args, **kw):
         logger.debug('IgaFinder store init %s', self.__class__)
-        super(IgaFinder, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     def fullpath(self, remote):
         if remote['query'].get('relative', False):
@@ -174,7 +171,7 @@ class SopranoStore(Store):
 
     def __init__(self, *args, **kw):
         logger.debug('Soprano store init %s', self.__class__)
-        super(SopranoStore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Module needed to interact with FA and LFI files.
 
@@ -11,10 +9,7 @@ It provides shell addons to deal with:
 
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import re
-import six
 
 import footprints
 
@@ -38,7 +33,7 @@ def use_in_shell(sh, **kw):
     return footprints.proxy.addon(**kw)
 
 
-class LFI_Status(object):
+class LFI_Status:
     """
     Store lfi commands status as a set of attributes:
       * rc = return code
@@ -54,7 +49,7 @@ class LFI_Status(object):
         self._result = result or list()
 
     def __str__(self):
-        return '{0:s} | rc={1:d} result={2:d}>'.format(repr(self).rstrip('>'), self.rc, len(self.result))
+        return '{:s} | rc={:d} result={:d}>'.format(repr(self).rstrip('>'), self.rc, len(self.result))
 
     @property
     def ok(self):
@@ -102,10 +97,6 @@ class LFI_Status(object):
                 maxlines = len(self.stdout) + 1
             for l in self.stdout[:maxlines]:
                 print(l)
-
-    def __nonzero__(self):
-        """Python2 compatibility."""
-        return self.__bool__()
 
     def __bool__(self):
         return bool(self.rc in self.ok)
@@ -155,7 +146,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     def __init__(self, *args, **kw):
         """LFI tools initialisation."""
-        super(LFI_Tool_Raw, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._lfitools_path = dict()
 
     @property
@@ -169,17 +160,17 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
     def _spawn(self, cmd, **kw):
         """Tube to set LFITOOLS env variable."""
         self.env.LFITOOLS = self.lfitools_path
-        return super(LFI_Tool_Raw, self)._spawn(cmd, **kw)
+        return super()._spawn(cmd, **kw)
 
     def _spawn_wrap(self, func, cmd, **kw):
         """Tube to set LFITOOLS env variable."""
         self.env.LFITOOLS = self.lfitools_path
-        return super(LFI_Tool_Raw, self)._spawn_wrap(['lfi_' + func, ] + cmd, **kw)
+        return super()._spawn_wrap(['lfi_' + func, ] + cmd, **kw)
 
     def is_xlfi(self, source):
         """Check if the given ``source`` is a multipart-lfi file."""
         rc = False
-        if source and isinstance(source, six.string_types) and self.sh.path.exists(source):
+        if source and isinstance(source, str) and self.sh.path.exists(source):
             with open(source, 'rb') as fd:
                 rc = fd.read(8) == b'LFI_ALTM'
         return rc
@@ -220,15 +211,15 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
         maxprint = kw.pop('maxprint', 2)
         if maxprint:
-            cmd.extend(['--max-print-diff', six.text_type(maxprint)])
+            cmd.extend(['--max-print-diff', str(maxprint)])
 
         skipfields = kw.pop('skipfields', 0)
         if skipfields:
-            cmd.extend(['--lfi-skip-fields', six.text_type(skipfields)])
+            cmd.extend(['--lfi-skip-fields', str(skipfields)])
 
         skiplength = kw.pop('skiplength', 0)
         if skiplength:
-            cmd.extend(['--lfi-skip-length', six.text_type(skiplength)])
+            cmd.extend(['--lfi-skip-length', str(skiplength)])
 
         kw['output'] = True
 
@@ -242,7 +233,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         )
 
         stlist = self.lfi_table(lfi1, output=True)
-        trfields.unchanged = set([x[0] for x in stlist.result]) - set(trfields)
+        trfields.unchanged = {x[0] for x in stlist.result} - set(trfields)
 
         return LFI_Status(
             rc=int(bool(fields)),
@@ -288,7 +279,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
                 if st:
                     return destination
                 else:
-                    raise IOError('XLFI packing failed')
+                    raise OSError('XLFI packing failed')
             else:
                 return destination
         else:
@@ -301,7 +292,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         """On the fly packing and ftp."""
         if self.is_xlfi(source):
             if cpipeline is not None:
-                raise IOError("It's not allowed to compress xlfi files.")
+                raise OSError("It's not allowed to compress xlfi files.")
             hostname = self.sh.fix_fthostname(hostname)
 
             st = LFI_Status()
@@ -313,9 +304,9 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
                 self.sh.pclose(p)
                 st.result = [destination]
                 st.stdout = [
-                    'Connection time   : {0:f}'.format(ftp.length),
-                    'Packed source size: {0:d}'.format(packed_size),
-                    'Actual target size: {0:d}'.format(ftp.size(destination))
+                    'Connection time   : {:f}'.format(ftp.length),
+                    'Packed source size: {:d}'.format(packed_size),
+                    'Actual target size: {:d}'.format(ftp.size(destination))
                 ]
                 ftp.close()
             else:
@@ -332,7 +323,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         """Use ftserv as much as possible."""
         if self.is_xlfi(source):
             if cpipeline is not None:
-                raise IOError("It's not allowed to compress xlfi files.")
+                raise OSError("It's not allowed to compress xlfi files.")
             if self.sh.ftraw and self.rawftshell is not None:
                 newsource = self.sh.copy2ftspool(source, fmt='lfi')
                 rc = self.sh.ftserv_put(newsource, destination,
@@ -438,7 +429,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             rc = self.sh.scpput(source, destination, hostname, logname, cpipeline)
         else:
             if cpipeline is not None:
-                raise IOError("It's not allowed to compress xlfi files.")
+                raise OSError("It's not allowed to compress xlfi files.")
             logname = self.sh.fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
             ssh = self.sh.ssh(hostname, logname)
             permissions = ssh.get_permissions(source)
@@ -463,7 +454,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         """
         if self.is_xlfi(source):
             if cpipeline is not None:
-                raise IOError("It's not allowed to compress xlfi files.")
+                raise OSError("It's not allowed to compress xlfi files.")
             psource = source + self.sh.safe_filesuffix()
             rc = LFI_Status()
             try:
@@ -501,7 +492,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         """
         if self.is_xlfi(source):
             if cpipeline is not None:
-                raise IOError("It's not allowed to compress xlfi files.")
+                raise OSError("It's not allowed to compress xlfi files.")
             psource = source + self.sh.safe_filesuffix()
             rc = LFI_Status()
             try:
@@ -613,7 +604,7 @@ class LFI_Tool_Py(LFI_Tool_Raw):
     _cp_nopack_fsko_write = _cp_pack_write
 
     def _multicpmethod(self, pack=False, intent='in', samefs=False):
-        return '_cp_{0:s}_{1:s}_{2:s}'.format(
+        return '_cp_{:s}_{:s}_{:s}'.format(
             'aspack' if pack else 'nopack',
             'fsok' if samefs else 'fsko',
             'read' if intent == 'in' else 'write',
@@ -711,7 +702,7 @@ class IO_Poll(addons.Addon):
     def __init__(self, *args, **kw):
         """Abstract Addon initialisation."""
         logger.debug('IO_Poll init %s', self.__class__)
-        super(IO_Poll, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._polled = set()
 
     def _spawn(self, cmd, **kw):
@@ -725,16 +716,16 @@ class IO_Poll(addons.Addon):
         # Is there a need for an interpreter ?
         if self.interpreter != 'none':
             kw['interpreter'] = self.interpreter
-        return super(IO_Poll, self)._spawn(cmd, **kw)
+        return super()._spawn(cmd, **kw)
 
     def io_poll(self, prefix, nproc_io=None):
         """Do the actual job of polling files prefixed by ``prefix``."""
         cmd = ['--prefix', prefix]
         if nproc_io is None:
             if not self.sh.path.exists('fort.4'):
-                raise IOError('The proc_io option or a fort.4 file should be provided.')
+                raise OSError('The proc_io option or a fort.4 file should be provided.')
         else:
-            cmd.extend(['--nproc_io', six.text_type(nproc_io)])
+            cmd.extend(['--nproc_io', str(nproc_io)])
 
         # Catch the file processed
         rawout = self._spawn(cmd)

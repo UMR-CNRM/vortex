@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation
 """
-
-from __future__ import absolute_import, print_function, division, unicode_literals
 
 import footprints
 
@@ -80,7 +76,7 @@ class AirTool(footprints.FootprintBase):
 
     def __init__(self, *args, **kw):
         """Setup actual cfg file."""
-        super(AirTool, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._actualcfg = None
         logger.info('Set <loglevel:%s>', self.loglevel)
         self.ticket.setloglevel(self.loglevel)

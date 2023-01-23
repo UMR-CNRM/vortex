@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Usage of EPyGrAM package.
 
 When loaded, this module discards any FootprintBase resource collected as a container
 in EPyGrAM package.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
 
@@ -112,7 +108,7 @@ def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, ov
                     dataout.close()
                     dataout.open(openmode='a')
                 # Actually add the new field
-                logger.info('Add field %s pack=%s' % (fy.fid, comprpack))
+                logger.info('Add field {} pack={}'.format(fy.fid, comprpack))
                 dataout.writefield(fy, compression=comprpack)
                 addedfields += 1
 
@@ -259,7 +255,7 @@ class EpygramMetadataReader(MetaDataReader):
         self._datahide = {
             'date': Date(date_epy) if date_epy else date_epy,
             'term': Time(hour=int(term_epy.total_seconds() / 3600),
-                         minute=int((term_epy.total_seconds() / 60)) % 60)
+                         minute=int(term_epy.total_seconds() / 60) % 60)
         }
 
     def _process_epy(self, epyf):
@@ -389,7 +385,7 @@ def empty_fa(t, rh, empty_name):
             rh.contents.data.close()
             return e
     else:
-        raise IOError('Try to copy header from a missing resource <{!s}>'.format(rh.container.localpath()))
+        raise OSError('Try to copy header from a missing resource <{!s}>'.format(rh.container.localpath()))
 
 
 @epygram_checker.disabled_if_unavailable(version='1.0.0')
@@ -571,7 +567,7 @@ def split_errgrib_on_shortname(t, rh):
                 if sn is not None:
                     break
             if sn is None:
-                raise IOError('No ShortName was found')
+                raise OSError('No ShortName was found')
             # Set up the appropriate section
             if sn not in sections:
                 sections[sn] = create_section(sn)

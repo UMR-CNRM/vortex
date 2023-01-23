@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
 """
@@ -6,12 +5,10 @@ This module handles store objects in charge of physically accessing resources.
 Store objects use the :mod:`footprints` mechanism.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import copy
 import ftplib
+import io
 import re
-import six
 
 from bronx.fancies import loggers
 import footprints
@@ -162,10 +159,10 @@ class FunctionStore(Store):
             if 'intent' in options and options['intent'] == dataflow.intent.IN:
                 logger.info('Ignore intent <in> for function input.')
             # Handle StringIO objects, by changing them to ByteIOs...
-            if isinstance(fres, six.StringIO):
+            if isinstance(fres, io.StringIO):
                 s_fres = fres
                 s_fres.seek(0)
-                fres = six.BytesIO()
+                fres = io.BytesIO()
                 for l in s_fres:
                     fres.write(l.encode(encoding='utf-8'))
                 fres.seek(0)
@@ -208,7 +205,7 @@ class Finder(Store):
 
     def __init__(self, *args, **kw):
         logger.debug('Finder store init %s', self.__class__)
-        super(Finder, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -226,7 +223,7 @@ class Finder(Store):
             return remote['path']
 
     def _localtarfix(self, local):
-        if (isinstance(local, six.string_types) and self.system.path.isfile(local) and
+        if (isinstance(local, str) and self.system.path.isfile(local) and
                 self.system.is_tarfile(local)):
             destdir = self.system.path.dirname(self.system.path.realpath(local))
             try:
@@ -382,7 +379,7 @@ class Finder(Store):
         return rc
 
 
-class _VortexStackedStorageMixin(object):
+class _VortexStackedStorageMixin:
     """Mixin class that adds utility functions to work with stacked data."""
 
     _STACKED_RE = re.compile('stacked-')
@@ -472,7 +469,7 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
 
     def __init__(self, *args, **kw):
         logger.debug('Vortex archive store init %s', self.__class__)
-        super(_VortexBaseArchiveStore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     def remap_read(self, remote, options):
         """Remap actual remote path to distant store path for intrusive actions."""
@@ -518,7 +515,7 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
             logger.info("Refilling the stack egg to [%s]", rstore)
             try:
                 rstore.put(target, remote.copy(), targetopts)
-            except (ExecutionError, IOError, OSError) as e:
+            except (ExecutionError, OSError) as e:
                 logger.error("An ExecutionError happened during the refill: %s", str(e))
                 logger.error("This error is ignored... but that's ugly !")
         return rc, target, remainder
@@ -906,7 +903,7 @@ class _VortexCacheBaseStore(CacheStore, _VortexStackedStorageMixin):
     def __init__(self, *args, **kw):
         logger.debug('Vortex cache store init %s', self.__class__)
         del self.cache
-        super(_VortexCacheBaseStore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     def vortexcheck(self, remote, options):
         """Proxy to :meth:`incachecheck`."""
@@ -1282,15 +1279,15 @@ class PromiseCacheStore(VortexCacheMtStore):
 
     def vortexget(self, remote, local, options):
         """Proxy to :meth:`incacheget`."""
-        return super(PromiseCacheStore, self).vortexget(remote, local, self._add_default_options(options))
+        return super().vortexget(remote, local, self._add_default_options(options))
 
     def vortexput(self, local, remote, options):
         """Proxy to :meth:`incacheput`."""
-        return super(PromiseCacheStore, self).vortexput(local, remote, self._add_default_options(options))
+        return super().vortexput(local, remote, self._add_default_options(options))
 
     def vortexdelete(self, remote, options):
         """Proxy to :meth:`incachedelete`."""
-        return super(PromiseCacheStore, self).vortexdelete(remote, self._add_default_options(options))
+        return super().vortexdelete(remote, self._add_default_options(options))
 
 
 class VortexPromiseStore(PromiseStore):

@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 
 import footprints
 
@@ -16,7 +10,7 @@ from vortex.tools.grib import GRIBAPI_Tool
 __all__ = []
 
 
-class _GRIBDIFF_Plus_St(object):
+class _GRIBDIFF_Plus_St:
     """Status of the GRIB comparison."""
 
     def __init__(self, rc, result):
@@ -24,22 +18,18 @@ class _GRIBDIFF_Plus_St(object):
         self._result = result
 
     def __str__(self):
-        return '{0:s} | rc={1:d}>'.format(repr(self).rstrip('>'), self.rc)
+        return '{:s} | rc={:d}>'.format(repr(self).rstrip('>'), self.rc)
 
     @property
     def result(self):
         """Indicates whether the diff succeeded or not."""
         return self._result
 
-    def __nonzero__(self):
-        """Python2 compatibility."""
-        return self.__bool__()
-
     def __bool__(self):
         return self.rc
 
 
-class _GRIBDIFF_Plus_Res(object):
+class _GRIBDIFF_Plus_Res:
     """Detailed result of the GRIB comparison."""
 
     def __init__(self, gapi, epydiff, epydiff_res):
@@ -77,12 +67,12 @@ class GRIBDIFF_Plus(GRIBAPI_Tool):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(GRIBDIFF_Plus, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._epycount = 0
         self._epyavail = None
 
     def _actual_diff(self, grib1, grib2, skipkeys, **kw):
-        rc = super(GRIBDIFF_Plus, self)._actual_diff(grib1, grib2, skipkeys, **kw)
+        rc = super()._actual_diff(grib1, grib2, skipkeys, **kw)
         if not rc:
             if self._epyavail is None:
                 from common.util.usepygram import epygram_checker
@@ -92,7 +82,7 @@ class GRIBDIFF_Plus(GRIBAPI_Tool):
                     from common.util.diffpygram import EpyGribDiff
                     gdiff = EpyGribDiff(grib2, grib1)  # Ref file is first...
                     self._epycount += 1
-                    res = _GRIBDIFF_Plus_Res(rc, True, six.text_type(gdiff))
+                    res = _GRIBDIFF_Plus_Res(rc, True, str(gdiff))
                     # Save the detailed diff
                     with open(grib1 + "_epygram_diffstats.log", "w") as outfh:
                         outfh.write(gdiff.format_diff(detailed=True))

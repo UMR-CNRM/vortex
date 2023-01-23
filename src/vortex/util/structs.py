@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 This module defines common base classes for miscellaneous purposes.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import json
 
@@ -27,4 +23,4 @@ class ShellEncoder(json.JSONEncoder):
             return obj.footprint_export()
         elif hasattr(obj, '__dict__'):
             return vars(obj)
-        return super(ShellEncoder, self).default(obj)
+        return super().default(obj)

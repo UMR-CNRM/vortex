@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Created on Thu Apr  4 17:32:49 2019 by sraynaud
 """
@@ -64,7 +62,7 @@ class Hycom3dCompilator(Expresso):
     )
 
     def prepare(self, rh, kw):
-        super(Hycom3dCompilator, self).prepare(rh, kw)
+        super().prepare(rh, kw)
         # Note LFM: A clone of the environment is already created in
         #           AlgoComponent.run. There is no need to clone it again.
         stripout_conda_env(self.ticket, self.env)
@@ -92,7 +90,7 @@ class Hycom3dIBCRunTime(Expresso):
     ]
 
     def prepare(self, rh, opts):
-        super(Hycom3dIBCRunTime, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         ncinputs = self.context.sequence.effective_inputs(role=["Input"])
         self._ncins = ','.join(
@@ -126,7 +124,7 @@ class Hycom3dIBCRunHorizRegridcdf(BlindRun, Hycom3dSpecsFileDecoMixin):
 
     def prepare(self, rh, opts):
         """Get specs data from JSON and setup args."""
-        super(Hycom3dIBCRunHorizRegridcdf, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         specs = self._get_specs_and_link("regridcdf.json")
         resfiles = specs["resfiles"]
         self.csteps = range(len(resfiles["ssh"]))
@@ -145,7 +143,7 @@ class Hycom3dIBCRunHorizRegridcdf(BlindRun, Hycom3dSpecsFileDecoMixin):
             for cstep in self.csteps:
                 self._clargs = dict(varname=varname, cstep=cstep)
                 print(self._clargs)
-                super(Hycom3dIBCRunHorizRegridcdf, self).execute(rh, opts)
+                super().execute(rh, opts)
 
 
 class Hycom3dIBCRunVerticalInicon(BlindRun, Hycom3dSpecsFileDecoMixin):
@@ -181,7 +179,7 @@ class Hycom3dIBCRunVerticalInicon(BlindRun, Hycom3dSpecsFileDecoMixin):
 
     def prepare(self, rh, opts):
         """Get specs data from JSON."""
-        super(Hycom3dIBCRunVerticalInicon, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         self._specs = self._get_specs_and_link("inicon.json")
 
     def spawn_command_options(self):
@@ -230,7 +228,7 @@ class Hycom3dRiversFlowRate(Expresso):
     ]
 
     def prepare(self, rh, opts):
-        super(Hycom3dRiversFlowRate, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         gettarfile = self.context.sequence.effective_inputs(
             role=["Input"])
@@ -272,7 +270,7 @@ class Hycom3dAtmFrcTime(Expresso):
     ]
 
     def prepare(self, rh, opts):
-        super(Hycom3dAtmFrcTime, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # Input insta files
         insta_rhs = [sec.rh for sec in
@@ -324,7 +322,7 @@ class Hycom3dSpectralNudgingRunPrepost(Expresso):
     )
 
     def prepare(self, rh, opts):
-        super(Hycom3dSpectralNudgingRunPrepost, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         ncinputs = self.context.sequence.effective_inputs(role=["Input"])
         self._ncins = ','.join(
@@ -357,7 +355,7 @@ class Hycom3dSpectralNudgingRunDemerliac(BlindRun, Hycom3dSpecsFileDecoMixin):
 
     def prepare(self, rh, opts):
         """Get specs data from JSON and setup args."""
-        super(Hycom3dSpectralNudgingRunDemerliac, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         specs = self._get_specs_and_link("demerliac.json")
         self.ncins = specs["ncins"]
         self.ncout_patt = specs["ncout_patt"]
@@ -374,7 +372,7 @@ class Hycom3dSpectralNudgingRunDemerliac(BlindRun, Hycom3dSpecsFileDecoMixin):
         """We execute several times the executable with different inputs"""
         for varname in self.varnames:
             self.system.symlink(self.ncins[varname], "input.nc")
-            super(Hycom3dSpectralNudgingRunDemerliac, self).execute(rh, opts)
+            super().execute(rh, opts)
             self.system.rm("input.nc")
             self.system.mv("output.nc", self.ncout_patt.format(**locals()))
 
@@ -392,7 +390,7 @@ class Hycom3dSpectralNudgingRunSpectralPreproc(Expresso):
     )
 
     def prepare(self, rh, opts):
-        super(Hycom3dSpectralNudgingRunSpectralPreproc, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         ncinputs_hycom3d = self.context.sequence.effective_inputs(
             role=["Input_hycom3d"])
@@ -457,7 +455,7 @@ class Hycom3dSpectralNudgingRunSpectral(BlindRun,
         for varname in self.varnames:
             for source in list(self.ncfiles[varname].keys()):
                 self.system.symlink(self.ncfiles[varname][source], "input.nc")
-                super(Hycom3dSpectralNudgingRunSpectral, self).execute(rh, opts)
+                super().execute(rh, opts)
                 self.system.rm("input.nc")
                 self.system.mv("output.nc", self.ncout_patt.format(**locals()))
 
@@ -487,7 +485,7 @@ class Hycom3dSpectralNudgingRunSpectralPara(ParaBlindRun,
 
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super(Hycom3dSpectralNudgingRunSpectralPara, self)._default_common_instructions(rh, opts)
+        ddict = super()._default_common_instructions(rh, opts)
         del ddict['progname']
         del ddict['progargs']
         return ddict
@@ -637,7 +635,7 @@ class Hycom3dModelRun(Parallel, Hycom3dSpecsFileDecoMixin):
             mpiopts=self.mpiopts,
             mpiname=self.namempi
         )
-        super(Hycom3dModelRun, self).execute(rh, opts)
+        super().execute(rh, opts)
 
 
 # %% Post-production run algo component
@@ -671,7 +669,7 @@ class Hycom3dPostprodPreproc(Expresso):
     )
 
     def prepare(self, rh, opts):
-        super(Hycom3dPostprodPreproc, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         # Input files
         rhs = [sec.rh for sec in
                self.context.sequence.effective_inputs(role="Input")]
@@ -707,7 +705,7 @@ class Hycom3dPostprodConcat(Hycom3dPostprodPreproc):
     )
 
     def spawn_command_options(self):
-        clopts = super(Hycom3dPostprodConcat, self).spawn_command_options()
+        clopts = super().spawn_command_options()
         clopts['vapp'] = self.vapp
         clopts['vconf'] = self.vconf
         return clopts
@@ -756,7 +754,7 @@ class Hycom3dPostprod(BlindRun, Hycom3dPostprodMixin, Hycom3dSpecsFileDecoMixin)
         """We execute several times the executable with different inputs."""
         for arg in self._clargs:
             self._clarg = arg
-            super(Hycom3dPostprod, self).execute(rh, opts)
+            super().execute(rh, opts)
 
 
 class Hycom3dParaPostprod(ParaBlindRun, Hycom3dPostprodMixin, Hycom3dSpecsFileDecoMixin):
@@ -778,12 +776,12 @@ class Hycom3dParaPostprod(ParaBlindRun, Hycom3dPostprodMixin, Hycom3dSpecsFileDe
         return "hycom3d_postprod"
 
     def prepare(self, rh, opts):
-        super(Hycom3dParaPostprod, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         self._links = self._specs["links"] if "links" in self._specs.keys() else []
 
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super(Hycom3dParaPostprod, self)._default_common_instructions(rh, opts)
+        ddict = super()._default_common_instructions(rh, opts)
         del ddict['progname']
         del ddict['progargs']
         return ddict
@@ -884,7 +882,7 @@ class Hycom3dPostprodInterpolation(Hycom3dPostprodPreproc):
         return "hycom3d_postprod_interpolation"
 
     def prepare(self, rh, opts):
-        super(Hycom3dPostprodInterpolation, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         # Link to regional and blkdat files
         for path in self._specs["links"]:
             local_path = self.system.path.basename(path)

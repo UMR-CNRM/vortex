@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Callback functions for Jeeves.
 If needed, VORTEX must be loaded via a VortexWorker in this context.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from vortex.tools import compression, systems
 from vortex.util.worker import VortexWorker

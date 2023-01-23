@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Authorizations module.
 
@@ -7,8 +5,6 @@ This modules allow the system to check if the processed actions is authorized or
 not. Via the sessions module, glove et environment objects support the
 verification.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 from collections import namedtuple

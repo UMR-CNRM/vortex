@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 *Versatile Objects Rounded-up in a Toolbox for Environmental eXperiments*
 
@@ -21,8 +19,6 @@ Advanced users could access to specific classes of objects, but the use
 of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 __version__ = '1.8.4'
 __prompt__ = 'Vortex v-' + __version__ + ':'

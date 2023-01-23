@@ -1,19 +1,13 @@
-# -*- coding: utf-8 -*-
-
 """
 AlgoComponents for the next generation of Fullpos runs (based on the 903
 configuration).
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-
 import collections
 import functools
 import math
 import re
-from six.moves import filterfalse
+from itertools import filterfalse
 import time
 
 from bronx.compat.functools import cached_property
@@ -38,7 +32,7 @@ logger = loggers.getLogger(__name__)
 fullpos_server_flypoll_pickle = '.fullpos_server_flypoll'
 
 
-class FullPosServerFlyPollPersistantState(object):
+class FullPosServerFlyPollPersistantState:
     """Persistent storage object for Fullpos's polling method."""
 
     def __init__(self):
@@ -57,7 +51,7 @@ def fullpos_server_flypoll(sh, outputprefix, termfile, directories=('.', ), **kw
                 fpoll_st = FullPosServerFlyPollPersistantState()
             try:
                 if sh.path.exists(termfile):
-                    with open(termfile, 'r') as wfh:
+                    with open(termfile) as wfh:
                         rawcursor = wfh.readline().rstrip('\n')
                     try:
                         cursor = Time(rawcursor)
@@ -82,7 +76,7 @@ def fullpos_server_flypoll(sh, outputprefix, termfile, directories=('.', ), **kw
     return new
 
 
-class FullposServerDiscoveredInputs(object):
+class FullposServerDiscoveredInputs:
     """Holds all kind of information on input files."""
 
     def __init__(self):
@@ -241,7 +235,7 @@ class FullPosServer(IFSParallel):
         return 'fullpos'
 
     def __init__(self, *args, **kw):
-        super(FullPosServer, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._flyput_mapping_d = dict()
 
     def flyput_outputmapping(self, item):
@@ -301,7 +295,7 @@ class FullPosServer(IFSParallel):
                 for s in todosec0:
                     discovered.tododata.append({self._MODELSIDE_INPUTPREFIX0 + iprefixes[0]: s})
             else:
-                if len(set([len(secs) for secs in todosec1.values()])) > 1:
+                if len({len(secs) for secs in todosec1.values()}) > 1:
                     raise AlgoComponentError('Inconsistent number of input data.')
                 for sections in zip(* [iter(todosec1[i]) for i in iprefixes]):
                     discovered.tododata.append({self._MODELSIDE_INPUTPREFIX0 + k: v
@@ -579,7 +573,7 @@ class FullPosServer(IFSParallel):
 
     def prepare(self, rh, opts):
         """Various sanity checks + namelist tweaking."""
-        super(FullPosServer, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         if self.object_namelists:
             self.system.subtitle('Object Namelists customisation')
@@ -594,8 +588,8 @@ class FullPosServer(IFSParallel):
         self.system.subtitle('Dealing with various input files')
 
         # Sanity check over climfiles and geometries
-        input_geo = set([sec.rh.resource.geometry
-                         for sdict in self.inputs.tododata for sec in sdict.values()])
+        input_geo = {sec.rh.resource.geometry
+                     for sdict in self.inputs.tododata for sec in sdict.values()}
         if len(input_geo) == 0:
             raise AlgoComponentError('No input data are provided, ...')
         elif len(input_geo) > 1:
@@ -603,9 +597,9 @@ class FullPosServer(IFSParallel):
         else:
             input_geo = input_geo.pop()
 
-        input_climgeo = set([x.rh.resource.geometry
-                             for x in self.context.sequence.effective_inputs(role=('InputClim',
-                                                                                   'InitialClim'))])
+        input_climgeo = {x.rh.resource.geometry
+                         for x in self.context.sequence.effective_inputs(role=('InputClim',
+                                                                               'InitialClim'))}
         if len(input_climgeo) == 0:
             logger.info('No input clim provided. Going on without it...')
         elif len(input_climgeo) > 1:
@@ -620,17 +614,17 @@ class FullPosServer(IFSParallel):
             raise AlgoComponentError('The Initial Condition geometry differs from other input data.')
 
         # Sanity check on target climatology files
-        target_climgeos = set([x.rh.resource.geometry
-                               for x in self.context.sequence.effective_inputs(role='TargetClim')])
+        target_climgeos = {x.rh.resource.geometry
+                           for x in self.context.sequence.effective_inputs(role='TargetClim')}
         if len(target_climgeos) == 0:
             logger.info('No target clim are provided. Going on without it...')
 
         # Sanity check on selection namelists
         if self.xxtmapping:
             for tdict in self.xxtmapping.values():
-                if (set([self._actual_term(sec.rh)
-                         for sdict in self.inputs.tododata
-                         for sec in sdict.values()]) < set(tdict.keys())):
+                if ({self._actual_term(sec.rh)
+                     for sdict in self.inputs.tododata
+                     for sec in sdict.values()} < set(tdict.keys())):
                     raise AlgoComponentError("The list of terms between input data and selection namelists differs")
         else:
             logger.info("No selection namelists detected. That's fine")
@@ -651,7 +645,7 @@ class FullPosServer(IFSParallel):
                                                                 kind='namelist')]
 
     def prepare_namelist_delta(self, rh, namcontents, namlocal):
-        super(FullPosServer, self).prepare_namelist_delta(rh, namcontents, namlocal)
+        super().prepare_namelist_delta(rh, namcontents, namlocal)
         # With cy43: &NAMCT0 CSCRIPT_PPSERVER=__SERVERSYNC_SCRIPT__, /
         if self.inputs.anyexpected:
             self._set_nam_macro(namcontents, namlocal, 'SERVERSYNC_SCRIPT',
@@ -693,17 +687,17 @@ class FullPosServer(IFSParallel):
 
     def spawn_pre_dirlisting(self):
         """Print a directory listing just before run."""
-        super(FullPosServer, self).spawn_pre_dirlisting()
+        super().spawn_pre_dirlisting()
         for sdir in self.outdirectories:
-            self.system.subtitle('{0:s} : {1:s} sub-directory listing (pre-execution)'
+            self.system.subtitle('{:s} : {:s} sub-directory listing (pre-execution)'
                                  .format(self.realkind, sdir))
             self.system.dir(sdir, output=False, fatal=False)
 
     def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""
-        super(FullPosServer, self).spawn_hook()
+        super().spawn_hook()
         for o_nam in self.object_namelists:
-            self.system.subtitle('{0:s} : dump namelist <{1:s}>'
+            self.system.subtitle('{:s} : dump namelist <{:s}>'
                                  .format(self.realkind, o_nam.container.localpath()))
             self.system.cat(o_nam.container.localpath(), output=False)
 
@@ -780,7 +774,7 @@ class FullPosServer(IFSParallel):
             # Is there already an Initial Condition file ?
             # If so, start the binary...
             if self.inputs.inidata:
-                super(FullPosServer, self).execute(rh, opts)
+                super().execute(rh, opts)
                 # Did the server stopped ?
                 if not self.server_alive():
                     logger.error("Server initialisation failed.")
@@ -848,7 +842,7 @@ class FullPosServer(IFSParallel):
                                           intent='in', fmt=isec.rh.container.actualfmt)
                                     logger.info('%s copied as %s. For initialisation purposes only.',
                                                 isec.rh.container.localpath(), i_init)
-                            super(FullPosServer, self).execute(rh, opts)
+                            super().execute(rh, opts)
                             # Did the server stopped ?
                             if not self.server_alive():
                                 logger.error("Server initialisation failed.")
@@ -863,7 +857,7 @@ class FullPosServer(IFSParallel):
                             self._move_output_guess(iguess, current_i)
 
                         # Let's go...
-                        super(FullPosServer, self).execute(rh, opts)
+                        super().execute(rh, opts)
                         self._deal_with_promises(outputs_mapping, self._poll_and_move)
                         current_i += 1
 
@@ -887,14 +881,14 @@ class FullPosServer(IFSParallel):
                         bm.health_check(interval=30)
 
             for failed_file in [e.section.rh.container.localpath()
-                                for e in six.itervalues(bm.failed)]:
+                                for e in bm.failed.values()]:
                 logger.error("We were unable to fetch the following file: %s", failed_file)
                 if self.fatal:
                     self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
                                                traceback=False)
 
             if tmout:
-                raise IOError("The waiting loop timed out")
+                raise OSError("The waiting loop timed out")
 
         else:
             # Direct Run !
@@ -924,7 +918,7 @@ class FullPosServer(IFSParallel):
                 self.flyput = True
 
             # Let's roll !
-            super(FullPosServer, self).execute(rh, opts)
+            super().execute(rh, opts)
 
         # Map all outputs to destination (using io_poll)
         self.io_poll_args = tuple([self._MODELSIDE_OUTPUTPREFIX,

@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Usage of the TNT package.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-import six
-
 import codecs
+import io
 
 from bronx.fancies import loggers
 from bronx.syntax.externalcode import ExternalCodeImportChecker
@@ -81,7 +76,7 @@ def compose_nam(options):
     dirpack_role = options.get('dirpack', None)
     dirpack_path = _get_pack_adress(dirpack_role) if dirpack_role else nampack_path
 
-    out_io = six.BytesIO()
+    out_io = io.BytesIO()
     thenamelisttool.util.compose_namelist(
         t.sh.path.join(dirpack_path, source + '.yaml'),
         sourcenam_directory=nampack_path,

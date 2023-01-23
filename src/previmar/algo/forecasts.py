@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 SURGES HYCOM.
 """
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 import footprints
@@ -184,7 +181,7 @@ class SurgesCouplingForecasts(Parallel):
         tmpwd = self.dir_exec
         logger.info('Temporarily change the working dir to ./%s', tmpwd)
         with self.system.cdcontext(tmpwd):
-            super(SurgesCouplingForecasts, self).execute(rh, opts)
+            super().execute(rh, opts)
 
 
 class SurgesCouplingInterp(SurgesCouplingForecasts):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
 """
@@ -31,27 +30,24 @@ Mixins are a powerful tool to mutualise some pieces of code. See the
 :class:`AlgoComponentDecoMixin` class documentation for more details.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
+import collections.abc
 import contextlib
 import copy
 import locale
 import logging
 import multiprocessing
+import queue
 import shlex
 import sys
 import tempfile
 import traceback as py_traceback
 
-import six
-
-import footprints
-import vortex
-from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.stdtypes import date
 from bronx.syntax.decorators import nicedeco
+import footprints
 from taylorism import Boss
+import vortex
 from vortex.algo import mpitools
 from vortex.syntax.stdattrs import DelayedEnvValue
 from vortex.tools.parallelism import ParallelResultParser
@@ -76,16 +72,15 @@ class DelayedAlgoComponentError(AlgoComponentError):
     """Triggered when exceptions occured during the execution but were delayed."""
 
     def __init__(self, excs):
-        super(DelayedAlgoComponentError, self).__init__("One or several errors occurs during the run.")
+        super().__init__("One or several errors occurs during the run.")
         self._excs = excs
 
     def __iter__(self):
-        for exc in self._excs:
-            yield exc
+        yield from self._excs
 
     def __str__(self):
         outstr = "One or several errors occur during the run. In order of appearance:\n"
-        outstr += "\n".join(['{0:3d}. {1!s} (type: {2!s})'.format(i + 1, exc, type(exc))
+        outstr += "\n".join(['{:3d}. {!s} (type: {!s})'.format(i + 1, exc, type(exc))
                              for i, exc in enumerate(self)])
         return outstr
 
@@ -95,7 +90,7 @@ class ParallelInconsistencyAlgoComponentError(Exception):
 
     def __init__(self, target):
         msg = "The len of {:s} is inconsistent with the number or ResourceHandlers."
-        super(ParallelInconsistencyAlgoComponentError, self).__init__(msg.format(target))
+        super().__init__(msg.format(target))
 
 
 @nicedeco
@@ -116,10 +111,6 @@ def algo_component_deco_mixin_autodoc(cls):
     Decorator that adds an automatic documentation on any :class:`AlgoComponentDecoMixin`
     class.
     """
-    if six.PY2:
-        # With Python2.7, do not even try...
-        return cls
-
     extradoc = ''
 
     # Document extra footprints
@@ -157,7 +148,7 @@ def algo_component_deco_mixin_autodoc(cls):
                     ' \n'.join(['        ' + t if t else ''
                                 for t in extradoc.split('\n')]))
 
-        if isinstance(getattr(cls, '__doc__', None), six.string_types):
+        if isinstance(getattr(cls, '__doc__', None), str):
             cls.__doc__ += '\n' + extradoc
         else:
             cls.__doc__ = extradoc
@@ -165,7 +156,7 @@ def algo_component_deco_mixin_autodoc(cls):
     return cls
 
 
-class AlgoComponentDecoMixin(object):
+class AlgoComponentDecoMixin:
     """
     This is the base class for any Mixin class targeting :class:`AlgoComponent`
     classes.
@@ -262,7 +253,7 @@ class AlgoComponentDecoMixin(object):
             raise RuntimeError('< {0.__name__:s} > is a mixin class: it cannot be instantiated.'
                                .format(cls))
         else:
-            return super(AlgoComponentDecoMixin, cls).__new__(cls)
+            return super().__new__(cls)
 
     @classmethod
     @_clsmtd_mixin_locked
@@ -443,7 +434,7 @@ class AlgoComponentMeta(footprints.FootprintBaseMeta):
                 raise RuntimeError('< execute > is already defined in the target class: cannot proceed')
             d['execute'] = todobases[0].mixin_execute_overwrite()
         # Create the class as usual
-        fpcls = super(AlgoComponentMeta, cls).__new__(cls, n, b, d)
+        fpcls = super().__new__(cls, n, b, d)
         # Apply decorators
         todobases = [base for base in candidates if base.MIXIN_AUTO_DECO]
         for base in reversed(todobases):
@@ -451,7 +442,7 @@ class AlgoComponentMeta(footprints.FootprintBaseMeta):
         return fpcls
 
 
-class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBase)):
+class AlgoComponent(footprints.FootprintBase, metaclass=AlgoComponentMeta):
     """Component in charge of any kind of processing."""
 
     _SERVERSYNC_RAISEONEXIT = True
@@ -537,7 +528,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         self._delayed_excs = list()
         self._server_synctool = None
         self._server_process = None
-        super(AlgoComponent, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -820,7 +811,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         try:
             # allow 5 sec to put data into queue (it should be more than enough)
             ctxrec = queue_ctx.get(block=True, timeout=time_sleep + 5)
-        except six.moves.queue.Empty:
+        except queue.Empty:
             logger.warning("Impossible to get the Context recorder")
             ctxrec = None
         finally:
@@ -910,7 +901,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
 
     def spawn_pre_dirlisting(self):
         """Print a directory listing just before run."""
-        self.system.subtitle('{0:s} : directory listing (pre-execution)'.format(self.realkind))
+        self.system.subtitle('{:s} : directory listing (pre-execution)'.format(self.realkind))
         self.system.dir(output=False, fatal=False)
 
     def spawn_hook(self):
@@ -928,7 +919,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         sh = self.system
 
         if self.env.true('vortex_debug_env'):
-            sh.subtitle('{0:s} : dump environment (os bound: {1!s})'.format(
+            sh.subtitle('{:s} : dump environment (os bound: {!s})'.format(
                 self.realkind,
                 self.env.osbound()
             ))
@@ -942,7 +933,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         self.spawn_hook()
         self.target.spawn_hook(sh)
         self.spawn_pre_dirlisting()
-        sh.subtitle('{0:s} : start execution'.format(self.realkind))
+        sh.subtitle('{:s} : start execution'.format(self.realkind))
         sh.spawn(args, output=False, stdin=stdin, fatal=opts.get('fatal', True))
 
         # On-the-fly coprocessing cleaning
@@ -969,7 +960,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         if stdin_text is not None:
             plocale = locale.getlocale()[1] or 'ascii'
             tmpfh = tempfile.TemporaryFile(dir=self.system.pwd(), mode='w+b')
-            if isinstance(stdin_text, six.text_type):
+            if isinstance(stdin_text, str):
                 tmpfh.write(stdin_text.encode(plocale))
             else:
                 tmpfh.write(stdin_text)
@@ -1024,7 +1015,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
             self.server_end()
 
     def postfix_post_dirlisting(self):
-        self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.realkind))
+        self.system.subtitle('{:s} : directory listing (post-run)'.format(self.realkind))
         self.system.dir(output=False, fatal=False)
 
     def postfix(self, rh, opts):
@@ -1107,11 +1098,11 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
     def quickview(self, nb=0, indent=0):
         """Standard glance to objects."""
         tab = '  ' * indent
-        print('{0}{1:02d}. {2:s}'.format(tab, nb, repr(self)))
+        print('{}{:02d}. {:s}'.format(tab, nb, repr(self)))
         for subobj in ('kind', 'engine', 'interpreter'):
             obj = getattr(self, subobj, None)
             if obj:
-                print('{0}  {1:s}: {2!s}'.format(tab, subobj, obj))
+                print('{}  {:s}: {!s}'.format(tab, subobj, obj))
         print()
 
     def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
@@ -1163,7 +1154,7 @@ class xExecutableAlgoComponent(ExecutableAlgoComponent):
         Return a boolean value according to the effective executable nature
         of the resource handler provided.
         """
-        rc = super(xExecutableAlgoComponent, self).valid_executable(rh)
+        rc = super().valid_executable(rh)
         if rc:
             # Ensure that the input file is executable
             xrh = rh if isinstance(rh, (list, tuple)) else [rh, ]
@@ -1204,7 +1195,7 @@ class TaylorRun(AlgoComponent):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(TaylorRun, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._boss = None
 
     def _default_common_instructions(self, rh, opts):
@@ -1390,7 +1381,7 @@ class ParaExpresso(TaylorRun):
 
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super(ParaExpresso, self)._default_common_instructions(rh, opts)
+        ddict = super()._default_common_instructions(rh, opts)
         actual_interpreter = sys.executable if self.interpreter == 'current' else self.interpreter
         ddict['progname'] = actual_interpreter
         ddict['progargs'] = footprints.FPList(self._interpreter_args_fix(rh, opts) +
@@ -1487,7 +1478,7 @@ class ParaBlindRun(TaylorRun):
 
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super(ParaBlindRun, self)._default_common_instructions(rh, opts)
+        ddict = super()._default_common_instructions(rh, opts)
         ddict['progname'] = self.absexcutable(rh.container.localpath())
         ddict['progargs'] = footprints.FPList(self.spawn_command_line(rh))
         ddict['progtaskset'] = self.taskset
@@ -1567,10 +1558,10 @@ class Parallel(xExecutableAlgoComponent):
         options = dict(mpiname=act_mpiname)
         config_mpiname = act_mpiname.split('-')[0]
         # Find ither generic options
-        generic_options = set(('mpilauncher',
-                               'mpiopts',
-                               'mpiwrapstd',
-                               'mpibind_topology'))
+        generic_options = {'mpilauncher',
+                           'mpiopts',
+                           'mpiwrapstd',
+                           'mpibind_topology'}
 
         def _generic_options_from_mapping(mapping, options, checkvalue=False):
             optprefix = '{:s}_'.format(config_mpiname)
@@ -1618,7 +1609,7 @@ class Parallel(xExecutableAlgoComponent):
         """Initialise the mpitool object and finds out the command line."""
 
         # Rh is a list binaries...
-        if not isinstance(rh, collections_abc.Iterable):
+        if not isinstance(rh, collections.abc.Iterable):
             rh = [rh, ]
 
         # Find the MPI launcher
@@ -1722,7 +1713,7 @@ class Parallel(xExecutableAlgoComponent):
 
             # Check mpiopts shape
             for k, v in mpi_opts.items():
-                if not isinstance(v, collections_abc.Iterable):
+                if not isinstance(v, collections.abc.Iterable):
                     raise ValueError('In such a case, mpiopts must be Iterable')
                 if len(v) != len(rh):
                     raise ParallelInconsistencyAlgoComponentError('mpiopts[{:s}]'.format(k))
@@ -1832,7 +1823,7 @@ class Parallel(xExecutableAlgoComponent):
         contains indications on the number of nodes, tasks, ...
         """
 
-        self.system.subtitle('{0:s} : parallel engine'.format(self.realkind))
+        self.system.subtitle('{:s} : parallel engine'.format(self.realkind))
 
         with self._tweak_mpitools_logging():
 

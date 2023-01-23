@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains "fake" stores for demonstration purposes.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.stores import _VortexBaseArchiveStore, VortexCacheMtStore, \
     VortexStoreLegacy, PromiseCacheStore, VortexPromiseStore

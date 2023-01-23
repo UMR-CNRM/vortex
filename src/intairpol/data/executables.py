@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 from vortex.data.executables import BlackBox, ChemistryModel
 from gco.syntax.stdattrs import gvar

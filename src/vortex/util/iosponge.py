@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Provide a File-Like object that reads in the first N bytes in order to count
 them precisely.
 """
 
-from __future__ import print_function, division, absolute_import, unicode_literals
-
 import io
-import six
 
 #: No automatic export
 __all__ = []
@@ -74,11 +69,7 @@ class IoSponge(io.BufferedIOBase):
 
     def read1(self, size=None):
         """Read *size* bytes from the file (at once)."""
-        if six.PY2:
-            # read1 is not supported
-            return self._generic_read(size, self._rawio.read)
-        else:
-            return self._generic_read(size, self._rawio.read1)
+        return self._generic_read(size, self._rawio.read1)
 
     def readable(self):
         """Is this file-like object readable ?"""

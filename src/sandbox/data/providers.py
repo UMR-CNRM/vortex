@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains "fake" provider for demonstration purposes.
 
 Such providers will be triggered based on the experiment name (or location
 for uget).
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 
 from vortex.data.providers import Vortex
 from vortex.syntax.stdattrs import legacy_xpid, demosuites
@@ -57,7 +52,7 @@ class UGetDemoProvider(AbstractUGetProvider):
 
     def netloc(self, resource):
         """Tweak the desired netloc."""
-        ns = super(UGetDemoProvider, self).netloc(resource).split('.')
+        ns = super().netloc(resource).split('.')
         ns[0] += '-demo'
         return '.'.join(ns)
 
@@ -77,12 +72,12 @@ class UEnvDemoProvider(AbstractUEnvProvider):
     @property
     def _uenv_netloc(self):
         """Tweak the desired netloc that is used to fetch the Env file."""
-        ns = super(UEnvDemoProvider, self)._uenv_netloc.split('.')
+        ns = super()._uenv_netloc.split('.')
         ns[0] += '-demo'
         return '.'.join(ns)
 
     def netloc(self, resource):
         """Tweak the desired netloc."""
-        ns = super(UEnvDemoProvider, self).netloc(resource).split('.')
+        ns = super().netloc(resource).split('.')
         ns[0] += '-demo'
         return '.'.join(ns)

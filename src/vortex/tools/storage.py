@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This package handles :class:`Storage` objects that could be in charge of
 hosting data resources both locally ("Cache") or on a remote host "Archive").
@@ -29,8 +27,6 @@ aspects. Using the :mod:`footprints` package, for a given execution target, it
 allows to customise the way data are accessed leaving the :class:`Store` objects
 unchanged.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import ftplib
 import re
@@ -80,7 +76,7 @@ def enforce_readonly(f):
 
     def wrapped_action(self, item, *kargs, **kwargs):
         if self.readonly:
-            raise IOError("This Storage place is readonly.")
+            raise OSError("This Storage place is readonly.")
         return f(self, item, *kargs, **kwargs)
 
     return wrapped_action
@@ -155,7 +151,7 @@ class Storage(footprints.FootprintBase):
 
     def __init__(self, *args, **kw):
         logger.debug('Abstract storage init %s', self.__class__)
-        super(Storage, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._actual_config = self.config
         if self._actual_config is None:
             self._actual_config = GenericConfigParser(inifile=self.inifile, mkforce=self.iniauto)
@@ -378,7 +374,7 @@ class Cache(Storage):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(Cache, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._touch_tracker = dict()
 
     @property
@@ -802,7 +798,7 @@ class Archive(AbstractArchive):
             if self.sh.filecocoon(local):
                 rc = self.sh.mv(d_action.result, local, **extras)
             else:
-                raise IOError('Could not cocoon: {!s}'.format(local))
+                raise OSError('Could not cocoon: {!s}'.format(local))
         elif d_action.status == d_action_status.failed:
             logger.info('The earlyretrieve failed (retrieve_id=%s)', retrieve_id)
             rc = False
@@ -971,7 +967,7 @@ class LocalArchive(AbstractLocalArchive):
             raise OSError('User expansion failed for "{:s}"'.format(rawpath))
         if self.auto_self_expand and not self.sh.path.isabs(rawpath):
             rawpath = self.sh.path.expanduser(self.sh.path.join('~', rawpath))
-        return super(LocalArchive, self)._formatted_path(rawpath, **kwargs)
+        return super()._formatted_path(rawpath, **kwargs)
 
 
 class LocalBucketArchive(AbstractLocalArchive):
@@ -990,7 +986,7 @@ class LocalBucketArchive(AbstractLocalArchive):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(LocalBucketArchive, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._bucketname = self.storage.split('.')[0]
 
     @property
@@ -1004,7 +1000,7 @@ class LocalBucketArchive(AbstractLocalArchive):
         rawpath = self.sh.path.expanduser(
             self.sh.path.join('~', 'vortexbucket', self.bucketname, rawpath)
         )
-        return super(LocalBucketArchive, self)._formatted_path(rawpath, **kwargs)
+        return super()._formatted_path(rawpath, **kwargs)
 
 
 # Concrete cache implementations
@@ -1052,7 +1048,7 @@ class FixedEntryCache(Cache):
             logfile = '.'.join((
                 'HISTORY',
                 datetime.now().strftime('%Y%m%d%H%M%S.%f'),
-                'P{0:06d}'.format(self.sh.getpid()),
+                'P{:06d}'.format(self.sh.getpid()),
                 self.sh.getlogname()
             ))
             dumpfile = self.sh.path.join(self.entry, '.history', logfile)
@@ -1129,7 +1125,7 @@ class MarketPlaceCache(Cache):
     )
 
     def __init__(self, *args, **kw):
-        super(MarketPlaceCache, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._internal_conf = dict()
         self._internal_lookup = dict()
         self._init_config()
@@ -1270,11 +1266,11 @@ class MarketPlaceCache(Cache):
 
     @marketplace_check_write_permission
     def _actual_insert(self, item, local, **kwargs):
-        return super(MarketPlaceCache, self)._actual_insert(item, local, **kwargs)
+        return super()._actual_insert(item, local, **kwargs)
 
     @marketplace_check_write_permission
     def _actual_delete(self, item, **kwargs):
-        return super(MarketPlaceCache, self)._actual_delete(item, **kwargs)
+        return super()._actual_delete(item, **kwargs)
 
 
 class MtoolCache(FixedEntryCache):

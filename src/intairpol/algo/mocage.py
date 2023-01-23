@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 AlgoComponents to run Mocage in various modes (forecast, assim, ...).
 """
-
-from __future__ import absolute_import, print_function, division, unicode_literals
-
-import six
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
@@ -93,7 +87,7 @@ class AbstractMocageRoot(Parallel):
             self.flyput = False
         if self.extrasetup:
             self.export(self.extrasetup)
-        super(AbstractMocageRoot, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
     def _sorted_inputs_terms(self, **kwargs):
         """Build a dictionary that contains a list of sections for each geometry.
@@ -180,8 +174,8 @@ class AbstractMocageRoot(Parallel):
         first = self.basedate
         last = self.basedate + date.Period(hours=realfcterm)
 
-        if self.fcterm != six.text_type(realfcterm):
-            self.system.title('**WARNING** Forecast final term modified : {0:d} '.format(realfcterm))
+        if self.fcterm != str(realfcterm):
+            self.system.title('**WARNING** Forecast final term modified : {:d} '.format(realfcterm))
 
         self._fix_nam_macro(namrh, 'YYYY1', int(first.year))
         self._fix_nam_macro(namrh, 'YYYY2', int(last.year))
@@ -192,9 +186,9 @@ class AbstractMocageRoot(Parallel):
         self._fix_nam_macro(namrh, 'HH1', int(first.hour))
         self._fix_nam_macro(namrh, 'HH2', int(last.hour))
         # NHCY is expressed in hours...
-        # if self.nhcy < six.text_type(realnhcy):
+        # if self.nhcy < str(realnhcy):
         if (self.nhcy.length // 3600) < realnhcy:
-            self.system.title('**WARNING** Forcing frequency modified : {0:d} '.format(realnhcy))
+            self.system.title('**WARNING** Forcing frequency modified : {:d} '.format(realnhcy))
             self._fix_nam_macro(namrh, 'NHCY', realnhcy)
         else:
             self._fix_nam_macro(namrh, 'NHCY', self.nhcy.length // 3600)
@@ -224,7 +218,7 @@ class Forecast(AbstractMocageRoot):
     def execute(self, rh, opts):
         """Standard execution."""
         self._prepare_mocage_fc_namelist()
-        super(Forecast, self).execute(rh, opts)
+        super().execute(rh, opts)
 
 
 class AssimilationOpenPalm(AbstractMocageRoot, ParallelOpenPalmMixin):
@@ -261,7 +255,7 @@ class AssimilationOpenPalm(AbstractMocageRoot, ParallelOpenPalmMixin):
     def prepare(self, rh, opts):
         """Export some variables that are specific to MOCAGE-assim."""
         self.export('mocage-assim')
-        super(AssimilationOpenPalm, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
     def execute(self, rh, opts):
         """Standard execution."""
@@ -278,7 +272,7 @@ class AssimilationOpenPalm(AbstractMocageRoot, ParallelOpenPalmMixin):
         json_rh.save()
         json_rh.container.cat()
 
-        super(AssimilationOpenPalm, self).execute(rh, opts)
+        super().execute(rh, opts)
 
 
 class Init(Parallel):
@@ -364,7 +358,7 @@ class Init(Parallel):
             namrh.container.cat()
 
             # Execute the binary
-            super(Init, self).execute(rh, opts)
+            super().execute(rh, opts)
         else:
             # Remove the input HM* files
             for a_file in sh.glob('HM' + '*'):
@@ -417,12 +411,12 @@ class ControlGuess(Parallel):
             # Delete the link for the expected input name
             sh.rm('HMFILE')
             r = i.rh
-            sh.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
-                                                                  r.resource.term.fmthm))
+            sh.title('Loop on domain {:s} and term {:s}'.format(r.resource.geometry.area,
+                                                                r.resource.term.fmthm))
             # link to expected input filename
             sh.symlink(r.container.localpath(), 'HMFILE')
 
-            super(ControlGuess, self).execute(rh, opts)
+            super().execute(rh, opts)
 
             # get the value written in output file
             sh.title('Climatological Init :  0=No else=yes ')
@@ -432,12 +426,12 @@ class ControlGuess(Parallel):
 
             # get the first line of relance_clim file
             try:
-                with open('relance_clim', 'r') as fnam:
+                with open('relance_clim') as fnam:
                     lines = fnam.readlines()
                 returncode = lines[0]
                 # total stores the returncode values for each domain
                 total = total + int(returncode)
-            except IOError:
+            except OSError:
                 logger.error('Could not open file relance_clim in read mode')
                 raise
 
@@ -447,10 +441,10 @@ class ControlGuess(Parallel):
         logger.info('total %d', total)
         try:
             with open('relance_clim', 'w') as fwnam:
-                fwnam.write(six.text_type(total))
+                fwnam.write(str(total))
             sh.title('End of tstrestart : Climatological Inits :  0=No else=yes ')
             sh.cat('relance_clim', output=False)
-        except IOError:
+        except OSError:
             logger.error('Could not open file relance_clim in write mode')
             raise
 

@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Conftools are small objects that can be instantiated from an application's
 configuration file. This module defines conftools specific to IntAirPol applications.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-from six.moves import filter
 
 import collections
 import functools
@@ -101,7 +96,7 @@ class HHDict(dict):
         if name not in self and 'default' in self:
             return self['default']
         else:
-            return super(HHDict, self).__getitem__(name)
+            return super().__getitem__(name)
 
 
 class MocageDomainsConfTool(ConfTool):
@@ -593,8 +588,8 @@ class MocageDomainsConfTool(ConfTool):
             Time(24, 0)
 
         """
-        super(MocageDomainsConfTool, self).__init__(*kargs, **kwargs)
-        if set(self.config.keys()) != set(('actives', 'domains', 'finalterms')):
+        super().__init__(*kargs, **kwargs)
+        if set(self.config.keys()) != {'actives', 'domains', 'finalterms'}:
             raise MocageDomainsConfError('The config dictionary must contain "active", ' +
                                          '"domains" and "finalterm" entries')
         self._actual_config = dict(domains=dict())
@@ -669,7 +664,7 @@ class MocageDomainsConfTool(ConfTool):
                         cast=None):
         d = dict()
         if isinstance(item, dict):
-            if set(item.keys()) == set(['assim', 'production']):
+            if set(item.keys()) == {'assim', 'production'}:
                 # an assim/prod mapping
                 for c, v in item.items():
                     if isinstance(v, dict):
@@ -1014,7 +1009,7 @@ class CutoffHhMocageDomainsConfTool(ConfTool):
         """
         :example: see the :class:`MocageDomainsConfTool` class documentation.
         """
-        super(CutoffHhMocageDomainsConfTool, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._cache = dict()
 
     def __getattr__(self, name):
@@ -1042,7 +1037,7 @@ class CutoffHhMocageDomainsConfTool(ConfTool):
             raise AttributeError()
 
 
-class MocageMixedDomainsInfo(object):
+class MocageMixedDomainsInfo:
     """
     Returns configuration data that are common to several **subdomains** for a
     given cutoff and basetime (hh).

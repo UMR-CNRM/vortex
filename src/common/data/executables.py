@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various Resources for executables used in NWP.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import vortex
 
@@ -88,7 +84,7 @@ class IFSModel(NWPModel):
         Depending on the cycle it may returns nothing.
         """
         if self.cycle < 'cy41':
-            return '-v{0:s} -e{1:s} -c{2:d} -a{3:s} -t{4:g} -f{5:s}{6:d} -m{7:s}'.format(
+            return '-v{:s} -e{:s} -c{:d} -a{:s} -t{:g} -f{:s}{:d} -m{:s}'.format(
                 vmodel, name, conf, timescheme, timestep, fcunit, fcterm, model
             )
         else:
@@ -111,7 +107,7 @@ class Arome(IFSModel):
     def command_line(self, **kw):
         """Enforce aladin model option."""
         kw.setdefault('model', 'aladin')
-        return super(Arome, self).command_line(**kw)
+        return super().command_line(**kw)
 
 
 class NemoModel(OceanographicModel):
@@ -448,11 +444,11 @@ class Odbtools(BlackBox):
 
     def command_line(self, dbin='ECMA', dbout='CCMA', npool=1, nslot=1, fcma=None, masksize=None, date=None):
         """Build command line for execution as a single string."""
-        cmdline = '-i{0:s} -o{1:s} -b1 -a{2:d} -T{3:d}'.format(dbin.upper(), dbout.upper(), npool, nslot)
+        cmdline = '-i{:s} -o{:s} -b1 -a{:d} -T{:d}'.format(dbin.upper(), dbout.upper(), npool, nslot)
         if fcma is not None:
-            cmdline = cmdline + ' -F{0:s}'.format(fcma.upper())
+            cmdline = cmdline + ' -F{:s}'.format(fcma.upper())
         if masksize is not None:
-            cmdline = cmdline + ' -n{0:d}'.format(int(masksize))
+            cmdline = cmdline + ' -n{:d}'.format(int(masksize))
         if date is not None:
             cmdline = cmdline + ' -B' + date.ymdh
         return cmdline
@@ -824,7 +820,7 @@ class BDMExecutableBUFR(Script):
         args = []
         if 'query' in opts:
             args.append(opts['query'])  # The query name
-        superraw = super(BDMExecutableBUFR, self).command_line(**opts)
+        superraw = super().command_line(**opts)
         if superraw:
             args.append(superraw)  # Other arguments provided by the user
         return ' '.join(args)

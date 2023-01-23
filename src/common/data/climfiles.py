@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various resources to handle climatology files used in NWP models.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.geometries import LonlatGeometry
 from vortex.data.outflow import StaticGeoResource, ModelGeoResource

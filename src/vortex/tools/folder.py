@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Various shell addons that handle formats relying on a folder structure.
 
 In any kind of cache directories, the folder structure is kept as is. When
 data are sent using FTP or SSH, a tar file is created on the fly.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 
 import contextlib
 import ftplib
@@ -25,11 +19,11 @@ __all__ = []
 
 logger = loggers.getLogger(__name__)
 
-_folder_exposed_methods = set(['cp', 'mv', 'forcepack', 'forceunpack',
-                               'anyft_remote_rewrite',
-                               'ftget', 'rawftget', 'batchrawftget', 'ftput', 'rawftput',
-                               'scpget', 'scpput',
-                               'ecfsget', 'ecfsput', 'ectransget', 'ectransput'])
+_folder_exposed_methods = {'cp', 'mv', 'forcepack', 'forceunpack',
+                           'anyft_remote_rewrite',
+                           'ftget', 'rawftget', 'batchrawftget', 'ftput', 'rawftput',
+                           'scpget', 'scpput',
+                           'ecfsget', 'ecfsput', 'ectransget', 'ectransput'}
 
 
 def folderize(cls):
@@ -93,9 +87,9 @@ class FolderShell(addons.FtrawEnableAddon):
 
     def _folder_mv(self, source, destination):
         """Shortcut to :meth:`move` method (file or directory)."""
-        if not isinstance(source, six.string_types) or not isinstance(destination, six.string_types):
+        if not isinstance(source, str) or not isinstance(destination, str):
             rc = self.sh.hybridcp(source, destination)
-            if isinstance(source, six.string_types):
+            if isinstance(source, str):
                 rc = rc and self.sh.remove(source)
         else:
             rc, source, destination = self._folder_tarfix_out(source, destination)
@@ -242,7 +236,7 @@ class FolderShell(addons.FtrawEnableAddon):
                       port=DEFAULT_FTP_PORT, cpipeline=None):
         """Proceed direct ftp get on the specified target."""
         if cpipeline is not None:
-            raise IOError("It's not allowed to compress folder like data.")
+            raise OSError("It's not allowed to compress folder like data.")
         hostname = self.sh.fix_fthostname(hostname)
         with self.sh.ftpcontext(hostname, logname, port=port) as ftp:
             if ftp:
@@ -266,7 +260,7 @@ class FolderShell(addons.FtrawEnableAddon):
                          port=None, cpipeline=None):
         """Use ftserv as much as possible."""
         if cpipeline is not None:
-            raise IOError("It's not allowed to compress folder like data.")
+            raise OSError("It's not allowed to compress folder like data.")
         if self.sh.ftraw:
             source, destination = self._folder_preftget(source, destination)
             with self._folder_postftget_context(destination):
@@ -284,7 +278,7 @@ class FolderShell(addons.FtrawEnableAddon):
                               port=None, cpipeline=None):
         """Use ftserv to fetch several folder-like resources"""
         if cpipeline is not None:
-            raise IOError("It's not allowed to compress folder like data.")
+            raise OSError("It's not allowed to compress folder like data.")
         if self.sh.ftraw:
             actualsources = list()
             actualdestinations = list()
@@ -325,7 +319,7 @@ class FolderShell(addons.FtrawEnableAddon):
                       port=DEFAULT_FTP_PORT, cpipeline=None, sync=False):
         """Proceed direct ftp put on the specified target."""
         if cpipeline is not None:
-            raise IOError("It's not allowed to compress folder like data.")
+            raise OSError("It's not allowed to compress folder like data.")
         hostname = self.sh.fix_fthostname(hostname)
         source = self.sh.path.abspath(source)
         with self.sh.ftpcontext(hostname, logname, port=port) as ftp:
@@ -346,13 +340,13 @@ class FolderShell(addons.FtrawEnableAddon):
                          port=None, cpipeline=None, sync=False):
         """Use ftserv as much as possible."""
         if cpipeline is not None:
-            raise IOError("It's not allowed to compress folder like data.")
+            raise OSError("It's not allowed to compress folder like data.")
         if self.sh.ftraw and self.rawftshell is not None:
             newsource = self.sh.copy2ftspool(source, nest=True,
                                              fmt=self.supportedfmt)
             request = self.sh.path.dirname(newsource) + '.request'
             with open(request, 'w') as request_fh:
-                request_fh.write(six.text_type(self.sh.path.dirname(newsource)))
+                request_fh.write(str(self.sh.path.dirname(newsource)))
             self.sh.readonly(request)
             rc = self.sh.ftserv_put(request, destination,
                                     hostname=hostname, logname=logname, port=port,
@@ -368,7 +362,7 @@ class FolderShell(addons.FtrawEnableAddon):
     def _folder_scpget(self, source, destination, hostname, logname=None, cpipeline=None):
         """Retrieve a folder using scp."""
         if cpipeline is not None:
-            raise IOError("It's not allowed to compress folder like data.")
+            raise OSError("It's not allowed to compress folder like data.")
         logname = self.sh.fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         ssh = self.sh.ssh(hostname, logname)
         rc = False
@@ -381,7 +375,7 @@ class FolderShell(addons.FtrawEnableAddon):
     def _folder_scpput(self, source, destination, hostname, logname=None, cpipeline=None):
         """Upload a folder using scp."""
         if cpipeline is not None:
-            raise IOError("It's not allowed to compress folder like data.")
+            raise OSError("It's not allowed to compress folder like data.")
         source = self.sh.path.abspath(source)
         logname = self.sh.fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         ssh = self.sh.ssh(hostname, logname)
@@ -401,7 +395,7 @@ class FolderShell(addons.FtrawEnableAddon):
         """
         # The folder must not be compressed
         if cpipeline is not None:
-            raise IOError("It's not allowed to compress folder like data.")
+            raise OSError("It's not allowed to compress folder like data.")
         source, target = self._folder_preftget(source, target)
         with self._folder_postftget_context(target):
             with self._folder_ftget_file_extract(source) as tmp_target:
@@ -421,7 +415,7 @@ class FolderShell(addons.FtrawEnableAddon):
         :return: return code and additional attributes used
         """
         if cpipeline is not None:
-            raise IOError("It's not allowed to compress folder like data.")
+            raise OSError("It's not allowed to compress folder like data.")
         source = self.sh.path.abspath(source)
         with self._folder_ftput_file_compress(source) as c_source:
             rc, dict_args = self.sh.ecfsput(source=c_source,
@@ -442,7 +436,7 @@ class FolderShell(addons.FtrawEnableAddon):
         """
         # The folder must not be compressed
         if cpipeline is not None:
-            raise IOError("It's not allowed to compress folder like data.")
+            raise OSError("It's not allowed to compress folder like data.")
         source, target = self._folder_preftget(source, target)
         with self._folder_postftget_context(target):
             with self._folder_ftget_file_extract(source) as tmp_target:
@@ -466,7 +460,7 @@ class FolderShell(addons.FtrawEnableAddon):
         :return: return code and additional attributes used
         """
         if cpipeline is not None:
-            raise IOError("It's not allowed to compress folder like data.")
+            raise OSError("It's not allowed to compress folder like data.")
         source = self.sh.path.abspath(source)
         with self._folder_ftput_file_compress(source) as c_source:
             rc, dict_args = self.sh.raw_ectransput(source=c_source,

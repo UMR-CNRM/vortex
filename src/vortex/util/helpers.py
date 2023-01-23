@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Some convenient functions that may simplify scripts
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import defaultdict
 

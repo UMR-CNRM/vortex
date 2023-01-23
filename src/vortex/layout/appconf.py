@@ -1,22 +1,17 @@
-# -*- coding: utf-8 -*-
-
 """
 This modules defines objects that any kind of configuration data
 for jobs and nodes.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
-
+import collections.abc
 import re
 
-from bronx.compat.moves import collections_abc
 from bronx.syntax.decorators import secure_getattr
 
 from vortex.util.config import AppConfigStringDecoder
 
 
-class ConfigSet(collections_abc.MutableMapping):
+class ConfigSet(collections.abc.MutableMapping):
     """Simple struct-like object that acts as a lower case dictionary.
 
     Two syntax are available to add a new entry in a :class:`ConfigSet` object:
@@ -41,7 +36,7 @@ class ConfigSet(collections_abc.MutableMapping):
     """
 
     def __init__(self, *kargs, **kwargs):
-        super(ConfigSet, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self.__dict__['_internal'] = dict()
         self.__dict__['_confdecoder'] = AppConfigStringDecoder(substitution_cb=self._internal.get)
 
@@ -57,7 +52,7 @@ class ConfigSet(collections_abc.MutableMapping):
         return self._confdecoder(self._internal[self._remap_key(key)])
 
     def __setitem__(self, key, value):
-        if value is not None and isinstance(value, six.string_types):
+        if value is not None and isinstance(value, str):
             # Support for old style dictionaries (compatibility)
             if (key.endswith('_map') and not re.match(r'^dict\(.*\)$', value) and
                     not re.match(r'^\w+\(dict\(.*\)\)$', value)):

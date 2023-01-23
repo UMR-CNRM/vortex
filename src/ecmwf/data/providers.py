@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 This package is used to implement the Archive Store class only used at ECMWF.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 from vortex.data.providers import Remote

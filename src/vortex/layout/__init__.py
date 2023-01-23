@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Package dealing with various aspects of the VORTEX session organisation/layout.
 
@@ -22,8 +20,6 @@ It also provides modules that allows to create "standard" VORTEX's jobs:
     * the :mod:`jobs` module focuses on the actual job generation and initialisation.
 
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 #: No automatic export
 __all__ = []

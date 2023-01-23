@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Top level interface for accessing the VORTEX facilities.
 
@@ -7,11 +5,9 @@ This module does not provides any class, constant, or any nice object.
 It defines a very basic interface to some (possibly) powerful capacities
 of the :mod:`vortex` toolbox.
 """
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from contextlib import contextmanager
 import re
-import six
 import traceback
 
 from bronx.fancies import loggers
@@ -86,7 +82,7 @@ def quickview(args, nb=0, indent=0):
         if quickview:
             quickview(nb, indent)
         else:
-            print('{0:02d}. {1:s}'.format(nb, x))
+            print('{:02d}. {:s}'.format(nb, x))
 
 
 class VortexToolboxDescError(Exception):
@@ -177,7 +173,7 @@ def rput(*args, **kw):
 def nicedump(msg, **kw):
     """Simple dump the **kw** dict content with ``msg`` as header."""
     print('#', msg, ':')
-    for k, v in sorted(six.iteritems(kw)):
+    for k, v in sorted(kw.items()):
         print('+', k.ljust(12), '=', str(v))
     print()
 
@@ -276,7 +272,7 @@ def add_section(section, args, kw):
 
     # Print the user inputs
     def print_user_inputs():
-        nicedump('New {0:s} section with options'.format(section), **opts)
+        nicedump('New {:s} section with options'.format(section), **opts)
         nicedump('Resource handler description', **kwclean)
         nicedump(
             'This command options',
@@ -372,8 +368,7 @@ def add_section(section, args, kw):
                         rhandler = newsection.rh
                         # If quick get was ok for this resource don't call get again...
                         if talkative:
-                            t.sh.subtitle('Resource no {0:02d}/{1:02d}'.format(ir + 1,
-                                                                               len(rl)))
+                            t.sh.subtitle('Resource no {:02d}/{:02d}'.format(ir + 1, len(rl)))
                             rhandler.quickview(nb=ir + 1, indent=0)
                             if batchflags[ir] is not True or (do_quick_insitu and quickget[ir]):
                                 t.sh.highlight('Action {:s} on {:s}'.format(doitmethod.upper(),
@@ -812,8 +807,7 @@ def archive_refill(*args, **kw):
         with t.sh.ftppool():
             for ir, rhandler in enumerate(rl):
                 if talkative:
-                    t.sh.subtitle('Resource no {0:02d}/{1:02d}'.format(ir + 1,
-                                                                       len(rl)))
+                    t.sh.subtitle('Resource no {:02d}/{:02d}'.format(ir + 1, len(rl)))
                     rhandler.quickview(nb=ir + 1, indent=0)
                 if not (rhandler.store.use_cache() and rhandler.store.use_archive()):
                     logger.info('The requested store does not have both the cache and archive capabilities. ' +
@@ -885,7 +879,7 @@ def print_namespaces(**kw):
     nd = namespaces(**kw)
     justify = max([len(x) for x in nd.keys()])
     linesep = ",\n" + ' ' * (justify + len(prefix) + 2)
-    for k, v in sorted(six.iteritems(nd)):
+    for k, v in sorted(nd.items()):
         nice_v = linesep.join(v) if len(v) > 1 else v[0]
         print(prefix + k.ljust(justify), '[' + nice_v + ']')
 

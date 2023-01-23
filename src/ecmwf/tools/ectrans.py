@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 System Addons to support ECMWF' EcTrans data transfert tool.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 
 from bronx.fancies import loggers
 import footprints
@@ -209,7 +203,7 @@ class ECtransTools(addons.Addon):
                 finally:
                     self.sh.rm(csource)
         else:
-            raise IOError('No such file or directory: {!r}'.format(source))
+            raise OSError('No such file or directory: {!r}'.format(source))
         return rc
 
     def raw_ectransget(self, source, target, gateway, remote):
@@ -248,7 +242,7 @@ class ECtransTools(addons.Addon):
         :param cpipeline: compression pipeline to be used if provided
         :return: return code
         """
-        if isinstance(target, six.string_types):
+        if isinstance(target, str):
             self.sh.rm(target)
         if cpipeline is None:
             rc = self.raw_ectransget(source=source,

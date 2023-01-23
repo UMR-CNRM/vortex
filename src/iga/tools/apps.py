@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: module documentation.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import contextlib
 
@@ -34,12 +30,12 @@ class OpTask(Task):
         """Set defaults for toolbox defaults, with priority to actual conf."""
         extras.setdefault('namespace', self.conf.get('namespace', 'vortex.cache.fr'))
         extras.setdefault('gnamespace', self.conf.get('gnamespace', 'opgco.cache.fr'))
-        super(OpTask, self).defaults(extras)
+        super().defaults(extras)
 
     @contextlib.contextmanager
     def isolate(self):
         """In Op Jobs always clear un-honored promises."""
-        with super(OpTask, self).isolate():
+        with super().isolate():
             try:
                 yield
             finally:
@@ -47,7 +43,7 @@ class OpTask(Task):
                 self.ticket.context.clear_promises()
 
 
-class MissingObsMixin(object):
+class MissingObsMixin:
     """This mixin can be added to any bator-like task.
 
     It provides functions to alter the component_runner behaviour when the
@@ -66,9 +62,9 @@ class MissingObsMixin(object):
         """Report (e-mail) any Bator failure."""
         listing = self.env.getvar('RUNDIR') + '/opview/' + self.tag + '/NODE.001_01'
         outstr = ("Les bases ODB suivantes ont rencontré des problèmes lors de " +
-                  "l'exécution de la tâche {0:s}\n".format(self.tag))
+                  "l'exécution de la tâche {:s}\n".format(self.tag))
         for i, iexc in enumerate(exc._excs):
-            outstr += "\n-{0:2d}: {1:s}".format(i + 1, iexc.odb_database.upper())
+            outstr += "\n-{:2d}: {:s}".format(i + 1, iexc.odb_database.upper())
 
         ad.opmail(task=self.tag, id='execution_nonfatal_error', msg=outstr, listing=listing)
 

@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 This modules defines specific CEN addons for the Task base class.
 Multiple inheritence together with the standard Task class is required to use this module.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.stdtypes.date import yesterday, Date, Period, Time
 from bronx.fancies import loggers
@@ -15,7 +11,7 @@ from vortex.algo.components import DelayedAlgoComponentError
 logger = loggers.getLogger(__name__)
 
 
-class S2MTaskMixIn(object):
+class S2MTaskMixIn:
     """Usefull addtions for any S2M task."""
 
     nightruntime = Time(hour=3, minute=0)

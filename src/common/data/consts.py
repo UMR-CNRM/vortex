@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various Resources for constant files used in NWP.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import footprints
 from gco.syntax.stdattrs import gvar

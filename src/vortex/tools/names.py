@@ -1,15 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Functions and tools to handle resources names or other kind of names.
 
 Any "name building" object, must conform to the :class:`AbstractVortexNameBuilder`
 abstract class interface.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 
 from bronx.fancies import loggers
 import footprints
@@ -38,12 +32,12 @@ class AbstractVortexNameBuilder(footprints.FootprintBase):
                 info        = "The NameBuilder's name.",
             ),
         ),
-        fastkeys = set(['name', ])
+        fastkeys = {'name'}
     )
 
     def __init__(self, *args, **kw):
         logger.debug('Init VortexNameBuilder %s', self.__class__)
-        super(AbstractVortexNameBuilder, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._default = dict(
             radical='vortexdata',
         )
@@ -97,7 +91,7 @@ class AbstractVortexNameBuilderProxy(AbstractVortexNameBuilder):
     def __init__(self, *kargs, **kwargs):
         # Cache for actual builder objects
         self._instanciated_builders = dict()
-        super(AbstractVortexNameBuilderProxy, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
 
     def setdefault(self, **kw):
         """Update or set new default values as the background description used in packing."""
@@ -170,7 +164,7 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
         for k in ['vapp', 'vconf', 'experiment']:
             if k not in d:
                 raise VortexNameBuilderError('The {!r} info key is mandatory'.format(k))
-            pathbits.append(six.text_type(d[k]))
+            pathbits.append(str(d[k]))
         return pathbits
 
     def _pack_pathname_append_flowdate(self, pathbits, d):
@@ -209,23 +203,23 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
 
     def _pack_void_item(self, value):
         """The most trivial conversion mechanism: the ``value`` as string."""
-        return six.text_type(value)
+        return str(value)
 
     def _pack_std_item_seta(self, value):
         """Packing of a MPI-task number in first direction."""
-        return 'a{0:04d}'.format(int(value))
+        return 'a{:04d}'.format(int(value))
 
     def _pack_std_item_setb(self, value):
         """Packing of a MPI-task number in second direction."""
-        return 'b{0:04d}'.format(int(value))
+        return 'b{:04d}'.format(int(value))
 
     def _pack_std_item_mpi(self, value):
         """Packing of a MPI-task number."""
-        return 'n{0:04d}'.format(int(value))
+        return 'n{:04d}'.format(int(value))
 
     def _pack_std_item_openmp(self, value):
         """Packing of an OpenMP id number."""
-        return 'omp{0:02d}'.format(int(value))
+        return 'omp{:02d}'.format(int(value))
 
     def _pack_std_item_month(self, value):
         """Packing of a month-number value."""

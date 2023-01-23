@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This package handles MPI interface objects responsible of parallel executions.
 :class:`MpiTool` and :class:`MpiBinaryDescription` objects use the
@@ -70,18 +68,15 @@ Note: Namelists and environment changes are orchestrated as follows:
 
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import collections
+import collections.abc
 import itertools
 import locale
 import re
 import shlex
-import six
 import sys
 
 import footprints
-from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.syntax.parsing import xlist_strings
 from vortex.tools import env
@@ -187,7 +182,7 @@ class MpiTool(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         """After parent initialization, set master, options and basics to undefined."""
         logger.debug('Abstract mpi tool init %s', self.__class__)
-        super(MpiTool, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._launcher = self.mpilauncher or self.generic_mpiname
         self._binaries = []
         self._envelope = []
@@ -240,7 +235,7 @@ class MpiTool(footprints.FootprintBase):
 
     def _set_launcher(self, value):
         """Set current launcher mpi name. Should be some special trick, so issue a warning."""
-        logger.warning('Setting a new value [%s] to mpi launcher [%s].' % (value, self))
+        logger.warning('Setting a new value [%s] to mpi launcher [%s].', value, self)
         self._launcher = value
 
     launcher = property(_get_launcher, _set_launcher)
@@ -255,7 +250,7 @@ class MpiTool(footprints.FootprintBase):
 
     def _set_envelope(self, value):
         """Set the envelope description."""
-        if not (isinstance(value, collections_abc.Iterable) and
+        if not (isinstance(value, collections.abc.Iterable) and
                 all([isinstance(b, dict) and
                      all([bk in ('nn', 'nnp', 'openmp', 'np') for bk in b.keys()])
                      for b in value])):
@@ -289,7 +284,7 @@ class MpiTool(footprints.FootprintBase):
             elif a_bin.group in groups:
                 # Deal with group of binaries
                 group = groups.pop(a_bin.group)
-                n_nodes = set([g_bin.options.get('nn', None) for g_bin in group])
+                n_nodes = {g_bin.options.get('nn', None) for g_bin in group}
                 if None in n_nodes:
                     raise ValueError('To build a proper envelope, ' +
                                      '"nn" needs to be specified in all binaries')
@@ -314,7 +309,7 @@ class MpiTool(footprints.FootprintBase):
 
     def _set_binaries(self, value):
         """Set the list of :class:`MpiBinaryDescription` objects associated with this instance."""
-        if not (isinstance(value, collections_abc.Iterable) and
+        if not (isinstance(value, collections.abc.Iterable) and
                 all([isinstance(b, MpiBinary) for b in value])):
             raise ValueError('This should be an Iterable of MpiBinary instances.')
         has_bin_groups = not all([b.group is None for b in value])
@@ -444,7 +439,7 @@ class MpiTool(footprints.FootprintBase):
 
     def _set_sources(self, value):
         """Set the list of of directories that may contain source files."""
-        if not isinstance(value, collections_abc.Iterable):
+        if not isinstance(value, collections.abc.Iterable):
             raise ValueError('This should be an Iterable.')
         self._sources = value
 
@@ -617,9 +612,9 @@ class MpiTool(footprints.FootprintBase):
                 e_options = self._hook_binary_mpiopts(bin_obj, bin_obj.expanded_options())
                 for k in sorted(e_options.keys()):
                     if k in self.optmap:
-                        cmdl.append(self.optprefix + six.text_type(self.optmap[k]))
+                        cmdl.append(self.optprefix + str(self.optmap[k]))
                         if e_options[k] is not None:
-                            cmdl.append(six.text_type(e_options[k]))
+                            cmdl.append(str(e_options[k]))
                 if self.optsep:
                     cmdl.append(self.optsep)
                 if wrapstd:
@@ -767,9 +762,9 @@ class MpiTool(footprints.FootprintBase):
             e_options = self._hook_binary_mpiopts(e_bit, e_bit.expanded_options())
             for k in sorted(e_options.keys()):
                 if k in self.optmap:
-                    cmdl.append(self.optprefix + six.text_type(self.optmap[k]))
+                    cmdl.append(self.optprefix + str(self.optmap[k]))
                     if e_options[k] is not None:
-                        cmdl.append(six.text_type(e_options[k]))
+                        cmdl.append(str(e_options[k]))
             self._envelope_mkcmdline_extra(cmdl)
             if self.optsep:
                 cmdl.append(self.optsep)
@@ -786,9 +781,9 @@ class MpiTool(footprints.FootprintBase):
         cmdl = [self.launcher, ]
         for k, instances in sorted(self._reshaped_mpiopts().items()):
             for instance in instances:
-                cmdl.append(self.optprefix + six.text_type(k))
+                cmdl.append(self.optprefix + str(k))
                 for a_value in instance:
-                    cmdl.append(six.text_type(a_value))
+                    cmdl.append(str(a_value))
         if self.envelope:
             self._envelope_mkcmdline(cmdl)
         else:
@@ -801,7 +796,7 @@ class MpiTool(footprints.FootprintBase):
             # Deal with standard output/error files
             for outf in sorted(self.system.glob('vwrap_stdeo.*')):
                 rank = int(outf[12:])
-                with open(outf, 'r',
+                with open(outf,
                           encoding=locale.getlocale()[1] or 'ascii',
                           errors='replace') as sfh:
                     for (i, l) in enumerate(sfh):
@@ -913,7 +908,7 @@ class MpiTool(footprints.FootprintBase):
         for k, v in confdata.items():
             if k not in self.env:
                 try:
-                    v = six.text_type(v).format(**envsub)
+                    v = str(v).format(**envsub)
                 except KeyError:
                     logger.warning("Substitution failed for the environment " +
                                    "variable %s. Ignoring it.", k)
@@ -992,7 +987,7 @@ class ConfigurableMpiTool(MpiTool):
             if k not in self.env:
                 # If already present, do not overwrite
                 self._logged_env_set(k, v)
-        super(ConfigurableMpiTool, self).setup_environment(opts, conflabel)
+        super().setup_environment(opts, conflabel)
         for k in self._actual_mpidelenv():
             self._logged_env_del(k)
 
@@ -1050,7 +1045,7 @@ class MpiBinaryDescription(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         """After parent initialization, set master and options to undefined."""
         logger.debug('Abstract mpi tool init %s', self.__class__)
-        super(MpiBinaryDescription, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._master = None
         self._arguments = ()
         self._options = None
@@ -1140,10 +1135,10 @@ class MpiBinaryDescription(footprints.FootprintBase):
 
     def _set_arguments(self, args):
         """Keep a copy of the master binary pathname."""
-        if isinstance(args, six.string_types):
+        if isinstance(args, str):
             self._arguments = args.split()
-        elif isinstance(args, collections_abc.Iterable):
-            self._arguments = [six.text_type(a) for a in args]
+        elif isinstance(args, collections.abc.Iterable):
+            self._arguments = [str(a) for a in args]
         else:
             raise ValueError('Improper *args* argument provided.')
 
@@ -1228,7 +1223,7 @@ class MpiBinaryIOServer(MpiBinary):
     def __init__(self, *args, **kw):
         """After parent initialization, set launcher value."""
         logger.debug('Abstract mpi tool init %s', self.__class__)
-        super(MpiBinaryIOServer, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         thisenv = env.current()
         if self.ranks is None:
             self.ranks = thisenv.VORTEX_IOSERVER_RANKS
@@ -1244,7 +1239,7 @@ class MpiBinaryIOServer(MpiBinary):
         if self.nprocs == 0:
             return dict()
         else:
-            return super(MpiBinaryIOServer, self).expanded_options()
+            return super().expanded_options()
 
 
 class MpiRun(MpiTool):
@@ -1340,7 +1335,7 @@ class SRun(ConfigurableMpiTool):
 
     def _set_envelope(self, value):
         """Set the envelope description."""
-        super(SRun, self)._set_envelope(value)
+        super()._set_envelope(value)
         if len(self._envelope) > 1 and self.bindingmethod not in (None, 'vortex'):
             logger.warning("Resetting the binding method to 'Vortex'.")
             self.bindingmethod = 'vortex'
@@ -1350,7 +1345,7 @@ class SRun(ConfigurableMpiTool):
     def _set_binaries_envelope_hack(self, binaries):
         """Tweak the envelope after binaries were setup."""
         if self.bindingmethod not in (None, 'vortex'):
-            openmps = set([b.options.get('openmp', None) for b in binaries])
+            openmps = {b.options.get('openmp', None) for b in binaries}
             if len(openmps) > 1:
                 logger.warning("Resetting the binding method to 'Vortex' because " +
                                "the number of threads is not uniform.")
@@ -1388,7 +1383,7 @@ class SRun(ConfigurableMpiTool):
         """
         self._build_cpumask(cmdl, self.binaries,
                             self.binaries[0].options.get('openmp', 1))
-        super(SRun, self)._simple_mkcmdline(cmdl)
+        super()._simple_mkcmdline(cmdl)
 
     def _envelope_mkcmdline(self, cmdl):
         """Builds the MPI command line when an envelope is used.
@@ -1397,10 +1392,10 @@ class SRun(ConfigurableMpiTool):
         """
         # Simple case, only one envelope description
         has_bin_groups = not all([b.group is None for b in self.binaries])
-        openmps = set([b.options.get('openmp', 1) for b in self.binaries])
+        openmps = {b.options.get('openmp', 1) for b in self.binaries}
         if len(self.envelope) == 1 and not self._complex_ranks_mapping and len(openmps) == 1:
             self._build_cpumask(cmdl, self.envelope, openmps.pop())
-            super(SRun, self)._envelope_mkcmdline(cmdl)
+            super()._envelope_mkcmdline(cmdl)
         # Multiple entries... use the nodelist stuff :-(
         else:
             # Find all the available nodes and ranks
@@ -1445,13 +1440,13 @@ class SRun(ConfigurableMpiTool):
 
     def clean(self, opts=None):
         """post-execution cleaning."""
-        super(SRun, self).clean(opts)
+        super().clean(opts)
         if self.envelope and len(self.envelope) > 1:
             self.system.remove(self._envelope_nodelist_name)
 
     def _environment_substitution_dict(self, opts, conflabel):  # @UnusedVariable
         """Things that may be substituted in environment variables."""
-        sdict = super(SRun, self)._environment_substitution_dict(opts, conflabel)
+        sdict = super()._environment_substitution_dict(opts, conflabel)
         shp = self.system.path
         # Detect the path to the srun command
         actlauncher = self.launcher
@@ -1475,7 +1470,7 @@ class SRun(ConfigurableMpiTool):
 
     def setup_environment(self, opts, conflabel):
         """Tweak the environment with some srun specific settings."""
-        super(SRun, self).setup_environment(opts, conflabel)
+        super().setup_environment(opts, conflabel)
         if (self._complex_ranks_mapping and
                 self._mpilib_identification() and
                 self._mpilib_identification()[3] == 'intelmpi'):
@@ -1516,7 +1511,7 @@ class SRunDDT(SRun):
 
     def mkcmdline(self):
         """Add the DDT prefix command to the command line"""
-        cmdl = super(SRunDDT, self).mkcmdline()
+        cmdl = super().mkcmdline()
         armtool = ArmForgeTool(self.ticket)
         for extra_c in reversed(armtool.ddt_prefix_cmd(
             sources=self.sources,
@@ -1603,7 +1598,7 @@ class OmpiMpiRun(ConfigurableMpiTool):
         """
         if self.bindingmethod is not None:
             raise RuntimeError('If bindingmethod is set, an enveloppe should allways be used.')
-        super(OmpiMpiRun, self)._simple_mkcmdline(cmdl)
+        super()._simple_mkcmdline(cmdl)
 
     def _create_rankfile(self, rankslist, nodeslist, slotslist):
         rf_strings = []
@@ -1709,13 +1704,13 @@ class OmpiMpiRun(ConfigurableMpiTool):
 
     def clean(self, opts=None):
         """post-execution cleaning."""
-        super(OmpiMpiRun, self).clean(opts)
+        super().clean(opts)
         if self.envelope:
             self.system.remove(self._envelope_rankfile_name)
 
     def setup_environment(self, opts, conflabel):
         """Tweak the environment with some srun specific settings."""
-        super(OmpiMpiRun, self).setup_environment(opts, conflabel)
+        super().setup_environment(opts, conflabel)
         if self.bindingmethod == 'native' and 'OMP_PROC_BIND' not in self.env:
             self._logged_env_set('OMP_PROC_BIND', 'true')
         for libpath in self._mpilib_identification()[2]:

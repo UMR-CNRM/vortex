@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Algo Components for deterministic S2M simulations.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, tomorrow
@@ -104,7 +100,7 @@ class Generate_Clim_TG(AlgoComponent):
     def execute(self, rh, opts):
 
         avail_forcing = self.context.sequence.effective_inputs(role="Forcing")
-        listforcing = list(set([self.system.path.basename(am.rh.container.filename) for am in avail_forcing]))
+        listforcing = list({self.system.path.basename(am.rh.container.filename) for am in avail_forcing})
 
         generate_clim(listforcing)
 
@@ -132,7 +128,7 @@ class Pgd_Parallel_from_Forcing(Parallel):
 
     def execute(self, rh, opts):
         self.system.symlink(self.forcingname, "FORCING.nc")
-        super(Pgd_Parallel_from_Forcing, self).execute(rh, opts)
+        super().execute(rh, opts)
         self.system.remove("FORCING.nc")
 
 
@@ -208,7 +204,7 @@ class Surfex_Parallel(Parallel, DrHookDecoMixin):
                 dateend_this_run = min(self.dateend, dateforcend)
 
             # Run surfex offline
-            super(Surfex_Parallel, self).execute(rh, opts)
+            super().execute(rh, opts)
 
             # Copy the SURFOUT file for next iteration
             self.system.cp("SURFOUT.nc", "PREP.nc")
@@ -314,7 +310,7 @@ class Interpol_Forcing(Parallel):
 
         for forcing in list_forcings:
             self.system.mv(forcing.container.filename, 'input.nc')
-            super(Interpol_Forcing, self).execute(rh, opts)
+            super().execute(rh, opts)
             self.system.mv('output.nc', forcing.container.filename)
 
 
@@ -359,7 +355,7 @@ class Prosnow_Parallel(Surfex_Parallel):
         # Call execute of Surfex_Parallel
         # Note that modify_namelist and modify_prep methods of the mother class
         # still have to be called in the following instruction
-        super(Prosnow_Parallel, self).execute(rh, opts)
+        super().execute(rh, opts)
 
         # Insert snow height in prep (after running surfex)
         self.prosnow_modify_prep()

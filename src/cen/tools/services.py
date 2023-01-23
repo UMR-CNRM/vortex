@@ -1,11 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
 This module contains the services specifically needed by Olive.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.tools.services import AbstractRdTemplatedMailService
 

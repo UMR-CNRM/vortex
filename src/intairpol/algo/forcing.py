@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 All kinds of AlgoComponents used to prepare Mocage runs (deals with external forcings).
 """
 
-from __future__ import absolute_import, print_function, division, unicode_literals
-
-import six
 from collections import defaultdict
 from functools import partial
 
@@ -54,7 +49,7 @@ class CorrOmegaSurf(Parallel):
     def prepare(self, rh, opts):
 
         # Let ancestors handling most of the env setting
-        super(CorrOmegaSurf, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         sh = self.system
 
@@ -65,8 +60,8 @@ class CorrOmegaSurf(Parallel):
         gridrh.sort(key=lambda s: s.rh.resource.term)
 
         sh.remove('fort.2')
-        list_file = [six.text_type(filerh.rh.container.localpath()) for filerh in gridrh]
-        list_file = "\n".join([six.text_type(len(list_file)), ] + list_file)
+        list_file = [str(filerh.rh.container.localpath()) for filerh in gridrh]
+        list_file = "\n".join([str(len(list_file)), ] + list_file)
 
         with open('fort.2', 'w') as fnam:
             fnam.write(list_file)
@@ -155,7 +150,7 @@ class AbstractSumoForcing(Parallel):
         namcontainer = self._sumo_nam_rewrite(namcontent, refblock,
                                               actualdate, domain)
         try:
-            super(AbstractSumoForcing, self).execute(rh, opts)
+            super().execute(rh, opts)
         finally:
             namcontainer.clear()
 
@@ -187,7 +182,7 @@ class AbstractSumoForcingWithMeteo(AbstractSumoForcing):
 
     def _sumo_nam_setcontent(self, namblock, actualdate, domain):
         """Update the Sumo namelist block."""
-        super(AbstractSumoForcingWithMeteo, self)._sumo_nam_setcontent(namblock, actualdate, domain)
+        super()._sumo_nam_setcontent(namblock, actualdate, domain)
         namblock.addmacro('CPLMETEO', self.cplmto)
 
 
@@ -274,7 +269,7 @@ class SurfaceArp(AbstractSumoForcingWithMeteo):
 
         # loop on domains
         for currentdom, domainrhs in sorted(domains.items()):
-            sh.title('Loop on domain {0:s}'.format(currentdom))
+            sh.title('Loop on domain {:s}'.format(currentdom))
 
             for _, currentday, nextday in pcn(sorted(domainrhs)):
                 if nextday is None:
@@ -328,7 +323,7 @@ class Fire(AbstractSumoForcing):
         for r_obs in obssec:
             r = r_obs.rh
 
-            sh.title('Loop on domain {0:s}'.format(r.resource.geometry.area))
+            sh.title('Loop on domain {:s}'.format(r.resource.geometry.area))
 
             # Create symlinks for fire obsfiles
             obsfiles = sh.ls(r.container.localpath())

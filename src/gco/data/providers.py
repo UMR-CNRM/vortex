@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
@@ -68,7 +64,7 @@ class GcoProvider(Provider):
     def __init__(self, *args, **kw):
         """Proxy init abstract method. Logging only for the time being."""
         logger.debug('GcoProvider abstract init %s', self.__class__)
-        super(GcoProvider, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     def scheme(self, resource):
         """Default scheme is ``gget``."""
@@ -100,13 +96,13 @@ class GGet(GcoProvider):
                 type = GgetId,
             ),
         ),
-        fastkeys = set(['gget']),
+        fastkeys = {'gget'},
     )
 
     def __init__(self, *args, **kw):
         """Proxy init method. Logging only for the time being."""
         logger.debug('GGet provider init %s', self.__class__)
-        super(GGet, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -142,13 +138,13 @@ class GEnv(GcoProvider):
                 info     = 'Automatically register missing cycles',
             )
         ),
-        fastkeys = set(['genv']),
+        fastkeys = {'genv'},
     )
 
     def __init__(self, *args, **kw):
         """Proxy init method. Logging only for the time being."""
         logger.debug('GEnv provider init %s', self.__class__)
-        super(GEnv, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -157,7 +153,7 @@ class GEnv(GcoProvider):
 
     def _str_more(self):
         """Additional information to print representation."""
-        return "cycle='{0:s}'".format(self.genv)
+        return "cycle='{:s}'".format(self.genv)
 
     def basename(self, resource):
         """
@@ -209,7 +205,7 @@ class AbstractUGetProvider(_UtypeProvider):
                 type = AbstractUgetId,
             ),
         ),
-        fastkeys = set(['uget']),
+        fastkeys = {'uget'},
     )
 
     @property
@@ -263,11 +259,11 @@ class AbstractUEnvProvider(_UtypeProvider):
                     ),
                 )
                 ],
-        fastkeys = set(['uenv']),
+        fastkeys = {'uenv'},
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(AbstractUEnvProvider, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._id_cache = dict()
 
     @property
@@ -277,7 +273,7 @@ class AbstractUEnvProvider(_UtypeProvider):
 
     def _str_more(self):
         """Additional information to print representation."""
-        return "cycle='{0:s}'".format(self.uenv)
+        return "cycle='{:s}'".format(self.uenv)
 
     def _get_id(self, resource):
         """Return the UgetId or GgetId associated with a given resource."""

@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation
 """
-
-from __future__ import absolute_import, print_function, division, unicode_literals
-
-import six
 
 import footprints
 
@@ -27,7 +21,7 @@ class Site(TableItem):
         info = 'Sites for sources of pollution (radiologic, chemical, volcanic, etc.)',
         attr = dict(
             name = dict(
-                type   = six.text_type,
+                type   = str,
             ),
             family = dict(
                 values = ['radiologic', 'chemical', 'volcanic'],
@@ -39,7 +33,7 @@ class Site(TableItem):
                 type = float
             ),
             location = dict(
-                type     = six.text_type,
+                type     = str,
                 optional = True,
                 default  = '[name]',
             ),
@@ -66,7 +60,7 @@ class Element(TableItem):
                 values = ['radiologic', 'chemical', 'volcanic'],
             ),
             name = dict(
-                type     = six.text_type,
+                type     = str,
                 optional = True,
                 default  = '[symbol]',
             ),

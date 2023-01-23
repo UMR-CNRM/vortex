@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
-
 """
 :class:`Handler` class is a cornerstone in any Vortex script. :class:`Handler`
 objects are in charge of manipulating data between the working directory and
 the various caches or archives".
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import functools
 import re
-import six
 import sys
 
 import bronx.fancies.dump
@@ -67,15 +63,15 @@ class IdCardAttrDumper(bronx.fancies.dump.TxtDumper):
     def dump_fpattrs(self, fpobj, level=0):
         """Dump the attributes of a footprint based object."""
         if level + 1 > self.max_depth:
-            return "%s{...}%s" % (
+            return "{}{{...}}{}".format(
                 self._indent(level, self.break_before_dict_begin),
                 self._indent(level, self.break_after_dict_end)
             )
         else:
-            items = ["%s%s = %s%s," % (self._indent(level + 1, self.break_before_dict_key),
-                                       six.text_type(k),
-                                       self._indent(level + 2, self.break_before_dict_value),
-                                       self._recursive_dump(v, level + 1))
+            items = ["{}{} = {}{},".format(self._indent(level + 1, self.break_before_dict_key),
+                                           str(k),
+                                           self._indent(level + 2, self.break_before_dict_value),
+                                           self._recursive_dump(v, level + 1))
                      for k, v in sorted(fpobj.footprint_as_shallow_dict().items())]
             return ' '.join(items)
 
@@ -93,7 +89,7 @@ class IdCardAttrDumper(bronx.fancies.dump.TxtDumper):
                 return "{:s} obj: {!s}".format(type(obj).__name__, parent_dump)
 
 
-class Handler(object):
+class Handler:
     """
     The resource handler object gathers a provider, a resource and a container
     for any specific resource.
@@ -130,7 +126,7 @@ class Handler(object):
         logger.debug('New resource handler %s', self.__dict__)
 
     def __str__(self):
-        return six.text_type(self.__dict__)
+        return str(self.__dict__)
 
     def _get_resource(self):
         """Getter for ``resource`` property."""
@@ -358,12 +354,12 @@ class Handler(object):
     def quickview(self, nb=0, indent=0):
         """Standard glance to objects."""
         tab = '  ' * indent
-        print('{0}{1:02d}. {2:s}'.format(tab, nb, repr(self)))
-        print('{0}  Complete  : {1!s}'.format(tab, self.complete))
+        print('{}{:02d}. {:s}'.format(tab, nb, repr(self)))
+        print('{}  Complete  : {!s}'.format(tab, self.complete))
         for subobj in ('container', 'provider', 'resource'):
             obj = getattr(self, subobj, None)
             if obj:
-                print('{0}  {1:10s}: {2!s}'.format(tab, subobj.capitalize(), obj))
+                print('{}  {:10s}: {!s}'.format(tab, subobj.capitalize(), obj))
 
     def wide_key_lookup(self, key, exports=False, fatal=True):
         """Return the *key* attribute if it exists in the provider or resource.
@@ -397,7 +393,7 @@ class Handler(object):
     def as_dict(self):
         """Produce a raw json-compatible dictionary."""
         rhd = dict(options=dict())
-        for k, v in six.iteritems(self.options):
+        for k, v in self.options.items():
             try:
                 v = v.export_dict()
             except (AttributeError, TypeError):
@@ -1019,4 +1015,4 @@ class Handler(object):
 
     def strlast(self):
         """String formatted log of the last action."""
-        return ' '.join([six.text_type(x) for x in self.history.last])
+        return ' '.join([str(x) for x in self.history.last])

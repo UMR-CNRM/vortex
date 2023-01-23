@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 AlgoComponents for OOPS elementary tests.
 """
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import json
 
@@ -177,7 +175,7 @@ class OOPSecma2ccma(OOPSODB, _OOPSTestDecoMixin):
 
     def postfix(self, rh, opts):
         """Rename the ECMA database once OOPS has run."""
-        super(OOPSecma2ccma, self).postfix(rh, opts)
+        super().postfix(rh, opts)
         self._mv_ecma2ccma()
 
     def _mv_ecma2ccma(self):

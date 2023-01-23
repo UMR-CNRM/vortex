@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
-
 """
 General interest and NWP specific MPI launchers.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import collections
 import re
 import math
-import six
 
 from bronx.fancies import loggers
 from bronx.syntax.iterators import interleave
@@ -78,7 +73,7 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
 
     def _reshaped_mpiopts(self):
         """Raw list of mpi tool command line options."""
-        options = super(MpiAuto, self)._reshaped_mpiopts()
+        options = super()._reshaped_mpiopts()
         options['init-timeout-restart'] = [(self.timeoutrestart, )]
         if self.sublauncher == 'srun':
             options['use-slurm-mpi'] = [()]
@@ -120,13 +115,13 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
 
     def _set_binaries_envelope_hack(self, binaries):
         """Tweak the envelope after binaries were setup."""
-        super(MpiAuto, self)._set_binaries_envelope_hack(binaries)
+        super()._set_binaries_envelope_hack(binaries)
         for e_bit in self.envelope:
             e_bit.master = binaries[0].master
 
     def _set_envelope(self, value):
         """Set the envelope description."""
-        super(MpiAuto, self)._set_envelope(value)
+        super()._set_envelope(value)
         if len(self._envelope) > 1 and self.bindingmethod not in (None, 'arch', 'vortex'):
             logger.info("The '{:s}' binding method is not working properly with complex envelopes."
                         .format(self.bindingmethod))
@@ -154,7 +149,7 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
 
     def _envelope_mkwrapper_todostack(self):
         ranksidx = 0
-        todostack, ranks_bsize = super(MpiAuto, self)._envelope_mkwrapper_todostack()
+        todostack, ranks_bsize = super()._envelope_mkwrapper_todostack()
         for bin_obj in self.binaries:
             if bin_obj.options:
                 for mpirank in range(ranksidx, ranksidx + bin_obj.nprocs):
@@ -170,18 +165,18 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
         """If possible, add an openmp option when the arch binding method is used."""
 
         if self.bindingmethod != 'vortex':
-            openmps = set([b.options.get('openmp', None) for b in self.binaries])
+            openmps = {b.options.get('openmp', None) for b in self.binaries}
             if len(openmps) > 1:
                 if self.bindingmethod is not None:
                     logger.warning("Non-uniform OpenMP threads number... Not specifying anything.")
             else:
                 openmp = openmps.pop() or 1
                 cmdl.append(self.optprefix + self.optmap['openmp'])
-                cmdl.append(six.text_type(openmp))
+                cmdl.append(str(openmp))
 
     def setup_environment(self, opts, conflabel):
         """Last minute fixups."""
-        super(MpiAuto, self).setup_environment(opts, conflabel)
+        super().setup_environment(opts, conflabel)
         if self.bindingmethod in ('arch', 'vortex'):
             # Make sure srun does nothing !
             self._logged_env_set('SLURM_CPU_BIND', 'none')
@@ -194,8 +189,8 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
                 if self.system.path.exists(prefix_c):
                     self.system.xperm(prefix_c, force=True)
                 else:
-                    raise IOError('The prefixcommand do not exists.')
-        super(MpiAuto, self).setup(opts, conflabel)
+                    raise OSError('The prefixcommand do not exists.')
+        super().setup(opts, conflabel)
 
 
 class MpiAutoDDT(MpiAuto):
@@ -215,7 +210,7 @@ class MpiAutoDDT(MpiAuto):
     _conf_suffix = '-ddt'
 
     def _reshaped_mpiopts(self):
-        options = super(MpiAutoDDT, self)._reshaped_mpiopts()
+        options = super()._reshaped_mpiopts()
         if 'prefix-mpirun' in options:
             raise mpitools.MpiException('It is not allowed to start DDT with another ' +
                                         'prefix_mpirun command defined: "{:s}"'
@@ -252,7 +247,7 @@ def arpifs_obsort_nprocab_binarydeco(cls):
     return cls
 
 
-class _NWPIoServerMixin(object):
+class _NWPIoServerMixin:
 
     _NWP_IOSERV_PATTERNS = ('io_serv.*.d', )
 
@@ -333,7 +328,7 @@ class _NWPIoServerMixin(object):
         if 'GRIBPF' in ioserv_prefixes:
             # If GRIB are requested, do not bother with old FA PF files
             ioserv_prefixes.discard('PF')
-            ioserv_filelist = set([(f, p) for f, p in ioserv_filelist if p != 'PF'])
+            ioserv_filelist = {(f, p) for f, p in ioserv_filelist if p != 'PF'}
 
         # Touch the output files
         for tgfile, _ in ioserv_filelist:
@@ -350,7 +345,7 @@ class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
     _abstract = True
 
     def __init__(self, * kargs, **kwargs):
-        super(_AbstractMpiNWP, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._incore_iotasks = None
         self._effective_incore_iotasks = None
         self._incore_iotasks_fixer = None
@@ -364,7 +359,7 @@ class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
     @incore_iotasks.setter
     def incore_iotasks(self, value):
         """The number of tasks dedicated to the IO server."""
-        if isinstance(value, six.string_types) and value.endswith('%'):
+        if isinstance(value, str) and value.endswith('%'):
             value = math.ceil(self.nprocs * float(value[:-1]) / 100)
         self._incore_iotasks = int(value)
         self._effective_incore_iotasks = None
@@ -377,7 +372,7 @@ class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
     @incore_iotasks_fixer.setter
     def incore_iotasks_fixer(self, value):
         """Tweak the number of iotasks in order to respect a given constraints."""
-        if not isinstance(value, six.string_types):
+        if not isinstance(value, str):
             raise ValueError('A string is expected')
         if value.startswith('nproc_multiple_of_'):
             self._incore_iotasks_fixer = ('nproc_multiple_of',
@@ -427,7 +422,7 @@ class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
     def incore_iodist(self, value):
         """How to distribute IO server tasks within model tasks."""
         allowed = ('begining', 'end', 'scattered',)
-        if not (isinstance(value, six.string_types) and
+        if not (isinstance(value, str) and
                 value in allowed):
             raise ValueError("'{!s}' is not an allowed value ('{:s}')"
                              .format(value, ', '.join(allowed)))
@@ -497,7 +492,7 @@ class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
 
     def clean(self, opts=None):
         """Finalise the IO server run."""
-        super(_AbstractMpiNWP, self).clean(opts=opts)
+        super().clean(opts=opts)
         if self.incore_iotasks:
             self._nwp_ioserv_clean()
 
@@ -555,5 +550,5 @@ class MpiNWPIO(mpitools.MpiBinaryIOServer, _NWPIoServerMixin):
 
     def clean(self, opts=None):
         """Finalise the IO server run."""
-        super(MpiNWPIO, self).clean(opts=opts)
+        super().clean(opts=opts)
         self._nwp_ioserv_clean()

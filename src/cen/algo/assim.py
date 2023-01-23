@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Algo Components for ensemble S2M simulations.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
@@ -53,7 +49,7 @@ class SodaWorker(Parallel):
             key=lambda s: s.rh.provider.member)
 
     def prepare(self, rh, opts):
-        super(SodaWorker, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         mb_sections = self.mb_sections
         # symbolic links for each prep from each member dir to the soda dir
         for jj, mb_s in enumerate(mb_sections, start=1):
@@ -63,7 +59,7 @@ class SodaWorker(Parallel):
         self.system.symlink(mb_sections[0].rh.container.localpath(), 'PREP.nc')
 
     def postfix(self, rh, opts):
-        super(SodaWorker, self).postfix(rh, opts)
+        super().postfix(rh, opts)
         # rename ((and mix)) surfout files for next offline assim
         # rename background preps
         # delete soda symbolic links
@@ -211,12 +207,12 @@ class PerturbForcingComponent(TaylorRun):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(PerturbForcingComponent, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         self.env.DR_HOOK_NOT_MPI = 1
 
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super(PerturbForcingComponent, self)._default_common_instructions(rh, opts)
+        ddict = super()._default_common_instructions(rh, opts)
         for attribute in self.footprint_attributes:
             ddict[attribute] = getattr(self, attribute)
         return ddict
@@ -236,4 +232,4 @@ class PerturbForcingComponent(TaylorRun):
         In this algo component, the number of members is defined by the user,
         as there is only 1 single deterministic input
         """
-        return ['mb{0:04d}'.format(member) for member in self.members]
+        return ['mb{:04d}'.format(member) for member in self.members]

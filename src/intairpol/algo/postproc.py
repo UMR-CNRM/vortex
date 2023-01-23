@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 AlgoComponents for MOCAGE post-processing.
 """
-
-from __future__ import absolute_import, print_function, division, unicode_literals
 
 from collections import defaultdict
 import re
@@ -178,8 +174,8 @@ class PPCamsBDAP(BlindRun):
             r = i.rh
             # wait for the next HM netcdf file to be translated in grib2 format
             self.grab(i, comment='forecast outputs moved to grib2 format')
-            sh.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
-                                                                  r.resource.term.fmthm))
+            sh.title('Loop on domain {:s} and term {:s}'.format(r.resource.geometry.area,
+                                                                r.resource.term.fmthm))
             actualdate = r.resource.date + r.resource.term
             # optionally compute daily statistics
             if self.daily_values:
@@ -201,7 +197,7 @@ class PPCamsBDAP(BlindRun):
             # Link in the forecast file
             self.system.softlink(r.container.localpath(), 'HMFILE.nc')
             # Execute
-            super(PPCamsBDAP, self).execute(rh, opts)
+            super().execute(rh, opts)
             newcontainer.clear()
             actualname = 'MFM_' + actualdate.ymdh + '.grib2'
             if self.system.path.exists('MFM_V5-.grib2'):

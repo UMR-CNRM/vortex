@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Ensemble of classes that deal with input/output filenames for IFS/Arpege related
 binaries (those that inherits from :class:`IFSParallel`).
@@ -25,8 +23,6 @@ The base class for any object dealing with IFS/Arpege file names is
 Do not create :class:`IFSNamingConvention` objects directly. Instead, use the
 :meth:`IFSParallel.naming_convention` method.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import math
 

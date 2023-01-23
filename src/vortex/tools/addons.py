@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 Abstract classes for System addons.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from collections import defaultdict
-import six
 
 from bronx.fancies import loggers
 from bronx.syntax.decorators import nicedeco
@@ -74,7 +69,7 @@ class Addon(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         """Abstract Addon initialisation."""
         logger.debug('Abstract Addon init %s', self.__class__)
-        super(Addon, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.sh.extend(self)
         self._context_cache = defaultdict(dict)
         self._cmd_xperms_cache = set()
@@ -122,8 +117,8 @@ class Addon(footprints.FootprintBase):
         if ctxtag not in self._context_cache and self.toolkind is not None:
             ltrack = contexts.current().localtracker
             # NB: 'str' is important because local might be in unicode...
-            candidates = [six.text_type(self.sh.path.realpath(local))
-                          for local, entry in six.iteritems(ltrack)
+            candidates = [str(self.sh.path.realpath(local))
+                          for local, entry in ltrack.items()
                           if (entry.latest_rhdict('get').get('resource', dict()).get('kind', '') ==
                               self.toolkind)]
             if candidates:
@@ -216,7 +211,7 @@ class FtrawEnableAddon(Addon):
     def __init__(self, *args, **kw):
         """Abstract Addon initialisation."""
         logger.debug('Abstract Addon init %s', self.__class__)
-        super(FtrawEnableAddon, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         # If needed, look in the config file for the rawftshell
         if self.rawftshell is None:
             tg = self.sh.default_target
@@ -263,7 +258,7 @@ class AddonGroup(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         """Abstract Addon initialisation."""
         logger.debug('Abstract Addon init %s', self.__class__)
-        super(AddonGroup, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._addons_load()
 
     def _addons_load(self):

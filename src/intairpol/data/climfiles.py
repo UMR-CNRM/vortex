@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation
 """
-
-from __future__ import absolute_import, print_function, division, unicode_literals
 
 from vortex.syntax.stdattrs import month_deco
 from common.data.consts import GenvModelResource

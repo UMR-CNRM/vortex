@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 This modules defines the physical layout.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 
 import footprints
 from bronx.fancies import loggers
@@ -154,7 +148,7 @@ class DiffHistory(PrivateHistory):
     def append_record(self, rc, localcontainer, remotehandler):
         """Adds a new diff record in the current DiffHistory."""
         rcmap = {True: 'PASS', False: 'FAIL'}
-        containerstr = (six.text_type(localcontainer) if localcontainer.is_virtual()
+        containerstr = (str(localcontainer) if localcontainer.is_virtual()
                         else localcontainer.localpath())
         self.append('{:s}: {:s} (Ref: {!s})'.format(rcmap[bool(rc)], containerstr,
                                                     remotehandler.provider))
@@ -185,7 +179,7 @@ class Context(getbytag.GetByTag, observer.Observer):
         self._path = path + '/' + self.tag
         self._session = None
         self._rundir = None
-        self._stamp = '-'.join(('vortex', 'stamp', self.tag, six.text_type(id(self))))
+        self._stamp = '-'.join(('vortex', 'stamp', self.tag, str(id(self))))
         self._fstore = dict()
         self._fstamps = set()
         self._wkdir = None
@@ -271,20 +265,20 @@ class Context(getbytag.GetByTag, observer.Observer):
 
     def focus_loose_hook(self):
         """Save the current Environment and working directory."""
-        super(Context, self).focus_loose_hook()
+        super().focus_loose_hook()
         self._env = self.env
         if self._wkdir is not None:
             self._wkdir = self.system.getcwd()
 
     def focus_gain_allow(self):
-        super(Context, self).focus_gain_allow()
+        super().focus_gain_allow()
         # It's not possible to activate a Context that lies outside the current
         # session
         if not self.session.active:
             raise RuntimeError("It's not allowed to switch to a Context that belongs to an inactive session")
 
     def focus_gain_hook(self):
-        super(Context, self).focus_gain_hook()
+        super().focus_gain_hook()
         # Activate the environment (if necessary)
         if not self._env.active():
             self._env.active(True)
@@ -419,7 +413,7 @@ class Context(getbytag.GetByTag, observer.Observer):
 
     def stamp(self, tag='default'):
         """Return a stamp name that could be used for any generic purpose."""
-        return self._stamp + '.' + six.text_type(tag)
+        return self._stamp + '.' + str(tag)
 
     def fstrack_stamp(self, tag='default'):
         """Set a stamp to track changes on the filesystem."""

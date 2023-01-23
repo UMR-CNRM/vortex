@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-import six
 import json
 
 import footprints
@@ -21,7 +16,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class _GenericFilter(object):
+class _GenericFilter:
     """This class could be the start of filtering classes for different formats."""
 
     def __init__(self):
@@ -73,7 +68,7 @@ class _GenericFilter(object):
         for a_filter in filters:
             if isinstance(a_filter, dict):
                 self._filters.append(a_filter)
-            elif isinstance(a_filter, six.string_types):
+            elif isinstance(a_filter, str):
                 self._filters.append(json.loads(a_filter))
             elif isinstance(a_filter, Context):
                 for a_request in a_filter.sequence.effective_inputs(kind='filtering_request'):
@@ -87,13 +82,13 @@ class _GenericFilter(object):
     def _is_dict_superset(full, subset):
         """Finds out if the full dictionary contains and matches subset."""
         superset_ok = True
-        for k, v in six.iteritems(subset):
+        for k, v in subset.items():
             # Ignore the comments...
             if k.startswith('comment'):
                 continue
             # Check for the key inside the full dictionary
             try:
-                fullvalue = full[six.text_type(k)]
+                fullvalue = full[str(k)]
             except KeyError:
                 superset_ok = False
                 break
@@ -145,13 +140,13 @@ class GRIBFilter(_GenericFilter):
 
         :param bool concatenate: Wether to generate a concatenated GRIB file
         """
-        super(GRIBFilter, self).__init__()
+        super().__init__()
         self.concatenate = concatenate
         self._xgrib_support = 'grib' in self._sh.loaded_addons()
 
     def __len__(self):
         """Returns the number of active filters (concatenate included)."""
-        return super(GRIBFilter, self).__len__() + (1 if self.concatenate else 0)
+        return super().__len__() + (1 if self.concatenate else 0)
 
     def _simple_cat(self, gribfile, outfile_fmt, intent):
         """Just concatenate a multipart GRIB."""
@@ -177,7 +172,7 @@ class GRIBFilter(_GenericFilter):
         """
 
         if not self._sh.path.exists(gribfile):
-            raise IOError("{!s} doesn't exist".format(gribfile))
+            raise OSError("{!s} doesn't exist".format(gribfile))
 
         # We just want to concatenate files...
         if not self._filters:

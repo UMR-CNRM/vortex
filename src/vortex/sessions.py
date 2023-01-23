@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Vortex Sessions Handling
 
@@ -8,8 +6,6 @@ A :mod:`vortex` session is a virtual identifier gathering information on the cur
 time. A session also defines the level of the internal logging used in all
 the vortex modules.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import logging
 
@@ -318,12 +314,12 @@ class Ticket(getbytag.GetByTag):
 
     def focus_gain_hook(self):
         """Activate the appropriate context."""
-        super(Ticket, self).focus_gain_hook()
+        super().focus_gain_hook()
         self._last_context.catch_focus()
 
     def focus_loose_hook(self):
         """Keep track of the latest context."""
-        super(Ticket, self).focus_loose_hook()
+        super().focus_loose_hook()
         self._last_context = self.context
 
     @classmethod

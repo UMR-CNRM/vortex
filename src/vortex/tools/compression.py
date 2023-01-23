@@ -1,18 +1,13 @@
-# -*- coding: utf-8 -*-
-
 """
 Stream/File compression tools.
 
 The user interface for such tools is the :class:`CompressionPipeline`.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from contextlib import contextmanager
 import io
 import functools
 import operator
-import six
 
 import footprints
 from bronx.fancies import loggers
@@ -25,7 +20,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class CompressionPipeline(object):
+class CompressionPipeline:
     """Main interface to data compression algorithms."""
 
     def __init__(self, system, compression=''):
@@ -99,14 +94,14 @@ class CompressionPipeline(object):
             stream.seek(0)
         except AttributeError:
             logger.warning('Could not rewind <source:%s>', str(stream))
-        except IOError:
+        except OSError:
             logger.debug('Seek trouble <source:%s>', str(stream))
         return estimated_size
 
     @contextmanager
     def _openstream(self, local, mode='rb'):
         """If *local* is not an opened file, open it..."""
-        if isinstance(local, six.string_types):
+        if isinstance(local, str):
             localfh = open(local, mode)
             yield localfh
             localfh.close()

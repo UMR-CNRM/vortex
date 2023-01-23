@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Conftools are small objects that can be instantiated from an application's
 configuration file.
@@ -8,15 +6,12 @@ They might be used when some complex calculations are needed to establish the
 tasks configuration.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 import collections
+import collections.abc
 import functools
 import math
 import re
 
-from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time, Period, Month, timeintrangex
 from bronx.syntax.decorators import secure_getattr
@@ -59,7 +54,7 @@ class AbstractObjectProxyConfTool(ConfTool):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(AbstractObjectProxyConfTool, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._proxied_obj = self._create_proxied_obj()
 
     def _create_proxied_obj(self):
@@ -92,7 +87,7 @@ class CouplingOffsetConfPrepareError(CouplingOffsetConfError):
 
     def __init__(self, fmtk):
         msg = 'It is useless to compute coupling for: {}.'.format(fmtk)
-        super(CouplingOffsetConfPrepareError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class CouplingOffsetConfRefillError(CouplingOffsetConfError):
@@ -104,7 +99,7 @@ class CouplingOffsetConfRefillError(CouplingOffsetConfError):
             msg += '.'
         else:
             msg += ' at HH={!s}.'.format(hh)
-        super(CouplingOffsetConfRefillError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class CouplingOffsetConfTool(ConfTool):
@@ -195,7 +190,7 @@ class CouplingOffsetConfTool(ConfTool):
     _DFLT_KEY = 'default'
 
     def __init__(self, *kargs, **kwargs):
-        super(CouplingOffsetConfTool, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
 
         # A dictionary summarising the base HH supported by this configuration tool
         # ex: dict(assim=set([0, 1 , 2, ...]), production=set([0, 6,...])
@@ -230,7 +225,7 @@ class CouplingOffsetConfTool(ConfTool):
             t_finalterm = self._reshape_inputs(self.finalterm, value_reclass=str)
             for c, cv in t_hhbase.items():
                 for hh in cv.keys():
-                    if isinstance(t_steps[c][hh], six.string_types):
+                    if isinstance(t_steps[c][hh], str):
                         t_steps[c][hh] = t_steps[c][hh].replace('finalterm',
                                                                 t_finalterm[c][hh])
 
@@ -254,7 +249,7 @@ class CouplingOffsetConfTool(ConfTool):
                                          'Computed Terms'))
             for k in sorted(self._prepare_terms_map.keys()):
                 print('{:s}  :  {:s}'.format(self._cpl_fmtkey(k),
-                                             ' '.join([six.text_type(t.hour)
+                                             ' '.join([str(t.hour)
                                                        for t in self._prepare_terms_map[k]
                                                        ])
                                              )
@@ -272,7 +267,7 @@ class CouplingOffsetConfTool(ConfTool):
             for k in sorted(self._refill_terms_map[self.refill_cutoff].keys()):
                 vdict = self._refill_terms_map[self.refill_cutoff][k]
                 print('{:s}  :  {:s}'.format(self._rtask_fmtkey(k),
-                                             ' '.join([six.text_type(t.hour) for t in sorted(vdict.keys())])))
+                                             ' '.join([str(t.hour) for t in sorted(vdict.keys())])))
             print()
 
     @property
@@ -332,7 +327,7 @@ class CouplingOffsetConfTool(ConfTool):
 
     @staticmethod
     def _cpl_key(hh, cutoff, vapp, vconf, xpid, model):
-        return (six.text_type(hh), vapp, vconf, xpid, model, cutoff)
+        return (str(hh), vapp, vconf, xpid, model, cutoff)
 
     @staticmethod
     def _cpl_fmtkey(k):
@@ -516,7 +511,7 @@ class CouplingOffsetConfTool(ConfTool):
                 myhh not in self._refill_terms_map[refill_cutoff][key]):
             raise CouplingOffsetConfRefillError(self._rtask_fmtkey(key))
         for off, terms in self._refill_terms_map[refill_cutoff][key][myhh].items():
-            finaldates[six.text_type(mydate - off)] = terms
+            finaldates[str(mydate - off)] = terms
         return {'date': finaldates}
 
     def refill_dates(self, date, cutoff, vapp, vconf, model=None, refill_cutoff=None, xpid=''):
@@ -565,7 +560,7 @@ class AggregatedCouplingOffsetConfTool(ConfTool):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(AggregatedCouplingOffsetConfTool, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._toolslist = list(self.nominal)
         if self.alternate and self.use_alternates:
             self._toolslist.extend(self.alternate)
@@ -695,7 +690,7 @@ class TimeSerieInputFinderConfTool(ConfTool):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(TimeSerieInputFinderConfTool, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._begincache = dict()
         self._steplength = self.timeserie_step.length
 
@@ -1002,7 +997,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
     _UNDEFINED = object()
 
     def __init__(self, *kargs, **kwargs):
-        super(ArpIfsForecastTermConfTool, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._x_fcterm = self._check_data_keys_and_times(self.fcterm_def, 'fcterm_def',
                                                          cast=self._cast_unique_value)
         self._x_hist_terms = self._check_data_keys_and_times(self.hist_terms_def, 'hist_terms_def',
@@ -1059,11 +1054,11 @@ class ArpIfsForecastTermConfTool(ConfTool):
 
     @staticmethod
     def _cast_timerangex(value):
-        if not (value is None or isinstance(value, six.string_types)):
-            if isinstance(value, collections_abc.Iterable):
-                value = ','.join([six.text_type(e) for e in value])
+        if not (value is None or isinstance(value, str)):
+            if isinstance(value, collections.abc.Iterable):
+                value = ','.join([str(e) for e in value])
             else:
-                value = six.text_type(value)
+                value = str(value)
         return value
 
     @staticmethod

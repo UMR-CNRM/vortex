@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Definitions of the Archive stores at ECMWF.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 import footprints

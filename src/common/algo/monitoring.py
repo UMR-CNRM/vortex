@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 AlgoComponents dedicated to computations related to observations monitoring.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
@@ -115,7 +111,7 @@ class OdbMonitoring(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin)
         logger.info('Setting ODB env %s = %s.', 'IOASSIGN', sh.path.join(ecma_path, 'IOASSIGN'))
 
         # Let ancestors handling most of the env setting
-        super(OdbMonitoring, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # Force to start a new accumulated statistics file if first day and first hour of the month
         mnt_start = self.start

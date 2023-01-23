@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Typical flow ressources for promethee use.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.flow import FlowResource
 from vortex.data.contents import JsonDictContent

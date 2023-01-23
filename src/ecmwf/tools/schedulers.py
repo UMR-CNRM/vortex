@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Interface to SMS commands.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import uuid
 
@@ -46,7 +42,7 @@ class EctransSMS(EcmwfLikeScheduler):
 
     def __init__(self, *args, **kw):
         logger.debug('EctransSMS scheduler client init %s', self)
-        super(EctransSMS, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._confcheck = ('ectrans' in self.sh.loaded_addons() and
                            'VORTEX_UPDSERVER_HOST' in self.env and
                            'VORTEX_UPDSERVER_PATH' in self.env)
@@ -59,7 +55,7 @@ class EctransSMS(EcmwfLikeScheduler):
 
     def info(self):
         """Dump current defined variables."""
-        super(EctransSMS, self).info()
+        super().info()
         print("Extra SMS' Ectrans configuration:")
         if self._confcheck:
             print('  gateway=', self._gateway)
@@ -70,7 +66,7 @@ class EctransSMS(EcmwfLikeScheduler):
 
     def cmd_rename(self, cmd):
         """Remap command name. Strip any sms prefix."""
-        cmd = super(EctransSMS, self).cmd_rename(cmd)
+        cmd = super().cmd_rename(cmd)
         while cmd.startswith('sms'):
             cmd = cmd[3:]
         return cmd

@@ -1,26 +1,22 @@
-# -*- coding: utf-8 -*-
-
 """
 Usage of the EPyGrAM package to compute diffs.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import collections
 import copy
 import functools
 import hashlib
+import io
 import json
 import operator
 import pprint
-import six
 
 import footprints
 from vortex import sessions
 from . import usepygram
 
 
-class HGeoDesc(object):
+class HGeoDesc:
     """Holds Epygram's horizontal geometry data."""
 
     def __init__(self, epyfield):
@@ -32,7 +28,7 @@ class HGeoDesc(object):
         self.dimensions = geo.dimensions
         self.name = geo.name
         self.projection = None if not geo.projected_geometry else geo.projection
-        sio = six.StringIO()
+        sio = io.StringIO()
         geo.what(out=sio, vertical_geometry=False)
         sio.seek(0)
         self._what = sio.readlines()[3:]
@@ -47,7 +43,7 @@ class HGeoDesc(object):
         return ''.join(self._what)
 
 
-class DataDesc(object):
+class DataDesc:
     """Holds information about an Epygram's field data (basic stats + checksum)."""
 
     def __init__(self, epyfield):
@@ -67,7 +63,7 @@ class DataDesc(object):
         return ', '.join(['{:s}={!s}'.format(k, v) for k, v in self.stats.items()])
 
 
-class HGeoLibrary(object):
+class HGeoLibrary:
     """A collection/library of :class:`HGeoDesc` objects."""
 
     def __init__(self):
@@ -94,12 +90,12 @@ class HGeoLibrary(object):
         outstr = ''
         for i, g in enumerate(self._geolist):
             outstr += 'HORIZONTAL GEOMETRY #{:d}\n\n'.format(i)
-            outstr += six.text_type(g)
+            outstr += str(g)
             outstr += '\n'
         return outstr
 
 
-class FieldDesc(object):
+class FieldDesc:
     """Holds various information about an Epygram field."""
 
     def __init__(self, hgeoid, vgeo, datadesc, fid, valid):
@@ -133,16 +129,16 @@ class FieldDesc(object):
 
     def __str__(self):
         out = "HGeo=#{:d} ; Validity={!s} ; metadata are:\n".format(self.hgeoid, self.valid)
-        out += six.text_type(pprint.pformat(self.fid)) + "\n"
+        out += pprint.pformat(self.fid) + "\n"
         out += "Data: {!s}".format(self.datadesc)
         return out
 
     def prefixed_str(self, prefix):
         """A representation of this object prefixed with the *prefix* string."""
-        return '\n'.join([prefix + l for l in six.text_type(self).split('\n')])
+        return '\n'.join([prefix + l for l in str(self).split('\n')])
 
 
-class FieldBundle(object):
+class FieldBundle:
     """A collection of FieldDesc objects."""
 
     def __init__(self, hgeolib):
@@ -172,17 +168,15 @@ class FieldBundle(object):
         with usepygram.epy_env_prepare(sessions.current()):
             gribdata = footprints.proxy.dataformat(filename=filename,
                                                    openmode='r', format='GRIB')
-            fld = gribdata.iter_fields(get_info_as_json=(six.text_type('centre'),
-                                                         six.text_type('subCentre')))
+            fld = gribdata.iter_fields(get_info_as_json=('centre', 'subCentre'))
             while fld:
                 fid = fld.fid.get('GRIB2', fld.fid.get('GRIB1'))
                 fid.update(json.loads(fld.comment))
                 self._fields.append(self._common_processing(fld, fid))
-                fld = gribdata.iter_fields(get_info_as_json=(six.text_type('centre'),
-                                                             six.text_type('subCentre')))
+                fld = gribdata.iter_fields(get_info_as_json=('centre', 'subCentre'))
 
 
-class FieldBundles(object):
+class FieldBundles:
     """A collection of :class:`FieldBundle` objects."""
 
     def __init__(self):
@@ -231,7 +225,7 @@ class EpyGribDiff(FieldBundles):
         :param str ref: Path to the reference GRIB file
         :param str new: Path to the new GRIB file
         """
-        super(EpyGribDiff, self).__init__()
+        super().__init__()
         self._new = self.new_bundle('New')
         self._new.read_grib(new)
         self._ref = self.new_bundle('Ref')
@@ -272,7 +266,7 @@ class EpyGribDiff(FieldBundles):
         """Returns the comparison table header."""
         out = cls._SPACER + "\n"
         e_len = max([len(e) for e in cls._ELTS_MIDDLE])
-        e_new = [('{:>' + six.text_type(e_len) + 's}').format(e.upper()) for e in cls._ELTS_MIDDLE]
+        e_new = [('{:>' + str(e_len) + 's}').format(e.upper()) for e in cls._ELTS_MIDDLE]
         if e_len > 1:
             for i in range(e_len - 1):
                 out += (cls._HEAD_COUNTER + ' ' * len(cls._HEAD_SHORT) +
@@ -288,11 +282,11 @@ class EpyGribDiff(FieldBundles):
         """Returns a string that summarise a field properties."""
         if 'paramId' in field.fid:
             # GRIB1
-            sid = six.text_type(field.fid['paramId']) + '/' + field.fid['shortName']
+            sid = str(field.fid['paramId']) + '/' + field.fid['shortName']
         else:
             # GRIB2
-            sid = (six.text_type(field.fid['parameterCategory']) + '-' +
-                   six.text_type(field.fid['parameterNumber']) + '/' +
+            sid = (str(field.fid['parameterCategory']) + '-' +
+                   str(field.fid['parameterNumber']) + '/' +
                    field.fid['shortName'])
         if len(sid) > 16:  # Truncate if the string is too long
             sid = sid[:15] + '*'
@@ -358,7 +352,7 @@ class EpyGribDiff(FieldBundles):
             out += "\n" if detailed else ''
         if detailed:
             out += 'LIST OF HORIZONTAL GEOMETRIES:\n\n'
-            out += six.text_type(self.hgeo_library)
+            out += str(self.hgeo_library)
         return out
 
     def __str__(self):

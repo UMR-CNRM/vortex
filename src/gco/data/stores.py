@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
 """
 TODO: Module documentation.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 
 import ast
 import collections
@@ -41,7 +36,7 @@ class GcoStoreConfig(GenericConfigParser):
         self.__dict__['_config_defaults'] = dict()
         self.__dict__['_config_re_cache'] = collections.defaultdict(dict)
         self.__dict__['_search_cache'] = dict()
-        super(GcoStoreConfig, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
 
     @staticmethod
     def _decoder(value):
@@ -53,14 +48,14 @@ class GcoStoreConfig(GenericConfigParser):
 
     def setfile(self, inifile, encoding=None):
         """Read the specified ``inifile`` as new configuration."""
-        super(GcoStoreConfig, self).setfile(inifile, encoding=None)
+        super().setfile(inifile, encoding=None)
         # Create a regex cache for later use in key_properties
         for section in self.sections():
             k_re = re.compile(section)
             self._config_re_cache[k_re] = {k: self._decoder(v)
                                            for k, v in self.items(section)}
         self._config_defaults = {k: self._decoder(v)
-                                 for k, v in six.iteritems(self.defaults())}
+                                 for k, v in self.defaults().items()}
 
     def key_properties(self, ggetkey):
         """See if a given *ggetkey* matches one of the sections of the configuration file.
@@ -73,7 +68,7 @@ class GcoStoreConfig(GenericConfigParser):
             if self.file is None:
                 raise RuntimeError("A configuration file must be setup first")
             myconf = self._config_defaults
-            for section_re, section_conf in six.iteritems(self._config_re_cache):
+            for section_re, section_conf in self._config_re_cache.items():
                 if section_re.match(ggetkey):
                     myconf = section_conf
                     break
@@ -82,11 +77,11 @@ class GcoStoreConfig(GenericConfigParser):
 
     def key_untar_properties(self, ggetkey):
         """Filtered version of **key_properties** with only untar related data."""
-        return {k: v for k, v in six.iteritems(self.key_properties(ggetkey))
+        return {k: v for k, v in self.key_properties(ggetkey).items()
                 if k in ['uniquelevel_ignore']}
 
 
-class _AutoExtractStoreMixin(object):
+class _AutoExtractStoreMixin:
     """Some very useful methods needed by all GCO stores."""
 
     @property
@@ -101,7 +96,7 @@ class _AutoExtractStoreMixin(object):
     def _extract_data(remote, local=None):
         extract = remote['query'].get('extract', None)
         dir_extract = bool(int(remote['query'].get('dir_extract', ['0', ])[0]))
-        if local and dir_extract and not isinstance(local, six.string_types):
+        if local and dir_extract and not isinstance(local, str):
             logger.error("Cannot fetch a directory in a Virtual container.")
             raise RuntimeError('dir_extract incompatible with this type of Container')
         return extract, dir_extract
@@ -122,11 +117,11 @@ class _AutoExtractStoreMixin(object):
 
     @staticmethod
     def _read_directory_index(index_file):
-        with open(index_file, 'r', encoding='utf-8') as fh_index:
+        with open(index_file, encoding='utf-8') as fh_index:
             return set(fh_index.read().split('\n'))
 
     def _do_local_auto_untar(self, local):
-        return (isinstance(local, six.string_types) and
+        return (isinstance(local, str) and
                 not self.system.path.isdir(local) and
                 self.system.is_tarname(local) and
                 self.system.is_tarfile(local))
@@ -182,7 +177,7 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
     def __init__(self, *args, **kw):
         """Proxy init method. Perform a cache reset after initialisation."""
         logger.debug('Auto-extract abstract cache store init %s', self.__class__)
-        super(_AutoExtractCacheStore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def itemconfig(self):
@@ -329,7 +324,7 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
                 # If not, get the tar, extract it and refill the extracted data in cache
                 uname = self.system.path.basename(remote['path'])
                 tmplocal = (self.system.path.dirname(local)
-                            if isinstance(local, six.text_type) else '.')
+                            if isinstance(local, str) else '.')
                 tmplocal = self.system.path.join(tmplocal,
                                                  uname + self.system.safe_filesuffix())
                 rc = self.incacheget(remote, tmplocal, options)
@@ -357,7 +352,7 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
         else:
             rc = self.incacheget(remote, local, options)
             gname = remote['path'].lstrip('/').split('/').pop()
-            if rc and isinstance(local, six.string_types):
+            if rc and isinstance(local, str):
                 if self.system.path.isdir(local):
                     if self._ALLOW_DIR_ITEMS:
                         if not self._gco_xcache_get_index_and_check(remote, local):
@@ -384,9 +379,9 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
                                         logger.warning("The auto-extract directory is incomplete. ignoring it.")
                                         rcx = False
                                     else:
-                                        firstlevel = set([item_s[1] if item_s[0] == '.' else item_s[0]
-                                                         for item_s in [self.system.path.split(item)
-                                                                        for item in indexed]])
+                                        firstlevel = {item_s[1] if item_s[0] == '.' else item_s[0]
+                                                      for item_s in [self.system.path.split(item)
+                                                                     for item in indexed]}
                                         for item in firstlevel:
                                             localdest = self.system.path.join(localdir, item)
                                             # Create the target directory if needed
@@ -428,7 +423,7 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
             if dir_extract and not self.system.path.isdir(local):
                 return False
             rc = dir_extract or self.incacheput(local, remote, options)
-            if rc and isinstance(local, six.string_types):
+            if rc and isinstance(local, str):
                 # Save the directory index + autoextract stuff
                 if dir_extract or self.system.path.isdir(local):
                     index_file = self._dump_directory_index(local)
@@ -514,7 +509,7 @@ class GcoCentralStore(Store, _AutoExtractStoreMixin):
     def __init__(self, *args, **kw):
         """Proxy init abstract method. Logging only for the time being."""
         logger.debug('Gco store init %s', self.__class__)
-        super(GcoCentralStore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def itemconfig(self):
@@ -625,7 +620,7 @@ class GcoCentralStore(Store, _AutoExtractStoreMixin):
         logger.info('ggetget from %s://%s/%s (extract=%s, dir_extract=%s, to: %s)',
                     self.scheme, self.netloc, remote['path'], extract, dir_extract, local)
         # Run the Gget command in a temporary directory
-        if isinstance(local, six.string_types):
+        if isinstance(local, str):
             localdir = self.system.path.dirname(local)
             self.system.mkdir(localdir)
         else:
@@ -661,7 +656,7 @@ class GcoCentralStore(Store, _AutoExtractStoreMixin):
                         _, actual_target = self._autoextract_untar(actual_target, gname)
             actual_target = sh.path.join(tmpdir, actual_target)
             if rc and sh.path.exists(actual_target):
-                rc = rc and (not isinstance(local, six.text_type) or sh.filecocoon(local))
+                rc = rc and (not isinstance(local, str) or sh.filecocoon(local))
                 if sh.path.isdir(local):
                     sh.rm(local)
                 rc = rc and sh.mv(actual_target, local, fmt=fmt)
@@ -799,8 +794,6 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
 
     @classmethod
     def _hashdir(cls, eltid):
-        if six.PY2:
-            eltid = six.text_type(eltid)
         cleaned = cls._eltid_cleaner0.sub('', eltid)
         cleaned = cls._eltid_cleaner1.sub(r'\1\2', cleaned)
         return hashlib.md5(cleaned.encode(encoding="utf-8")).hexdigest()[0]
@@ -883,7 +876,7 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
         # Extract what to do ?
         extract, dir_extract = self._extract_data(remote, local)
         uname = self.system.path.basename(remote['path'])
-        if isinstance(local, six.text_type):
+        if isinstance(local, str):
             full_uname = self.system.path.dirname(local)
         else:
             full_uname = '.'
@@ -959,7 +952,7 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
         return self.inarchivedelete(self._universal_remap(remote), options)
 
 
-class _UgetCacheStoreMixin(object):
+class _UgetCacheStoreMixin:
 
     @property
     def system(self):
@@ -1248,7 +1241,7 @@ class UgetHackCacheStore(CacheStore, _UgetCacheStoreMixin, _AutoExtractStoreMixi
                 # Fetch the targeted tar file
                 uname = sh.path.basename(remote['path'])
                 full_uname = (sh.path.dirname(local)
-                              if isinstance(local, six.text_type) else '.')
+                              if isinstance(local, str) else '.')
                 full_uname = sh.path.join(full_uname, uname)
                 if sh.path.exists(full_uname):
                     logger.info("'%s' already fetched during previous extract.", full_uname)
@@ -1282,7 +1275,7 @@ class UgetHackCacheStore(CacheStore, _UgetCacheStoreMixin, _AutoExtractStoreMixi
                                             sh.path.basename(remote['path']),
                                             xintent=options.get('intent', CACHE_GET_INTENT_DEFAULT))
             # If a pre-extracted directory was fetched...
-            elif isinstance(local, six.text_type) and sh.path.isdir(local):
+            elif isinstance(local, str) and sh.path.isdir(local):
                 if sh.is_tarname(local):
                     # Move the directory content one level up
                     for item in sh.listdir(local):
@@ -1357,7 +1350,7 @@ class UgetStore(MultiStore):
                 logger.info("Trying to refill the '%s' uget element in cache stores", uname)
                 # Generate a temporary filename
                 tmplocal = (self.system.path.dirname(local)
-                            if isinstance(local, six.text_type) else '.')
+                            if isinstance(local, str) else '.')
                 tmplocal = self.system.path.join(tmplocal,
                                                  uname + self.system.safe_filesuffix())
                 # Fetch and refill the Uget tar
@@ -1367,4 +1360,4 @@ class UgetStore(MultiStore):
                 # Remove it
                 self.system.rm(tmplocal, fmt=fmt)
                 logger.info('The refill should be done (rc=%s)', str(rc))
-        return super(UgetStore, self).get(remote, local, options)
+        return super().get(remote, local, options)

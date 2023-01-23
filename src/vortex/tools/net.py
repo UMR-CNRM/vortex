@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
-
 """
 Net tools.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import abc
 import binascii
 import collections
+from collections import namedtuple
+from datetime import datetime
 import ftplib
 import functools
 import io
@@ -16,17 +14,13 @@ import itertools
 import operator
 import random
 import re
+import shlex
 import socket
 import stat
 import struct
 import time
-from collections import namedtuple
-from datetime import datetime
-
-import six
-from six.moves.urllib import request as urlrequest
-from six.moves.urllib import parse as urlparse
-
+from urllib import request as urlrequest
+from urllib import parse as urlparse
 
 from bronx.fancies import loggers
 from bronx.net.netrc import netrc
@@ -82,7 +76,7 @@ def uriunparse(uridesc):
 
 def http_post_data(url, data, ok_statuses=(), proxies=None, headers={}):
     """Make a http POST request, encoding **data**."""
-    if not isinstance(data, bytes if six.PY3 else str):
+    if not isinstance(data, bytes):
         data = urlparse.urlencode(data).encode('utf-8')
     handlers = []
     if isinstance(proxies, dict):
@@ -150,7 +144,7 @@ def netrc_lookup(logname, hostname, nrcfile=None):
     return actual_logname, actual_pwd
 
 
-class ExtendedFtplib(object):
+class ExtendedFtplib:
     """Simple Vortex's extension to the bare ftplib object.
 
     It wraps the standard ftplib object to add or overwrite methods.
@@ -186,7 +180,7 @@ class ExtendedFtplib(object):
         Nicely formatted print, built as the concatenation
         of the class full name and `logname` and `length` attributes.
         """
-        return '{0:s} | host={1:s} logname={2:s} since={3!s}>'.format(
+        return '{:s} | host={:s} logname={:s} since={!s}>'.format(
             repr(self).rstrip('>'),
             self.host,
             self.logname,
@@ -201,7 +195,7 @@ class ExtendedFtplib(object):
             def osproxy(*args, **kw):
                 cmd = [key]
                 cmd.extend(args)
-                cmd.extend(['{0:s}={1!s}'.format(x, kw[x]) for x in kw.keys()])
+                cmd.extend(['{:s}={!s}'.format(x, kw[x]) for x in kw.keys()])
                 self.stderr(*cmd)
                 return actualattr(*args, **kw)
 
@@ -290,7 +284,7 @@ class ExtendedFtplib(object):
     def get(self, source, destination):
         """Retrieve a remote `destination` file to a local `source` file object."""
         self.stderr('get', source, destination)
-        if isinstance(destination, six.string_types):
+        if isinstance(destination, str):
             self.system.filecocoon(destination)
             target = open(destination, 'wb')
             xdestination = True
@@ -328,7 +322,7 @@ class ExtendedFtplib(object):
         destination, and a mismatch is considered a failure.
         """
         self.stderr('put', source, destination)
-        if isinstance(source, six.string_types):
+        if isinstance(source, str):
             inputsrc = open(source, 'rb')
             xsource = True
         else:
@@ -341,7 +335,7 @@ class ExtendedFtplib(object):
             inputsrc.seek(0)
         except AttributeError:
             logger.warning('Could not rewind <source:%s>', str(source))
-        except IOError:
+        except OSError:
             logger.debug('Seek trouble <source:%s>', str(source))
 
         self.rmkdir(destination)
@@ -350,7 +344,7 @@ class ExtendedFtplib(object):
             logger.info('Replacing <file:%s>', str(destination))
         except ftplib.error_perm:
             logger.info('Creating <file:%s>', str(destination))
-        except (ValueError, TypeError, IOError,
+        except (ValueError, TypeError, OSError,
                 ftplib.error_proto, ftplib.error_reply, ftplib.error_temp) as e:
             logger.error('Serious delete trouble <file:%s> <error:%s>',
                          str(destination), str(e))
@@ -403,7 +397,7 @@ class ExtendedFtplib(object):
                 try:
                     self.mkd(current)
                 except ftplib.error_perm as errmkd:
-                    if 'File exists' not in six.text_type(errmkd):
+                    if 'File exists' not in str(errmkd):
                         raise
                 self.cwd(current)
             path_pre = current + '/'
@@ -422,13 +416,7 @@ class ExtendedFtplib(object):
         resp = self.sendcmd('MDTM ' + filename)
         if resp[:3] == '213':
             s = resp[3:].strip().split()[-1]
-            try:
-                return int(s)
-            except (OverflowError, ValueError):
-                if six.PY2:
-                    return long(s)
-                else:
-                    raise
+            return int(s)
 
     def size(self, filename):
         """Retrieve the size of a file."""
@@ -436,16 +424,10 @@ class ExtendedFtplib(object):
         resp = self.sendcmd('SIZE ' + filename)
         if resp[:3] == '213':
             s = resp[3:].strip().split()[-1]
-            try:
-                return int(s)
-            except (OverflowError, ValueError):
-                if six.PY2:
-                    return long(s)
-                else:
-                    raise
+            return int(s)
 
 
-class StdFtp(object):
+class StdFtp:
     """Standard wrapper for the crude FTP object (of class :class:`ExtendedFtplib`).
 
     It relies heavily on the :class:`ExtendedFtplib` class for FTP commands but
@@ -704,7 +686,7 @@ class AutoRetriesFtp(StdFtp):
         # Reset everything
         self._initialise()
         # Finalise
-        super(AutoRetriesFtp, self).__init__(system, hostname, port=port, nrcfile=nrcfile, ignoreproxy=ignoreproxy)
+        super().__init__(system, hostname, port=port, nrcfile=nrcfile, ignoreproxy=ignoreproxy)
 
     def _initialise(self):
         self._internal_retries_max = None
@@ -855,7 +837,7 @@ class AutoRetriesFtp(StdFtp):
 
     def close(self):
         """Quit the current ftp session abruptly."""
-        rc = super(AutoRetriesFtp, self).close()
+        rc = super().close()
         self._initialise()
         return rc
 
@@ -868,14 +850,14 @@ class ResetableAutoRetriesFtp(AutoRetriesFtp):
     """
 
     def _initialise(self):
-        super(ResetableAutoRetriesFtp, self)._initialise()
+        super()._initialise()
         self._initialpath = None
 
     def _actual_login(self, *args):
         if self._initialpath is not None and self._cwd:
-            rc = super(ResetableAutoRetriesFtp, self)._actual_login(*args)
+            rc = super()._actual_login(*args)
         else:
-            rc = super(ResetableAutoRetriesFtp, self)._actual_login(*args)
+            rc = super()._actual_login(*args)
             if rc:
                 self._initialpath = self.pwd()
         return rc
@@ -901,13 +883,13 @@ class PooledResetableAutoRetriesFtp(ResetableAutoRetriesFtp):
         class constructor (refers to its documentation).
         """
         self._pool = pool
-        super(PooledResetableAutoRetriesFtp, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         logger.debug('Pooled FTP init <host:%s> <pool:%s>', self.host, repr(pool))
 
     def forceclose(self):
         """Really quit the ftp session."""
         if self._internal_ftp is not None:
-            return super(PooledResetableAutoRetriesFtp, self).close()
+            return super().close()
         else:
             return True
 
@@ -922,7 +904,7 @@ class PooledResetableAutoRetriesFtp(ResetableAutoRetriesFtp):
         return True
 
 
-class FtpConnectionPool(object):
+class FtpConnectionPool:
     """A class that dispense FTP client objects for a given *hostname*/*logname* pair.
 
     Dispensed objects can either be new object or re-used pre-existing ones: this
@@ -1025,7 +1007,7 @@ class FtpConnectionPool(object):
             hpool.clear()
 
 
-class Ssh(object):
+class Ssh:
     """Remote command execution via ssh.
 
     Also handles remote copy via scp or ssh, which is intimately linked
@@ -1065,17 +1047,6 @@ class Ssh(object):
     def check_ok(self):
         """Is the connexion ok ?"""
         return self.execute('true') is not False
-
-    @staticmethod
-    def quote(s):
-        """Quote a string so that it can be used as an argument in a posix shell."""
-        try:
-            # py3
-            from shlex import quote
-        except ImportError:
-            # py2
-            from pipes import quote
-        return quote(s)
 
     def execute(self, remote_command, sshopts=''):
         """Execute the command remotely.
@@ -1143,10 +1114,10 @@ class Ssh(object):
 
     def _scp_putget_commons(self, source, destination):
         """Common checks on source and destination."""
-        if not isinstance(source, six.string_types):
+        if not isinstance(source, str):
             msg = 'Source is not a plain file path: {!r}'.format(source)
             raise TypeError(msg)
-        if not isinstance(destination, six.string_types):
+        if not isinstance(destination, str):
             msg = 'Destination is not a plain file path: {!r}'.format(destination)
             raise TypeError(msg)
 
@@ -1206,7 +1177,7 @@ class Ssh(object):
         cmd = ([self._scpcmd, ] +
                self._scpopts + scpopts.split() +
                [source,
-                myremote + ':' + self.quote(destination + '.tmp')])
+                myremote + ':' + shlex.quote(destination + '.tmp')])
         rc = self.sh.spawn(cmd, output=False, fatal=False)
         if rc:
             # success, rename the tmp
@@ -1245,7 +1216,7 @@ class Ssh(object):
         # is necessary, to avoid an 'scp: ambiguous target' error.
         cmd = ([self._scpcmd, ] +
                self._scpopts + scpopts.split() +
-               [myremote + ':' + self.quote(source),
+               [myremote + ':' + shlex.quote(source),
                 destination + '.tmp'])
         rc = self.sh.spawn(cmd, output=False, fatal=False)
         if rc:
@@ -1274,7 +1245,7 @@ class Ssh(object):
             msg = "stream is a {}, should be a <type 'file'>".format(type(stream))
             raise TypeError(msg)
 
-        if not isinstance(destination, six.string_types):
+        if not isinstance(destination, str):
             msg = 'Destination is not a plain file path: {!r}'.format(destination)
             raise TypeError(msg)
 
@@ -1286,9 +1257,9 @@ class Ssh(object):
             return False
 
         # transfer to a tmp, rename and set permissions in one go
-        remote_cmd = 'cat > {0}.tmp && mv {0}.tmp {0}'.format(self.quote(destination))
+        remote_cmd = 'cat > {0}.tmp && mv {0}.tmp {0}'.format(shlex.quote(destination))
         if permissions:
-            remote_cmd += ' && chmod -v {:o} {}'.format(permissions, self.quote(destination))
+            remote_cmd += ' && chmod -v {:o} {}'.format(permissions, shlex.quote(destination))
 
         cmd = ([self._sshcmd, ] +
                self._sshopts + sshopts.split() +
@@ -1308,7 +1279,7 @@ class Ssh(object):
             msg = "stream is a {}, should be a <type 'file'>".format(type(stream))
             raise TypeError(msg)
 
-        if not isinstance(source, six.string_types):
+        if not isinstance(source, str):
             msg = 'Source is not a plain file path: {!r}'.format(source)
             raise TypeError(msg)
 
@@ -1317,7 +1288,7 @@ class Ssh(object):
             return False
 
         # transfer to a tmp, rename and set permissions in one go
-        remote_cmd = 'cat {0}'.format(self.quote(source))
+        remote_cmd = 'cat {}'.format(shlex.quote(source))
         cmd = ([self._sshcmd, ] +
                self._sshopts + sshopts.split() +
                [myremote, remote_cmd])
@@ -1379,7 +1350,7 @@ class Ssh(object):
         return tunnel
 
 
-class ActiveSshTunnel(object):
+class ActiveSshTunnel:
     """Hold an opened SSH tunnel."""
 
     def __init__(self, sh, activeprocess, entranceport, finaldestination, finalport):
@@ -1511,11 +1482,10 @@ class _AssistedSshMeta(type):
         for cfatal in [x for x in d['_auto_checkfatal'] if x not in bare_methods]:
             inherited = [base for base in b if hasattr(base, cfatal)]
             d[cfatal] = _check_fatal(d.get(cfatal, getattr(inherited[0], cfatal)))
-        return super(_AssistedSshMeta, cls).__new__(cls, n, b, d)
+        return super().__new__(cls, n, b, d)
 
 
-@six.add_metaclass(_AssistedSshMeta)
-class AssistedSsh(Ssh):
+class AssistedSsh(Ssh, metaclass=_AssistedSshMeta):
     """Remote command execution via ssh.
 
     Also handles remote copy via scp or ssh, which is intimately linked.
@@ -1611,7 +1581,7 @@ class AssistedSsh(Ssh):
                                     host name is provided, such a check is never
                                     performed.
         """
-        super(AssistedSsh, self).__init__(sh, hostname, logname, sshopts, scpopts)
+        super().__init__(sh, hostname, logname, sshopts, scpopts)
         self._triesdelay = triesdelay
         self._virtualnode = virtualnode
         self._permut = permut
@@ -1687,8 +1657,7 @@ TcpConnectionStatus = namedtuple('TcpConnectionStatus', _ConnectionStatusAttrs)
 UdpConnectionStatus = namedtuple('UdpConnectionStatus', _ConnectionStatusAttrs)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class AbstractNetstats(object):
+class AbstractNetstats(metaclass=abc.ABCMeta):
     """AbstractNetstats classes provide all kind of informations on network connections."""
 
     @property
@@ -1716,7 +1685,7 @@ class AbstractNetstats(object):
     def available_localport(self):
         """Returns the number of an unused unprivileged port."""
         netstats = self.tcp_netstats() + self.udp_netstats()
-        busyports = set([x.LocalPort for x in netstats])
+        busyports = {x.LocalPort for x in netstats}
         busy = True
         while busy:
             guess_port = random.choice(self.unprivileged_ports)
@@ -1726,7 +1695,7 @@ class AbstractNetstats(object):
     def check_localport(self, port):
         """Check if ``port`` is currently in use."""
         netstats = self.tcp_netstats() + self.udp_netstats()
-        busyports = set([x.LocalPort for x in netstats])
+        busyports = {x.LocalPort for x in netstats}
         return port in busyports
 
 
@@ -1747,7 +1716,7 @@ class LinuxNetstats(AbstractNetstats):
     @property
     def unprivileged_ports(self):
         if self.__unprivileged_ports is None:
-            with open(self._LINUX_LPORT, 'r') as tmprange:
+            with open(self._LINUX_LPORT) as tmprange:
                 tmpports = [int(x) for x in tmprange.readline().split()]
             unports = set(range(5001, 65536))
             self.__unprivileged_ports = sorted(unports - set(range(tmpports[0], tmpports[1] + 1)))
@@ -1756,27 +1725,27 @@ class LinuxNetstats(AbstractNetstats):
     @classmethod
     def _ip_from_hex(cls, hexip, family=_LINUX_AF_INET4):
         if family == cls._LINUX_AF_INET4:
-            packed = struct.pack("<I".encode('utf8'), int(hexip, 16))
+            packed = struct.pack(b"<I", int(hexip, 16))
         elif family == cls._LINUX_AF_INET6:
-            packed = struct.unpack(">IIII".encode('utf8'),
+            packed = struct.unpack(b">IIII",
                                    binascii.a2b_hex(hexip))
-            packed = struct.pack("@IIII".encode('utf8'), *packed)
+            packed = struct.pack(b"@IIII", *packed)
         else:
             raise ValueError("Unknown address family.")
         return socket.inet_ntop(family, packed)
 
     def _generic_netstats(self, proto, rclass):
         tmpports = dict()
-        with open(self._LINUX_PORTS_V4[proto], 'r') as netstats:
+        with open(self._LINUX_PORTS_V4[proto]) as netstats:
             netstats.readline()  # Skip the header line
             tmpports[self._LINUX_AF_INET4] = [re.split(r':\b|\s+', x.strip())[1:6]
                                               for x in netstats.readlines()]
         try:
-            with open(self._LINUX_PORTS_V6[proto], 'r') as netstats:
+            with open(self._LINUX_PORTS_V6[proto]) as netstats:
                 netstats.readline()  # Skip the header line
                 tmpports[self._LINUX_AF_INET6] = [re.split(r':\b|\s+', x.strip())[1:6]
                                                   for x in netstats.readlines()]
-        except IOError:
+        except OSError:
             # Apparently, no IPv6 support on this machine
             tmpports[self._LINUX_AF_INET6] = []
         tmpports = [[rclass(family,

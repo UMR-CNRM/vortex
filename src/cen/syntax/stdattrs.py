@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 This module provides some pre-defined attributes descriptions or combined sets
 of attributes description that could be used in the footprint definition of any
 class which follow the :class:`footprints.Footprint` syntax.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.stdtypes.date import Date
 import footprints
@@ -38,4 +34,4 @@ def show():
     """Returns available items and their type."""
     dmod = globals()
     for stda in sorted(filter(lambda x: x.startswith('a_') or type(dmod[x]) == footprints.Footprint, dmod.keys())):
-        print('{0} ( {1} ) :\n  {2}\n'.format(stda, type(dmod[stda]).__name__, dmod[stda]))
+        print('{} ( {} ) :\n  {}\n'.format(stda, type(dmod[stda]).__name__, dmod[stda]))

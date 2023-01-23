@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 Promethee Application Configuration features.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import json
-import six
 import vortex  # noqa: F401
 from vortex.layout.nodes import ConfigSet
 
@@ -47,7 +42,7 @@ def recursive_format(element, **format_kwargs):
     * type(element): Formatted given element
 
     """
-    if isinstance(element, six.string_types):
+    if isinstance(element, str):
         try:
             return element.format(**format_kwargs)
         except KeyError:
@@ -126,7 +121,7 @@ class ConfigSetPromethee(ConfigSet):
 
     """
     def __init__(self, conf, ticket):
-        super(ConfigSetPromethee, self).__init__()
+        super().__init__()
         for key, value in conf.items():
             try:
                 self[key] = value.strftime("%Y%m%dT%H%M%S")
@@ -149,7 +144,7 @@ class ConfigSetPromethee(ConfigSet):
 
         if self.path.isfile(self.jsonconf):
             try:
-                with open(self.jsonconf, 'r', encoding='utf-8') as jsonf:
+                with open(self.jsonconf, encoding='utf-8') as jsonf:
                     self.update(**json.load(jsonf))
             except Exception:
                 logger.error("Failed to retrieve json config", exc_info=True)
@@ -172,7 +167,7 @@ class ConfigSetPromethee(ConfigSet):
         the given 'update_kwargs'.
         """
         new_update_kwargs = recursive_format(update_kwargs, **self)
-        super(ConfigSetPromethee, self).update(**new_update_kwargs)
+        super().update(**new_update_kwargs)
         self.format(**update_kwargs)
 
     def format(self, **format_kwargs):

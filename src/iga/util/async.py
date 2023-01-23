@@ -1,17 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """
 Callback functions for Jeeves, dedicated to operational needs.
 If needed, VORTEX must be loaded via a VortexWorker in this context.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import fcntl
 import re
 from pprint import pformat
-
-import six
 
 from common.tools.agt import agt_volatile_path
 from common.tools.grib import GRIBFilter
@@ -28,7 +22,7 @@ __all__ = []
 assert any([actions, services])
 
 
-class LockedOpen(object):
+class LockedOpen:
     """Context class for locking a file while it is open."""
 
     def __init__(self, filename, mode):
@@ -61,7 +55,7 @@ def dayfile_report(pnum, ask, config, logger, **kw):
         data = vwork.get_dataset(ask)
         logger.debug('Reporting to', pnum=pnum, target=data.target)
         sh.filecocoon(data.target)
-        with LockedOpen(data.target, 'a' + ('b' if six.PY2 else '')) as fp:
+        with LockedOpen(data.target, 'a') as fp:
             fp.write(data.infos)
     return pnum, vwork.rc, value
 

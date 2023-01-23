@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: module documentation.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os
 
@@ -116,13 +112,13 @@ class IgaProvider(Provider):
                     default  = IgaCfgParser('@iga-map-resources.ini')
                 ),
             ),
-            fastkeys = set(['suite']),
+            fastkeys = {'suite'},
         )
     ]
 
     def __init__(self, *args, **kw):
         logger.debug('IGA job provider init %s', self.__class__)
-        super(IgaProvider, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):
@@ -201,7 +197,7 @@ class SopranoProvider(Provider):
 
     def __init__(self, *args, **kw):
         logger.debug('IGA job provider init %s', self.__class__)
-        super(SopranoProvider, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):

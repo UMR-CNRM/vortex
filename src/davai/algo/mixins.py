@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Wrappers above usual AlgoComponents.
 """
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 from bronx.stdtypes import date

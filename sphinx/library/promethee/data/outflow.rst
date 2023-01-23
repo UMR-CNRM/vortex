@@ -19,6 +19,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: PrometheeGeoMask
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: PrometheeNoDateBdpeResource
    :show-inheritance:
    :members:

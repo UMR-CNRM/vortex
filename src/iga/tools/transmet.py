@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO module documentation.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-import six
 
 from bronx.fancies import loggers
 
@@ -41,7 +35,7 @@ def ttaaii_actual_command(sh, transmet_cmd, transmet_dict, scriptdir):
     :rtype: str
     """
     options = ''
-    for k, w in six.iteritems(transmet_dict):
+    for k, w in transmet_dict.items():
         options += '{}={} '.format(k, w)
     options += 'FICHIER_ENTETE=entete'
     scriptdir = sh.default_target.get(scriptdir, default=None)

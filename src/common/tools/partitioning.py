@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Compute simple domain partitionings.
 
@@ -7,8 +5,6 @@ The partitioning classes can be used on their own. Alternatively, the
 :meth:`setup_partitioning_in_namelist` method can be used to interact with
 namelist's Content objects.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import functools
 import math
@@ -30,7 +26,7 @@ class PartitioningError(ValueError):
     pass
 
 
-class AbstratctPartitioner(object):
+class AbstratctPartitioner:
     """The base class for any concrete partitioning class.
 
     Provides the mechanism to filter the partitioning methods and

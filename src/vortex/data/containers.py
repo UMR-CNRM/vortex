@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Abstract and generic classes for any "Container". "Container" objects
 describe where to store the data localy.
@@ -11,10 +9,6 @@ working directory.
 
 The :class:`SingleFile` container is by far the most commonly used.
 """
-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 
 import contextlib
 import os
@@ -85,7 +79,7 @@ class Container(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         """Preset to None or False hidden attributes ``iod``, ``iomode`` and ``filled``."""
         logger.debug('Container %s init', self.__class__)
-        super(Container, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._iod = None
         self._iomode = None
         self._ioencoding = None
@@ -97,7 +91,7 @@ class Container(footprints.FootprintBase):
         self._filled = False
 
     def __getstate__(self):
-        d = super(Container, self).__getstate__()
+        d = super().__getstate__()
         # Start from a clean slate regarding IO descriptors
         d['_iod'] = None
         d['_acmode'] = None
@@ -199,7 +193,7 @@ class Container(footprints.FootprintBase):
         if self.totalsize < self.maxreadsize or (0 < n < self.maxreadsize):
             return iod.read(n)
         else:
-            raise DataSizeTooBig('Input is more than {0:d} bytes.'.format(self.maxreadsize))
+            raise DataSizeTooBig('Input is more than {:d} bytes.'.format(self.maxreadsize))
 
     def dataread(self, mode=None, encoding=None):
         """
@@ -224,7 +218,7 @@ class Container(footprints.FootprintBase):
                 lines.append(iod.readline())
                 lsize += len(lines[-1])
                 if lsize > self.maxreadsize:
-                    raise DataSizeTooBig('Input is more than {0:d} bytes.'.format(self.maxreadsize))
+                    raise DataSizeTooBig('Input is more than {:d} bytes.'.format(self.maxreadsize))
                 nread += 1
             return lines
 
@@ -236,14 +230,13 @@ class Container(footprints.FootprintBase):
                 self.rewind()
                 return iod.readlines()
             else:
-                raise DataSizeTooBig('Input is more than {0:d} bytes.'.format(self.maxreadsize))
+                raise DataSizeTooBig('Input is more than {:d} bytes.'.format(self.maxreadsize))
 
     def __iter__(self):
         with self.preferred_decoding(byte=False):
             iod = self.iodesc()
             iod.seek(0)
-            for x in iod:
-                yield x
+            yield from iod
 
     def close(self):
         """Close the logical io descriptor."""
@@ -416,17 +409,6 @@ class Virtual(Container):
         """Virtual container's io target is an io descriptor."""
         return self.iodesc()
 
-    def _py2to3_checks(self, encoding):
-        """Disable features that are unavailable in Python2.7."""
-        if six.PY2:
-            if encoding is not None:
-                logger.warning("With Python2.7, encoding is not suported in the %s container" +
-                               "... hopping for the best !", self.__class__.__name__)
-            extras = dict()
-        else:
-            extras = {'encoding': encoding}
-        return extras
-
 
 class InCore(Virtual):
 
@@ -449,13 +431,13 @@ class InCore(Virtual):
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
         ),
-        fastkeys = set(['incore', ])
+        fastkeys = {'incore'}
     )
 
     def __init__(self, *args, **kw):
         logger.debug('InCore container init %s', self.__class__)
         kw.setdefault('incore', True)
-        super(InCore, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._tempo = False
 
     def actualpath(self):
@@ -471,7 +453,7 @@ class InCore(Virtual):
 
     def _str_more(self):
         """Additional information to print representation."""
-        return 'incorelimit={0:d} tmpfile="{1:s}"'.format(self.incorelimit, self.actualpath())
+        return 'incorelimit={:d} tmpfile="{:s}"'.format(self.incorelimit, self.actualpath())
 
     def _new_iodesc(self, mode, encoding):
         """Returns an active (opened) spooled file descriptor in binary read mode by default."""
@@ -482,7 +464,7 @@ class InCore(Virtual):
                 prefix=self.prefix,
                 dir=os.getcwd(),
                 delete=True,
-                ** self._py2to3_checks(encoding)
+                encoding=encoding
             )
         else:
             iod = tempfile.SpooledTemporaryFile(
@@ -490,7 +472,7 @@ class InCore(Virtual):
                 prefix=self.prefix,
                 dir=os.getcwd(),
                 max_size=self.incorelimit,
-                ** self._py2to3_checks(encoding)
+                encoding=encoding
             )
         return iod
 
@@ -509,7 +491,7 @@ class InCore(Virtual):
                 prefix=self.prefix,
                 dir=os.getcwd(),
                 delete=True,
-                ** self._py2to3_checks(self._acencoding)
+                encoding=self._acencoding
             )
             for data in iomem:
                 self._iod.write(data)
@@ -527,7 +509,7 @@ class InCore(Virtual):
                 prefix=self.prefix,
                 dir=os.getcwd(),
                 max_size=self.incorelimit,
-                ** self._py2to3_checks(self._acencoding)
+                encoding=self._acencoding
             )
             for data in iotmp:
                 self._iod.write(data)
@@ -567,13 +549,13 @@ class MayFly(Virtual):
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
         ),
-        fastkeys = set(['mayfly', ])
+        fastkeys = {'mayfly'}
     )
 
     def __init__(self, *args, **kw):
         logger.debug('MayFly container init %s', self.__class__)
         kw.setdefault('mayfly', True)
-        super(MayFly, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     def actualpath(self):
         """Returns path information, if any, of the spooled object."""
@@ -585,7 +567,7 @@ class MayFly(Virtual):
     def _str_more(self):
         """Additional information to internal representation."""
 
-        return 'delete={0!s} tmpfile="{1:s}"'.format(self.delete, self.actualpath())
+        return 'delete={!s} tmpfile="{:s}"'.format(self.delete, self.actualpath())
 
     def _new_iodesc(self, mode, encoding):
         """Returns an active (opened) temporary file descriptor in binary read mode by default."""
@@ -595,7 +577,7 @@ class MayFly(Virtual):
             prefix=self.prefix,
             dir=os.getcwd(),
             delete=self.delete,
-            ** self._py2to3_checks(encoding)
+            encoding=encoding
         )
 
     def localpath(self):
@@ -632,7 +614,7 @@ class _SingleFileStyle(Container):
     def __init__(self, *args, **kw):
         """Business as usual... but define actualpath according to ``cwdtied`` attribute."""
         logger.debug('_SingleFileStyle container init %s', self.__class__)
-        super(_SingleFileStyle, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         if self.cwdtied:
             self._actualpath = os.path.realpath(self.filename)
         else:
@@ -664,7 +646,7 @@ class _SingleFileStyle(Container):
 
     def _str_more(self):
         """Additional information to print representation."""
-        return 'path=\'{0:s}\''.format(self.actualpath())
+        return 'path=\'{:s}\''.format(self.actualpath())
 
     def localpath(self):
         """Returns the actual name of the file object."""
@@ -682,7 +664,7 @@ class _SingleFileStyle(Container):
 
     def clear(self, *kargs, **kw):
         """Delete the container content (in this case the actual file)."""
-        rst = super(_SingleFileStyle, self).clear(*kargs, **kw)
+        rst = super().clear(*kargs, **kw)
         # Physically delete the file if it exists
         if self.exists():
             sh = kw.pop('system', sessions.system())
@@ -706,7 +688,7 @@ class SingleFile(_SingleFileStyle):
                 doc_zorder  = 50,
             ),
         ),
-        fastkeys = set(['filename', ])
+        fastkeys = {'filename'}
     )
 
 
@@ -729,14 +711,14 @@ class UnnamedSingleFile(_SingleFileStyle):
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
         ),
-        fastkeys = set(['shouldfly', ])
+        fastkeys = {'shouldfly'}
     )
 
     def __init__(self, *args, **kw):
         logger.debug('UnnamedSingleFile container init %s', self.__class__)
         self._auto_filename = None
         kw.setdefault('shouldfly', True)
-        super(UnnamedSingleFile, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def filename(self):
@@ -747,7 +729,7 @@ class UnnamedSingleFile(_SingleFileStyle):
         return self._auto_filename
 
     def __getstate__(self):
-        st = super(UnnamedSingleFile, self).__getstate__()
+        st = super().__getstate__()
         st['_auto_filename'] = None
         return st
 
@@ -776,14 +758,14 @@ class Uuid4UnamedSingleFile(_SingleFileStyle):
                 doc_zorder = 90,
             ),
         ),
-        fastkeys = set(['uuid4fly', ])
+        fastkeys = {'uuid4fly'}
     )
 
     def __init__(self, *args, **kw):
         logger.debug('UuidBasedUnamedSingleFile container init %s', self.__class__)
         self._auto_filename = None
         kw.setdefault('uuid4fly', True)
-        super(Uuid4UnamedSingleFile, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def filename(self):
@@ -793,6 +775,6 @@ class Uuid4UnamedSingleFile(_SingleFileStyle):
         return self._auto_filename
 
     def __getstate__(self):
-        st = super(Uuid4UnamedSingleFile, self).__getstate__()
+        st = super().__getstate__()
         st['_auto_filename'] = None
         return st

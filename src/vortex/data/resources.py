@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Abstract class for any "Resource". "Resource" objects describe what is in this
 or that data.
@@ -8,8 +6,6 @@ or that data.
           :mod:`~vortex.data.executables` or  :mod:`~gco.data.resources` for more
           specialised versions that may better fit your needs.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 from bronx.stdtypes.dictionaries import LowerCaseDict
@@ -45,13 +41,13 @@ class Resource(footprints.FootprintBase):
                     doc_visibility  = footprints.doc.visibility.ADVANCED,
                 )
             ),
-            fastkeys = set(['kind', 'nativefmt', ])
+            fastkeys = {'kind', 'nativefmt'}
         )
     ]
 
     def __init__(self, *args, **kw):
         logger.debug('Resource init %s', self.__class__)
-        super(Resource, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._mailbox = LowerCaseDict()
 
     @property
@@ -63,7 +59,7 @@ class Resource(footprints.FootprintBase):
         d = self.footprint_as_shallow_dict()
         for xdel in [x for x in notinrepr if x in d]:
             del d[xdel]
-        return ' '.join(['{0:s}=\'{1!s}\''.format(k, v) for k, v in d.items()])
+        return ' '.join(['{:s}=\'{!s}\''.format(k, v) for k, v in d.items()])
 
     @property
     def mailbox(self):
@@ -179,13 +175,13 @@ class Unknown(Resource):
                     default = FormatAdapter,
                 ),
             ),
-            fastkeys = set(['unknown', ]),
+            fastkeys = {'unknown'},
         )
     ]
 
     def namebuilding_info(self):
         """Keep the Unknown resource unknown."""
-        bdict = super(Unknown, self).namebuilding_info()
+        bdict = super().namebuilding_info()
         bdict.update(radical=self.nickname, )
         if self.nativefmt in ('auto', 'autoconfig', 'foo', 'unknown'):
             del bdict['fmt']

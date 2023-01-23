@@ -1,11 +1,8 @@
 #!/usr/bin/env python
-# -*- coding:Utf-8 -*-
 
 """
 Actions specific to CEN needs.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.tools.actions import TemplatedMail, actiond
 
@@ -20,8 +17,8 @@ class CenMail(TemplatedMail):
 
     def __init__(self, kind='cenmail', service='cenmail', active=True,
                  catalog=None, inputs_charset=None):
-        super(CenMail, self).__init__(kind=kind, active=active, service=service,
-                                      catalog=catalog, inputs_charset=inputs_charset)
+        super().__init__(kind=kind, active=active, service=service,
+                         catalog=catalog, inputs_charset=inputs_charset)
         self.off()  # Inactive by default
 
 

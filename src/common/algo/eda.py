@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 AlgoComponents dedicated to computations related to the Ensemble Data Assimilation
 system.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import math
 import re
@@ -41,14 +37,14 @@ class IFSEdaAbstractAlgo(IFSParallel):
     def naming_convention(self, kind, rh, actualfmt=None, **kwargs):
         """Take into account the *inputnaming* attribute."""
         if kind == 'edainput':
-            return super(IFSEdaAbstractAlgo, self).naming_convention(kind, rh,
-                                                                     actualfmt=actualfmt,
-                                                                     namingformat=self.inputnaming,
-                                                                     **kwargs)
+            return super().naming_convention(kind, rh,
+                                             actualfmt=actualfmt,
+                                             namingformat=self.inputnaming,
+                                             **kwargs)
         else:
-            return super(IFSEdaAbstractAlgo, self).naming_convention(kind, rh,
-                                                                     actualfmt=actualfmt,
-                                                                     **kwargs)
+            return super().naming_convention(kind, rh,
+                                             actualfmt=actualfmt,
+                                             **kwargs)
 
 
 class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
@@ -80,7 +76,7 @@ class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(IFSEdaEnsembleAbstractAlgo, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._actual_nbe = self.nbmember
 
     @property
@@ -156,7 +152,7 @@ class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
         """Check if, for the **mlist** members list, some renaming id needed."""
         eff_sections = self._members_effective_inputs()
         eff_members = [sec.rh.provider.member for sec in eff_sections]
-        eff_formats = set([sec.rh.container.actualfmt for sec in eff_sections])
+        eff_formats = {sec.rh.container.actualfmt for sec in eff_sections}
         if eff_members and self.nbmember is None:
             self._actual_nbe = len(eff_members)
         return self._check_members_list_numbering(rh, eff_members, eff_formats)
@@ -193,7 +189,7 @@ class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
                         len(eff_sections))
             self.modelstate_renumbering(rh, eff_sections)
         self.system.subtitle('Other IFS related settings')
-        super(IFSEdaEnsembleAbstractAlgo, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
 
 class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
@@ -225,7 +221,7 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(IFSEdaLaggedEnsembleAbstractAlgo, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._actual_nresx = self.nblag
 
     @property
@@ -245,7 +241,7 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
 
     def _members_sorting_key(self, s):
         """Return the sorting key for the **s** section."""
-        stuple = list(super(IFSEdaLaggedEnsembleAbstractAlgo, self)._members_sorting_key(s))
+        stuple = list(super()._members_sorting_key(s))
         rdate = getattr(s.rh.resource, 'date')
         stuple.insert(0, rdate)
         return tuple(stuple)
@@ -256,7 +252,7 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
         eff_sections = self._members_effective_inputs()
 
         # Look for available dates (lagged ensemble)
-        all_dates = set([sec.rh.resource.date for sec in all_sections])
+        all_dates = {sec.rh.resource.date for sec in all_sections}
         if all_dates and self.nblag is not None:
             # Consistency check
             if len(all_dates) != self.nblag:
@@ -272,7 +268,7 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
             for a_date in all_dates:
                 d_sections = [sec for sec in all_sections if sec.rh.resource.date == a_date]
                 d_members = sorted([sec.rh.provider.member for sec in d_sections])
-                d_formats = set([sec.rh.container.actualfmt for sec in d_sections])
+                d_formats = {sec.rh.container.actualfmt for sec in d_sections}
                 d_blocks[a_date] = (d_members, d_formats)
             ref_date, (eff_members, eff_formats) = d_blocks.popitem()
             for a_date, a_data in d_blocks.items():
@@ -294,7 +290,7 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
         else:
             eff_members = [(sec.rh.resource.date, sec.rh.provider.member)
                            for sec in eff_sections]
-            eff_formats = set([sec.rh.container.actualfmt for sec in eff_sections])
+            eff_formats = {sec.rh.container.actualfmt for sec in eff_sections}
             if eff_members and self.nbmember is None:
                 # Here, NBE is the number of members for all dates
                 self._actual_nbe = len(eff_members)
@@ -337,13 +333,11 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
                         raise AlgoComponentError('No padding data where found for i= {:d}: {!s}'
                                                  .format(i, s))
         else:
-            super(IFSEdaLaggedEnsembleAbstractAlgo, self).modelstate_renumbering(rh, mlist)
+            super().modelstate_renumbering(rh, mlist)
 
     def prepare_namelist_delta(self, rh, namcontents, namlocal):
         """Update the namelists with EDA related macros."""
-        nam_updated = super(IFSEdaLaggedEnsembleAbstractAlgo, self).prepare_namelist_delta(rh,
-                                                                                           namcontents,
-                                                                                           namlocal)
+        nam_updated = super().prepare_namelist_delta(rh, namcontents, namlocal)
         if self.actual_nresx is not None:
             self._set_nam_macro(namcontents, namlocal, 'NRESX', self.actual_nresx)
             nam_updated = True
@@ -378,7 +372,7 @@ class IFSEdaFemars(IFSEdaAbstractAlgo):
             sh.mkdir(dest)
             for fic in flist:
                 sh.mv(fic, dest, fmt='grib')
-        super(IFSEdaFemars, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class IFSInflationLike(IFSEdaAbstractAlgo):
@@ -400,14 +394,14 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(IFSInflationLike, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._outputs_shelf = list()
 
     def _check_effective_terms(self, roles):
         eff_terms = None
         for role in roles:
-            eterm = set([sec.rh.resource.term for sec
-                         in self.context.sequence.effective_inputs(role=role)])
+            eterm = {sec.rh.resource.term
+                     for sec in self.context.sequence.effective_inputs(role=role)}
             if eterm:
                 if eff_terms is None:
                     eff_terms = eterm
@@ -452,7 +446,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
         if eff_terms:
             for actualterm in eff_terms:
                 wastebasket = list()
-                self.system.title('Loop on term {0!s}'.format(actualterm))
+                self.system.title('Loop on term {!s}'.format(actualterm))
                 self.system.subtitle('Solving the input files nightmare...')
                 # Ensemble Mean ?
                 mean_number = 2 if self.model == 'arome' else 0
@@ -503,7 +497,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
                         wastebasket.append((targetname, a_useless.rh.container.actualfmt))
 
                 # Standard execution
-                super(IFSInflationLike, self).execute(rh, opts)
+                super().execute(rh, opts)
 
                 # The concatenated listing
                 self.system.cat('NODE.001_01', output='NODE.all')
@@ -521,7 +515,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
                     self.system.rmall('ncf927', 'dirlst')
         else:
             # We should not be here but whatever... some task are poorly written !
-            super(IFSInflationLike, self).execute(rh, opts)
+            super().execute(rh, opts)
 
     def postfix(self, rh, opts):
         """Post-processing cleaning."""
@@ -529,7 +523,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
         for afile in self._outputs_shelf:
             logger.info("Output found: %s", self.system.path.basename(afile))
             self.system.move(afile, self.system.path.basename(afile), fmt='fa')
-        super(IFSInflationLike, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class IFSInflationFactor(IFSEdaEnsembleAbstractAlgo):
@@ -599,12 +593,12 @@ class IFSCovB(IFSEdaLaggedEnsembleAbstractAlgo):
     @property
     def actual_totalnumber(self):
         """The total number of members (times 2 if hybrid...)."""
-        parent_totalnumber = super(IFSCovB, self).actual_totalnumber
+        parent_totalnumber = super().actual_totalnumber
         return parent_totalnumber * 2 if self.hybrid else parent_totalnumber
 
     def prepare(self, rh, opts):
         """Default pre-link for the initial condition file"""
-        super(IFSCovB, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         # Legacy...
         for num, sec in enumerate(sorted(self.context.sequence.effective_inputs(role='Rawfiles'),
                                          key=self._members_sorting_key),

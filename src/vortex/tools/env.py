@@ -1,21 +1,14 @@
-# -*- coding: utf-8 -*-
-
 """
 Advanced environment variables management tools.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import collections
+import collections.abc
 import json
 import os
 import re
-import sys
 import traceback
 
-import six
-
-from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.stdtypes.history import PrivateHistory
 from vortex.util.structs import ShellEncoder
@@ -37,7 +30,7 @@ def current():
     return Environment.current()
 
 
-class Environment(object):
+class Environment:
     """
     Advanced handling of environment features. Either for binding to the system
     or to store and broadcast parameters. Activating an environment results
@@ -54,7 +47,6 @@ class Environment(object):
     * iteration
     * callable
 
-    When working with Python2, Unicode encoding is dealt with.
     """
 
     _current_active = None
@@ -98,12 +90,7 @@ class Environment(object):
                 if self._current_active is not None:
                     self._env_clone_internals(self._current_active, contextlock)
                 else:
-                    if six.PY2:
-                        # Mimics Python3 behaviour
-                        self._pool.update({self._udecode(k): self._udecode(v)
-                                           for k, v in os.environ.items()})
-                    else:
-                        self._pool.update(os.environ)
+                    self._pool.update(os.environ)
         self.__dict__['_noexport'] = [x.upper() for x in noexport]
         self.active(active)
 
@@ -115,22 +102,6 @@ class Environment(object):
             self.__dict__['_contextlock'] = contextlock
         else:
             self.__dict__['_contextlock'] = env.contextlock
-
-    @staticmethod
-    def _uencode(k):
-        """Encode the unicode to a raw string (if needed)."""
-        if six.PY2:
-            return k.encode(sys.getfilesystemencoding() or 'ascii', 'surrogateescape')
-        else:
-            return k
-
-    @staticmethod
-    def _udecode(k):
-        """Encode the raw string into an Unicode string (if needed)."""
-        if six.PY2:
-            return k.decode(sys.getfilesystemencoding() or 'ascii', 'surrogateescape')
-        else:
-            return k
 
     @property
     def history(self):
@@ -145,7 +116,7 @@ class Environment(object):
             self.history.append(var, value, traceback.format_stack()[:-1])
 
     def __str__(self):
-        return '{0:s} | including {1:d} variables>'.format(repr(self).rstrip('>'), len(self))
+        return '{:s} | including {:d} variables>'.format(repr(self).rstrip('>'), len(self))
 
     @classmethod
     def current(cls):
@@ -166,8 +137,8 @@ class Environment(object):
 
     def dumps(self, value):
         """Dump the specified ``value`` as a string (utility function)."""
-        if isinstance(value, six.string_types):
-            obj = six.text_type(value)
+        if isinstance(value, str):
+            obj = str(value)
         elif hasattr(value, 'export_dict'):
             obj = value.export_dict()
         elif hasattr(value, 'footprint_export'):
@@ -186,19 +157,19 @@ class Environment(object):
         Also used as internal for attribute access or dictionary access.
         """
         upvar = varname.upper() if enforce_uppercase else varname
-        upvar = six.text_type(upvar)
+        upvar = str(upvar)
         self._pool[upvar] = value
         self._mods.add(upvar)
         self._record(upvar, value)
         if self.osbound():
-            if isinstance(value, six.string_types):
-                actualvalue = six.text_type(value)
+            if isinstance(value, str):
+                actualvalue = str(value)
             else:
                 actualvalue = json.dumps(value, cls=ShellEncoder)
-            os.environ[self._uencode(upvar)] = self._uencode(actualvalue)
+            os.environ[upvar] = actualvalue
             if self.verbose():
                 if self.osbound() and self._sh:
-                    self._sh.stderr('export', '{0:s}={1:s}'.format(upvar, actualvalue))
+                    self._sh.stderr('export', '{:s}={:s}'.format(upvar, actualvalue))
                 logger.debug('Env export %s="%s"', upvar, actualvalue)
 
     def __setitem__(self, varname, value):
@@ -212,7 +183,7 @@ class Environment(object):
 
         Also used as internal for attribute access or dictionary access.
         """
-        varname = six.text_type(varname)
+        varname = str(varname)
         if varname in self._pool:
             return self._pool[varname]
         elif varname.upper() in self._pool:
@@ -236,7 +207,7 @@ class Environment(object):
         Also used as internal for attribute access or dictionary access.
         """
         seen = 0
-        varname = six.text_type(varname)
+        varname = str(varname)
         if varname in self._pool:
             seen = 1
             del self._pool[varname]
@@ -244,9 +215,9 @@ class Environment(object):
             seen = 1
             del self._pool[varname.upper()]
         if seen and self.osbound():
-            del os.environ[self._uencode(varname.upper())]
+            del os.environ[varname.upper()]
             if self.verbose() and self._sh:
-                self._sh.stderr('unset', '{0:s}'.format(varname.upper()))
+                self._sh.stderr('unset', '{:s}'.format(varname.upper()))
         if seen:
             self._record(varname.upper(), '!!deleted!!')
 
@@ -260,11 +231,10 @@ class Environment(object):
         return len(self._pool)
 
     def __iter__(self):
-        for t in self._pool.keys():
-            yield t
+        yield from self._pool.keys()
 
     def __contains__(self, item):
-        item = six.text_type(item)
+        item = str(item)
         return item in self._pool or item.upper() in self._pool
 
     def has_key(self, item):
@@ -273,9 +243,6 @@ class Environment(object):
         Also used as internal for dictionary access.
         """
         return item in self
-
-    def __cmp__(self, other):
-        return cmp(self._pool, other._pool)
 
     def keys(self):
         """Returns the keys of the internal pool of variables."""
@@ -294,15 +261,11 @@ class Environment(object):
 
     def get(self, *args):
         """Proxy to the dictionary ``get`` mechanism on the internal pool of variables."""
-        return self._pool.get(six.text_type(args[0]).upper(), *args[1:])
+        return self._pool.get(str(args[0]).upper(), *args[1:])
 
     def items(self):
         """Proxy to the dictionary ``items`` method on the internal pool of variables."""
         return self._pool.items()
-
-    def iteritems(self):
-        """Proxy to the dictionary ``iteritems`` method on the internal pool of variables."""
-        return six.iteritems(self._pool)
 
     def __eq__(self, other):
         return (isinstance(other, type(self)) and
@@ -317,7 +280,7 @@ class Environment(object):
         argd = list(args)
         argd.append(kw)
         for dico in argd:
-            for var, value in six.iteritems(dico):
+            for var, value in dico.items():
                 self.setvar(var, value)
 
     def delta(self, **kw):
@@ -326,8 +289,8 @@ class Environment(object):
         the :meth:`rewind` method.
         """
         upditems, newitems = (dict(), collections.deque())
-        for var, value in six.iteritems(kw):
-            var = six.text_type(var)
+        for var, value in kw.items():
+            var = str(var)
             if var in self:
                 upditems[var] = self.get(var)
             else:
@@ -341,7 +304,7 @@ class Environment(object):
             upditems, newitems = self._frozen.pop()
             while newitems:
                 self.delvar(newitems.pop())
-            for var, value in six.iteritems(upditems):
+            for var, value in upditems.items():
                 self.setvar(var, value)
         else:
             raise RuntimeError("No more delta to be rewinded...")
@@ -358,7 +321,7 @@ class Environment(object):
         argd = list(args)
         argd.append(kw)
         for dico in argd:
-            for var, value in six.iteritems(dico):
+            for var, value in dico.items():
                 if var not in self:
                     self.setvar(var, value)
 
@@ -394,8 +357,8 @@ class Environment(object):
     def native(self, varname):
         """Returns the native form this variable could have in a shell environment."""
         value = self._pool[varname]
-        if isinstance(value, six.string_types):
-            return six.text_type(value)
+        if isinstance(value, str):
+            return str(value)
         else:
             return json.dumps(value, cls=ShellEncoder)
 
@@ -433,7 +396,7 @@ class Environment(object):
         if osrewind:
             os.environ.clear()
             for k in filter(lambda x: x not in osrewind._noexport, osrewind._pool.keys()):
-                os.environ[self._uencode(k)] = osrewind.native(self._uencode(k))
+                os.environ[k] = osrewind.native(k)
         return active
 
     def naked(self):
@@ -464,12 +427,12 @@ class Environment(object):
     def osdump(self):
         """Dump the actual values of the OS environment."""
         for k in sorted(os.environ.keys()):
-            print('{0:s}="{1:s}"'.format(k, os.environ[k]))
+            print('{:s}="{:s}"'.format(k, os.environ[k]))
 
     def mydump(self):
         """Dump the actual values of the current environment."""
         for k in sorted(self._pool.keys()):
-            print('{0:s}="{1:s}"'.format(k, str(self._pool[k])))
+            print('{:s}="{:s}"'.format(k, str(self._pool[k])))
 
     def mkautolist(self, prefix):
         """Return a list of variable starting with the ``prefix`` string."""
@@ -499,7 +462,7 @@ class Environment(object):
         :param int pos: Where in the path, to insert ``value`` (by default, at the end)
         """
         mypath = self.getvar(var).split(':') if self.getvar(var) else []
-        value = six.text_type(value)
+        value = str(value)
         while value in mypath:
             mypath.remove(value)
         if pos is None:
@@ -529,7 +492,7 @@ class Environment(object):
         self.rmgenericpath('PATH', value)
 
 
-collections_abc.Mapping.register(Environment)
+collections.abc.Mapping.register(Environment)
 
 
 class EnvironmentDeltaContext():

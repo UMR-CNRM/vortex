@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains AlgoComponents that just generate a simple JSON
 file (or fail).
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.algo.components import AlgoComponent, AlgoComponentError
 from vortex.syntax.stdattrs import date, cutoff, member

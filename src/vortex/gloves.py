@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 GLObal Versatile Environment classes are responsible for session-wide
 configuration (username, emil adress, ...)
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 import footprints
@@ -61,7 +57,7 @@ class Glove(footprints.FootprintBase):
 
     def __init__(self, *args, **kw):
         logger.debug('Glove abstract %s init', self.__class__)
-        super(Glove, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._rmdepthmin = 3
         self._siteroot = None
         self._siteconf = None
@@ -277,7 +273,7 @@ class UnitTestGlove(ResearchGlove):
     )
 
     def __init__(self, *args, **kw):
-        super(UnitTestGlove, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._siteroot = self.test_siteroot
 
     @property

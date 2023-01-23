@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
-
 """
 This module provides some pre-defined attributes descriptions or combined sets
 of attributes description that could be used in the footprint definition of any
 class which follow the :class:`footprints.Footprint` syntax.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import re
-import six
 from functools import total_ordering
 
 import footprints
@@ -27,7 +22,7 @@ def _lowerattr(matchobj):
     return matchobj.group(0).lower()
 
 
-class GenvKey(six.text_type):
+class GenvKey(str):
     """
     Attribute for a GEnv cycle name.
     Implicit attributes inside brackets are translated to lower case.
@@ -36,7 +31,7 @@ class GenvKey(six.text_type):
 
     def __new__(cls, value):
         """Proxy to ``str.__new___`` with attributes inside brackets translated to lower case."""
-        return six.text_type.__new__(cls, re.sub(r'\[\w+\]', _lowerattr, value.upper()))
+        return str.__new__(cls, re.sub(r'\[\w+\]', _lowerattr, value.upper()))
 
 
 a_gvar = dict(info='The key that identifies the resource in the Genv database.',
@@ -50,7 +45,7 @@ gvar = footprints.Footprint(info='A GENV access key',
                             attr=dict(gvar=a_gvar))
 
 
-class GenvDomain(six.text_type):
+class GenvDomain(str):
     """
     Remap plain area names to specific Genv short domain names.
     See also :mod:`gco.tools.genv`.
@@ -58,7 +53,7 @@ class GenvDomain(six.text_type):
 
     def __new__(cls, value):
         """Proxy to ``str.__new___`` with on the fly remapping of domain names to short values."""
-        return six.text_type.__new__(cls, domain_remap.get(value, value))
+        return str.__new__(cls, domain_remap.get(value, value))
 
 
 a_gdomain = dict(info="The resource's geographical domain name in the Genv database.",
@@ -73,7 +68,7 @@ gdomain = footprints.Footprint(info='A domain name in GCO convention',
 
 
 @total_ordering
-class ArpIfsSimplifiedCycle(object):
+class ArpIfsSimplifiedCycle:
     """
     Type that holds a simplified representation of an ArpegeIFS cycle.
 
@@ -122,7 +117,7 @@ class ArpIfsSimplifiedCycle(object):
 
     def export_dict(self):
         """The pure dict/json output is the raw integer"""
-        return six.text_type(self)
+        return str(self)
 
 
 a_arpifs_cycle = dict(info="An Arpege/IFS cycle name",
@@ -141,15 +136,15 @@ uget_id_regex_only = re.compile('^' + uget_id_regex + '$')
 uget_id_regex = re.compile(r'\b' + uget_id_regex + r'\b')
 
 
-class GgetId(six.text_type):
+class GgetId(str):
     """Basestring wrapper for Gget Ids."""
     def __new__(cls, value):
         if uget_id_regex_only.match(value):
             raise ValueError('A GgetId cannot look like a UgetId !')
-        return six.text_type.__new__(cls, value)
+        return str.__new__(cls, value)
 
 
-class AbstractUgetId(six.text_type):
+class AbstractUgetId(str):
     """Basestring wrapper for Uget Ids."""
 
     _ALLOWED_LOCATIONS = ()
@@ -159,7 +154,7 @@ class AbstractUgetId(six.text_type):
         vmatch = uget_id_regex_only.match(value)
         if not vmatch:
             raise ValueError('Invalid UgetId (got "{:s}")'.format(value))
-        me = six.text_type.__new__(cls, value)
+        me = str.__new__(cls, value)
         me._id = vmatch.group('id')
         me._location = vmatch.group('location')
         if me._location in set(cls._OUTCAST_LOCATIONS):

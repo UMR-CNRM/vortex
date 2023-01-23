@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+import collections.abc
 
-import six
-
-from bronx.compat.moves import collections_abc
 from bronx.stdtypes.date import Date, Time
 from vortex import sessions
 from vortex.data.contents import DataContent, JsonDictContent, FormatAdapter
@@ -152,7 +147,7 @@ class ParallelListing(Listing):
 
     def namebuilding_info(self):
         """From base information of ``listing`` add mpi and openmp values."""
-        info = super(ParallelListing, self).namebuilding_info()
+        info = super().namebuilding_info()
         if self.mpi and self.openmp:
             info['compute'] = [{'mpi': self.mpi}, {'openmp': self.openmp}]
         if self.seta and self.setb:
@@ -315,7 +310,7 @@ class StaticTaskInfo(Resource):
         return 'statictaskinfo'
 
 
-class SectionsSlice(collections_abc.Sequence):
+class SectionsSlice(collections.abc.Sequence):
     """Hold a list of dictionaries representing Sections."""
 
     _INDEX_PREFIX = 'sslice'
@@ -325,7 +320,7 @@ class SectionsSlice(collections_abc.Sequence):
         self._data = sequence
 
     def __getitem__(self, i):
-        if isinstance(i, six.string_types) and i.startswith(self._INDEX_PREFIX):
+        if isinstance(i, str) and i.startswith(self._INDEX_PREFIX):
             i = int(i[len(self._INDEX_PREFIX):])
         return self._data[i]
 

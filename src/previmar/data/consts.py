@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
-
-
 """
 Constant data for marine production.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 

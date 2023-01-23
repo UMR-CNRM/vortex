@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 General purpose functions that can be used in conjunction with the
 :class:`~vortex.data.stores.FunctionStore`.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
+import io
 
 from footprints import proxy as fpx
 
@@ -78,7 +74,7 @@ def dumpinputs(options):
         sequence = list(ctx.sequence.inputs())
     if len(sequence) == 0:
         raise FunctionStoreCallbackError("Nothing to store: the effective inputs sequence is void.")
-    fileout = six.StringIO()
+    fileout = io.StringIO()
     t.sh.json_dump([s.as_dict() for s in sequence], fileout, indent=4)
     return fileout
 
@@ -99,9 +95,9 @@ def defaultinput(options):
             return v
 
     for k, v in options.items():
-        if isinstance(k, six.string_types) and k.startswith(prefix):
+        if isinstance(k, str) and k.startswith(prefix):
             content[k[len(prefix):]] = export_value(v)
     t = sessions.current()
-    fileout = six.StringIO()
+    fileout = io.StringIO()
     t.sh.json_dump([content, ], fileout, indent=4)
     return fileout

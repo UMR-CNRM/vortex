@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various resources needed to build ad Data Assimilmation system.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Time
@@ -103,7 +99,7 @@ class BackgroundStdError(_BackgroundErrorInfo):
 
     def namebuilding_info(self):
         """Generic information for names fabric, with radical = ``bcor``."""
-        infos = super(BackgroundStdError, self).namebuilding_info()
+        infos = super().namebuilding_info()
         infos['src'].append(self.stage)
         if self.stage != 'scr':
             infos['src'].append(self.origin)

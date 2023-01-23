@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Abstract base class for any AlgoComponent leveraging the Arpege/IFS code.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 import footprints
@@ -104,11 +100,11 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
 
     def fstag(self):
         """Extend default tag with ``kind`` value."""
-        return super(IFSParallel, self).fstag() + '.' + self.kind
+        return super().fstag() + '.' + self.kind
 
     def valid_executable(self, rh):
         """Be sure that the specifed executable is ifsmodel compatible."""
-        valid = super(IFSParallel, self).valid_executable(rh)
+        valid = super().valid_executable(rh)
         try:
             return valid and bool(rh.resource.realkind == 'ifsmodel')
         except (ValueError, TypeError):
@@ -116,9 +112,9 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
 
     def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""
-        super(IFSParallel, self).spawn_hook()
+        super().spawn_hook()
         if self.system.path.exists('fort.4'):
-            self.system.subtitle('{0:s} : dump namelist <fort.4>'.format(self.realkind))
+            self.system.subtitle('{:s} : dump namelist <fort.4>'.format(self.realkind))
             self.system.cat('fort.4', output=False)
 
     def spawn_command_options(self):
@@ -307,7 +303,7 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(IFSParallel, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         # Namelist fixes
         self.prepare_namelists(rh, opts)
 
@@ -315,4 +311,4 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
         """Standard IFS-Like execution parallel execution."""
         if rh.resource.cycle < 'cy46':
             self.system.ls(output='dirlst')
-        super(IFSParallel, self).execute_single(rh, opts)
+        super().execute_single(rh, opts)

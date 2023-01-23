@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Promethee gridfiles
 """
-from __future__ import print_function, absolute_import, unicode_literals, division
 from common.data.gridfiles import TimePeriodGridPoint
 from promethee.syntax.stdattrs import param_deco, step_deco
 

@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various System needed for NWP applications.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.tools.addons import AddonGroup
 

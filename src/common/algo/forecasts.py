@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 AlgoComponents dedicated to NWP direct forecasts.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import math
 import re
@@ -91,7 +87,7 @@ class Forecast(IFSParallel):
 
     def prepare(self, rh, opts):
         """Default pre-link for the initial condition file"""
-        super(Forecast, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         ininc = self.naming_convention('ic', rh)
         analysis = self.setlink(
@@ -137,7 +133,7 @@ class Forecast(IFSParallel):
                                                                 kind='namelist')]
 
     def prepare_namelist_delta(self, rh, namcontents, namlocal):
-        nam_updated = super(Forecast, self).prepare_namelist_delta(
+        nam_updated = super().prepare_namelist_delta(
             rh, namcontents, namlocal
         )
         if namlocal == 'fort.4':
@@ -185,7 +181,7 @@ class Forecast(IFSParallel):
                     for lfa in flist:
                         sh.mv(lfa, dest, fmt='lfa')
 
-        super(Forecast, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class LAMForecast(Forecast):
@@ -226,7 +222,7 @@ class LAMForecast(Forecast):
 
     def prepare(self, rh, opts):
         """Default pre-link for boundary conditions files."""
-        super(LAMForecast, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         sh = self.system
 
@@ -252,7 +248,7 @@ class LAMForecast(Forecast):
             lbcnc = self.naming_convention('lbc', rh, actualfmt=bound.container.actualfmt)
             sh.softlink(thisbound, lbcnc(number=i))
             if self.mksync:
-                thistool = self.synctool + '.{0:03d}'.format(i)
+                thistool = self.synctool + '.{:03d}'.format(i)
                 bound.mkgetpr(pr_getter=thistool, tplfetch=self.synctpl)
                 if firstsync is None:
                     firstsync = thistool
@@ -271,7 +267,7 @@ class LAMForecast(Forecast):
                 sh.subtitle(synclog)
                 sh.cat(synclog, output=False)
 
-        super(LAMForecast, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class DFIForecast(LAMForecast):
@@ -288,7 +284,7 @@ class DFIForecast(LAMForecast):
 
     def prepare(self, rh, opts):
         """Pre-link boundary conditions as special DFI files."""
-        super(DFIForecast, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         ininc = self.naming_convention('ic', rh)
         lbcnc = self.naming_convention('lbc', rh, actualfmt='fa')
         for pseudoterm in (999, 0, 1):
@@ -393,10 +389,10 @@ class FullPosGeo(FullPos):
                                     inputkind='clim_model', area='000')
 
             # Standard execution
-            super(FullPosGeo, self).execute(rh, opts)
+            super().execute(rh, opts)
 
             # Find the output filename
-            output_file = [x for x in sh.glob('PF{0:s}*+*'.format(self.xpname))]
+            output_file = [x for x in sh.glob('PF{:s}*+*'.format(self.xpname))]
             if len(output_file) != 1:
                 raise AlgoComponentError("No or multiple output files found.")
             output_file = output_file[0]
@@ -436,7 +432,7 @@ class FullPosGeo(FullPos):
                 sh.move('{:s}/pfout_{:d}'.format(self._RUNSTORE, num),
                         self._compute_target_name(r), fmt=r.container.actualfmt)
 
-        super(FullPosGeo, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class FullPosBDAP(FullPos):
@@ -469,7 +465,7 @@ class FullPosBDAP(FullPos):
         """Some additional checks."""
         if self.system.path.exists('xxt00000000'):
             raise AlgoComponentError('There should be no file named xxt00000000 in the working directory')
-        super(FullPosBDAP, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
@@ -498,7 +494,7 @@ class FullPosBDAP(FullPos):
 
         for sec in initsec:
             r = sec.rh
-            sh.subtitle('Loop on {0:s}'.format(r.resource.term.fmthm))
+            sh.subtitle('Loop on {:s}'.format(r.resource.term.fmthm))
 
             thisdate = r.resource.date + r.resource.term
             thismonth = thisdate.month
@@ -547,11 +543,11 @@ class FullPosBDAP(FullPos):
             sh.softlink(r.container.localpath(), infile)
 
             # Standard execution
-            super(FullPosBDAP, self).execute(rh, opts)
+            super().execute(rh, opts)
 
             # Freeze the current output
-            for posfile in [x for x in (sh.glob('PF{0:s}*+*'.format(self.xpname)) +
-                                        sh.glob('GRIBPF{0:s}*+*'.format(self.xpname)))]:
+            for posfile in [x for x in (sh.glob('PF{:s}*+*'.format(self.xpname)) +
+                                        sh.glob('GRIBPF{:s}*+*'.format(self.xpname)))]:
                 rootpos = re.sub('0+$', '', posfile)
                 fmtpos = 'grib' if posfile.startswith('GRIB') else 'lfi'
                 targetfile = sh.path.join(runstore, rootpos + r.resource.term.fmthm)
@@ -575,7 +571,7 @@ class FullPosBDAP(FullPos):
                 sh.move(logfile, sh.path.join(runstore, logfile))
 
             # Some cleaning
-            sh.rmall('PX{0:s}*'.format(self.xpname), fmt='lfi')
+            sh.rmall('PX{:s}*'.format(self.xpname), fmt='lfi')
             sh.rmall('ncf927', 'dirlst')
             for clim in thesenames:
                 sh.rm(clim)
@@ -584,14 +580,14 @@ class FullPosBDAP(FullPos):
         """Post processing cleaning."""
         sh = self.system
 
-        for fpfile in [x for x in (sh.glob('RUNOUT*/PF{0:s}*'.format(self.xpname)) +
-                                   sh.glob('RUNOUT*/GRIBPF{0:s}*+*'.format(self.xpname)))
+        for fpfile in [x for x in (sh.glob('RUNOUT*/PF{:s}*'.format(self.xpname)) +
+                                   sh.glob('RUNOUT*/GRIBPF{:s}*+*'.format(self.xpname)))
                        if sh.path.isfile(x)]:
             sh.move(fpfile, sh.path.basename(fpfile),
                     fmt='grib' if 'GRIBPF' in fpfile else 'lfi')
         sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
 
-        super(FullPosBDAP, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class OfflineSurfex(Parallel, DrHookDecoMixin):
@@ -636,7 +632,7 @@ class OfflineSurfex(Parallel, DrHookDecoMixin):
         rc = bmodel == 'surfex' and rh.resource.realkind == 'offline'
         if not rc:
             logger.error('Inapropriate binary provided')
-        return rc and super(OfflineSurfex, self).valid_executable(rh)
+        return rc and super().valid_executable(rh)
 
     @staticmethod
     def _fix_nam_macro(sec, macro, value):

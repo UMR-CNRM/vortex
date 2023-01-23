@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 AlgoComponents dedicated to the coupling between NWP models.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import re
 import footprints
@@ -88,7 +84,7 @@ class Coupling(FullPos):
 
     def prepare(self, rh, opts):
         """Default pre-link for namelist file and domain change."""
-        super(Coupling, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         namsec = self.setlink(initrole='Namelist', initkind='namelist', initname='fort.4')
         for nam in [x.rh for x in namsec if 'NAMFPC' in x.rh.contents]:
             logger.info('Substitute "AREA" to CFPDOM namelist entry')
@@ -108,7 +104,7 @@ class Coupling(FullPos):
         ininc = self.naming_convention('ic', rh)
         infile = ininc()
         isMany = len(cplsec) > 1
-        outprefix = 'PF{0:s}AREA'.format(self.xpname)
+        outprefix = 'PF{:s}AREA'.format(self.xpname)
 
         cplguess = self.context.sequence.effective_inputs(role='Guess')
         cplguess.sort(key=lambda s: s.rh.resource.term)
@@ -131,7 +127,7 @@ class Coupling(FullPos):
 
         for sec in cplsec:
             r = sec.rh
-            sh.subtitle('Loop on {0!s}'.format(r.resource))
+            sh.subtitle('Loop on {!s}'.format(r.resource))
 
             # First attempt to set actual date as the one of the source model
             actualdate = r.resource.date + r.resource.term
@@ -194,7 +190,7 @@ class Coupling(FullPos):
                                 inputkind='clim_model', area='AREA')
 
             # Standard execution
-            super(Coupling, self).execute(rh, opts)
+            super().execute(rh, opts)
 
             # Set a local appropriate file
             posfile = [x for x in sh.glob(outprefix + '+*')
@@ -256,7 +252,7 @@ class CouplingLAM(Coupling):
 
     def spawn_command_options(self):
         """Dictionary provided for command line factory."""
-        opts = super(CouplingLAM, self).spawn_command_options()
+        opts = super().spawn_command_options()
         opts['model'] = 'aladin'
         return opts
 
@@ -321,7 +317,7 @@ class PrepMixin(AlgoComponentDecoMixin):
         if section.rh.container.actualfmt != output_fmt:
             if infmt == 'fa' and output_fmt == 'lfi' and self._has_sfx_lfi:
                 if self.system.path.exists(output_name):
-                    raise IOError("The file {!r} already exists.".format(output_name))
+                    raise OSError("The file {!r} already exists.".format(output_name))
                 logger.info("Calling sfxtools' fa2lfi from %s to %s.", localpath, output_name)
                 self.system.sfx_fa2lfi(localpath, output_name)
             else:
@@ -408,7 +404,7 @@ class PrepMixin(AlgoComponentDecoMixin):
 
         for sec in cplsec:
             r = sec.rh
-            sh.header('Loop on {0:s}'.format(r.container.localpath()))
+            sh.header('Loop on {:s}'.format(r.container.localpath()))
 
             # Expect the coupling source to be there...
             self.grab(sec, comment='coupling source')
@@ -586,7 +582,7 @@ class C901(IFSParallel):
                                     inputkind='clim_model')
 
             # Standard execution
-            super(C901, self).execute(rh, opts)
+            super().execute(rh, opts)
             # Move the output file
             current_term = current_file_input.rh.resource.term
             sh.move(output_name, output_name + "+{}".format(current_term.fmthm))

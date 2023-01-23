@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TODO: Module documentation.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
@@ -68,7 +64,7 @@ def contents(cycle, scheme=None, netloc=None):
             # FtServ to be used
             tmplocal = footprints.proxy.container(shouldfly=True, mode='r')
             rc = localst.get(uriparse(uri_s), tmplocal.iotarget(), dict())
-        except (OSError, IOError) as e:
+        except OSError as e:
             print(e)
             try:
                 # This may happen if the user has insufficient rights on
@@ -114,7 +110,7 @@ def nicedump(cycle, scheme=None, netloc=None):
     ldump = list()
     c = contents(cycle, scheme, netloc)
     if c:
-        ldump = ['{0:s}="{1:s}"'.format(k, ' '.join(v if type(v) is list else [v]))
+        ldump = ['{:s}="{:s}"'.format(k, ' '.join(v if type(v) is list else [v]))
                  for k, v in sorted(c.items())]
     return ldump
 

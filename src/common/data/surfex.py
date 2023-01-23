@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various resources to handle climatology files used in the Surfex model.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.outflow import ModelGeoResource
 from vortex.syntax.stddeco import namebuilding_delete
@@ -45,7 +41,7 @@ class PGDRaw(ModelGeoResource):
         return 'PGDFILE-' + self.geometry.area + '.' + self.nativefmt
 
     def namebuilding_info(self):
-        nbi = super(PGDRaw, self).namebuilding_info()
+        nbi = super().namebuilding_info()
         nbi.update(
             # will work only with the @cen namebuilder:
             cen_rawbasename=('PGD_' + self.geometry.area + '.' +

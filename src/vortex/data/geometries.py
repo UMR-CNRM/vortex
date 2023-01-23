@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This module contains the definition of all the Geometry objects widely in
 Vortex's resources description. Geometry objects rely on the
@@ -54,9 +52,6 @@ Each geometry has its own attributes: please refers to each of the concrete
 class documentation for more details.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 import re
 
 from bronx.fancies import loggers
@@ -147,7 +142,7 @@ class Geometry(bronx.patterns.getbytag.GetByTag):
 
     def __repr__(self):
         """Nicer represenation for geometries."""
-        return '<{0:s}.{1:s} (tag=\'{2:s}\') object at {3:#x}>'.format(
+        return '<{:s}.{:s} (tag=\'{:s}\') object at {:#x}>'.format(
             self.__module__, self.__class__.__name__, self.tag, id(self)
         )
 
@@ -180,7 +175,7 @@ class VerticalGeometry(Geometry):
 
         .. note:: This is an abstract class, do not instantiate.
         """
-        super(VerticalGeometry, self).__init__(**kw)
+        super().__init__(**kw)
         self.kind = 'vertical'
         logger.debug('Abstract Vertical Geometry init %s %s', str(self), str(kw))
 
@@ -221,13 +216,13 @@ class HorizontalGeometry(Geometry):
             latmin=None,
         )
         desc.update(kw)
-        super(HorizontalGeometry, self).__init__(**desc)
+        super().__init__(**desc)
         for k, v in self.__dict__.items():
-            if isinstance(v, six.string_types) and re.match('none', v, re.IGNORECASE):
+            if isinstance(v, str) and re.match('none', v, re.IGNORECASE):
                 self.__dict__[k] = None
-            if isinstance(v, six.string_types) and re.match('true', v, re.IGNORECASE):
+            if isinstance(v, str) and re.match('true', v, re.IGNORECASE):
                 self.__dict__[k] = True
-            if isinstance(v, six.string_types) and re.match('false', v, re.IGNORECASE):
+            if isinstance(v, str) and re.match('false', v, re.IGNORECASE):
                 self.__dict__[k] = False
         for item in ('nlon', 'nlat', 'ni', 'nj', 'nmassif', 'nposts', 'truncation'):
             cv = getattr(self, item)
@@ -254,11 +249,11 @@ class HorizontalGeometry(Geometry):
         """Returns a string with a nice representation of the resolution (if sensible)."""
         if self.runit is not None:
             if self.runit == 'km':
-                res = '{0:05.2f}'.format(self.resolution)
+                res = '{:05.2f}'.format(self.resolution)
             elif self.runit in ('s', 'min'):
-                res = '{0:04.1f}'.format(self.resolution)
+                res = '{:04.1f}'.format(self.resolution)
             else:
-                res = '{0:06.3f}'.format(self.resolution)
+                res = '{:06.3f}'.format(self.resolution)
             return re.sub(r'\.', self.runit, res, 1)
         else:
             return 'Unknown Resolution'
@@ -273,12 +268,12 @@ class HorizontalGeometry(Geometry):
 
     def anonymous_info(self, *args):  # @UnusedVariable
         """Try to build a meaningful information from an anonymous geometry."""
-        return '{0!s}, {1:s}'.format(self.area, self.rnice)
+        return '{!s}, {:s}'.format(self.area, self.rnice)
 
     def __str__(self):
         """Very short presentation."""
         if self.info == 'anonymous':
-            return '{0:s}({1:s})'.format(self.__class__.__name__, self.anonymous_info())
+            return '{:s}({:s})'.format(self.__class__.__name__, self.anonymous_info())
         else:
             return self.info
 
@@ -305,14 +300,14 @@ class HorizontalGeometry(Geometry):
 
     def strheader(self):
         """Return the beginning of the formatted print representation."""
-        header = '{0:s}.{1:s} | tag=\'{2}\' id=\'{3:s}\''.format(
+        header = '{:s}.{:s} | tag=\'{}\' id=\'{:s}\''.format(
             self.__module__,
             self.__class__.__name__,
             self.tag,
             self.info,
         )
         if self.lam:
-            header += ' area=\'{0:s}\''.format(self.area)
+            header += ' area=\'{:s}\''.format(self.area)
         return header
 
     @property
@@ -331,7 +326,7 @@ class SpectralAwareHorizontalGeometry(HorizontalGeometry):
     _tag_topcls = False
 
     def _check_attributes(self):
-        super(SpectralAwareHorizontalGeometry, self)._check_attributes()
+        super()._check_attributes()
         if self.truncationtype is None:
             self.truncationtype = 'linear'
         if self.truncationtype not in ('linear', 'quadratic', 'cubic'):
@@ -364,7 +359,7 @@ class CombinedGeometry(Geometry):
         """
         self.hgeo = None
         self.vgeo = None
-        super(CombinedGeometry, self).__init__(**kw)
+        super().__init__(**kw)
         self.kind = 'combined'
         logger.debug('Combined Geometry init %s %s', str(self), str(kw))
 
@@ -394,13 +389,13 @@ class GaussGeometry(SpectralAwareHorizontalGeometry):
 
         .. note:: Gaussian grids are always global grids.
         """
-        super(GaussGeometry, self).__init__(**kw)
+        super().__init__(**kw)
         self.kind = 'gauss'
         logger.debug('Gauss Geometry init %s', str(self))
 
     def _check_attributes(self):
         self.lam = False  # Always false for gaussian grid
-        super(GaussGeometry, self)._check_attributes()
+        super()._check_attributes()
         if self.truncation is None or self.stretching is None:
             raise AttributeError("Some mandatory arguments are missing")
         if self.gridtype is None:
@@ -423,11 +418,11 @@ class GaussGeometry(SpectralAwareHorizontalGeometry):
 
     def __str__(self):
         """Standard formatted print representation."""
-        return '<{0:s} t{1:s}{2:s}={3:d} c={4:g}>'.format(self.strheader(),
-                                                          self.short_truncationtype,
-                                                          self.short_gridtype,
-                                                          self.truncation,
-                                                          self.stretching)
+        return '<{:s} t{:s}{:s}={:d} c={:g}>'.format(self.strheader(),
+                                                     self.short_truncationtype,
+                                                     self.short_gridtype,
+                                                     self.truncation,
+                                                     self.stretching)
 
     def doc_export(self):
         """Relevant informations to print in the documentation."""
@@ -455,12 +450,12 @@ class ProjectedGeometry(SpectralAwareHorizontalGeometry):
         :param str area: The grid location (needed if **lam** is *True*)
         """
         kw.setdefault('runit', 'km')
-        super(ProjectedGeometry, self).__init__(**kw)
+        super().__init__(**kw)
         self.kind = 'projected'
         logger.debug('Projected Geometry init %s', str(self))
 
     def _check_attributes(self):
-        super(ProjectedGeometry, self)._check_attributes()
+        super()._check_attributes()
         if self.resolution is None:
             raise AttributeError("Some mandatory arguments are missing")
 
@@ -472,9 +467,9 @@ class ProjectedGeometry(SpectralAwareHorizontalGeometry):
 
     def __str__(self):
         """Standard formatted print representation."""
-        return '<{0:s} r=\'{1:s}\' {2:s}>'.format(self.strheader(),
-                                                  self.rnice,
-                                                  self.truncationtype)
+        return '<{:s} r=\'{:s}\' {:s}>'.format(self.strheader(),
+                                               self.rnice,
+                                               self.truncationtype)
 
     def doc_export(self):
         """Relevant informations to print in the documentation."""
@@ -503,14 +498,14 @@ class LonlatGeometry(HorizontalGeometry):
         :param str area: The grid location (needed if **lam** is *True*)
         """
         kw.setdefault('runit', 'dg')
-        super(LonlatGeometry, self).__init__(**kw)
+        super().__init__(**kw)
         self.kind = 'lonlat'
         # TODO: coherence entre les coordonnees et nlon/nlat/resolution
         logger.debug('Lon/Lat Geometry init %s', str(self))
 
     def __str__(self):
         """Standard formatted print representation."""
-        return '<{0:s} r=\'{1:s}\'>'.format(self.strheader(), self.rnice)
+        return '<{:s} r=\'{:s}\'>'.format(self.strheader(), self.rnice)
 
     def doc_export(self):
         """Relevant informations to print in the documentation."""
@@ -535,13 +530,13 @@ class UnstructuredGeometry(HorizontalGeometry):
 
         .. note:: This is an abstract class, do not instantiate.
         """
-        super(UnstructuredGeometry, self).__init__(**kw)
+        super().__init__(**kw)
         self.kind = 'unstructured'
         logger.debug('Unstructured Geometry init %s', str(self))
 
     def __str__(self):
         """Standard formatted print representation."""
-        return '<{0:s}>'.format(self.strheader())
+        return '<{:s}>'.format(self.strheader())
 
     def doc_export(self):
         """Relevant informations to print in the documentation."""
@@ -567,11 +562,11 @@ class CurvlinearGeometry(UnstructuredGeometry):
         :param int nj: The number of latitude points in the grid
         :param str area: The grid location (needed if **lam** is *True*)
         """
-        super(CurvlinearGeometry, self).__init__(**kw)
+        super().__init__(**kw)
         self.kind = 'curvlinear'
 
     def _check_attributes(self):
-        super(CurvlinearGeometry, self)._check_attributes()
+        super()._check_attributes()
         if self.ni is None or self.nj is None:
             raise AttributeError("Some mandatory arguments are missing")
 
@@ -603,21 +598,21 @@ class RedgridGeometry(HorizontalGeometry):
         """
         kw.setdefault('runit', 'dg')
         kw.setdefault('lam', False)
-        super(RedgridGeometry, self).__init__(**kw)
+        super().__init__(**kw)
         self.kind = 'redgrid'
 
     def _check_attributes(self):
         if self.nlonmax is None or self.nlat is None or self.resolution is None:
             raise AttributeError("Some mandatory arguments are missing")
-        super(RedgridGeometry, self)._check_attributes()
+        super()._check_attributes()
         if self.lam is False:
             self.area = 'global'
 
     def __str__(self):
         """Standard formatted print representation."""
-        return '<{0:s} area=\'{1:s}\' r=\'{2:s}\'>'.format(self.strheader(),
-                                                           self.area,
-                                                           self.rnice)
+        return '<{:s} area=\'{:s}\' r=\'{:s}\'>'.format(self.strheader(),
+                                                        self.area,
+                                                        self.rnice)
 
     def doc_export(self):
         """Relevant informations to print in the documentation."""

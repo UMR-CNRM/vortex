@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 This modules defines helpers to build job's scripts.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 
 import ast
 import collections
@@ -78,10 +72,10 @@ def _mkjob_opts_detect_1(t, ** opts):
 
     taskconf = opts.pop('taskconf', None)
     if taskconf:
-        jobconf = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(appbase, vapp, vconf, taskconf)
+        jobconf = '{:s}/conf/{:s}_{:s}_{:s}.ini'.format(appbase, vapp, vconf, taskconf)
         taskconf = '_' + taskconf
     else:
-        jobconf = '{0:s}/conf/{1:s}_{2:s}.ini'.format(appbase, vapp, vconf)
+        jobconf = '{:s}/conf/{:s}_{:s}.ini'.format(appbase, vapp, vconf)
         taskconf = ''
 
     # Other pre-calculated stuff
@@ -242,7 +236,7 @@ def _mkjob_opts_detect_2(t, tplconf, jobconf, jobconf_defaults, tr_opts, auto_op
             rundate = date.Date(rundate).ymdh
         except (ValueError, TypeError):
             pass
-        tr_opts['rundate'] = "'" + six.text_type(rundate) + "'"  # Ugly, but that's history
+        tr_opts['rundate'] = "'" + str(rundate) + "'"  # Ugly, but that's history
     if runtime is None:
         tr_opts['runtime'] = None
     else:
@@ -250,7 +244,7 @@ def _mkjob_opts_detect_2(t, tplconf, jobconf, jobconf_defaults, tr_opts, auto_op
             runtime = date.Time(runtime)
         except (ValueError, TypeError):
             pass
-        tr_opts['runtime'] = "'" + six.text_type(runtime) + "'"  # Ugly, but that's history
+        tr_opts['runtime'] = "'" + str(runtime) + "'"  # Ugly, but that's history
     if cutoff is not None:
         tr_opts['cutoff'] = cutoff
     tr_opts['member'] = member
@@ -293,10 +287,10 @@ def _mkjob_type_translate(k, v):
     elif 'date' in k:
         return "bronx.stdtypes.date.Date('{:s}')".format(v)
     else:
-        if isinstance(v, six.string_types):
+        if isinstance(v, str):
             return "'{:s}'".format(v)
         else:
-            return six.text_type(v)
+            return str(v)
 
 
 def _mkjob_opts_autoexport(auto_opts):
@@ -313,7 +307,7 @@ def mkjob(t, **kw):
     opts.update(kw)
 
     # Detect some basic options that do not depend on the configuration files
-    tr_opts, auto_opts, r_kw = _mkjob_opts_detect_1(t, mkopts=six.text_type(kw), **kw)
+    tr_opts, auto_opts, r_kw = _mkjob_opts_detect_1(t, mkopts=str(kw), **kw)
 
     # Read the configuration files
     try:
@@ -455,7 +449,7 @@ class JobAssistant(footprints.FootprintBase):
     _P_ADDON_FMT = '+ Add-on {0:10s} = {1!r}'
 
     def __init__(self, *args, **kw):
-        super(JobAssistant, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.subjob_allowed = True
         self.subjob_tag = None
         self.subjob_fsid = None
@@ -637,7 +631,7 @@ class JobAssistant(footprints.FootprintBase):
         if ftuser is not None:
             if isinstance(ftuser, dict):
                 for dest, d_ftuser in ftuser.items():
-                    if not (isinstance(dest, six.string_types) and isinstance(d_ftuser, six.string_types)):
+                    if not (isinstance(dest, str) and isinstance(d_ftuser, str)):
                         logger.error('Improper ftuser configuration (Destination=%s, Logname=%s)',
                                      dest, d_ftuser)
                         continue
@@ -647,7 +641,7 @@ class JobAssistant(footprints.FootprintBase):
                     else:
                         self._printfmt('+ Setting the {:s} file-transfer user to: {:s}', dest, d_ftuser)
                         t.glove.setftuser(d_ftuser, dest)
-            elif isinstance(ftuser, six.string_types):
+            elif isinstance(ftuser, str):
                 self._printfmt('+ Setting the default file-transfer user to: {:s}', ftuser)
                 t.glove.setftuser(ftuser)
             else:
@@ -809,7 +803,7 @@ class JobAssistantPlugin(footprints.FootprintBase):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(JobAssistantPlugin, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         # Check for potential conflicts
         for conflicting in self._conflicts:
             if conflicting in [p.kind for p in self.masterja.plugins]:
@@ -865,7 +859,7 @@ class JobAssistantAutodirPlugin(JobAssistantPlugin):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(JobAssistantAutodirPlugin, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._joblabel = None
 
     def _autodir_tmpdir(self, t):
@@ -1030,7 +1024,7 @@ class JobAssistantFlowSchedPlugin(JobAssistantPlugin):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(JobAssistantFlowSchedPlugin, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._flow_sched_saved_mtplug = 0
 
     @property
@@ -1129,14 +1123,10 @@ class JobAssistantEpygramPlugin(JobAssistantPlugin):
                 if full_spath not in sys.path:
                     logger.info('Extending python path with: %s', full_spath)
                     sys.path.insert(i_epygram + 1, full_spath)
-            # Python3, ECCODES_DIR is needed
-            if sys.version_info.major == 3:
                 edir_path = t.sh.path.join(sys.path[i_epygram], 'eccodes_dir')
-                if t.sh.path.exists(edir_path):
-                    logger.info('ECCODES_DIR environment variable setup to %s', edir_path)
-                    t.env.ECCODES_DIR = edir_path
-                else:
-                    logger.info('ECCODES_DIR environment variable left unconfigured')
+            if t.sh.path.exists(edir_path):
+                logger.info('ECCODES_DIR environment variable setup to %s', edir_path)
+                t.env.ECCODES_DIR = edir_path
             # In any case, run with the Agg matplotlib backend
             t.env.MPLBACKEND = 'Agg'
 
@@ -1200,7 +1190,7 @@ class JobAssistantAppWideLockPlugin(JobAssistantPlugin):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(JobAssistantAppWideLockPlugin, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._appwide_lock_label = None
         self._appwide_lock_acquired = None
 

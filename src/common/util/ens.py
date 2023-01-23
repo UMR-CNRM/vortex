@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 A collection of utility functions used in the context of Ensemble forecasts.
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import six
+import io
 import json
 import re
 import time
@@ -62,7 +58,7 @@ def drawingfunction(options):
 
         tirage = (rgen.sample(population * (nbsample // nbset), (nbsample // nbset) * nbset) +
                   rgen.sample(population, nbsample % nbset))
-        logger.info('List of random elements: %s', ', '.join([six.text_type(x) for x in tirage]))
+        logger.info('List of random elements: %s', ', '.join([str(x) for x in tirage]))
     else:
         raise FunctionStoreCallbackError("no resource handler here :-(")
     # NB: The result have to be a file like object !
@@ -75,7 +71,7 @@ def drawingfunction(options):
                    population=population)
     if rhdict['provider'].get('experiment', None) is not None:
         outdict['experiment'] = rhdict['provider']['experiment']
-    return six.BytesIO(json.dumps(outdict, indent=4).encode(encoding='utf_8'))
+    return io.BytesIO(json.dumps(outdict, indent=4).encode(encoding='utf_8'))
 
 
 def _checkingfunction_dict(options):
@@ -177,7 +173,7 @@ def checkingfunction(options):
                    population=avail_list)
     if rhdict['provider'].get('experiment', None) is not None:
         outdict['experiment'] = rhdict['provider']['experiment']
-    return six.BytesIO(json.dumps(outdict, indent=4).encode(encoding='utf_8'))
+    return io.BytesIO(json.dumps(outdict, indent=4).encode(encoding='utf_8'))
 
 
 def safedrawingfunction(options):

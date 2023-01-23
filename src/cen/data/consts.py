@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Specific CEN "genv" resources.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
@@ -97,7 +93,7 @@ class climTG(GenvModelGeoResource):
 
     def namebuilding_info(self):
 
-        nbi = super(climTG, self).namebuilding_info()
+        nbi = super().namebuilding_info()
         nbi.update(
             # will work only with the @cen namebuilder:
             cen_rawbasename=(self.realkind + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)),

@@ -1,17 +1,12 @@
-# -*- coding: utf-8 -*-
-
 """
 AlgoComponents dedicated to computations related to the Ensemble Prediction System.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
 import copy
 import re
 
 import footprints
-import six
 from bronx.compat.itertools import pairwise
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Time
@@ -66,7 +61,7 @@ class Combi(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
         """Standard Combi execution."""
         namsec = self.setlink(initrole='Namelist', initkind='namelist')
         namsec[0].rh.container.cat()
-        super(Combi, self).execute(rh, opts)
+        super().execute(rh, opts)
 
     @property
     def nmod(self):
@@ -111,7 +106,7 @@ class CombiPert(Combi):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(CombiPert, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # Tweak the namelists
         for namsec in self.context.sequence.effective_inputs(role=re.compile('Namelist'),
@@ -140,7 +135,7 @@ class CombiSV(CombiPert):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(CombiSV, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # Check the number of singular vectors and link them in succession
         nbVectTmp = collections.OrderedDict()
@@ -243,7 +238,7 @@ class CombiSVnorm(CombiSV):
         """Post processing cleaning."""
         # Pick up the coeff in the namelist
         self._coeff_picking('vs', 'SV')
-        super(CombiSVnorm, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
     @property
     def nmod(self):
@@ -277,7 +272,7 @@ class CombiIC(Combi):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(CombiIC, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # Tweak the namelist
         namsec = self.setlink(initrole='Namelist', initkind='namelist')
@@ -377,7 +372,7 @@ class CombiBreeding(CombiPert):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(CombiBreeding, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # Consistent naming with the Fortran execution
         hst_sections = self.context.sequence.effective_inputs(kind=('pert', 'historic'))
@@ -399,7 +394,7 @@ class CombiBreeding(CombiPert):
         """Post processing cleaning."""
         # Pick up the coeff in the namelist
         self._coeff_picking('bm', 'breeding')
-        super(CombiBreeding, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class SurfCombiIC(BlindRun):
@@ -422,7 +417,7 @@ class SurfCombiIC(BlindRun):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(SurfCombiIC, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         icsec = self.setlink(initrole=('SurfaceAnalysis', 'SurfaceInitialCondition'),
                              initkind='ic')
@@ -467,7 +462,7 @@ class Clustering(BlindRun, EcGribDecoMixin):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(Clustering, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         grib_sections = self.context.sequence.effective_inputs(role='ModelState',
                                                                kind='gridpoint')
@@ -489,13 +484,13 @@ class Clustering(BlindRun, EcGribDecoMixin):
                             for (key, value) in elt.items()]):
                         sublist_ids.append(i)
                 # Stack the gribs in file_list
-                file_list.extend(sorted([six.text_type(grib_sections[i].rh.container.localpath())
+                file_list.extend(sorted([str(grib_sections[i].rh.container.localpath())
                                          for i in sublist_ids]))
                 terms_set.update([grib_sections[i].rh.resource.term for i in sublist_ids])
                 for i in reversed(sublist_ids):
                     del grib_sections[i]
         else:
-            file_list = sorted([six.text_type(grib.rh.container.localpath())
+            file_list = sorted([str(grib.rh.container.localpath())
                                 for grib in grib_sections])
             terms_set = {grib.rh.resource.term for grib in grib_sections}
 
@@ -543,7 +538,7 @@ class Clustering(BlindRun, EcGribDecoMixin):
         if self.nbmembers is None or self.nbmembers > self.nbclust:
             logger.info("Normal clustering run (%d members, %d clusters)",
                         self.nbmembers, self.nbclust)
-            super(Clustering, self).execute(rh, opts)
+            super().execute(rh, opts)
         # if not, generate face outputs
         else:
             logger.info("Generating fake outputs with %d members", self.nbmembers)
@@ -551,7 +546,7 @@ class Clustering(BlindRun, EcGribDecoMixin):
                 fdcl.write("\n".join(['{0:3d} {1:3d} {0:3d}'.format(i, 1)
                                       for i in range(1, self.nbmembers + 1)]))
             with open('ASCII_RMCLUST', 'w') as fdrm:
-                fdrm.write("\n".join([six.text_type(i) for i in range(1, self.nbmembers + 1)]))
+                fdrm.write("\n".join([str(i) for i in range(1, self.nbmembers + 1)]))
             with open('ASCII_POPCLUST', 'w') as fdpop:
                 fdpop.write("\n".join(['1'] * self.nbmembers))
 
@@ -565,16 +560,16 @@ class Clustering(BlindRun, EcGribDecoMixin):
             # Read the clustering information
             if self.system.path.exists('ASCII_CLUST'):
                 # New format for clustering outputs
-                with open('ASCII_CLUST', 'r') as fdcl:
+                with open('ASCII_CLUST') as fdcl:
                     cluster_members = list()
                     cluster_sizes = list()
                     for l in [l.split() for l in fdcl.readlines()]:
                         cluster_members.append(int(l[0]))
                         cluster_sizes.append(int(l[1]))
             else:
-                with open('ASCII_RMCLUST', 'r') as fdrm:
+                with open('ASCII_RMCLUST') as fdrm:
                     cluster_members = [int(m) for m in fdrm.readlines()]
-                with open('ASCII_POPCLUST', 'r') as fdpop:
+                with open('ASCII_POPCLUST') as fdpop:
                     cluster_sizes = [int(s) for s in fdpop.readlines()]
             # Update the population JSON
             mycontent = copy.deepcopy(avail_json[0].rh.contents)
@@ -588,7 +583,7 @@ class Clustering(BlindRun, EcGribDecoMixin):
                                                        actualfmt='json')
             mycontent.rewrite(new_container)
 
-        super(Clustering, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class Addpearp(BlindRun):
@@ -608,7 +603,7 @@ class Addpearp(BlindRun):
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(Addpearp, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # Tweak the namelist
         namsec = self.setlink(initrole='Namelist', initkind='namelist')

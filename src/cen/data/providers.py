@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Specific CEN providers.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
@@ -131,7 +127,7 @@ class CenSopranoDevProvider(Provider):
 
     def __init__(self, *args, **kw):
         logger.debug('SOPRANO dev job provider init %s', self.__class__)
-        super(CenSopranoDevProvider, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
 
     @property
     def realkind(self):

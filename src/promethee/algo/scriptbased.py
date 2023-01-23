@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Promethee custom Algo Component.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from footprints import FPDict
 from vortex.algo.components import Expresso

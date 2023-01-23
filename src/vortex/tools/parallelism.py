@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
-
 """
 Abstract classes for :mod:`taylorism` workers to be used in conjunction with
 AlgoComponents based on the :class:`~vortex.algo.components.TaylorRun` class.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import io
 import logging
-import six
 import sys
 
 from bronx.fancies import loggers
@@ -158,7 +153,7 @@ class TeeLikeStringIO(io.StringIO):
     """A StringIO variatn that can also write to several files."""
 
     def __init__(self):
-        super(TeeLikeStringIO, self).__init__()
+        super().__init__()
         self._tees = set()
 
     def record_teefile(self, filename, mode='w', line_buffering=True):
@@ -173,12 +168,9 @@ class TeeLikeStringIO(io.StringIO):
 
     def write(self, t):
         """Write in the present StringIO but also in the extra logfiles."""
-        if six.PY2 and isinstance(t, str):
-            # With Python2, t may not be a unicode string
-            t = t.decode()
         for teeio in self._tees:
             teeio.write(t)
-        super(TeeLikeStringIO, self).write(t)
+        super().write(t)
 
     def filedump(self, filename, mode='w'):
         """Dump all of the captured data to **filename**."""
@@ -188,7 +180,7 @@ class TeeLikeStringIO(io.StringIO):
                 fhdump.write(line)
 
 
-class ParallelSilencer(object):
+class ParallelSilencer:
     """Record everything and suppress all outputs (stdout, loggers, ...).
 
     The record is kept within the object: the *export_result* method returns
@@ -299,7 +291,7 @@ class ParallelSilencer(object):
                     stdoe_record=self._io_r.readlines())
 
 
-class ParallelResultParser(object):
+class ParallelResultParser:
     """Summarise the results of a parallel execution.
 
     Just pass to this object the `rc` of a `taylorism` worker based on

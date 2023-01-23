@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Contents for marine production.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
@@ -29,8 +25,8 @@ class SurgeTemplate(AlmostListContent):
             if m:
                 dico_in = m.groupdict()
                 if dico_in['key'] in dictkeyvalue.keys():
-                    line = "{0:11s}'{1:6s}' = {2:s}\n".format(dictkeyvalue[dico_in['key']],
-                                                              dico_in['key'], dico_in['info'])
+                    line = "{:11s}'{:6s}' = {:s}\n".format(dictkeyvalue[dico_in['key']],
+                                                           dico_in['key'], dico_in['info'])
             self._data.append(line)
 
 

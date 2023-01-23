@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Typical ressources for promethee use.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.resources import Resource
 from vortex.data.outflow import StaticResource

@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Resources for query files used for extractions in various databases.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import re
 
@@ -107,7 +103,7 @@ class BDCPQuery(Query):
         return 'bdcp_query'
 
 
-class StaticCutoffDispenser(object):
+class StaticCutoffDispenser:
     """
     From a dictionary of cutoff times, for a given *obstype*, find the
     best suited cutoff time.

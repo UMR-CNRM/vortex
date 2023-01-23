@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various configuration files (Namelists excepted).
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.outflow import StaticResource
 from gco.syntax.stdattrs import gvar

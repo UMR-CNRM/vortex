@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Abstract class for any flow-dependant "Resource".
 
@@ -9,8 +7,6 @@ By "flow-dependant", we mean a "Resource" that has to be described by ``model``,
 The :class:`GeoFlowResource` abstract class is to be used for flow-dependant
 resources associated with an horizontal geometry.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from .resources import Resource
 from .geometries import hgeometry_deco
@@ -54,7 +50,7 @@ class UnknownFlow(FlowResource):
                     default = FormatAdapter
                 ),
             ),
-            fastkeys = set(['unknownflow', ]),
+            fastkeys = {'unknownflow'},
         )
     ]
 

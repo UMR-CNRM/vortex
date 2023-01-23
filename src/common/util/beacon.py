@@ -1,14 +1,10 @@
-# -*- coding: utf-8 -*-
-
 """
 Functions to create and write a few information in a file using Vortex
 (FunctionStore).
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
+import io
 import json
-import six
 
 #: No automatic export
 __all__ = []
@@ -41,4 +37,4 @@ def beaconfunction(options):
         rst['error'] = 'No resource handler here'
     outstr = json.dumps(rst)
     # Return the string, which has to be converted to a file like object
-    return six.BytesIO(outstr.encode(encoding='utf_8'))
+    return io.BytesIO(outstr.encode(encoding='utf_8'))

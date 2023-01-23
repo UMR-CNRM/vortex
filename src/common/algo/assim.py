@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 AlgoComponents dedicated to computations related to Data Assimilation systems.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
@@ -47,7 +43,7 @@ class MergeVarBC(Parallel):
         sh.touch(self.varbcout)
 
         # Let ancesters doing real stuff
-        super(MergeVarBC, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
 
 class Anamix(IFSParallel):
@@ -119,14 +115,14 @@ class SeaIceAnalysis(IFSParallel):
     )
 
     def find_namelists(self, opts=None):
-        namrh_list = super(SeaIceAnalysis, self).find_namelists(opts)
+        namrh_list = super().find_namelists(opts)
         if not namrh_list:
             logger.critical('No namelist was found.')
             raise ValueError('No namelist was found for seaice analysis')
         return namrh_list
 
     def prepare_namelist_delta(self, rh, namcontents, namlocal):
-        super(SeaIceAnalysis, self).prepare_namelist_delta(rh, namcontents, namlocal)
+        super().prepare_namelist_delta(rh, namcontents, namlocal)
         self._set_nam_macro(namcontents, namlocal, 'IDAT', int(self.date.ymd))
         return True
 
@@ -154,7 +150,7 @@ class Canari(IFSParallel, odb.OdbComponentDecoMixin):
 
     def prepare(self, rh, opts):
         """Get a look at raw observations input files."""
-        super(Canari, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # Looking for input observations
         obsodb = [x for x in self.lookupodb() if x.rh.resource.part.startswith('surf')]
@@ -215,7 +211,7 @@ class Screening(IFSParallel, odb.OdbComponentDecoMixin):
 
     def prepare(self, rh, opts):
         """Get a look at raw observations input files."""
-        super(Screening, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # Looking for input observations
         allodb = self.lookupodb()
@@ -262,7 +258,7 @@ class IFSODBCCMA(IFSParallel, odb.OdbComponentDecoMixin):
 
     def prepare(self, rh, opts):
         """Get a look at raw observations input files."""
-        super(IFSODBCCMA, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         sh = self.system
 
@@ -310,7 +306,7 @@ class Minim(IFSODBCCMA):
 
     def prepare(self, rh, opts):
         """Find out if preconditioning eigenvectors are here."""
-        super(Minim, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
         # Check if a preconditioning EV map is here
         evmaprh = self.context.sequence.effective_inputs(role=('PreconEVMap',
@@ -349,7 +345,7 @@ class Minim(IFSODBCCMA):
             prec_info['evnum'] = [int(x[6:]) for x in prec]
             sh.json_dump(prec_info, 'precev_map.out', indent=4)
 
-        super(Minim, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
 
 class Trajectory(IFSODBCCMA):
@@ -404,7 +400,7 @@ class SstGrb2Ascii(BlindRun):
 
     def prepare(self, rh, opts):
         """Add namelist delta, prepare the environment and build the arguments needed."""
-        super(SstGrb2Ascii, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         for namrh in [x.rh for x in self.context.sequence.effective_inputs(role='Namelist',
                                                                            kind='namelist', )]:
             namc = namrh.contents
@@ -449,7 +445,7 @@ class IceNetCDF2Ascii(BlindRun):
     )
 
     def prepare(self, rh, opts):
-        super(IceNetCDF2Ascii, self).prepare(rh, opts)
+        super().prepare(rh, opts)
         # Look for the input files
         list_netcdf = self.context.sequence.effective_inputs(role='NetCDFfiles',
                                                              kind='observations')

@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Customised MPI binaries for intairpol MPI AlgoComponents.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
