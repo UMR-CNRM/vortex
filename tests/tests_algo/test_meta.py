@@ -53,7 +53,7 @@ class BaseTestMixin(AlgoComponentDecoMixin):
 
     def _mixin_execute(self, rh, opts):
         self.execute_stack.append('mix')
-        super(self.__class__, self).execute(rh, opts)
+        super(self.mixin_execute_companion(), self).execute(rh, opts)
         self.execute_stack.append('mix')
 
     def _postfix_hook(self, rh, opts):
@@ -165,6 +165,18 @@ class TestAlgoMetaClass(unittest.TestCase):
         self.assertEqual(algot.postfix_stack, ['base', 'mix'])
         self.assertTrue(algot.spawn_command_options()['hacked'])
         self.assertTrue(algot.spawn_command_options()['base'])
+
+        class Full_TestAlgoComponentForMeta_Child(Full_TestAlgoComponentForMeta):
+
+            _footprint = dict(attr=dict(
+                kind=dict(values=['full_base_test_algo_for_meta_child', ]),
+            ))
+
+        algot = Full_TestAlgoComponentForMeta_Child(kind='full_base_test_algo_for_meta_child',
+                                                    engine='algo',
+                                                    fakeattr='gruik')
+
+        self._run_algo(algot)
 
         class Half_TestMixin(BaseTestMixin):
 

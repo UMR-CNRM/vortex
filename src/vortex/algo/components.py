@@ -342,6 +342,14 @@ class AlgoComponentDecoMixin(object):
     def mixin_execute_overwrite(cls):
         return cls._MIXIN_EXECUTE_OVERWRITE
 
+    @classmethod
+    def mixin_execute_companion(cls):
+        """Find on which class "super" should be called (if_MIXIN_EXECUTE_OVERWRITE is used)."""
+        comp = getattr(cls, '_algo_meta_execute_companion', ())
+        if not comp:
+            raise RuntimeError("unable to find a suitable companion class")
+        return comp
+
 
 class AlgoComponentMpiDecoMixin(AlgoComponentDecoMixin):
     """
@@ -420,7 +428,7 @@ class AlgoComponentMeta(footprints.FootprintBaseMeta):
 
     def __new__(cls, n, b, d):
         # Mixin candidates: a mixin must only be dealt with once hence the
-        # condition on issubclass(base, AlgoComponent
+        # condition on issubclass(base, AlgoComponent)
         candidates = [base for base in b
                       if (issubclass(base, AlgoComponentDecoMixin) and
                           not issubclass(base, AlgoComponent))]
@@ -434,16 +442,18 @@ class AlgoComponentMeta(footprints.FootprintBaseMeta):
                 base.mixin_tweak_footprint(fplocal)
             d['_footprint'] = fplocal
         # Overwrite the execute method...
-        todobases = [base for base in candidates if base.mixin_execute_overwrite() is not None]
-        if len(todobases) > 1:
+        todobases_exc = [base for base in candidates if base.mixin_execute_overwrite() is not None]
+        if len(todobases_exc) > 1:
             raise RuntimeError('Cannot overwrite < execute > multiple times: {:s}'
-                               .format(','.join([base.__name__ for base in todobases])))
-        if todobases:
+                               .format(','.join([base.__name__ for base in todobases_exc])))
+        if todobases_exc:
             if 'execute' in d:
                 raise RuntimeError('< execute > is already defined in the target class: cannot proceed')
-            d['execute'] = todobases[0].mixin_execute_overwrite()
+            d['execute'] = todobases_exc[0].mixin_execute_overwrite()
         # Create the class as usual
         fpcls = super(AlgoComponentMeta, cls).__new__(cls, n, b, d)
+        if todobases_exc:
+            setattr(fpcls, '_algo_meta_execute_companion', fpcls)
         # Apply decorators
         todobases = [base for base in candidates if base.MIXIN_AUTO_DECO]
         for base in reversed(todobases):

@@ -328,7 +328,7 @@ class _GetBDMDecoMixin(AlgoComponentDecoMixin):
                 self.system.cat(self.defaut_queryname, output=False)
                 # Launch the BDM request and catch
                 try:
-                    super(self.__class__, self).execute(rh, opts)
+                    super(self.mixin_execute_companion(), self).execute(rh, opts)
                 except ExecutionError:
                     rc_all = False
                     logger.error('Problem during the BDM request of %s.', query_filename)
