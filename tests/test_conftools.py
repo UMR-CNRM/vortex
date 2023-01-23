@@ -75,12 +75,15 @@ class Coupling3DVConfToolTest(unittest.TestCase):
                              '15': '1-12-1', '21': '1-12-1', '18': '1-36-1',
                              '09': '1-12-1', '06': '1-36-1'}}
 
+    _FINALTERM = None
+
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.wtool = footprints.proxy.conftool(kind='couplingoffset',
                                                cplhhbase=self._BASE, cplvapp=self._VAPP,
                                                cplvconf=self._VCONF, cplcutoff=self._CUTOFF,
-                                               cplsteps=self._STEPS, verbose=False)
+                                               cplsteps=self._STEPS, finalterm=self._FINALTERM,
+                                               verbose=False)
 
     def test_weird_coupling_prepare(self):
         self.assertListEqual(self.wtool.prepare_terms('2017010100', 'production', 'arpege', 'courtfr'),
@@ -209,6 +212,28 @@ class Coupling3DVbisConfToolTest(Coupling3DVConfToolTest):
               'production': {'03': '1-12-1', '00': '1-42-1', '12': '1-36-1',
                              '15': '1-12-1', '21': '1-12-1', '18': '1-36-1',
                              '09': '1-12-1', '06': '1-36-1'}}
+
+
+class Coupling3DVterConfToolTest(Coupling3DVConfToolTest):
+    """Same tests but using the 'default' feature."""
+
+    _VAPP = {'default': 'arpege'}
+
+    _VCONF = {'default': '4dvarfr',
+              'production': {'00': 'courtfr', }}
+
+    _CUTOFF = {'default': 'production',
+               'assim': {'00': 'assim', '06': 'assim', '05': 'assim',
+                         '11': 'assim', '12': 'assim', '17': 'assim',
+                         '18': 'assim', '23': 'assim'}, }
+
+    _STEPS = {'assim': {'default': 'finalterm'},
+              'production': {'default': '1-finalterm-1'}}
+
+    _FINALTERM = {'assim': {'default': 1},
+                  'production': {'03': 12, '00': '42', '12': Time(36),
+                                 '15': 12, '21': 12, '18': 36,
+                                 '09': '12', '06': '36'}}
 
 
 @loggers.unittestGlobalLevel(tloglevel)

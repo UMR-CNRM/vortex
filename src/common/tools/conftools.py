@@ -160,6 +160,11 @@ class CouplingOffsetConfTool(ConfTool):
                 info = 'For a given cutoff and hour, gives then list of requested terms.',
                 type = FPDict,
             ),
+            finalterm = dict(
+                info = 'For a given cutoff and hour, the final term (for "finalterm" token substitution)',
+                type = FPDict,
+                optional = True
+            ),
             refill_cutoff = dict(
                 values = ['assim', 'production', 'all'],
                 info = 'By default, what is the cutoff name of the refill task.',
@@ -219,6 +224,15 @@ class CouplingOffsetConfTool(ConfTool):
         else:
             t_model = self._reshape_inputs(self.cplmodel)
         t_xpid = self._reshape_inputs(self.cplxpid, class_default='')
+
+        # If relevent, do "finalterm" token substitution
+        if self.finalterm is not None:
+            t_finalterm = self._reshape_inputs(self.finalterm, value_reclass=str)
+            for c, cv in t_hhbase.items():
+                for hh in cv.keys():
+                    if isinstance(t_steps[c][hh], six.string_types):
+                        t_steps[c][hh] = t_steps[c][hh].replace('finalterm',
+                                                                t_finalterm[c][hh])
 
         # Build the dictionary of CouplingInfos objects
         self._cpl_data = collections.defaultdict(dict)
@@ -567,7 +581,7 @@ class AggregatedCouplingOffsetConfTool(ConfTool):
             print()
             print('#### Aggregated Coupling configuration tool initialised ####')
             print('It is made of {:d} nominal configuration tool(s)'.format(len(self.nominal)))
-            if self.use_alternates:
+            if self.alternate and self.use_alternates:
                 print('+ {:d} rescue-mode configuration tool(s)'.format(len(self.alternate)))
             else:
                 print('No rescue-mode configuration tool is considered (deactivated)')
