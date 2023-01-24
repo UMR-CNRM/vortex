@@ -1,17 +1,12 @@
-# -*- coding: utf-8 -*-
-
 """
 Created on 13 nov. 2018
 
 @author: meunierlf
 """
 
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
-
 import contextlib
 import copy
+import io
 import os
 import shutil
 import sys
@@ -26,7 +21,7 @@ tloglevel = 'critical'
 
 @contextlib.contextmanager
 def capture(command, *args, **kwargs):
-    out, sys.stdout = sys.stdout, six.StringIO()
+    out, sys.stdout = sys.stdout, io.StringIO()
     try:
         command(*args, **kwargs)
         sys.stdout.seek(0)
@@ -49,12 +44,8 @@ class TestContainers(unittest.TestCase):
         shutil.rmtree(self.tmpdir)
 
     def test_incore(self):
-        if six.PY3:
-            teststr = 'Coucou héhéhé'
-            testraw = teststr.encode('utf_8')
-        else:
-            teststr = 'Coucou hehehe'
-            testraw = teststr.encode('ascii')
+        teststr = 'Coucou héhéhé'
+        testraw = teststr.encode('utf_8')
         # Default write, rewind, read
         inc1 = cts.InCore(incore=True)
         self.assertEqual(inc1.actualpath(), 'NotSpooled')
@@ -112,9 +103,8 @@ class TestContainers(unittest.TestCase):
         self.assertEqual(inc1.actualencoding, 'utf-8')
         # This will have no effect since mode/encoding is hardwired
         with inc1.preferred_decoding(byte=True):
-            if six.PY3:
-                with self.assertRaises(TypeError):
-                    inc1.write(testraw)
+            with self.assertRaises(TypeError):
+                inc1.write(testraw)
             inc1.write('\n' + teststr)
         self.assertEqual(inc1.readlines(), [teststr + '\n', teststr])
         inc1.rewind()
@@ -145,9 +135,8 @@ class TestContainers(unittest.TestCase):
         inc2.write(teststr)
         # This will have no effect since mode/encoding is hardwired
         with inc2.preferred_decoding(byte=True):
-            if six.PY3:
-                with self.assertRaises(TypeError):
-                    inc2.write(testraw)
+            with self.assertRaises(TypeError):
+                inc2.write(testraw)
             inc2.write('\n' + teststr)
         self.assertEqual(inc2.readlines(), [teststr + '\n', teststr])
         inc2.close()

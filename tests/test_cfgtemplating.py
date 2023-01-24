@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import os
-
+import tempfile
 import unittest
 from unittest import TestCase
 
-import tempfile
 import vortex
 
 from vortex.util.config import load_template

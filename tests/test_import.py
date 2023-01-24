@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-from unittest import TestCase, main
 import importlib
 import io
 import json
 import os
 import sys
+from unittest import TestCase, main
 
 # Otherwise os.getcwd may fail with nose
 os.chdir(os.environ['HOME'])
@@ -38,7 +34,7 @@ non_standard_dep = {'yaml': ['bronx.datagrip.misc',
 tloglevel = 'critical'
 
 
-class DynamicTerminal(object):
+class DynamicTerminal:
 
     def __init__(self, header, total):
         self.active_terminal = False

@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-
 numpy_looks_fine = True
 try:
     import numpy as np
@@ -62,7 +56,7 @@ t_filter = '''
 }'''
 
 
-class _FakeRH(object):
+class _FakeRH:
 
     def __init__(self, infile, actualfmt):
         self.container = vortex.data.containers.SingleFile(filename=infile,
@@ -96,17 +90,14 @@ class _EpyTestBase(unittest.TestCase):
         return self.sh.path.join(self.datapath, demofile)
 
     def assertDictLikeEqual(self, new, ref):
-        if six.PY2:
-            self.assertItemsEqual(new, ref)
-        else:
-            self.assertCountEqual(new, ref)
+        self.assertCountEqual(new, ref)
 
 
 @loggers.unittestGlobalLevel(tloglevel)
 class TestEpygramFaContents(_EpyTestBase):
 
     def setUp(self):
-        super(TestEpygramFaContents, self).setUp(needFA=True)
+        super().setUp(needFA=True)
 
     def test_fa_contents(self):
         fa_c = vortex.data.containers.SingleFile(filename=self.demofile('historic.light.fa'),
@@ -125,7 +116,7 @@ class TestEpygramFaContents(_EpyTestBase):
 class TestEpygramGribContents(_EpyTestBase):
 
     def setUp(self):
-        super(TestEpygramGribContents, self).setUp(needGRIB=True)
+        super().setUp(needGRIB=True)
 
     def test_grib_contents(self):
         grib_c = vortex.data.containers.SingleFile(filename=self.demofile('fullpos.light.grib'),
@@ -141,7 +132,7 @@ class TestEpygramGribContents(_EpyTestBase):
 class _LocDirEpyTestBase(_EpyTestBase):
 
     def setUp(self, **kwargs):
-        super(_LocDirEpyTestBase, self).setUp(**kwargs)
+        super().setUp(**kwargs)
         # Work in a dedicated directory
         self.tmpdir = tempfile.mkdtemp(suffix='test_epygram')
         self.oldpwd = self.sh.pwd()
@@ -159,7 +150,7 @@ class _LocDirEpyTestBase(_EpyTestBase):
 class TestEpygramAdvanced(_LocDirEpyTestBase):
 
     def setUp(self):
-        super(TestEpygramAdvanced, self).setUp(needFA=True)
+        super().setUp(needFA=True)
 
     def test_epygram_hooks(self):
         self.sh.cp(self.demofile('historic.verylight.fa'),
@@ -206,7 +197,7 @@ class TestEpygramAdvanced(_LocDirEpyTestBase):
 class TestEpygramBasedGribFilter(_LocDirEpyTestBase):
 
     def setUp(self):
-        super(TestEpygramBasedGribFilter, self).setUp(needGRIB=True)
+        super().setUp(needGRIB=True)
 
     @staticmethod
     def _simplified_grib_fid(fid):

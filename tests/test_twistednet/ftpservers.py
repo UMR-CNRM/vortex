@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 A set of servers.
 """
-
-from __future__ import print_function, division, absolute_import, unicode_literals
 
 import contextlib
 import itertools
@@ -31,7 +27,7 @@ logger = loggers.getLogger(__name__)
 class TwistedBrokenFTP(FTP):
 
     def __init__(self, *kargs, **kwargs):
-        super(TwistedBrokenFTP, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self.pass_ticker = itertools.repeat(True)
         self.retr_ticker = itertools.repeat(True)
         self.stor_ticker = itertools.repeat(True)
@@ -40,7 +36,7 @@ class TwistedBrokenFTP(FTP):
         what = next(self.pass_ticker)
         logger.info('ServerSide: ftp_PASS: ticker returned %s.', what)
         if what is True:
-            return super(TwistedBrokenFTP, self).ftp_PASS(password)
+            return super().ftp_PASS(password)
         else:
             return (what, )
 
@@ -48,7 +44,7 @@ class TwistedBrokenFTP(FTP):
         what = next(self.retr_ticker)
         logger.info('ServerSide: ftp_RETR: ticker returned %s.', what)
         if what is True:
-            return super(TwistedBrokenFTP, self).ftp_RETR(path)
+            return super().ftp_RETR(path)
         else:
             return (what, )
 
@@ -56,7 +52,7 @@ class TwistedBrokenFTP(FTP):
         what = next(self.stor_ticker)
         logger.info('ServerSide: ftp_STOR: ticker returned %s.', what)
         if what is True:
-            return super(TwistedBrokenFTP, self).ftp_STOR(path)
+            return super().ftp_STOR(path)
         else:
             return (what, )
 
@@ -98,7 +94,7 @@ class TwistedBrokenFTPFactory(FTPFactory):
         return p
 
 
-class TestFTPServer(object):
+class TestFTPServer:
 
     def __init__(self, port, serverroot, user, password,
                  pass_seq=(), retr_seq=(), stor_seq=()):

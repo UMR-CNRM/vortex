@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import os
 import tempfile
 import unittest
@@ -21,7 +19,7 @@ assert iga.data.stores
 tloglevel = 'error'
 
 
-class FooResource(object):
+class FooResource:
 
     def __init__(self, gvar='tools_lfi'):
         self.gvar = gvar
@@ -79,7 +77,7 @@ class TestGcoGget(PrivateCocoonGcoTest):
     _TEST_SESSION_NAME = 'test_session_gco_gget_1'
 
     def setUp(self):
-        super(TestGcoGget, self).setUp()
+        super().setUp()
         self.fakegget = os.path.join(DATAPATHTEST, 'fake_gget')
 
     def test_paths(self):
@@ -99,7 +97,7 @@ class TestGcoGget(PrivateCocoonGcoTest):
 
     def assert_mantra(self, somefile):
         self.assertTrue(os.path.isfile(somefile))
-        with open(somefile, 'r') as fh_s:
+        with open(somefile) as fh_s:
             self.assertEqual(fh_s.read(), 'This is a fake gget file.')
 
     def test_central_store_alone(self):
@@ -291,10 +289,10 @@ class TestGcoGget(PrivateCocoonGcoTest):
             self.assertEqual(st.check(uriparse('gget://opgco.cache.fr/tampon/fake_resource.01'), dict()).st_size,
                              6)
             self.assertSetEqual(set(st.list(uriparse('gget://opgco.cache.fr/tampon/'), dict())),
-                                set(['extract.mars.ifs.01.tgz',
-                                     'extract.mars.ifs.01',
-                                     'fake_resource.01',
-                                     'al43t2_arome@ifs-op5.01.nam']))
+                                {'extract.mars.ifs.01.tgz',
+                                 'extract.mars.ifs.01',
+                                 'fake_resource.01',
+                                 'al43t2_arome@ifs-op5.01.nam'})
             self.assertTrue(st.get(uriparse('gget://opgco.cache.fr/tampon/fake_resource.01'),
                                    'fake1', dict()))
             with open('fake1') as fhf:
@@ -399,14 +397,14 @@ class TestUgetUenv(PrivateCocoonGcoTest):
     _TEST_SESSION_NAME = 'test_session_gco_uget_uenv_1'
 
     def setUp(self):
-        super(TestUgetUenv, self).setUp()
+        super().setUp()
         # Untar the Uget sample data
         datapath = self.sh.path.join(self.sh.glove.siteroot, 'tests', 'data', 'uget_uenv_fake.tar.bz2')
         self.sh.untar(datapath, verbose=False)
 
     def tearDown(self):
         uenv.clearall()
-        super(TestUgetUenv, self).tearDown()
+        super().tearDown()
 
     def test_basics(self):
         uenv.contents('uget:cy42_op2.06@huguette', 'uget', 'uget.multi.fr')
@@ -600,7 +598,7 @@ class TestUgetUenv(PrivateCocoonGcoTest):
         # Test list
         self.assertSetEqual(set(stcache.list(uriparse('uget://uget.multi.fr/data/@huguette'),
                                              dict())),
-                            set(['grib_api.def.02.tgz', 'mask.atms.01b', 'rrtm.const.02b.tgz']))
+                            {'grib_api.def.02.tgz', 'mask.atms.01b', 'rrtm.const.02b.tgz'})
         self.assertEqual(stcache.list(uriparse('uget://uget.multi.fr/data/grib_api@huguette'),
                                       dict()),
                          [])

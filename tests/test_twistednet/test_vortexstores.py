@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 Test Vortex's Archive Stores + The folder special addon.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 import hashlib
 
 from bronx.fancies import loggers
@@ -111,7 +107,7 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
                 stM = self.vortex_store('vortex.multi.fr', storehash='md5')
                 self.assertTrue(st.put('flisting1', _URIl1, dict(fmt='ascii', delayed=False)))
                 m_listing = hashlib.md5()
-                m_listing.update('forecast_list'.encode())
+                m_listing.update(b'forecast_list')
                 self.assertVortexRemote(_PATHl1 + '.md5', m_listing.hexdigest())
                 self.assertTrue(st.check(_URIl1, dict(fmt='ascii')))
                 self.assertTrue(st.get(_URIl1, 'toto', dict(fmt='ascii')))
@@ -167,7 +163,7 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
                 self.assertTrue(xloc)
                 self.assertTrue(sh.readonly(xloc[0]))
                 self.assertTrue(stC.get(_SA_URIl1_CHECK, 'toto_bis', dict(fmt='ascii')))
-                with open('toto', 'r') as fhl:
+                with open('toto') as fhl:
                     self.assertFile('toto_bis', fhl.read())
                 sh.rm('toto')
                 sh.rm('toto_bis')
@@ -175,7 +171,7 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
                 self.assertTrue(stC.get(_SA_URIl1, 'toto', dict(fmt='ascii', intent="inout")))
                 self.assertTrue(sh.wperm('toto'))
                 self.assertTrue(sh.readonly(xloc[0]))
-                with open('toto', 'r') as fhl:
+                with open('toto') as fhl:
                     self.assertFile(xloc[0], fhl.read())
                 sh.rm('toto')
 

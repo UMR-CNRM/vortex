@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Base classes for unittests that require an FTP server.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import tempfile
 import unittest
@@ -75,7 +71,7 @@ class FtpBasedTestCase(unittest.TestCase):
 class NetrcFtpBasedTestCase(FtpBasedTestCase):
 
     def setUp(self):
-        super(NetrcFtpBasedTestCase, self).setUp()
+        super().setUp()
         # Fake NetRC
         self._fnrc = self.sh.path.join(self.tdir, 'fakenetrc')
         with open(self._fnrc, 'w') as fhnrc:
@@ -87,14 +83,14 @@ class NetrcFtpBasedTestCase(FtpBasedTestCase):
 class MtoolNetrcFtpBasedTestCase(NetrcFtpBasedTestCase):
 
     def setUp(self):
-        super(MtoolNetrcFtpBasedTestCase, self).setUp()
+        super().setUp()
         # Deal with the MTOOLDIR variable
         self._old_mtooldir = self.sh.env.get('MTOOLDIR', None)
         self.sh.env['MTOOLDIR'] = self.sh.path.join(self.udir, 'mtool')
         self.sh.mkdir(self.sh.env['MTOOLDIR'])
 
     def tearDown(self):
-        super(MtoolNetrcFtpBasedTestCase, self).tearDown()
+        super().tearDown()
         if self._old_mtooldir:
             self.sh.env['MTOOLDIR'] = self._old_mtooldir
         else:

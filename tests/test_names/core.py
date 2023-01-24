@@ -1,20 +1,15 @@
-# -*- coding: utf-8 -*-
-
 """
 Core classes needed to run names tests.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-from six.moves import urllib
-
 import collections
+import collections.abc
 import functools
 import hashlib
 import os
 import pprint
+import urllib
 
-import six
 import yaml
 
 import bronx.stdtypes.catalog
@@ -22,7 +17,6 @@ import bronx.stdtypes.date
 import footprints as fp
 import gco
 import vortex.syntax.stdattrs
-from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.fancies.loggers import contextboundGlobalLevel
 from .utils import YamlOrderedDict
@@ -65,17 +59,17 @@ class TestNamesComparisonError(TestNamesError):
     def __init__(self, defaults, desc, msg=None):
         self._defaults = defaults
         self._desc = desc
-        super(TestNamesComparisonError, self).__init__(msg if msg else self._DEFAULT_MSG)
+        super().__init__(msg if msg else self._DEFAULT_MSG)
 
     def __reduce__(self):
         """What to do after pickling..."""
         return (TestNamesComparisonError,
                 (self._defaults,
                  self._desc,
-                 super(TestNamesComparisonError, self).__str__()))
+                 super().__str__()))
 
     def __str__(self):
-        outstr = super(TestNamesComparisonError, self).__str__() + '\n'
+        outstr = super().__str__() + '\n'
         outstr += 'List of defaults\n{!s}\n'.format(self._defaults)
         outstr += 'List of parameters\n{!s}'.format(self._desc)
         return outstr
@@ -87,16 +81,16 @@ class TestNamesComparisonDiffError(TestNamesComparisonError):
     def __init__(self, defaults, desc, ref, me, msg=None):
         self._ref = ref
         self._me = me
-        super(TestNamesComparisonDiffError, self).__init__(defaults, desc, msg=None)
+        super().__init__(defaults, desc, msg=None)
 
     def __reduce__(self):
         """What to do after pickling..."""
-        _, (default, desc, msg) = super(TestNamesComparisonDiffError, self).__reduce__()
+        _, (default, desc, msg) = super().__reduce__()
         return (TestNamesComparisonDiffError,
                 (default, desc, self._ref, self._me, msg))
 
     def __str__(self):
-        outstr = super(TestNamesComparisonDiffError, self).__str__() + '\n'
+        outstr = super().__str__() + '\n'
         outstr += '(me) {0._me!s}\n!=   {0._ref!s} (ref)'.format(self)
         return outstr
 
@@ -110,7 +104,7 @@ class TestNamesComparisonNoRefError(TestNamesComparisonError):
 # ------------------------------------------------------------------------------
 # Main Test Classes
 
-class TestDriver(object):
+class TestDriver:
     """Handles all the tests contained in a YAML definition file.
 
     From the user's point of view, this is the class to work with.
@@ -211,9 +205,9 @@ class TestDriver(object):
                 # Deal with every defined Genv
                 for genv in self._genvs:
                     try:
-                        with open(os.path.join(self._registerpath, 'genv', genv), 'r') as fhgenv:
+                        with open(os.path.join(self._registerpath, 'genv', genv)) as fhgenv:
                             genvstuff = [l.rstrip('\n') for l in fhgenv.readlines()]
-                    except IOError:
+                    except OSError:
                         logger.error("Genv cycle << %s >> not found.", genv)
                         raise
                     gco.tools.genv.autofill(cycle=genv, gcout=genvstuff)
@@ -257,7 +251,7 @@ class TestDriver(object):
         self._refs = list()
         if not os.path.isfile(self._resultfile):
             raise TestNamesMissingReferenceError('The {:s} file is missing'.format(self._resultfile))
-        with open(self._resultfile, 'r') as fhyaml:
+        with open(self._resultfile) as fhyaml:
             stackdump = yaml.load(fhyaml, Loader=TestYamlLoader)
         for tstack in stackdump:
             self._refs.append(TestsStack(items=tstack))
@@ -275,7 +269,7 @@ class TestsStack(bronx.stdtypes.catalog.Catalog):
     """Contains a set of SingleTests."""
 
     def __init__(self, *kargs, **kwargs):
-        super(TestsStack, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self._lookupmap = collections.defaultdict(list)
         for item in self:
             self._lookupmap[item.desc].append(item)
@@ -285,7 +279,7 @@ class TestsStack(bronx.stdtypes.catalog.Catalog):
 
         :param stuff: a tuple of :class:`SingleTest` objects.
         """
-        super(TestsStack, self).add(*stuff)
+        super().add(*stuff)
         for item in stuff:
             self._lookupmap[item.desc].append(item)
 
@@ -353,7 +347,7 @@ class TestsStack(bronx.stdtypes.catalog.Catalog):
                                  str(test.desc), str(default))
 
 
-class SingleTest(object):
+class SingleTest:
     """Handle a single test case (i.e. A single resource's Handler to be tested)."""
 
     _DEFAULT_CONTAINER = fp.proxy.container(incore=True)
@@ -423,7 +417,7 @@ class SingleTest(object):
 # ------------------------------------------------------------------------------
 # Utility classes that handles footprint's descriptions and test results
 
-class TestResults(collections_abc.Mapping):
+class TestResults(collections.abc.Mapping):
     """Utility class that holds test's results."""
 
     def __init__(self):
@@ -442,8 +436,7 @@ class TestResults(collections_abc.Mapping):
         return len(self._results)
 
     def __iter__(self):
-        for k in self._results:
-            yield k
+        yield from self._results
 
     def __contains__(self, default):
         return default in self._results
@@ -453,8 +446,7 @@ class TestResults(collections_abc.Mapping):
 
     def items(self):
         """Iterate over results."""
-        for k, v in self._results.items():
-            yield k, v
+        yield from self._results.items()
 
     def getparsed(self, default):
         """Return a result dictinary wher URI are parsed."""
@@ -498,7 +490,7 @@ class TestResults(collections_abc.Mapping):
 
 
 @functools.total_ordering
-class TestParameters(collections_abc.Hashable):
+class TestParameters(collections.abc.Hashable):
     """Utility class that holds a footprint's description."""
 
     def __init__(self, desc):
@@ -523,17 +515,12 @@ class TestParameters(collections_abc.Hashable):
         else:
             return False
 
-    if six.PY3:
-        @staticmethod
-        def _py27_like_gt(me, other):
-            try:
-                return me > other
-            except TypeError:
-                return type(me).__name__ > type(other).__name__
-    else:
-        @staticmethod
-        def _py27_like_gt(me, other):
+    @staticmethod
+    def _py27_like_gt(me, other):
+        try:
             return me > other
+        except TypeError:
+            return type(me).__name__ > type(other).__name__
 
     def __gt__(self, other):
         for i_me, i_other in zip(self._desc, other._desc):
@@ -574,9 +561,6 @@ TestYamlDumper.add_representer(
                                               data.items()))
 
 TestYamlLoader = yaml.loader.SafeLoader
-if six.PY2:
-    TestYamlLoader.add_constructor(unicode, lambda self, data: self.represent_str(str(data)))
-
 TestYamlLoader.add_constructor('!test_names.core.SingleTest', SingleTest.from_yaml)
 TestYamlLoader.add_constructor('!test_names.core.TestParameters', TestParameters.from_yaml)
 TestYamlLoader.add_constructor('!test_names.core.TestResults', TestResults.from_yaml)

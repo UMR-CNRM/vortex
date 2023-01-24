@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import re
 import sys
 import tempfile
 import unittest
-
-import six
 
 import footprints
 import vortex
@@ -115,11 +109,6 @@ class MyTaylorRunAlgoWorker(TaylorVortexWorker):
 
 class TestTaylorRunAlgo(unittest.TestCase):
 
-    if six.PY2:
-        def assertRegex(self, text, regex, msg=None):
-            """This method should be removed when python2 dies."""
-            self.assertRegexpMatches(text, regex, msg)
-
     def setUp(self):
         # Generate a temporary directory
         self.sh = vortex.sessions.current().system()
@@ -143,7 +132,7 @@ class TestTaylorRunAlgo(unittest.TestCase):
 
     def assertOutputs(self, prefix, loopcount):
         for i in range(loopcount):
-            with open('{:s}_{:06d}.result'.format(prefix, i), 'r') as fhin:
+            with open('{:s}_{:06d}.result'.format(prefix, i)) as fhin:
                 self.assertEqual(fhin.read(),
                                  "Test write {:06d}".format(i))
 
@@ -154,7 +143,7 @@ class TestTaylorRunAlgo(unittest.TestCase):
             if re.match(r'{:s}_process{:06d}_\d+_stdeo.txt'.format(prefix, loopcount), a_file):
                 found = a_file
         self.assertTrue(found)
-        with open(found, 'r') as fhin:
+        with open(found) as fhin:
             alllines = fhin.readlines()
         self.assertRegex(alllines[0], "^Test print {:06d}$".format(loopcount))
         self.assertRegex(alllines[1], "^.*Test log   {:06d}".format(loopcount))

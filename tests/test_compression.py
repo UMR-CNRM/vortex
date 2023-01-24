@@ -1,10 +1,5 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import hashlib
 import os
-import six
 import tempfile
 import unittest
 
@@ -15,7 +10,7 @@ from vortex.tools.compression import CompressionPipeline
 class TestCompression(unittest.TestCase):
 
     def setUp(self):
-        super(TestCompression, self).setUp()
+        super().setUp()
         # Session + System
         self.t = vortex.sessions.current()
         self.sh = self.t.system()
@@ -40,7 +35,7 @@ class TestCompression(unittest.TestCase):
         self.sh.remove(self.tmpdir)
 
     def assertDataConsistency(self, source):
-        if isinstance(source, six.string_types):
+        if isinstance(source, str):
             with open(source, 'rb') as fhin:
                 data = fhin.read()
         else:

@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
+import io
 import unittest
-import six
 
 from vortex.util.iosponge import IoSponge
 
@@ -11,7 +7,7 @@ from vortex.util.iosponge import IoSponge
 class TestFakeIo(unittest.TestCase):
 
     def get_string_io(self, size):
-        s_io = six.BytesIO()
+        s_io = io.BytesIO()
         s_io.write(b'0' * size)
         s_io.seek(0)
         return s_io

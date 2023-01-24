@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 """
 Strictly speaking, it is not a unit-test in a sense that it leverages most of
 the Vortex package. However, it ensures that some of the most heavily used
@@ -414,7 +410,7 @@ class UtSimpleWorkflow(TestCase):
 
     def assertIntegrity(self, rh, finalstatement='#end'):
         self.assertTrue(rh.complete)
-        with open(rh.container.iotarget(), 'r') as fhin:
+        with open(rh.container.iotarget()) as fhin:
             lines = fhin.readlines()
             self.assertEqual(lines[0], '{:s}\n'.format(rh.resource.kind))
             i = 1
@@ -561,13 +557,13 @@ class UtSimpleWorkflow(TestCase):
         self.assertIn(loc0, verb_description)
         self.assertIn(loc1, verb_description)
         phub.flush(priority_threshold=prestaging_p.normal)
-        self.assertTrue(self.sh.path.exists('prestaging_req_testcache_pri{0:d}.txt'
+        self.assertTrue(self.sh.path.exists('prestaging_req_testcache_pri{:d}.txt'
                                             .format(prestaging_p.normal)))
-        self.assertFalse(self.sh.path.exists('prestaging_req_testcache_pri{0:d}.txt'
+        self.assertFalse(self.sh.path.exists('prestaging_req_testcache_pri{:d}.txt'
                                              .format(prestaging_p.urgent)))
-        self.assertFalse(self.sh.path.exists('prestaging_req_testcache_pri{0:d}.txt'
+        self.assertFalse(self.sh.path.exists('prestaging_req_testcache_pri{:d}.txt'
                                              .format(prestaging_p.low)))
-        with open('prestaging_req_testcache_pri{0:d}.txt'.format(prestaging_p.normal)) as fh_req:
+        with open('prestaging_req_testcache_pri{:d}.txt'.format(prestaging_p.normal)) as fh_req:
             self.assertEqual(fh_req.read(), '\n'.join(sorted([loc0, loc1])))
         verb_description = str(phub)
         self.assertIn(loc0, verb_description)

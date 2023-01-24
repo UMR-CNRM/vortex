@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 Defines an UnitTest class that can be launched using Nose.
 
 The tests will be skipped if PyYAML is missing.
 """
-
-from __future__ import print_function, division, absolute_import, unicode_literals
 
 from unittest import TestCase, SkipTest
 
@@ -31,7 +27,7 @@ class TestNames(TestCase):
 
     def setUp(self):
         """Check if PyYAML is available."""
-        super(TestNames, self).setUp()
+        super().setUp()
         if yaml is None:
             raise SkipTest("PyYAML seems to be missing")
 

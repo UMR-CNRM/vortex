@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import os
 import shutil
 import tempfile
@@ -53,7 +50,7 @@ class TestOSExtendedBasics(unittest.TestCase):
 
     def assert_tfile(self, path=_TESTFILE_DEFAULT):
         self.assertTrue(os.path.isfile(path))
-        with open(path, 'r') as fhtest:
+        with open(path) as fhtest:
             self.assertEqual(fhtest.read(), self._TESTFILE_MSG)
 
     def assert_sameinode(self, file1, file2):

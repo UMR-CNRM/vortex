@@ -1,10 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import contextlib
-
-import six
-
 import os
 import tempfile
 import unittest
@@ -84,7 +78,7 @@ class TestMkjobDetect(unittest.TestCase):
             self.sh.cd('BLOP@leffe/arpege/4dvarfr')
             fullp = self.sh.pwd()
             tr_opts, auto_opts, opts1 = _mkjob_opts_detect_1(self.t,
-                                                             mkopts=six.text_type(opts),
+                                                             mkopts=str(opts),
                                                              ** opts)
 
             iniparser = ExtendedReadOnlyConfigParser(inifile='@job-default.ini')

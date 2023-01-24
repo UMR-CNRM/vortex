@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
+import io
 import os
 import sys
 import unittest
 from contextlib import contextmanager
-
-import six
 
 import arpifs_listings
 import footprints
@@ -49,7 +44,7 @@ def _find_testfile(fname):
 
 @contextmanager
 def capture(command, *args, **kwargs):
-    out, sys.stdout = sys.stdout, six.StringIO()
+    out, sys.stdout = sys.stdout, io.StringIO()
     try:
         command(*args, **kwargs)
         sys.stdout.seek(0)
@@ -59,11 +54,6 @@ def capture(command, *args, **kwargs):
 
 
 class TestArpIfsIntegration(unittest.TestCase):
-
-    if six.PY2:
-        def assertRegex(self, text, regex, msg=None):
-            """This method should be removed when python2 dies."""
-            self.assertRegexpMatches(text, regex, msg)
 
     def test_addons_diff(self):
         self.maxDiff = None

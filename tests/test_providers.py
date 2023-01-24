@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from copy import deepcopy
 import os
 import tempfile
@@ -20,7 +18,7 @@ DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 TLOGLEVEL = 9999
 
 
-class DummyRessource(object):
+class DummyRessource:
 
     def __init__(self, realkind='dummy', bname='dummyres', cutoff='assim',
                  date=Date(2000, 1, 1, 0, 0, 0), term=0, model='arpege'):

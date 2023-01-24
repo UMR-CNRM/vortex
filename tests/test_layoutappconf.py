@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import unittest
 
 from vortex.layout.appconf import ConfigSet
@@ -39,10 +36,10 @@ class TestConfigSet(unittest.TestCase):
         self.assertDictEqual(cs.tdict2, {'toto': 1, 'tata': 2})
         # What
         self.assertSetEqual(set(cs),
-                            set(['blop', 'tlist', 'tdict', 'tdict2', 'tdict3_map', 'tgeometry', 'tgeometries', 'tr']))
+                            {'blop', 'tlist', 'tdict', 'tdict2', 'tdict3_map', 'tgeometry', 'tgeometries', 'tr'})
         del cs.tdict3_MAP
         self.assertSetEqual(set(cs),
-                            set(['blop', 'tlist', 'tdict', 'tdict2', 'tgeometry', 'tgeometries', 'tr']))
+                            {'blop', 'tlist', 'tdict', 'tdict2', 'tgeometry', 'tgeometries', 'tr'})
         cs.clear()
         self.assertEqual(len(cs), 0)
 

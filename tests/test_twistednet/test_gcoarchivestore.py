@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Test Vortex's FTP client
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os
 
@@ -47,13 +43,13 @@ class TestGcoArchiveStore(ftpunittests.MtoolNetrcFtpBasedTestCase):
         self.testconf = self.sh.path.join(DATAPATHTEST, 'target-test.ini')
         self.sh.target(inifile=self.testconf, sysname='Linux')
         # tmp-directory, FTP server setup and Netrc creation
-        super(TestGcoArchiveStore, self).setUp()
+        super().setUp()
         # Tweak the HOME directory in order to trick Uenv/Uget hack store
         self.sh.env.HOME = self.tdir
 
     def tearDown(self):
         # Do some cleaning
-        super(TestGcoArchiveStore, self).tearDown()
+        super().tearDown()
         # Go back to the original session
         self.cursession.activate()
 

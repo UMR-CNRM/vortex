@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import tempfile
 from unittest import TestCase, main
 
@@ -102,7 +98,7 @@ class UtSession(TestCase):
         newsession.rundir = self.tmpdir
         newsession.context.cocoon()
         self.assertEqual(newsession.context.rundir,
-                         self.sh.path.join(self.tmpdir, '{0:s}/scrontch'.format(self.tag1)))
+                         self.sh.path.join(self.tmpdir, '{:s}/scrontch'.format(self.tag1)))
         newsession.system().mkdir('toto')
         newsession.system().cd('toto')
         # Switch back to the original session
@@ -129,7 +125,7 @@ class UtSession(TestCase):
         self.assertTrue(newsession.context.env.active())
         # The working directory was restored
         self.assertEqual(self.sh.path.realpath(self.sh.pwd()),
-                         self.sh.path.join(self.tmpdir, '{0:s}/scrontch/toto'.format(self.tag1)))
+                         self.sh.path.join(self.tmpdir, '{:s}/scrontch/toto'.format(self.tag1)))
 
 
 if __name__ == '__main__':

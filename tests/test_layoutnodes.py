@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from collections import defaultdict, OrderedDict
 import tempfile
 import unittest
@@ -129,12 +126,12 @@ tloglevel = 'CRITICAL'
 class TmpTask(Task):
 
     def build(self):
-        super(TmpTask, self).build()
+        super().build()
         _GLOBAL_OBS.notify_new(self, dict(tag=self.tag))
 
     def complete(self):
         _GLOBAL_OBS.notify_del(self, dict(tag=self.tag))
-        super(TmpTask, self).complete()
+        super().complete()
 
     def refill(self, **kw):
         """Populates the vortex cache with expected input flow data.
@@ -310,7 +307,7 @@ class TestHeavyNodesStuff(unittest.TestCase):
                 self.assertEqual(self.spy.defaults[tid]['cutoff'], 'production')
                 self.assertEqual(self.spy.defaults[tid]['cycle'], 'cy42_peace-op2.21')
             # Cycles
-            self.assertSetEqual(self.registered, set(['cy42_peace-op2.21', 'cy42_op2.67']))
+            self.assertSetEqual(self.registered, {'cy42_peace-op2.21', 'cy42_op2.67'})
             # No refills
             if not refill:
                 self.assertTrue(len(self.spy.refill) == 0)

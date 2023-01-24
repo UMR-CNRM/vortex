@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 A set of servers.
 """
 
-from __future__ import print_function, division, absolute_import, unicode_literals
-
 import contextlib
-import six.moves.queue as basequeue
+import queue as basequeue
 import multiprocessing as mproc
 import os
 import signal
@@ -96,7 +92,7 @@ class SimpleRealm:
         raise NotImplementedError()
 
 
-class TestMessagesInterface(object):
+class TestMessagesInterface:
 
     def __init__(self, queue):
         self._queue = queue
@@ -105,7 +101,7 @@ class TestMessagesInterface(object):
         return self._queue.get()
 
 
-class TestMailServer(object):
+class TestMailServer:
 
     def __init__(self, port):
         self.port = port

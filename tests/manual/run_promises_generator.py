@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Generate and put fake promises (for test purposes).
 """

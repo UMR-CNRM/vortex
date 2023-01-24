@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import copy
 import json
 from unittest import TestCase, main
@@ -23,7 +19,7 @@ class _BaseDataContentTest(TestCase):
         return self._data
 
     def setUp(self):
-        super(_BaseDataContentTest, self).setUp()
+        super().setUp()
         if not isinstance(self._data, (tuple, list)):
             self._data = (self._data, )
         self.insample = list()
@@ -36,7 +32,7 @@ class _BaseDataContentTest(TestCase):
                     self.insample[-1].temporize()
 
     def tearDown(self):
-        super(_BaseDataContentTest, self).tearDown()
+        super().tearDown()
         for todo in self.insample:
             todo.close()
 

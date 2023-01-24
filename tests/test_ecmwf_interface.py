@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from unittest import TestCase, main
-from ecmwf.tools.interfaces import ECMWFInterface
 
+from ecmwf.tools.interfaces import ECMWFInterface
 from vortex import ticket
+
 sh = ticket().sh
 
 

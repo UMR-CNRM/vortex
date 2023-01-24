@@ -1,32 +1,20 @@
-# -*- coding: utf-8 -*-
-
 """
 Crawl into the tests configuration directory, find available tests and perform
 operation on multiple tests configuration files.
 """
 
-from __future__ import print_function, division, absolute_import, unicode_literals
-
-import six
-from six.moves import filter  # @UnresolvedImport
-
+import collections.abc
+import concurrent.futures
 import os
 import sys
 import traceback
 
-from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 
 from .utils import mkdir_p, output_capture
 
 logger = loggers.getLogger(__name__)
-
-if six.PY3:
-    import concurrent.futures
-    has_futures = True
-else:
-    has_futures = False
 
 core_checker = ExternalCodeImportChecker('test_names core module')
 with core_checker:
@@ -40,7 +28,7 @@ REGISTERPATH = os.path.join(DATAPATH, 'namestest_register')
 STORAGEEXT = '.yaml'
 
 
-class DiscoveredTests(collections_abc.Sequence):
+class DiscoveredTests(collections.abc.Sequence):
     """Class for a collection of available tests configuration files."""
 
     _TXT_OK = 'SUCCESS'
@@ -62,8 +50,7 @@ class DiscoveredTests(collections_abc.Sequence):
 
     def keys(self):
         """An iterator over available tests files"""
-        for f in self._tfiles:
-            yield f
+        yield from self._tfiles
 
     def __contains__(self, item):
         """Is a given test file available ?"""
@@ -90,7 +77,7 @@ class DiscoveredTests(collections_abc.Sequence):
         :rtype: core.TestDriver
         :return: The object representing this configuration file.
         """
-        with open(os.path.join(TESTSPATH, tfile), 'r') as fhyaml:
+        with open(os.path.join(TESTSPATH, tfile)) as fhyaml:
             try:
                 tdata = yaml.load(fhyaml, Loader=yaml.SafeLoader)
                 logger.info('%s YAML read in.', tfile)
@@ -202,7 +189,7 @@ class DiscoveredTests(collections_abc.Sequence):
                 return allresults
         else:
             alltests = self
-        if has_futures and (ntasks is None or ntasks > 1):
+        if ntasks is None or ntasks > 1:
             with concurrent.futures.ProcessPoolExecutor(max_workers=ntasks) as exc:
                 fresults = [exc.submit(self.test_runsequence, tfile, todo)
                             for tfile in alltests]

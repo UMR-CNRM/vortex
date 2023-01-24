@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from unittest import main, skipUnless
 import os
 import sys
@@ -23,10 +19,10 @@ with npchecker as npregister:
     import numpy as np  # @UnusedImport
 
 
-class _FakeResource(object):
+class _FakeResource:
 
     def __init__(self, *args, **kwargs):
-        super(_FakeResource, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.date = Date(2000, 1, 1, 6, 0, 0)
         self.other = 1
 
@@ -144,34 +140,34 @@ class UtObsMapContent(_BaseDataContentTest):
         outincore.seek(0)
         self.assertEqual(outincore.read(), OBSMAP_R)
         # ObsMap specifics
-        self.assertEqual(ct.odbset(), set(['conv', 'tovsa']))
-        self.assertEqual(ct.dataset(), set(['conv', 'airep', 'acar', 'tovamsua']))
-        self.assertEqual(ct.fmtset(), set(['OBSOUL', 'BUFR']))
-        self.assertEqual(ct.instrset(), set(['conv', 'airep', 'acar', 'amsua']))
+        self.assertEqual(ct.odbset(), {'conv', 'tovsa'})
+        self.assertEqual(ct.dataset(), {'conv', 'airep', 'acar', 'tovamsua'})
+        self.assertEqual(ct.fmtset(), {'OBSOUL', 'BUFR'})
+        self.assertEqual(ct.instrset(), {'conv', 'airep', 'acar', 'amsua'})
         self.assertEqual(ct.getfmt(dict(part='airep'), dict()), 'BUFR')
         with loggers.contextboundGlobalLevel('critical'):
             self.assertEqual(ct.getfmt(dict(part='toto'), dict()), None)
         # Discard
-        ct = obs.ObsMapContent(discarded=set(['conv', ]))
+        ct = obs.ObsMapContent(discarded={'conv'})
         ct.slurp(self.insample[0])
         self.assertEqual(ct.data, [OBSMAP_E[3], ])
-        ct = obs.ObsMapContent(discarded=set(['conv:conv', 'conv:airep', ]))
+        ct = obs.ObsMapContent(discarded={'conv:conv', 'conv:airep'})
         ct.slurp(self.insample[0])
         self.assertEqual(ct.data, [OBSMAP_E[1], OBSMAP_E[3], ])
-        ct = obs.ObsMapContent(discarded=set(['conv:a', ]))
+        ct = obs.ObsMapContent(discarded={'conv:a'})
         ct.slurp(self.insample[0])
         self.assertEqual(ct.data, [OBSMAP_E[0], OBSMAP_E[3], ])
-        ct = obs.ObsMapContent(discarded=set(['conv:a[a-i]', ]))
+        ct = obs.ObsMapContent(discarded={'conv:a[a-i]'})
         ct.slurp(self.insample[0])
         self.assertEqual(ct.data, [OBSMAP_E[0], OBSMAP_E[3], ])
         # Only
-        ct = obs.ObsMapContent(only=set(['conv', ]))
+        ct = obs.ObsMapContent(only={'conv'})
         ct.slurp(self.insample[0])
         self.assertEqual(ct.data, [OBSMAP_E[0], OBSMAP_E[1], OBSMAP_E[2], ])
-        ct = obs.ObsMapContent(only=set(['conv:a[a-i]', ]))
+        ct = obs.ObsMapContent(only={'conv:a[a-i]'})
         ct.slurp(self.insample[0])
         self.assertEqual(ct.data, [OBSMAP_E[1], OBSMAP_E[2], ])
-        ct = obs.ObsMapContent(only=set(['conv', ]), discarded=set(['conv:a[a-i]', ]))
+        ct = obs.ObsMapContent(only={'conv'}, discarded={'conv:a[a-i]'})
         ct.slurp(self.insample[0])
         self.assertEqual(ct.data, [OBSMAP_E[0], ])
 

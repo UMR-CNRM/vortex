@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import contextlib
 from unittest import TestCase, main
 
@@ -59,7 +55,7 @@ C=--,
 """
 
 
-class DummyNamContainer(object):
+class DummyNamContainer:
 
     def __init__(self, thetxt=DIRTYNAM):
         self.mytxt = thetxt
@@ -116,7 +112,7 @@ class UtNamelistContent(TestCase):
     def test_merge(self):
         # Test removes
         self.namcontent.merge({}, rmkeys=('A ', 'z'), rmblocks=('MySecondOne', ))
-        self.assertSetEqual(set(self.namcontent.keys()), set(('MYNAMELISTTEST', )))
+        self.assertSetEqual(set(self.namcontent.keys()), {'MYNAMELISTTEST'})
         self.assertNotIn('A ', self.namcontent['MyNamelistTest'])
         self.assertNotIn('Z', self.namcontent['MyNamelistTest'])
         # Test clear

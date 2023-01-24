@@ -1,9 +1,6 @@
-# -*- coding: utf-8 -*-
 """
 Generate and put fake promises (for test purposes).
 """
-
-from __future__ import print_function, absolute_import
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter

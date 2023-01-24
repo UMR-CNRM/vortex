@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Created on 13 nov. 2018
 
@@ -8,9 +6,6 @@ Created on 13 nov. 2018
 :note: Tests for the Archive Storage are located in test_twistednet since an FTP
        server is required for the test.
 """
-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os
 import tarfile
@@ -169,7 +164,7 @@ class TestCacheStorage(unittest.TestCase):
                             inifile='./cache-[storage].ini')
 
     def assertIsTestFile(self, path):
-        with open(path, 'r') as fht:
+        with open(path) as fht:
             res = fht.read()
         self.assertEqual(res, 'toto')
 
@@ -181,7 +176,7 @@ class TestCacheStorage(unittest.TestCase):
         tfiles = ('testfile1', 'testfile2', 'testfile3')
         tfiles = [self.sh.path.join(self.tdir, tf) for tf in tfiles]
         with tarfile.open(name=path, mode='r:gz') as tfobj:
-            self.assertEqual(set([ti.name for ti in tfobj.getmembers()]),
+            self.assertEqual({ti.name for ti in tfobj.getmembers()},
                              set([self.tdir, ] + tfiles))
             self.assertTrue(all([tfobj.getmember(tf).size == 4 for tf in tfiles]))
 

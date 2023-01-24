@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import io
 import os
 import sys
@@ -54,12 +50,8 @@ def fakearch01():
         for f in ('file1', 'file2', 'file3'):
             afile = tarfile.TarInfo(f)
             afile.size = len(_GGET_MANTRA)
-            if sys.version_info[0] == 3:
-                afile_fh = io.BytesIO()
-                afile_fh.write(_GGET_MANTRA.encode())
-            else:
-                afile_fh = io.StringIO()
-                afile_fh.write(_GGET_MANTRA)
+            afile_fh = io.BytesIO()
+            afile_fh.write(_GGET_MANTRA.encode())
             afile_fh.seek(0)
             tfobj.addfile(afile, afile_fh)
         for f in ('file4', 'file5'):

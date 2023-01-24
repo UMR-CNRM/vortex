@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import os
 import pickle
 import tempfile
@@ -226,7 +224,7 @@ class TestVortexArchiveStore(AbstractTestStores):
     ]
 
     def setUp(self):
-        super(TestVortexArchiveStore, self).setUp()
+        super().setUp()
         # Link in test config files
         self.sh.symlink(self.sh.path.join(DATAPATHTEST, 'store-vortex-free-testL.ini'),
                         'test_localconf.ini')
@@ -323,7 +321,7 @@ class TestVortexCacheStore(AbstractTestStores):
     ]
 
     def setUp(self):
-        super(TestVortexCacheStore, self).setUp()
+        super().setUp()
         self.oldmtdir = self.sh.env.get('MTOOLDIR')
         self.sh.mkdir('mtool')
         self.sh.env['MTOOLDIR'] = self.sh.path.join(self.tmpdir, 'mtool')
@@ -333,7 +331,7 @@ class TestVortexCacheStore(AbstractTestStores):
             self.sh.env['MTOOLDIR'] = self.oldmtdir
         else:
             del self.sh.env['MTOOLDIR']
-        super(TestVortexCacheStore, self).tearDown()
+        super().tearDown()
 
     def _do_loc_asserts(self, remaps):
         for remap in remaps:
@@ -378,7 +376,7 @@ class TestFunctionStore(AbstractTestStores):
         self.assertEqual(st.locate(furi, dict(fmt='ascii')),
                          'sandbox.util.storefunctions.echofunction')
         self.assertTrue(st.get(furi, 'echotest', dict(fmt='ascii')))
-        with open('echotest', 'r') as fhe:
+        with open('echotest') as fhe:
             lines = fhe.readlines()
         self.assertIn('Message #0 is: toto\n', lines)
         self.assertIn('Message #1 is: titi\n', lines)
@@ -404,7 +402,7 @@ class TestFinderStore(AbstractTestStores):
         self.assertFalse(st.check(fakeuri, dict(fmt='foo')))
         self.assertFalse(st.get(fakeuri, 'toto', dict(fmt='foo')))
         self.assertTrue(st.get(fileuri, 'toto', dict(fmt='foo')))
-        with open('toto', 'r') as fhf:
+        with open('toto') as fhf:
             self.assertEqual(fhf.read(), 'findme')
         self.assertTrue(st.get(fileuri, 'toto', dict(fmt='foo', intent='in')))
         self.assertTrue(st.put('toto', fileuri2, dict(fmt='foo')))

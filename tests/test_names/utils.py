@@ -1,15 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """
 Basic utilities and methods useful for test_names.
 """
 
-from __future__ import print_function, division, absolute_import, unicode_literals
-import six
-
 from collections import OrderedDict
 import contextlib
 import errno
+import io
 import os
 import sys
 
@@ -36,7 +32,7 @@ def output_capture(outputs=None):
     A context manager that captures stdout/stderr and store them in **outputs**.
     """
     if outputs is None:
-        outputs = six.StringIO()
+        outputs = io.StringIO()
     out, sys.stdout = sys.stdout, outputs
     err, sys.stderr = sys.stderr, sys.stdout
     try:

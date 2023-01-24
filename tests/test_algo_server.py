@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import signal
 import tempfile
 
@@ -70,7 +66,7 @@ class ExpressoServer(components.Expresso):
             if self.tickingbomb is not None:  # Fake a SIGTERM after a few seconds
                 signal.signal(signal.SIGALRM, self.boum)
                 signal.alarm(self.tickingbomb)
-            super(ExpressoServer, self).execute(rh, opts)
+            super().execute(rh, opts)
             if self.simulatecrash:
                 raise ValueError("Who knows what might happened ?")
             logger.info('Dealing with results of iteration number %d', i + 1)

@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import os
 import platform
 import stat
@@ -90,7 +86,7 @@ class TestSsh(_SshTestBase):
     _SSH_EXTRA_ARGS = dict()
 
     def setUp(self):
-        super(TestSsh, self).setUp()
+        super().setUp()
         self.ssh = self._SSH_CLASS(self.sh, test_host, logname=self.user,
                                    **self._SSH_EXTRA_ARGS)
 
@@ -204,7 +200,7 @@ class TestAssistedSshCompatibility(TestSsh):
 class TestAssistedSsh(_SshTestBase):
 
     def setUp(self):
-        super(TestAssistedSsh, self).setUp()
+        super().setUp()
         self.testconf = os.path.join(DATAPATHTEST, 'target-test.ini')
         self.tg = self.sh.target(hostname='unittestlogin001',
                                  inetname='unittest',

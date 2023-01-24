@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Test Vortex's FTP client
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
-
 import ftplib
+import io
 import tempfile
 
 from bronx.fancies import loggers
@@ -18,7 +14,7 @@ from .ftpunittests import FtpBasedTestCase
 tloglevel = 9999
 
 
-class FakeFp(object):
+class FakeFp:
 
     def __init__(self):
         self.done = False
@@ -61,7 +57,7 @@ class TestStdFtp(FtpBasedTestCase):
             self.assertEqual(ftpc.logname, 'testlogin')
             with ftpc:
                 self.assertEqual(ftpc.pwd(), '/')
-                testdata = six.BytesIO()
+                testdata = io.BytesIO()
                 testdata.write(b'Coucou')
                 self.assertTrue(ftpc.mkd('dirX'))
                 self.assertTrue(ftpc.cd('dirX'))
@@ -79,7 +75,7 @@ class TestStdFtp(FtpBasedTestCase):
                 self.assertTrue(ftpc.put(FakeFp(), 'coucou2'))
                 self.assertRemote('dir1/coucou2', 'Coucou')
                 self.assertEqual(set(ftpc.nlst('.')),
-                                 set(['coucou1', 'coucou2']))
+                                 {'coucou1', 'coucou2'})
                 self.assertTrue(all(['coucou' in l for l in ftpc.list()]))
                 self.assertTrue(ftpc.put(testdata, 'dirbis/coucou3'))
                 self.assertRemote('dir1/dirbis/coucou3', 'Coucou')
@@ -89,7 +85,7 @@ class TestStdFtp(FtpBasedTestCase):
                 self.assertIsInstance(ftpc.mtime('coucou1'), int)
                 self.assertTrue(ftpc.get('dirbis/coucou3', 'rawget'))
                 self.assertFile('rawget', 'Coucou')
-                testget = six.BytesIO()
+                testget = io.BytesIO()
                 self.assertTrue(ftpc.get('coucou1', testget))
                 testget.seek(0)
                 self.assertEqual(testget.read(), b'Hello')
@@ -132,7 +128,7 @@ class TestAutoRetriesFtp(TestStdFtp):
 class TestPooledFtp(TestStdFtp):
 
     def setUp(self):
-        super(TestPooledFtp, self).setUp()
+        super().setUp()
         self._fnrc = 'fakenetrc'
         with open(self._fnrc, 'w') as fhnrc:
             fhnrc.write('machine localhost login {:s} password {:s}'
@@ -144,7 +140,7 @@ class TestPooledFtp(TestStdFtp):
         self._ftppool.clear()
         del self._ftppool
         self.sh.rm(self._fnrc)
-        super(TestPooledFtp, self).tearDown()
+        super().tearDown()
 
     def new_ftp_client(self, delayed=True):
         return self._ftppool.deal('localhost', self.user, port=self.port, delayed=delayed)
@@ -187,7 +183,7 @@ class TestPooledFtp(TestStdFtp):
             self.assertTrue(ftpc2.put(FakeFp(), 'coucou1'))
             self.assertRemote('FTP2/coucou1', 'Coucou')
             # Get with #3 stills works
-            testget = six.BytesIO()
+            testget = io.BytesIO()
             self.assertTrue(ftpc3.get('FTP1/coucou1', testget))
             testget.seek(0)
             self.assertEqual(testget.read(), b'Coucou')

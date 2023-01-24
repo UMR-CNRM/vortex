@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import contextlib
 import os
 import shutil
@@ -25,7 +21,7 @@ JOBSDIR = os.path.abspath(os.path.join(
 ))
 
 
-class _JobIsolationHelper(object):
+class _JobIsolationHelper:
 
     def __init__(self, tmpdir):
         self._tmpdir = tmpdir

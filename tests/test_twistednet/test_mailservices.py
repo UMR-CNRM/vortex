@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Test Vortex's Mailing Services
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 
 import base64
 import email
@@ -174,7 +169,7 @@ Envoi automatique par Vortex {vversion:s} pour <tourist@unittest>."""
 
 _INPUTMSG_ENCODING = 'utf-16'
 
-_BYTES2ATTACH = "AZERTYbutéàù%".encode('utf-8')
+_BYTES2ATTACH = "AZERTYbutéàù%".encode()
 
 _DATAPATHTEST = os.path.join(
     os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
@@ -216,10 +211,9 @@ class TestEmailServices(unittest.TestCase):
         self.server = TestMailServer(self.port)
 
     def _parse_messages(self, ref, messages, **kwargs):
-        mparser = (eparser.FeedParser if six.PY2 else
-                   functools.partial(eparser.BytesFeedParser,
-                                     email.message.EmailMessage,
-                                     policy=email.policy.strict))
+        mparser = functools.partial(eparser.BytesFeedParser,
+                                    email.message.EmailMessage,
+                                    policy=email.policy.strict)
         # Ref message
         p_ref = mparser()
         p_ref.feed(b'Received: MpQueueMessageDelivery\n')
@@ -240,14 +234,8 @@ class TestEmailServices(unittest.TestCase):
         self.assertDictEqual(h_ref, h_new)
         # Compare bodies
         if not m_new.is_multipart():
-            if six.PY2:
-                b_ref = m_ref.get_payload(decode=True)
-                b_ref = b_ref.decode(m_ref.get_content_charset('ascii'))
-                b_new = m_new.get_payload(decode=True)
-                b_new = b_new.decode(m_new.get_content_charset('ascii'))
-            else:
-                b_ref = m_ref.get_body().get_content()
-                b_new = m_new.get_body().get_content()
+            b_ref = m_ref.get_body().get_content()
+            b_new = m_new.get_body().get_content()
             if igalike:
                 b_new = '\n'.join([l for l in b_new.split('\n')
                                    if not re.match('Mail envoyé le .* à .* locales.$', l)])
@@ -263,16 +251,14 @@ class TestEmailServices(unittest.TestCase):
                                             fname=filename, b64=attached_b64)
         # Compare bodies
         if m_new.is_multipart():
-            b_ref = [(b_item.get_payload(decode=False).decode(b_item.get_content_charset('ascii'))
-                      if six.PY2 else b_item.get_content())
+            b_ref = [b_item.get_content()
                      for b_item in m_ref.walk() if not b_item.is_multipart()]
-            b_new = [(b_item.get_payload(decode=False).decode(b_item.get_content_charset('ascii'))
-                      if six.PY2 else b_item.get_content())
+            b_new = [b_item.get_content()
                      for b_item in m_new.walk() if not b_item.is_multipart()]
             for a_ref, a_new in zip(b_ref, b_new):
                 logger.info('Received:\n%s', a_ref)
                 logger.info('Expecting:\n%s', a_new)
-                if isinstance(a_ref, six.string_types):
+                if isinstance(a_ref, str):
                     self.assertEqual(a_ref.rstrip('\n'), a_new.rstrip('\n'))
                 else:
                     self.assertEqual(a_ref, a_new)

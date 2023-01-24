@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import tempfile
 import unittest
 
@@ -19,28 +17,28 @@ class BaseTestAlgoComponentForMeta(AlgoComponent):
     ))
 
     def __init__(self, *kargs, **kwargs):
-        super(BaseTestAlgoComponentForMeta, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         self.prepare_stack = []
         self.execute_stack = []
         self.postfix_stack = []
 
     def prepare(self, rh, opts):
         self.prepare_stack.append('base')
-        super(BaseTestAlgoComponentForMeta, self).prepare(rh, opts)
+        super().prepare(rh, opts)
 
     def execute(self, rh, opts):
         self.execute_stack.append('base')
-        super(BaseTestAlgoComponentForMeta, self).execute(rh, opts)
+        super().execute(rh, opts)
 
     def postfix(self, rh, opts):
         self.postfix_stack.append('base')
-        super(BaseTestAlgoComponentForMeta, self).postfix(rh, opts)
+        super().postfix(rh, opts)
 
     def postfix_post_dirlisting(self):
         pass
 
     def spawn_command_options(self):
-        rv = super(BaseTestAlgoComponentForMeta, self).spawn_command_options()
+        rv = super().spawn_command_options()
         rv['base'] = True
         return rv
 
@@ -109,7 +107,7 @@ class TestAlgoMetaClass(unittest.TestCase):
                 def execute(self, rh, opts):
                     pass
 
-        class Fake(object):
+        class Fake:
             pass
 
         with self.assertRaises(RuntimeError):
@@ -148,7 +146,7 @@ class TestAlgoMetaClass(unittest.TestCase):
             ))
 
             def prepare(self, rh, opts):
-                super(Full_TestAlgoComponentForMeta, self).prepare(rh, opts)
+                super().prepare(rh, opts)
                 self.prepare_stack.append('inter')
 
         algot = Full_TestAlgoComponentForMeta(kind='full_base_test_algo_for_meta',

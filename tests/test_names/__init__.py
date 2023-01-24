@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 r"""
 :mod:`test_names` is a Unit-Test facility that creates a large number of
 resource's :class:`~vortex.data.handlers.Handler`\s and checks that the
@@ -52,8 +50,8 @@ The ``test_names_cli.py`` utility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``project/bin/test_names_cli.py`` command-line utility can be used with
-both Python2.7 en Python3. Calling ``project/bin/test_names_cli.py -h`` gives
-you an help message that summarises all available options.
+Python3. Calling ``project/bin/test_names_cli.py -h`` gives you an help message
+that summarises all available options.
 
 By default, ``test_names_cli.py`` works on the Vortex code contained in the
 same directory path than the ``test_names_cli.py`` utility.
@@ -351,5 +349,3 @@ fit to serialise all of the previously mentioned classes. Therefore, a
 reference data file is a YAML dump of a :class:`~test_names.core.TestDriver`
 object.
 """
-
-from __future__ import print_function, division, absolute_import, unicode_literals

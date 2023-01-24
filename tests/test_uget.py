@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-
 import contextlib
 import os
 import re
@@ -18,7 +12,7 @@ import unittest
 vortexbase = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 
-class UgetTestIsolationHelper(object):
+class UgetTestIsolationHelper:
 
     def __init__(self, tmpdir, debug=False):
         self._tmpdir = tmpdir
@@ -82,18 +76,6 @@ class TestUget(unittest.TestCase):
     def datapath(self):
         return os.path.join('.vortexrc', 'hack', 'uget', 'demo', 'data')
 
-    def assertRegex(self, text, expected_regex):
-        if six.PY3:
-            super(TestUget, self).assertRegex(text, expected_regex)
-        else:
-            if isinstance(expected_regex, six.string_types):
-                assert expected_regex, "expected_regex must not be empty."
-                expected_regex = re.compile(expected_regex)
-            if not expected_regex.search(text):
-                standard_msg = "Regex didn't match: %r not found in %r" % (
-                    expected_regex.pattern, text)
-                raise self.failureException(standard_msg)
-
     def assertExists(self, u_helper, *paths):
         looking_for = os.path.join(u_helper.tmpdir, *paths)
         self.assertTrue(os.path.exists(looking_for),
@@ -108,7 +90,7 @@ class TestUget(unittest.TestCase):
         self.assertTrue(os.path.exists(where),
                         msg="Looking for: {:s}".format(where))
         dfinaltext = dname if dfinaltext is None else dfinaltext
-        with open(where, 'r') as fh_d:
+        with open(where) as fh_d:
             self.assertEqual("Fake data: {:s}".format(dfinaltext),
                              fh_d.read())
 
@@ -168,7 +150,7 @@ class TestUget(unittest.TestCase):
             self.assertRegex(output, r'FIRSTKEY\s*=\s*uget:data1\.01@demo')
             self.assertRegex(output, r'SECONDKEY\s*=\s*uget:data2\.01@demo')
             u_helper.run_uget('pull data data2.01')
-            with open('data2.01', 'r') as fh_d:
+            with open('data2.01') as fh_d:
                 self.assertEqual('Fake data: data2.01', fh_d.read())
             os.unlink('data2.01')
             # Hack

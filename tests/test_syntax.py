@@ -1,13 +1,9 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import unittest
-
-import six
 
 from vortex.syntax.stdattrs import DelayedInit, Latitude, Longitude
 
 
-class Scrontch(object):
+class Scrontch:
 
     def __init__(self, msg):
         self._msg = msg
@@ -24,11 +20,6 @@ def _initialise_scrontch():
 
 
 class TestDelayedInit(unittest.TestCase):
-
-    if six.PY2:
-        def assertRegex(self, text, regex, msg=None):
-            """This method should be removed when python2 dies."""
-            self.assertRegexpMatches(text, regex, msg)
 
     def test_delayed_init_basics(self):
         scrontch = None

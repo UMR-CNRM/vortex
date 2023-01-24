@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import os
 import unittest
 
@@ -10,17 +8,17 @@ from vortex import sessions
 
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 
-TARGETS_COMMON_SECTIONS = set([u'drhook', u'drhookprof', u'lfi', u'odbtools',
-                               u'fortran', u'gco', u'services', u'drhook_not_mpi',
-                               u'mocage-assim', u'mocage-assim-repro', u'mpiauto',
-                               u'mpitool-mplbased', u'srun'])
+TARGETS_COMMON_SECTIONS = {'drhook', 'drhookprof', 'lfi', 'odbtools',
+                           'fortran', 'gco', 'services', 'drhook_not_mpi',
+                           'mocage-assim', 'mocage-assim-repro', 'mpiauto',
+                           'mpitool-mplbased', 'srun'}
 
-TARGET_TEST_SECTIONS = set(('stores', 'generic_nodes', 'mpitool', 'armtools', 'op',
-                            'mpienv', 'mpienv:srun', 'mpienv:srun:intelmpi',
-                            'mpitool-fullsrun',
-                            'mpienv-fullsrun', 'mpienv-fullsrun:srun',
-                            'mpitool-fullspecific',
-                            'mpienv-fullspecific'))
+TARGET_TEST_SECTIONS = {'stores', 'generic_nodes', 'mpitool', 'armtools', 'op',
+                        'mpienv', 'mpienv:srun', 'mpienv:srun:intelmpi',
+                        'mpitool-fullsrun',
+                        'mpienv-fullsrun', 'mpienv-fullsrun:srun',
+                        'mpitool-fullspecific',
+                        'mpienv-fullspecific'}
 
 
 class TestTargetsResearch(unittest.TestCase):
@@ -43,7 +41,7 @@ class TestTargetsResearch(unittest.TestCase):
         self.assertSetEqual(set(self.tg.sections()),
                             TARGETS_COMMON_SECTIONS | TARGET_TEST_SECTIONS)
         self.assertSetEqual(set(self.tg.options('stores')),
-                            set(('storage', 'fakekey1', 'vsop_cache_opprimary')))
+                            {'storage', 'fakekey1', 'vsop_cache_opprimary'})
         self.assertDictEqual(self.tg.items('stores'),
                              dict(storage='hendrix.meteo.fr',
                                   fakekey1='tourist',
@@ -74,8 +72,8 @@ class TestTargetsResearch(unittest.TestCase):
 
 class TestTargetsOp(unittest.TestCase):
 
-    _COMMON_TARGETS = set([u'drhook', u'drhookprof', u'lfi', u'odbtools', u'fortran',
-                           u'gco', u'services', u'drhook_not_mpi'])
+    _COMMON_TARGETS = {'drhook', 'drhookprof', 'lfi', 'odbtools', 'fortran',
+                       'gco', 'services', 'drhook_not_mpi'}
 
     def setUp(self):
         self.testconf = os.path.join(DATAPATHTEST, 'target-test.ini')
@@ -100,9 +98,9 @@ class TestTargetsOp(unittest.TestCase):
                          '1')
         self.assertSetEqual(set(self.tg.sections()),
                             TARGETS_COMMON_SECTIONS | TARGET_TEST_SECTIONS |
-                            set((('toto', ))))
+                            {'toto'})
         self.assertSetEqual(set(self.tg.options('stores')),
-                            set(('storage', 'fakekey1', 'fakekey2', 'vsop_cache_opprimary')))
+                            {'storage', 'fakekey1', 'fakekey2', 'vsop_cache_opprimary'})
         self.assertDictEqual(self.tg.items('stores'),
                              dict(storage='hendrixg2.meteo.fr',
                                   fakekey1='1', fakekey2='2',

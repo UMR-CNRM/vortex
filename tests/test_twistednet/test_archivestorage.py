@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Test Vortex's FTP client
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
-
 import gzip
+import io
 import tarfile
 import tempfile
 
@@ -29,7 +25,7 @@ class TestArchiveStorage(NetrcFtpBasedTestCase):
     _FTPLOGLEVEL = tloglevel
 
     def setUp(self):
-        super(TestArchiveStorage, self).setUp()
+        super().setUp()
         fpx.addon(kind='allfolders', shell=self.sh)
 
     def ftp_client_thook(self):
@@ -66,7 +62,7 @@ class TestArchiveStorage(NetrcFtpBasedTestCase):
         self.assertEqual(st.delete('some/test/file'), None)
         self.assertEqual(st.earlyretrieve('some/test/file', 'testlocal'), None)
         # Insert Some...
-        testdata = six.BytesIO()
+        testdata = io.BytesIO()
         testdata.write(b'Coucou')
         testdata.seek(0)
         self.assertTrue(st.insert('some/test/file1', testdata, usejeeves=False))

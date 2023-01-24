@@ -1,30 +1,23 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
+from configparser import InterpolationMissingOptionError, NoSectionError, NoOptionError
 import logging
 import os
-
-import footprints
-
-logging.basicConfig(level=logging.ERROR)
-
-from six.moves.configparser import InterpolationMissingOptionError, NoSectionError, NoOptionError
-
 import unittest
 from unittest import TestCase
 
 from bronx.stdtypes import date
+import footprints
 
 from vortex.util.config import ExtendedReadOnlyConfigParser, GenericConfigParser
 from vortex.util.config import AppConfigStringDecoder, TableItem, ConfigurationTable
 from vortex.data import geometries
 from iga.data.providers import IgaCfgParser
 
+logging.basicConfig(level=logging.ERROR)
+
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 
 
-class _FooResource(object):
+class _FooResource:
 
     def __init__(self, kind):
         self.realkind = kind
@@ -89,7 +82,7 @@ class UtExtendedConfigParser(TestCase):
     def test_usual(self):
         me = 'bigbase'
         self.assertSetEqual(set(self.ecp.options(me)),
-                            set(['toto_default', 'toto_over', 'titi', ]))
+                            {'toto_default', 'toto_over', 'titi'})
         self.assertEqual(self.ecp.get(me, 'titi'), 'bigbase')
         self.assertEqual(self.ecp.get(me, 'toto_default'), 'DEFAULT')
         self.assertEqual(self.ecp.get(me, 'toto_over'), 'DEFAULT')
@@ -97,7 +90,7 @@ class UtExtendedConfigParser(TestCase):
     def test_one_tier(self):
         me = 'fancy1'
         self.assertSetEqual(set(self.ecp.options(me)),
-                            set(['toto_default', 'toto_over', 'titi', 'tata']))
+                            {'toto_default', 'toto_over', 'titi', 'tata'})
         self.assertEqual(self.ecp.get(me, 'tata'), 'fancy1')
         self.assertEqual(self.ecp.get(me, 'titi'), 'bigbase')
         self.assertEqual(self.ecp.get(me, 'toto_default'), 'DEFAULT')
@@ -106,7 +99,7 @@ class UtExtendedConfigParser(TestCase):
     def test_two_tier(self):
         me = 'fancy2'
         self.assertSetEqual(set(self.ecp.options(me)),
-                            set(['toto_default', 'toto_over', 'titi', 'tata', 'truc']))
+                            {'toto_default', 'toto_over', 'titi', 'tata', 'truc'})
         self.assertEqual(self.ecp.get(me, 'tata'), 'fancy1')
         self.assertEqual(self.ecp.get(me, 'titi'), 'bigbase')
         self.assertEqual(self.ecp.get(me, 'toto_default'), 'DEFAULT')
@@ -116,8 +109,8 @@ class UtExtendedConfigParser(TestCase):
     def test_nightmare(self):
         me = 'verystrange'
         self.assertSetEqual(set(self.ecp.options(me)),
-                            set(['toto_default', 'toto_over', 'titi', 'tata', 'truc',
-                                 'bonus', 'ouf', 'cool']))
+                            {'toto_default', 'toto_over', 'titi', 'tata', 'truc',
+                             'bonus', 'ouf', 'cool'})
         self.assertEqual(self.ecp.get(me, 'tata'), 'fancy1')
         self.assertEqual(self.ecp.get(me, 'titi'), 'bigbase')
         self.assertEqual(self.ecp.get(me, 'toto_default'), 'DEFAULT')
@@ -135,12 +128,12 @@ class UtExtendedConfigParser(TestCase):
     def test_tricky(self):
         me = 'trick1'
         self.assertSetEqual(set(self.ecp.options(me)),
-                            set(['toto_default', 'toto_over', ]))
+                            {'toto_default', 'toto_over'})
         self.assertEqual(self.ecp.get(me, 'toto_default'), 'DEFAULT')
         self.assertEqual(self.ecp.get(me, 'toto_over'), 'trick1')
         me = 'trick2'
         self.assertSetEqual(set(self.ecp.options(me)),
-                            set(['toto_default', 'toto_over', 'titi', ]))
+                            {'toto_default', 'toto_over', 'titi'})
         self.assertEqual(self.ecp.get(me, 'toto_default'), 'DEFAULT')
         self.assertEqual(self.ecp.get(me, 'toto_over'), 'trick2')
         self.assertEqual(self.ecp.get(me, 'titi'), 'bigbase')
@@ -345,8 +338,8 @@ Localisation : HELLO"""
     def test_bare(self):
         c_conf = footprints.proxy.iniconf(kind='utestsites', family='utestfamily',
                                           version='bare')
-        self.assertEqual(set(c_conf.groups()), set(['utest_chemical', 'utest_volcanic']))
-        self.assertEqual(set(c_conf.keys()), set(['AGUA-DE-PAU', 'ARDOUKOBA', 'HELLO']))
+        self.assertEqual(set(c_conf.groups()), {'utest_chemical', 'utest_volcanic'})
+        self.assertEqual(set(c_conf.keys()), {'AGUA-DE-PAU', 'ARDOUKOBA', 'HELLO'})
         self.assertEqual(len(c_conf.tablelist), 3)
         self.assertIsInstance(c_conf.tablelist[0], _UnitTestTableItem)
         self.assertListEqual(c_conf.find('somewhere'), [c_conf.get('ARDOUKOBA')])

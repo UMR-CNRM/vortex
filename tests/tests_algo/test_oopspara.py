@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import unittest
 
 from bronx.fancies.loggers import unittestGlobalLevel
@@ -12,40 +10,40 @@ tloglevel = 'ERROR'
 
 
 # Fake objects for test purposes only
-class FakeResource(object):
+class FakeResource:
     pass
 
 
-class FakeDResource(object):
+class FakeDResource:
 
     def __init__(self, d):
         self.date = Date(d)
 
 
-class FakeTResource(object):
+class FakeTResource:
 
     def __init__(self, t, d):
         self.term = Time(t)
         self.date = Date(d)
 
 
-class FakeProvider(object):
+class FakeProvider:
     pass
 
 
-class FakeMProvider(object):
+class FakeMProvider:
 
     def __init__(self, m):
         self.member = m
 
 
-class FakeContainer(object):
+class FakeContainer:
 
     def exists(self):
         return True
 
 
-class FakeRh(object):
+class FakeRh:
 
     def __init__(self, r, p):
         self.resource = r
@@ -53,7 +51,7 @@ class FakeRh(object):
         self.container = FakeContainer()
 
 
-class FakeSec(object):
+class FakeSec:
 
     def __init__(self, r, p, stage='get'):
         self.rh = FakeRh(r, p)

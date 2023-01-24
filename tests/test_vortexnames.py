@@ -1,33 +1,31 @@
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import unittest
 
 from vortex.tools.names import VortexNameBuilder, VortexNameBuilderError
 from vortex.tools.names import VortexDateNameBuilder, VortexPeriodNameBuilder, VortexFlatNameBuilder
 
 
-class FakeTime(object):
+class FakeTime:
 
     @property
     def fmthm(self):
         return '0006:00'
 
 
-class FakeNegTime(object):
+class FakeNegTime:
 
     @property
     def fmthm(self):
         return '-0006:00'
 
 
-class FakeDate(object):
+class FakeDate:
 
     @property
     def stdvortex(self):
         return '20180101T0000'
 
 
-class FakeDate2(object):
+class FakeDate2:
 
     @property
     def stdvortex(self):

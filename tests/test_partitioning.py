@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import contextlib
 import unittest
 
@@ -13,7 +9,7 @@ from common.tools.partitioning import setup_partitioning_in_namelist, Partitioni
 tloglevel = 'ERROR'
 
 
-class DummyNamContainer(object):
+class DummyNamContainer:
 
     def __init__(self, thetxt):
         self.mytxt = thetxt
