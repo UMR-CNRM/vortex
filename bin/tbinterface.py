@@ -1,18 +1,14 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Exports the various footprints in text, Json or XML formats.
 """
-
-from __future__ import absolute_import, print_function, unicode_literals, division
 
 import argparse
 import importlib
 import json
 import os
 import re
-import six
 import sys
 from xml.dom import minidom
 
@@ -59,7 +55,7 @@ def swapp_exporter(collectors, abstract, filebase):
             attrs = c.footprint_retrieve().attr
             for a in attrs.keys():
                 if 'values' in attrs[a]:
-                    extra = a + '(' + ','.join([six.text_type(x) for x in attrs[a]['values']]) + ')'
+                    extra = a + '(' + ','.join([str(x) for x in attrs[a]['values']]) + ')'
                 else:
                     extra = a
                 if attrs[a]['optional']:
@@ -95,12 +91,8 @@ def json_exporter(collectors, abstract, filebase):
             _add_entry(export_dict, c, abstract=False)
         outfile = '{}_{}.json'.format(filebase, collector.tag)
         print('Output file:', outfile)
-        if six.PY2:
-            with open(outfile, 'wb') as fd:
-                json.dump(export_dict, fd, indent=2, encoding='utf-8')
-        else:
-            with open(outfile, 'w', encoding='utf-8') as fd:
-                json.dump(export_dict, fd, indent=2)
+        with open(outfile, 'w', encoding='utf-8') as fd:
+            json.dump(export_dict, fd, indent=2)
 
 
 def xml_exporter(collectors, abstract, filebase):

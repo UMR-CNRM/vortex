@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Fetch an Uenv (and its content) and re-archive it in a
 bucket or directly in ECMWF's ECFS archive.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 DOC_EPILOG = """
 The data are retrieved for the default storage. It may be tweaked using the
@@ -108,7 +105,7 @@ def generic_setup(args):
         fpx.addon(sh=vtx_sh, kind='ecmwf')
     locale.setlocale(locale.LC_ALL,
                      os.environ.get('VORTEX_DEFAULT_ENCODING',
-                                    str('en_US.UTF-8')))
+                                    'en_US.UTF-8'))
     # Setup logger verbosity
     if args.verbose is None:
         (loglevel_me, loglevel_main, loglevel_fp) = ('INFO', 'ERROR', 'ERROR')
@@ -195,7 +192,7 @@ def uenv_mirror(cycle, args):
                             rc = uget_default_st.get(target, v.id + '.void', dict())
                             if rc:
                                 todo.append((v.id + '.void', target))
-                    except (IOError, ExecutionError):
+                    except (OSError, ExecutionError):
                         rc = False
                     if not rc:
                         logger.info('Looking for a monthly version of < %s >', v)
@@ -212,7 +209,7 @@ def uenv_mirror(cycle, args):
                                     rc = rc and uget_default_st.get(target, v.id + suffix, dict())
                                     if rc:
                                         todo.append((v.id + suffix, target))
-                                except (IOError, ExecutionError):
+                                except (OSError, ExecutionError):
                                     rc = False
                             if not rc:
                                 break
@@ -246,7 +243,7 @@ def uenv_mirror(cycle, args):
                                         rc = rc and vtx_sh.mv(localxv + '.tgz', localxv)
                                     if rc:
                                         todo.append((localxv, xtarget))
-                                except (IOError, ExecutionError):
+                                except (OSError, ExecutionError):
                                     logger.exception("Unexpected exception during tar creation")
                                     rc = False
                             if not rc:
@@ -260,12 +257,12 @@ def uenv_mirror(cycle, args):
                             rc = rc and uget_out_st.put(xv, target)
                         if not rc:
                             logger.critical("Unable to upload data for < %s >.", v)
-                            raise IOError('Unable to upload data for {!s}'.format(v))
+                            raise OSError('Unable to upload data for {!s}'.format(v))
                     else:
                         logger.info('Nothing to do for < %s >', v)
                 else:
                     logger.critical('Unable to fetch < %s >.', v)
-                    raise IOError('Unable to fetch {!s}'.format(v))
+                    raise OSError('Unable to fetch {!s}'.format(v))
 
 
 if __name__ == "__main__":

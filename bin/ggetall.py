@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Extract all files provided by the genv command for one or several cycles,
@@ -19,8 +18,6 @@ Description files for option -f may include comments (introduced by '#')
 and  blank lines. The usual separators are allowed (space, tab, newline).
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import argparse
 import locale
 import os
@@ -33,7 +30,7 @@ vortexbase = re.sub(os.path.sep + 'bin$', '',
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
-locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', str('en_US.UTF-8')))
+locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', 'en_US.UTF-8'))
 
 DEFAULT_OPER_CYCLES_FILE = 'oper_cycles'
 DEFAULT_DBLE_CYCLES_FILE = 'dble_cycles'
@@ -79,7 +76,7 @@ def parse_command_line():
             print()
             print('WARNING : Cycles definition file missing: "{}"'.format(filename))
         else:
-            with open(filename, 'r') as fp:
+            with open(filename) as fp:
                 for line in fp.readlines():
                     args.cycles.extend(line.partition('#')[0].strip().split())
 

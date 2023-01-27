@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Upload a given bucket to another storage.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import argparse
 import contextlib
@@ -75,7 +72,7 @@ def generic_setup(args):
     """Setup a few very generic things."""
     locale.setlocale(locale.LC_ALL,
                      os.environ.get('VORTEX_DEFAULT_ENCODING',
-                                    str('en_US.UTF-8')))
+                                    'en_US.UTF-8'))
     # Setup logger verbosity
     if args.verbose is None:
         (loglevel_me, loglevel_main, loglevel_fp) = ('INFO', 'ERROR', 'ERROR')
@@ -105,7 +102,7 @@ def isolate():
 def crawl_bucket_root(bucketstorage):
     first_lev = bucketstorage.list('')
     if not isinstance(first_lev, list):
-        raise IOError("The '{:s}' bucket is missing or malformed ({:s})"
+        raise OSError("The '{:s}' bucket is missing or malformed ({:s})"
                       .format(bucketstorage.bucketname, bucketstorage.fullpath('')))
     for a_scheme in sorted(first_lev):
         second_level = bucketstorage.list(a_scheme)
@@ -125,7 +122,7 @@ def _crawl_generic(bucketstorage, a_scheme, a_netloc, a_head, item):
     xitem = vtx_sh.path.join(a_scheme, a_netloc, a_head, item)
     my_lev = bucketstorage.list(xitem)
     if my_lev is None:
-        raise IOError('Unexpected missing directory: {:s}'
+        raise OSError('Unexpected missing directory: {:s}'
                       .format(bucketstorage.fullpath(xitem)))
     if isinstance(my_lev, list):
         for subitem in sorted(my_lev):
@@ -156,7 +153,7 @@ def input_hash_check(bucketstorage, xitem):
         if hadapter.filecheck(full_xitem, full_xitem + '.' + hashalgo):
             logger.info('%s verified against hash file (%s)', xitem, hashalgo)
         else:
-            raise IOError('{:s} is inconsistent with its hashfile ({:s}).'
+            raise OSError('{:s} is inconsistent with its hashfile ({:s}).'
                           .format(full_xitem, hashalgo))
 
 
@@ -202,7 +199,7 @@ if __name__ == "__main__":
                     try:
                         input_hash_check(bstorage, xitem)
                         rc_upload = target_store.put(bucket_item, target_uri)
-                    except IOError:
+                    except OSError:
                         logger.exception("Exception caught during upload.")
                         rc_upload = False
                     if rc_upload:
@@ -214,4 +211,4 @@ if __name__ == "__main__":
         if error_list:
             logger.critical("%d upload error(s) occured:\n%s",
                             len(error_list), '\n'.join(error_list))
-            raise IOError("Some of the upload failed.")
+            raise OSError("Some of the upload failed.")

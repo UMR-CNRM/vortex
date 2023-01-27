@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Utility that manages the Uget Hack and Archive Stores.
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-import six
-
 import cmd
-from six.moves import configparser
-import itertools
+import configparser
+import io
 import locale
 import logging
 import os
@@ -25,7 +21,7 @@ vortexbase = re.sub(os.path.sep + 'bin$', '',
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
-locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', str('en_US.UTF-8')))
+locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', 'en_US.UTF-8'))
 
 from bronx.fancies.display import print_tablelike
 from bronx.syntax.decorators import nicedeco
@@ -132,17 +128,11 @@ class UGetShell(cmd.Cmd):
 
     def __init__(self, *kargs, **kwargs):
         cmd.Cmd.__init__(self, *kargs, **kwargs)
-        if six.PY2:
-            self._config = configparser.SafeConfigParser()
-        else:
-            self._config = configparser.ConfigParser()
+        self._config = configparser.ConfigParser()
         # Read the configuration
         if sh.path.exists(self._config_file):
-            with open(self._config_file, 'r') as fhconf:
-                if six.PY2:
-                    self._config.readfp(fhconf)
-                else:
-                    self._config.read_file(fhconf)
+            with open(self._config_file) as fhconf:
+                self._config.read_file(fhconf)
             if not self._config.has_option('cli', 'ecmwf_support'):
                 self._cliconfig_set('ecmwf_support', 'off')
 
@@ -260,11 +250,7 @@ class UGetShell(cmd.Cmd):
     @property
     def _storelist(self):
         """Iterate over the hack and archive stores."""
-        if six.PY2:
-            return itertools.izip(('Hack', 'Archive'),
-                                  (self._storehack, self._storearch))
-        else:
-            return zip(('Hack', 'Archive'), (self._storehack, self._storearch))
+        return zip(('Hack', 'Archive'), (self._storehack, self._storearch))
 
     def _uri(self, store, path):
         """Build up an URI given the store object and the path."""
@@ -354,14 +340,14 @@ class UGetShell(cmd.Cmd):
             # Look for comment line that contains informations about the parent env
             if mline['parent']:
                 # Fetch the target uenv file
-                uenvfile = six.BytesIO()
+                uenvfile = io.BytesIO()
                 uri = self._uri(self._storeweak, ('env', mline['shortuget']))
                 # Should always work since self._uenv_contents was called before...
                 self._storeweak.get(uri, uenvfile)
                 uenvfile.seek(0)
-                for l in [l.decode(encoding='utf-8', errors='ignore')
-                          for l in uenvfile.readlines()]:
-                    cmatch = self._hack_commentline_re.match(l.rstrip('\n'))
+                for line in [line.decode(encoding='utf-8', errors='ignore')
+                             for line in uenvfile.readlines()]:
+                    cmatch = self._hack_commentline_re.match(line.rstrip('\n'))
                     if cmatch:
                         ref_cb = self._genv_contents if cmatch.group('gco') else self._uenv_contents
                         ref_element = cmatch.group('baseshort')
@@ -447,7 +433,7 @@ class UGetShell(cmd.Cmd):
             theenv = uenv.contents('uget:' + shortid,
                                    scheme='uget',
                                    netloc='{:s}.weak.fr'.format(netloc_prefix))
-        except (IOError, OSError, uenv.UenvError) as e:
+        except (OSError, uenv.UenvError) as e:
             self._error('Error getting uenv data: {!s}'.format(e))
             uenv.clearall()
             theenv = None
@@ -456,7 +442,7 @@ class UGetShell(cmd.Cmd):
     def _genv_contents(self, cycle):
         try:
             theenv = genv.autofill(cycle)
-        except (OSError, IOError, ExecutionError) as e:
+        except (OSError, ExecutionError) as e:
             self._error('Error getting genv data: {!s}'.format(e))
             genv.clearall()
             theenv = None
@@ -552,7 +538,7 @@ class UGetShell(cmd.Cmd):
                 self._cliconfig_set('ecmwf_support', mline['value'])
             elif mline['what2'] == 'ftuser':
                 self._locationconfig_set(mline['target'], 'ftuser', mline['user'])
-            with open(self._config_file, 'w' + ('b' if six.PY2 else '')) as fpconf:
+            with open(self._config_file, 'w') as fpconf:
                 self._config.write(fpconf)
 
     def complete_check(self, text, line, begidx, endidx):
@@ -780,14 +766,14 @@ class UGetShell(cmd.Cmd):
         if mline:
             # name of the temporary file
             if mline['what'] == 'env':
-                tofile = six.BytesIO()
+                tofile = io.BytesIO()
             else:
                 tofile = mline['id'] + sh.safe_filesuffix()
             # retrieve the resource"
             uri = self._uri(self._storeweak, (mline['what'], mline['shortuget']))
             try:
                 rc = self._storeweak.get(uri, tofile, dict(auto_repack=True))
-            except IOError:
+            except OSError:
                 rc = False
             if not rc:
                 self._error("Could not get < {:s} >".format(mline['shortuget']))
@@ -937,7 +923,7 @@ class UGetShell(cmd.Cmd):
                         return False
                     try:
                         rc = self._storeweak.get(source_uri, tfile)
-                    except IOError:
+                    except OSError:
                         rc = False
                     if not rc:
                         self._error("Could not get < {:s} >".format(mline['baseshort']))
@@ -993,7 +979,7 @@ class UGetShell(cmd.Cmd):
                         return False
                 if mline['what'] == 'env':
                     # Add a comment line at the beginning of the new environment file
-                    finalenv = six.BytesIO()
+                    finalenv = io.BytesIO()
                     finalenv.write(self._hack_commentline_fmt
                                    .format('genv' if mline['gco'] else 'uenv', mline['baseshort'])
                                    .encode(encoding='utf-8'))

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 vortex_data_mover.py -- Retrieve data with Vortex and put them to another location.
@@ -92,8 +91,6 @@ Here is a YAML configuration file example:
 
 """
 
-from __future__ import print_function, division, absolute_import, unicode_literals
-
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import copy
@@ -163,7 +160,7 @@ logger = loggers.getLogger(__name__)
 def load_configfile(filepath):
     """Load and check the configuration file as much as possible."""
     if not sh.path.exists(filepath):
-        raise IOError('The < {:s} > configuration file does not exists.'.format(filepath))
+        raise OSError('The < {:s} > configuration file does not exists.'.format(filepath))
     logger.info('Reading the < %s > configuration file.', filepath)
     with open(filepath) as fhyaml:
         try:

@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
-Generate a script based on the Vortex and Application configuration files."""
-
-from __future__ import print_function, absolute_import, division, unicode_literals
+Generate a script based on the Vortex and Application configuration files.
+"""
 
 import argparse
 import locale
 import os
 import re
 from shutil import copyfile
-import six
 import sys
 import tempfile
 
@@ -28,7 +25,7 @@ for d in pathdirs:
     if os.path.isdir(d):
         sys.path.insert(0, d)
 
-locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', str('en_US.UTF-8')))
+locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', 'en_US.UTF-8'))
 
 import bronx.stdtypes.date
 import vortex
@@ -79,7 +76,7 @@ def parse_command_line():
     # Si un descriptif est passé manuellement (avec l'option -j) on ne traite que lui
     if not args.job and os.path.isfile(args.file):
         report.append('Generation of the jobs defined in the file : {} \n'.format(args.file))
-        with open(args.file, 'r') as fp:
+        with open(args.file) as fp:
             for line in fp.readlines():
                 if bool(line.rstrip()):
                     a_job = make_cmdline(line.rstrip())
@@ -91,7 +88,7 @@ def parse_command_line():
         jobs.append(a_job)
         if args.write:
             with open(args.file, 'a') as fp:
-                fp.write(six.text_type(args.job) + "\n")
+                fp.write(str(args.job) + "\n")
 
     if args.add:
         newparams = make_cmdline(args.add)
@@ -119,7 +116,7 @@ def list_jobs(jobs):
 
 def make_cmdline(description):
     t = vortex.ticket()
-    if isinstance(description, six.string_types):
+    if isinstance(description, str):
         description = description.split(' ')
     return t.sh.rawopts(description)
 
@@ -127,7 +124,7 @@ def make_cmdline(description):
 def list_variables():
     t = vortex.ticket()
     core = load_template(t, '@opjob-variables.tpl')
-    with open(core.srcfile, 'r') as f:
+    with open(core.srcfile) as f:
         for line in f:
             print(line.strip())
 
@@ -180,7 +177,7 @@ def makejob(job):
             jobfile = t.sh.path.abspath(jobfile)
         t.sh.xperm(jobfile, force=True)
         rundate = (re.sub(r"^'(.*)'$", r'\1', tplconf['rundate'])
-                   if isinstance(tplconf['rundate'], six.string_types) else '.')
+                   if isinstance(tplconf['rundate'], str) else '.')
         cmd = tplconf.get('extra_wrapper').format(injob=jobfile,
                                                   tstamp=bronx.stdtypes.date.now().ymdhms,
                                                   appbase=tplconf['appbase'],

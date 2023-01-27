@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# encoding: utf-8
 
 """
 Invokes get/put/prestage on resource handlers created form the command-line options.
@@ -14,8 +13,6 @@ have default values (see the list below).
 This scripts only supports two notations for the command line:
 `--attribute=value` or `--atribute value`.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import locale
 import os
@@ -79,7 +76,7 @@ vortexbase = re.sub(os.path.sep + 'bin$', '',
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
-locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', str('en_US.UTF-8')))
+locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', 'en_US.UTF-8'))
 
 import footprints as fp
 from bronx.fancies import loggers
@@ -95,7 +92,7 @@ class ExtraArgumentError(Exception):
     """Exception raised when incorrect arguments are provided."""
 
     def __init__(self, msg='Incorrect extra arguments. Please check your command line"'):
-        super(ExtraArgumentError, self).__init__(msg)
+        super().__init__(msg)
 
 
 def vortex_delayed_init(t, loadedmods=None):
@@ -151,7 +148,7 @@ def actual_action(action, t, args, fatal=True):
                         print("\n:-( Action '{}' on the resource handler ended badly".format(action))
                 if not rst:
                     if fatal:
-                        raise IOError("... stopping everything since fatal is True and rst={!s}".format(rst))
+                        raise OSError("... stopping everything since fatal is True and rst={!s}".format(rst))
                     else:
                         print("... but going on since fatal is False.")
             else:
