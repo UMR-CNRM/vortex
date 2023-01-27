@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 This example gets a simple resource and puts it at a different place
@@ -7,9 +6,6 @@ in the cache by changing the provider.
 
 Ok 20180801 - GR
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 
 # load the packages used in this example
 import common

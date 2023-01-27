@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Get an analysis using the remote provider.
@@ -20,9 +19,6 @@ or ftserv on super-computers (via ftmotpass) are configured.
 
 Ok 20180731 - GR
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 
 # load the packages used in this example
 import common

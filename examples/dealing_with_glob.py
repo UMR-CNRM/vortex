@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 This example shows how to use the glob expansion mechanism in Vortex:
@@ -10,8 +9,6 @@ This example shows how to use the glob expansion mechanism in Vortex:
 Ok 20190527 - PL
 Ok 20180801 - GR
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 # load the packages used in this example
 import pprint

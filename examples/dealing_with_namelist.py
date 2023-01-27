@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 This example creates a simple namelist on the fly, and manipulates it.
@@ -7,8 +6,6 @@ It should run everywhere.
 
 Ok 20180731 - GR
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 # load the packages used in this example
 import pprint

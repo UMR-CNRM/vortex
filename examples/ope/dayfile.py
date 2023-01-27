@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 OPE Services: writing to the dayfile.
@@ -14,8 +13,6 @@ With $vortex being the home of the project:
 To stop the daemon at end
   $vortex/bin/litj.py stop test
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 import pprint

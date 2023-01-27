@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 OPE Services: routing files.
 
 20210528 - PL updated and adapted for python3 compatibility
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 import pprint
@@ -101,7 +98,7 @@ def test_route():
 
     datafile = 'tempo.dta'
     sh.rm(datafile)
-    with open(datafile, 'wt') as fp:
+    with open(datafile, 'w') as fp:
         contents = "Test VORTEX - " + stime + '\n'
         fp.write(contents)
     print("contents:", contents)

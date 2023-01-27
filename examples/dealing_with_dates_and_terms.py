@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 This example shows a few typical use cases of dates and terms.
@@ -7,8 +6,6 @@ This example shows a few typical use cases of dates and terms.
 Ok 20210201 - LFM
 Ok 20180731 - GR
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 # load the packages used in this example
 from bronx.stdtypes import date

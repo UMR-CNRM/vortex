@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Get an analysis using the Olive provider.
@@ -17,9 +16,6 @@ to describe an existing resource.
 
 Ok 20180731 - GR
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 
 # load the packages used in this example
 import common

@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Various ways to retrieve informations on a resource handler and it's components.
 
 Ok 20180801 - GR
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 
 # load the packages used in this example
 import common.data

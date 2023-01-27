@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Get a namelist file from the Genv provider.
@@ -10,9 +9,6 @@ Can be launched anywhere where Gget or Gget light is available
 Ok 20200109 - PL + NM - added autofill and gautofill
 Ok 20180731 - GR
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 
 # load the packages used in this example
 import common

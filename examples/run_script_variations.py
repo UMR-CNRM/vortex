@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 This example shows how to customize both the command line arguments passed to a
@@ -9,8 +8,6 @@ other version if it is not available).
 
 Ok 20200804 - PL
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import pprint
 

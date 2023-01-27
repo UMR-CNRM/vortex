@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 OPE Services: sending Mails.
@@ -15,8 +14,6 @@ The opmail Service has been designed to meet operational needs:
 Ordinary users are not allowed to use this Service, only operational
 and developper profiles can play with this toy.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 import pprint

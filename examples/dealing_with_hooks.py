@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 This example shows how to use a hook on a file get.
@@ -7,8 +6,6 @@ This example shows how to use a hook on a file get.
 Ok 20190527 - PL + NM
 Ok 20180801 - GR
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 # load the packages used in this example
 import sys

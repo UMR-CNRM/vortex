@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 This example runs a simple Hello world script, created on the fly.
@@ -9,8 +8,6 @@ Ok 20210621 - LFM
 Ok 20200724 - PL python3 compatibility
 Ok 20180731 - GR
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 This example shows how to send an email to a specified user.
@@ -14,8 +13,6 @@ is just sent with 'DEBUG: ' prepended to the subject.
 Ok 20180802 - PL
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import vortex
 from vortex.tools.actions import actiond as ad
 
@@ -29,11 +26,11 @@ if add_an_action:
 
         def __init__(self, tag='DEBUG'):
             self.tag = tag
-            super(TagSubject, self).__init__()
+            super().__init__()
 
         def service_info(self, **kw):
             kw['subject'] = self.tag + ': ' + kw.get('subject', 'no subject')
-            return super(TagSubject, self).service_info(**kw)
+            return super().service_info(**kw)
 
 
     ad.add(TagSubject())

@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from vortex.layout.nodes import Driver, LoopFamily
 
 from .commons_basic import BasicPlusStdpost

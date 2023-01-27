@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 """
 Demonstrate the "on_error" and "delay_component_errors" features of the Node
 objects (e.g Task, Family, ...) + the use of a custom JobAssistant plugin.

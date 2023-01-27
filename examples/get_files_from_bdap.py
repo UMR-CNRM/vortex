@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Example of BDAP access.
@@ -7,15 +6,8 @@ Example of BDAP access.
 This script can only run on Soprano servers (alose, rason, orphie, pagre).
 
 The environment must be set prior to running this script:
-- python2 (2.7 or higher)
+- python3 (3.5 or higher)
 - Vortex must be in the path
-
-Please consider executing or adding these lines to your .bash_profile to do so:
-   export PATH=/opt/rh/python27/root/usr/bin:$PATH
-   export LD_LIBRARY_PATH=/opt/rh/python27/root/usr/lib64:$LD_LIBRARY_PATH
-   export MTOOLDIR=$HOME
-   vortexpath="/soprano/home/marp999/vortex/vortex-olive"
-   export PYTHONPATH=$PYTHONPATH:$vortexpath/site:$vortexpath/src:$vortexpath/project
 
 In Vortex, BDAP extractions are handled by an AlgoComponent wrapping the dap3 utility.
 The request (or query) file must be provided.
@@ -26,9 +18,6 @@ query file).
 
 Ok 20180801 - GR
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 
 # load the packages used in this example
 import common

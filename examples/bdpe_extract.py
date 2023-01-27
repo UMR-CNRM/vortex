@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Example of BDPE extraction.
@@ -8,8 +7,6 @@ The 'extract' function tries to extract a product for several dates, both with
 and without permission to access the archive version of the database. The result
 should be similar to what is produced by the shell version bdpe_extract_cdp.sh.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 # prefer the vortex version this file is in
 import os
