@@ -415,7 +415,7 @@ class PrepMixin(AlgoComponentDecoMixin):
             self._do_input_format_change(sec, infile, self.underlyingformat)
 
             # Standard execution
-            super(self.__class__, self).execute(rh, opts)
+            super(self.mixin_execute_companion(), self).execute(rh, opts)
             sh.subtitle("Listing after PREP")
             sh.dir(output=False, fatal=False)
 

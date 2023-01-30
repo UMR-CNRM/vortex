@@ -5,7 +5,7 @@ Wrappers above usual AlgoComponents.
 import footprints
 from bronx.stdtypes import date
 
-from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError, BlindRun
+from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError
 from common.algo.oopstests import (OOPSObsOpTest, OOPSecma2ccma,
                                    OOPSTestEnsBuild, OOPSTest)
 from common.algo.oopsroot import OOPSAnalysis
@@ -14,8 +14,7 @@ from common.algo.odbtools import (Raw2ODBparallel)
 from common.algo.forecasts import (Forecast, LAMForecast, DFIForecast,
                                    FullPosBDAP, FullPosGeo)
 from common.algo.clim import (BuildPGD, BuildPGD_MPI)
-from common.algo.coupling import (CouplingBaseDateNamMixin, Coupling, PrepMixin)
-from common.tools.drhook import DrHookDecoMixin
+from common.algo.coupling import Coupling, Prep
 from common.algo.fpserver import FullPosServer
 
 #: No automatic export
@@ -158,8 +157,7 @@ class BuildPGD_MPI_CrashWitness(BuildPGD_MPI, _CrashWitnessDecoMixin):
     pass
 
 
-class Prep_CrashWitness(BlindRun, _CrashWitnessDecoMixin,
-                        PrepMixin, CouplingBaseDateNamMixin, DrHookDecoMixin):
+class Prep_CrashWitness(Prep, _CrashWitnessDecoMixin):
     pass
 
 
