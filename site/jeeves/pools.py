@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Handle
 
@@ -8,7 +6,6 @@ Handle
 
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import json
 import os
@@ -155,7 +152,7 @@ def seconds_to_now(atime):
     return (datetime.now() - atime).total_seconds()
 
 
-class Request(object):
+class Request:
     """
     The basic meta structure of any `ask` to Jeeves.
     """
@@ -190,7 +187,7 @@ class Request(object):
             '.'.join((
                 'ask',
                 datetime.now().strftime('%Y%m%d%H%M%S.%f'),
-                'P{0:06d}'.format(os.getpid()),
+                'P{:06d}'.format(os.getpid()),
                 logname(),
                 radical,
                 'json'

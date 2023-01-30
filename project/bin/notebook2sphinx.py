@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
-# encoding: utf-8
 """
 Automatically convert notebooks to a set of RST files.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-import six
 
 argparse_epilog = '''
 '''
@@ -75,14 +71,14 @@ generating the documentation.
 '''
 
 
-class DefaultPackaging(object):
+class DefaultPackaging:
     """The default class to alter exports."""
 
     def __call__(self, rst, resources):
         return rst, resources
 
 
-class DefaultExporter(object):
+class DefaultExporter:
     """The default class to export notebook's file."""
 
     def __init__(self, packager, tarname):
@@ -159,7 +155,7 @@ class DefaultExporter(object):
         with open(rst_out, 'w', encoding='utf-8') as rstfh:
             rstfh.write(rst)
         # Also write potential image files
-        for additional, rawdata in six.iteritems(resources['outputs']):
+        for additional, rawdata in resources['outputs'].items():
             add_out = os.path.join(rst_dir, additional)
             with open(add_out, 'wb') as addfh:
                 addfh.write(rawdata)
@@ -248,7 +244,7 @@ def _index_auto_generate(outputdir, files):
         toc = ('.. toctree::\n   :titlesonly:\n\n' +
                '\n'.join(['   ' + n for n in toindex[radix]]) + '\n\n')
         if os.path.exists(os.path.join(radix, _INDEX_SKEL)):
-            with open(os.path.join(radix, _INDEX_SKEL), 'r', encoding='utf-8') as rstfh:
+            with open(os.path.join(radix, _INDEX_SKEL), encoding='utf-8') as rstfh:
                 full = rstfh.read()
         else:
             if radix == '':

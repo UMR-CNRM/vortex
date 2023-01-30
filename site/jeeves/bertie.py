@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Build some simple questions for Jeeves
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from . import pools
 

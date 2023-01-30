@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Everything related to log recording.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
 import contextlib
@@ -34,7 +31,7 @@ def _void_logger_setid_manager(taskno, loglevel):
     raise NotImplementedError()
 
 
-class AbstractLogFacility(object):
+class AbstractLogFacility:
     """All the necessary features to handle logs in Jeeves"""
 
     @contextlib.contextmanager
@@ -102,7 +99,7 @@ class IdFilter(logging.Filter):
     """
 
     def __init__(self, taskno=None):
-        super(IdFilter, self).__init__()
+        super().__init__()
         self._id = taskno
 
     def filter(self, record):
@@ -249,7 +246,7 @@ class LoggingBasedLogFacility(AbstractLogFacility):
 # -----------------------------------------------------------------------------
 # The legacy LogFacility (Python2 only)
 
-class GentleTalk(object):
+class GentleTalk:
     """An alternative to the logging interface that can be exchanged between processes."""
 
     _levels = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')

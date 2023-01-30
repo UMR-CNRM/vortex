@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# encoding: utf-8
 
 """
 Exports Vortex to the many servers where it is installed.
@@ -15,8 +14,6 @@ For now, only the SSH export service is implemented.
 
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from configparser import ConfigParser
 import contextlib
@@ -25,7 +22,6 @@ import logging
 import os
 import pprint
 import re
-import socket
 import string
 import subprocess
 import sys
@@ -43,19 +39,16 @@ username        = verolive
 #keyfile        = /home/meunierlf/.ssh/id_rsa
 stagingdir      = $HOME/tmp/vortex_auto_unpack
 headdir         = $HOME/vortex
-python27_c2020  = /opt/softs/anaconda3/envs/Python27/bin/python
 python37_c2020  = /opt/softs/anaconda3/envs/Py37nomkl/bin/python
 
 [belenos]
 #disabled        = True
 hostname        = belenos.meteo.fr
-python27        = %(python27_c2020)s
 python3         = %(python37_c2020)s
 
 [taranis]
 disabled        = True
 hostname        = taranis.meteo.fr
-python27        = %(python27_c2020)s
 python3         = %(python37_c2020)s
 
 Example:
@@ -83,7 +76,7 @@ _VTXBASE = re.sub('{0:}project{0:}bin$'.format(os.path.sep), '',
 _TEMPLATE_DIR = os.path.join(_VTXBASE, 'project', 'templates')
 
 
-class ToolboxProvider(object):
+class ToolboxProvider:
     """Abstract class for a Toolbox provider."""
 
     _ALLOWED_VERSIONS = [re.compile(r'master$'),
@@ -221,7 +214,7 @@ class ExportServiceError(Exception):
     pass
 
 
-class ExportService(object):
+class ExportService:
     """Abstract class for an ExportService.
 
     An export service is in charge of transfering data on a remote host and
@@ -234,11 +227,11 @@ class ExportService(object):
         """
         self._internals = kwargs
         for k in ('python_p',
-                  'ldlibrary_p', 'ldlibrary_p_python27', 'ldlibrary_p_python3'):
+                  'ldlibrary_p', 'ldlibrary_p_python3'):
             if k in self._internals:
                 self._internals[k] = self._internals[k].split(';')
         assert 'stagingdir' in self._internals
-        assert 'python27' in self._internals or 'python3' in self._internals
+        assert 'python3' in self._internals
         self._stagedir = None
         self._name = name
         self._tmpdir = tmpdir
@@ -256,8 +249,6 @@ class ExportService(object):
     def avail_py_versions(self):
         """Find out available python's interpreters (from the config file)."""
         avail = set()
-        if 'python27' in self._internals:
-            avail.add(2.7)
         if 'python3' in self._internals:
             avail.add(3)
         return avail
@@ -327,24 +318,14 @@ class ShellAccessExportService(ExportService):
         :param onerror_raise: Should we raise an exception if `cmd` returns a bad exit code
         :param silent: Do we print the stdout/stderr of `cmd` if it fails
         :param catch_output: If True, stdout will be returned by the method (as an array of strings)
-        :param prefered_py: The prefered version for Python (if None, 2.7 will be used if available)
+        :param prefered_py: The prefered version for Python (if None, 3 will be used if available)
         :returns: bool or array of str: True/False depending on `cmd` exit code or stdout if catch_output=True
         """
         pythonpath = list(pythonpath)
         pythonpath.extend(list(self._internals.get('python_p', [])))
         ldlibrary_p_add = list(self._internals.get('ldlibrary_p', []))
 
-        if ('python27' in self._internals and
-                (prefered_py is None or prefered_py in ('27', '2.7', 2.7))):
-            py27_ldlibrary_p_add = ldlibrary_p_add + list(self._internals.get('ldlibrary_p_python27', []))
-            return self._py27_execute(self._internals['python27'], cmd,
-                                      pysubs=dict(cversion='27', dversion='2.7'),
-                                      pythonpath=pythonpath,
-                                      ld_library_path=py27_ldlibrary_p_add,
-                                      onerror_raise=onerror_raise, silent=silent,
-                                      catch_output=catch_output)
-        elif ('python3' in self._internals and
-                (prefered_py is None or prefered_py in ('3', 3))):
+        if ('python3' in self._internals and (prefered_py is None or prefered_py in ('3', 3))):
             py3_ldlibrary_p_add = ldlibrary_p_add + list(self._internals.get('ldlibrary_p_python3', []))
             return self._py3_execute(self._internals['python3'], cmd,
                                      pysubs=dict(cversion='3', dversion='3'),
@@ -355,9 +336,9 @@ class ShellAccessExportService(ExportService):
         else:
             raise ValueError("Please specify a known python interpreter.")
 
-    def _py27_execute(self, interp, cmd, pysubs, pythonpath=(), ld_library_path=(),
-                      onerror_raise=True, silent=False, catch_output=False,
-                      locale='fr_FR.UTF-8'):
+    def _py3_execute(self, interp, cmd, pysubs, pythonpath=(), ld_library_path=(),
+                     onerror_raise=True, silent=False, catch_output=False,
+                     locale='fr_FR.UTF-8'):
         cmd_tr = ""
         if len(pythonpath) > 0:
             cmd_tr += 'export PYTHONPATH={}:$PYTHONPATH; '.format(':'.join(pythonpath))
@@ -368,8 +349,6 @@ class ShellAccessExportService(ExportService):
         cmd_tr += ' '.join([interp, cmd])
         return self.sh_execute(cmd_tr.format(** pysubs), onerror_raise=onerror_raise, silent=silent,
                                catch_output=catch_output)
-
-    _py3_execute = _py27_execute
 
     def upload(self, local):
         if not self._internals['stagingdir']:
@@ -397,8 +376,8 @@ class ShellAccessExportService(ExportService):
         # Run the check (it will generate the pyc files)
         for pyv in self.avail_py_versions():
             self.py_execute("{0:s}/tests/do_working_tests-{{dversion:s}}.py".format(remote_dir),
-                            pythonpath=('{0:s}/src'.format(remote_dir),
-                                        '{0:s}/site'.format(remote_dir)),
+                            pythonpath=('{:s}/src'.format(remote_dir),
+                                        '{:s}/site'.format(remote_dir)),
                             onerror_raise=enforce_check,
                             prefered_py=pyv)
             logger.info("  make check was run on {} with python v{!s}.".format(self.name, pyv))
@@ -420,7 +399,7 @@ class ShellAccessExportService(ExportService):
         finally:
             # Remove the '.tmpdel' directory
             if cleanup:
-                repl_cmd = "rm -rf {0:s}.tmpdel".format(final_dir)
+                repl_cmd = "rm -rf {:s}.tmpdel".format(final_dir)
                 if not self.sh_execute(repl_cmd, onerror_raise=False):
                     naptime = float(self._internals.get('sleep_retry', 2))
                     logger.warning('Waiting %s seconds and retries the delete...',
@@ -469,7 +448,7 @@ def ssh_export_service_error_wrap(func):
     def wrapper(* kargs, ** kwargs):
         try:
             return func(* kargs, ** kwargs)
-        except (paramiko.ssh_exception.SSHException, socket.error):
+        except (paramiko.ssh_exception.SSHException, OSError):
             raise SSHExportServiceError()
     return wrapper
 
@@ -482,7 +461,7 @@ class SSHExportService(ShellAccessExportService):
     """
 
     def __init__(self, name, tmpdir, **kwargs):
-        super(SSHExportService, self).__init__(name, tmpdir, **kwargs)
+        super().__init__(name, tmpdir, **kwargs)
         assert 'hostname' in self._internals
         assert 'username' in self._internals
         self.__theclient = None
@@ -590,7 +569,7 @@ class SSHJumpExportService(SSHExportService):
     """
 
     def __init__(self, name, tmpdir, **kwargs):
-        super(SSHJumpExportService, self).__init__(name, tmpdir, **kwargs)
+        super().__init__(name, tmpdir, **kwargs)
         assert 'jump_hostname' in self._internals
         assert 'jump_username' in self._internals
         self.__theclient = None
@@ -662,7 +641,7 @@ class EcAccessEcmwfExportService(ExportService):
     def __init__(self, name, tmpdir, **kwargs):
         if self._TEMPLATE_ID is None:
             raise NotImplementedError()
-        super(EcAccessEcmwfExportService, self).__init__(name, tmpdir, **kwargs)
+        super().__init__(name, tmpdir, **kwargs)
         assert 'hostname' in self._internals
         assert 'ecaccess_proxy' in self._internals
         assert 'ecaccess_proxy_stagingdir' in self._internals
@@ -708,16 +687,15 @@ class EcAccessEcmwfExportService(ExportService):
         """
         batchsys = self._internals.get('batchsystem', 'default')
         batchtplname = 'autoexport_{}_head_{}.tpl'.format(self._TEMPLATE_ID, batchsys)
-        with open(os.path.join(_TEMPLATE_DIR, batchtplname), 'rt', encoding='utf-8') as fhtpl:
+        with open(os.path.join(_TEMPLATE_DIR, batchtplname), encoding='utf-8') as fhtpl:
             stpl = fhtpl.read()
         tplname = 'autoexport_{}_sync.tpl'.format(self._TEMPLATE_ID)
-        with open(os.path.join(_TEMPLATE_DIR, tplname), 'rt', encoding='utf-8') as fhtpl:
+        with open(os.path.join(_TEMPLATE_DIR, tplname), encoding='utf-8') as fhtpl:
             stpl += fhtpl.read()
 
         stpl = ScriptTemplate(stpl)
 
         ldlibrary_p_add = list(self._internals.get('ldlibrary_p', []))
-        py27_ldlibrary_p_add = ldlibrary_p_add + list(self._internals.get('ldlibrary_p_python27', []))
         py3_ldlibrary_p_add = ldlibrary_p_add + list(self._internals.get('ldlibrary_p_python3', []))
         substuff = dict(jobname='vtxsync',
                         stagedir=self._internals['stagingdir'],
@@ -725,8 +703,6 @@ class EcAccessEcmwfExportService(ExportService):
                         local=local,
                         tmplocation=tmplocation,
                         tmphost=self._internals['ecaccess_proxy'],
-                        python27=self._internals.get('python27', ''),
-                        ldlibs27=':'.join(py27_ldlibrary_p_add),
                         python3=self._internals.get('python3', ''),
                         ldlibs3=':'.join(py3_ldlibrary_p_add))
         with tempfile.NamedTemporaryFile(mode='wt') as fhout:
@@ -746,10 +722,10 @@ class EcAccessEcmwfExportService(ExportService):
         """Create a link from one vortex version to another."""
         batchsys = self._internals.get('batchsystem', 'default')
         batchtplname = 'autoexport_{}_head_{}.tpl'.format(self._TEMPLATE_ID, batchsys)
-        with open(os.path.join(_TEMPLATE_DIR, batchtplname), 'rt', encoding='utf-8') as fhtpl:
+        with open(os.path.join(_TEMPLATE_DIR, batchtplname), encoding='utf-8') as fhtpl:
             stpl = fhtpl.read()
         tplname = 'autoexport_{}_link.tpl'.format(self._TEMPLATE_ID)
-        with open(os.path.join(_TEMPLATE_DIR, tplname), 'rt', encoding='utf-8') as fhtpl:
+        with open(os.path.join(_TEMPLATE_DIR, tplname), encoding='utf-8') as fhtpl:
             stpl += fhtpl.read()
 
         stpl = ScriptTemplate(stpl)
@@ -784,7 +760,7 @@ class EcmwfV1ExportService(EcAccessEcmwfExportService):
     _TEMPLATE_ID = 'ecmwfv1'
 
 
-class ExportTarget(object):
+class ExportTarget:
     """Defines a Target where Vortex is installed."""
 
     def __init__(self, name, tmpdir, **kwargs):

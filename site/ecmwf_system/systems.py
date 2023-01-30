@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 This package handles some common targets used at ECMWF.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 

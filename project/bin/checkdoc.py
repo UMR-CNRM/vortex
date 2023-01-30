@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Check the documentation and generates missing RST files.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import inspect
 import os
@@ -44,7 +41,7 @@ _ALT_AUTHORS = {'bronx': "The Vortex Team & many contributors"}
 
 def process_template(tplname, **subdict):
     tplfile = os.path.join(_DOC_TEMPLATES, tplname)
-    with open(tplfile, 'r', encoding='utf-8') as fhd:
+    with open(tplfile, encoding='utf-8') as fhd:
         tplobj = fhd.read()
     tplobj = string.Template(tplobj)
     return tplobj.substitute(subdict)
@@ -104,7 +101,7 @@ def rstfind(pattern, lines):
 
 def inspect_rst(rst, rstloc, report):
     rstnames = set()
-    with open(rst, 'r', encoding='utf-8') as fdrst:
+    with open(rst, encoding='utf-8') as fdrst:
         rstinfo = fdrst.readlines()
         if rstfind('TODO', rstinfo):
             report['todo'].append(rstloc)

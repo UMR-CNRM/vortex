@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-# encoding: utf-8
 """
 project.bin.coutlines -- count the lines of code in the project
 
 Uses the "cloc.pl" software to compute the number of lines of code in specific
 folders of the vortex project
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import argparse
 import collections

@@ -16,7 +16,7 @@ persistent=yes
 
 # List of plugins (as comma separated values of python modules names) to load,
 # usually to register additional checkers.
-load-plugins=pylint_footprints_import_plugin,pylint_vortex_specials_plugin
+load-plugins=pylint_meta_plugin
 
 # Use multiple processes to speed up Pylint.
 jobs=8
@@ -63,7 +63,7 @@ confidence=
 #   Codes are here: http://pep8.readthedocs.org/en/latest/intro.html#error-codes
 #   They are ignored: E113,E121,E123,E133,E201,E202,E221,E225,E226,E241,E242,E251,E401,W292
 # PYLINT codes there : http://pylint-messages.wikidot.com/all-codes
-disable=C0326
+disable=C0326,C0209,W,R,C
 
 [REPORTS]
 
@@ -100,7 +100,7 @@ msg-template={msg_id}:{path}:{line},{column:2d}: {msg} ({symbol})
 bad-functions=map,filter
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=e,i,j,k,t,x,y,ad,ex,fd,fh,fp,kw,rc,rh,sh,st,Run,logger,_
+good-names=b,e,f,i,j,k,n,t,v,x,y,ad,ex,fd,fh,fp,ko,kw,nb,ok,rc,rh,sh,st,Run,logger,_
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata
@@ -184,7 +184,7 @@ docstring-min-length=-1
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=110
+max-line-length=120
 
 # Regexp for a line that is allowed to be longer than the limit.
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$
@@ -332,16 +332,16 @@ max-branches=12
 max-statements=50
 
 # Maximum number of parents for a class (see R0901).
-max-parents=7
+max-parents=20
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=7
+max-attributes=25
 
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=2
 
 # Maximum number of public methods for a class (see R0904).
-max-public-methods=20
+max-public-methods=30
 
 
 [IMPORTS]

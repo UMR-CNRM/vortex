@@ -1,8 +1,6 @@
 echo "Hostname: $(hostname)"
 echo
 
-PYTHON_27=%{python27}
-LD_LIBS_27=%{ldlibs27}
 PYTHON_3=%{python3}
 LD_LIBS_3=%{ldlibs3}
 
@@ -63,12 +61,6 @@ echo "Testing..."
 cd $VTXNAME
 export LANG='en_US.UTF-8'
 export PYTHONPATH=$(pwd)/src:$(pwd)/site:$(pwd)/project:$PYTHONPATH
-if [ -n "$PYTHON_27" ] ; then
-  if [ -n "$LD_LIBS_27" ] ; then
-    export LD_LIBRARY_PATH=$LD_LIBS_27:$LD_LIBRARY_PATH
-  fi
-  $PYTHON_27 tests/do_working_tests-2.7.py
-fi
 if [ -n "$PYTHON_3" ] ; then
   if [ -n "$LD_LIBS_3" ] ; then
     export LD_LIBRARY_PATH=$LD_LIBS_3:$LD_LIBRARY_PATH

@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-# encoding: utf-8
 """
 Automatically generates an ReST file based on a given configuration file.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -78,7 +75,7 @@ def geometry_easydump(parser, section, comment, ckeys):
     return outstr
 
 
-class RstConfigFileParser(object):
+class RstConfigFileParser:
     """Read and Process the configuration file to document."""
 
     _RST_COMMENT_LINE = re.compile(r'^[#;]R\s+(.*)$')
@@ -96,7 +93,7 @@ class RstConfigFileParser(object):
         """
         self._conffile = conffile
         self._section_cb = section_cb
-        self._fp = open(conffile, 'r', encoding='utf-8')
+        self._fp = open(conffile, encoding='utf-8')
         self._parser = GenericConfigParser(conffile)
 
     def __del__(self):

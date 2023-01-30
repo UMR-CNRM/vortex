@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 Generate index.rst files for a given package's documentation.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 from argparse import ArgumentParser
 import importlib
@@ -33,7 +30,7 @@ _INDEX = 'index' + _DOCEXT
 _TOCINDENT = 3
 
 
-class RstIndexEntry(object):
+class RstIndexEntry:
     """Holds all the necessary data to build an index file."""
 
     def __init__(self, packagedir, fileslist, dirslist, mainpack, maxdepth):
@@ -160,7 +157,7 @@ class RstIndexEntry(object):
 
     @staticmethod
     def _process_template(**subdict):
-        with open(_DOC_TEMPLATE, 'r', encoding='utf-8') as fhd:
+        with open(_DOC_TEMPLATE, encoding='utf-8') as fhd:
             tplobj = fhd.read()
         tplobj = string.Template(tplobj)
         return tplobj.substitute(subdict)
@@ -234,7 +231,7 @@ def rst_finder(mainpack):
                 cleanlist.append(a_file)
 
     rstdepth = max([0] + [rst_depth(f) for f in rstfiles])
-    dirslist = set([os.path.dirname(f) for f in rstfiles])
+    dirslist = {os.path.dirname(f) for f in rstfiles}
     rstdirs = [RstIndexEntry(d, rstfiles, dirslist, mainpack, rstdepth) for d in dirslist]
     rstdirs.sort(key=lambda x: x.tocdepth)
 

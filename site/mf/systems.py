@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 This package handles some common targets used at Meteo France.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import collections
 import contextlib
@@ -58,7 +55,7 @@ class MeteoBullX3(Target):
     @contextlib.contextmanager
     def algo_run_context(self, ticket, *kmappings):
         """Specific target hook before any component run."""
-        with super(MeteoBullX3, self).algo_run_context(ticket, *kmappings):
+        with super().algo_run_context(ticket, *kmappings):
             dis_boost_confkey = 'bullx3_disable_boost'
             dis_boost_cmd = ['clush', '-bw', ticket.env.SLURM_JOB_NODELIST,
                              'sudo', '/opt/softs/amd/{todo:s}_boost_amd.sh']

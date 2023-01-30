@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 An ipython extension to integrate Vortex nicely.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import atexit
 import importlib
@@ -36,7 +32,7 @@ class VortexMagics(Magics):
 
     def __init__(self, shell):
         """Compute the _basedir and initialise things."""
-        super(VortexMagics, self).__init__(shell)
+        super().__init__(shell)
         self._basedir = os.environ.get('IVORTEX_BASEDIR', _IVORTEX_BASEDIR_DEFAULT)
         self._shell = shell
         self._rundir = None

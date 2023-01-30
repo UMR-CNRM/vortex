@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# encoding: utf-8
-# python >= 3.5 required
 
 """
 Run various code checkers on the Vortex' repository.
@@ -44,7 +42,7 @@ _VTXPACKAGES = {sditem.name
 def _property_auto_add(* what):
     """Automatically add property to expose read only attributes listed in **what."""
 
-    class RoAttrDescriptor(object):
+    class RoAttrDescriptor:
         """Abstract accessor class to read-only attributes."""
 
         def __init__(self, attr, doc=None):
@@ -64,7 +62,7 @@ def _property_auto_add(* what):
 # UTILITY CLASS REPRESENTING A PYTHON CODE THAT SHOULD BE ANALYSED -----------
 
 @_property_auto_add('path', 'shortpath', 'fpdetect')
-class VortexPythonCode(object):
+class VortexPythonCode:
     """The content of a Vortex' Python code file."""
 
     def __init__(self, path: str, shortpath: str, fpdetect: bool):
@@ -88,7 +86,7 @@ class VortexPythonCode(object):
     def code(self):
         """Read the source file and returns it as a string."""
         if self._code is None:
-            with open(self._path, 'r', encoding='utf-8') as fhcode:
+            with open(self._path, encoding='utf-8') as fhcode:
                 self._code = fhcode.read()
         return self._code
 
@@ -190,13 +188,12 @@ class MyPycodestyleReporter(pycodestyle.BaseReport):
     def init_file(self, filename, lines, expected, line_offset):
         """Signal a new file."""
         self._deferred_messages = []
-        return super(MyPycodestyleReporter, self).init_file(
+        return super().init_file(
             filename, lines, expected, line_offset)
 
     def error(self, line_number, offset, text, check):
         """Report an error, according to options."""
-        code = super(MyPycodestyleReporter, self).error(line_number, offset,
-                                                        text, check)
+        code = super().error(line_number, offset, text, check)
         if code:
             self._deferred_messages.append(
                 (line_number, offset, code, text[5:], check.__doc__))
@@ -208,7 +205,7 @@ class MyPycodestyleReporter(pycodestyle.BaseReport):
         return self._deferred_messages
 
 
-class PycodestyleChecker(object):
+class PycodestyleChecker:
     """Check the source code using pycodestyle."""
 
     _RESFMT = '{:s}-{:4s}  l.{:4d}.{:-3d}: {:s}'
@@ -255,7 +252,7 @@ class PycodestyleChecker(object):
         return self._parse_results(vpycode, label, result)
 
 
-class PydocstyleChecker(object):
+class PydocstyleChecker:
     """Check the source code using pydocstyle."""
 
     _RESFMT = '{:s}-{:4s}  l.{:4d}    : {!s}: {!s}'
@@ -291,7 +288,7 @@ DictOfImports = typing.Dict[str, typing.Tuple[int, str]]
 SetOfNames = typing.Set[str]
 
 
-class AstroidChecker(object):
+class AstroidChecker:
     """Check the source code for unused imports using astroid."""
 
     _RESFMT_I = '{:s}-imp   l.{:4d}    : {!s}'
@@ -451,7 +448,7 @@ New checker can easily be created by creating a dedicated class that:
 # DEFINITON OF UTILITY CLASSES TO PARSE THE CONFIG FILE AND CRAWL INTO FILES --
 
 
-class _AnyConfigEntry(object):
+class _AnyConfigEntry:
     """handle any kind of configuration data read from the YAML file."""
 
     __metaclass__ = abc.ABCMeta
@@ -486,7 +483,7 @@ class CheckConfig(_AnyConfigEntry):
 
     def __init__(self, name: str, description: dict):
         """Create the configuration object starting form its **description**."""
-        super(CheckConfig, self).__init__(name, description)
+        super().__init__(name, description)
         # Process the definition
         self._label = description['label']
         self._checkers = list()
@@ -519,7 +516,7 @@ class VortexPlace(_AnyConfigEntry):
     def __init__(self, name: str, description: dict,
                  checkconfigs: DictOfCheckConfigs, vortexpath: str):
         """Parse the **decription** read in the YAML configuration file."""
-        super(VortexPlace, self).__init__(name, description)
+        super().__init__(name, description)
         self._path = os.path.join(vortexpath, description['path'])
         self._shortpath = description['path']
         self._fpdetect = bool(description.get('footprints_detect', False))
@@ -577,7 +574,7 @@ class VortexPlace(_AnyConfigEntry):
 DictOfPlaces = typing.Dict[str, VortexPlace]
 
 
-class CheckerConfig(object):
+class CheckerConfig:
     """Gives access to this checker config file."""
 
     def __init__(self, configfile: str, vortexpath: str, configdir: str = None):
@@ -597,9 +594,9 @@ class CheckerConfig(object):
             self._file = configfile
         logger.info('Configuration file in use: %s', self._file)
         if not os.path.exists(self._file):
-            raise IOError("The configuration file {:s} is missing.".format(self._file))
+            raise OSError("The configuration file {:s} is missing.".format(self._file))
         # Load the yaml configuration file
-        with open(self._file, 'r', encoding='utf-8') as fhconf:
+        with open(self._file, encoding='utf-8') as fhconf:
             try:
                 self._confdata = yaml.load(fhconf, yaml.SafeLoader)
             except yaml.YAMLError:

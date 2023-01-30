@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 :mod:`jeeves`: A multipurpose daemon for handling miscellaneous requests.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from . import butlers
 

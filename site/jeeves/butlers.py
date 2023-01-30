@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Daemon related classes:
 
@@ -8,8 +6,6 @@ Daemon related classes:
 
 Jeeves inherits both of them and handles the asynchronous multiprocessing.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import fcntl
 import json
@@ -23,12 +19,10 @@ import subprocess
 import sys
 import time
 from ast import literal_eval
+from configparser import SafeConfigParser
 from datetime import datetime
 from random import randint
 from signal import SIGTERM
-
-import six
-from six.moves.configparser import SafeConfigParser
 
 from bronx.syntax import dictmerge, mktuple
 from . import pools, talking
@@ -124,7 +118,7 @@ def _dispatch_func_wrapper(logger_cb, logger_setid_manager, loglevel,
         return rc
 
 
-class ExitHandler(object):
+class ExitHandler:
     """Context manager for SIGTERM and Co. signals."""
 
     def __init__(self, daemon, on_exit=None, on_stack=False):
@@ -186,7 +180,7 @@ class ExitHandler(object):
         return True
 
 
-class PidFile(object):
+class PidFile:
     """
     Class in charge of pid handling in a simple file.
     """
@@ -205,7 +199,7 @@ class PidFile(object):
         """Create the pid file (would erase an older one) and lock it."""
         try:
             self._fd = os.open(self._filename, os.O_CREAT | os.O_RDWR, 0o644)
-        except IOError as iotrouble:
+        except OSError as iotrouble:
             sys.exit('Failed to open pidfile: %s' % str(iotrouble))
         assert not fcntl.flock(self._fd, fcntl.LOCK_EX)
 
@@ -272,7 +266,7 @@ class PidFile(object):
             ['ps', '-o', 'command', '-p', str(int(contents))],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        stdout, u_stderr = [six.ensure_text(stream) for stream in p.communicate()]
+        stdout, u_stderr = (stream.decode() for stream in p.communicate())
         if stdout == 'COMMAND\n':
             return False
 
@@ -280,7 +274,7 @@ class PidFile(object):
         return self.procname in command and 'python' in command.lower()
 
 
-class BaseDaemon(object):
+class BaseDaemon:
     """
     A generic daemon class.
     Thanks to Sander Marechal : https://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
@@ -356,10 +350,7 @@ class BaseDaemon(object):
     def logfacility(self):
         """A LogFacility instance that provide the necessary features to deal with logging."""
         if self._logfacility is None:
-            if six.PY2:
-                self._logfacility = talking.LegacyLogfacility()
-            else:
-                self._logfacility = talking.LoggingBasedLogFacility()
+            self._logfacility = talking.LoggingBasedLogFacility()
         return self._logfacility
 
     @property
@@ -424,7 +415,7 @@ class BaseDaemon(object):
         # remap std 0, 1 and 2
         if self.daemonized:
             sys.stdin.close()
-            sys.stdin = open(self.stdin, 'r')
+            sys.stdin = open(self.stdin)
         if self.stdout is not None:
             sys.stdout.flush()
             sys.stderr.flush()
@@ -532,7 +523,7 @@ class BaseDaemon(object):
         raise NotImplementedError
 
 
-class HouseKeeping(object):
+class HouseKeeping:
     """A wrapper for all internal config callbacks."""
 
     def internal_reload(self, ask):
@@ -825,7 +816,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         """Multiprocessing dispatching."""
         rc = False
         self.ptask += 1
-        pnum = '{0:06d}'.format(self.ptask)
+        pnum = '{:06d}'.format(self.ptask)
         # complete the json opts with the configuration defaults
         opts = ask.opts.copy()
         for extra in [x for x in acfg.get('options', tuple()) if x not in opts]:

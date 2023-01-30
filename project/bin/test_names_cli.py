@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 project.bin.test_names_cli.py -- Manages Unit-Tests from the test_names package.
@@ -13,9 +12,6 @@ There are several possible actions:
 * dump: Dump a new set of reference data
 
 """
-
-from __future__ import print_function, division, absolute_import, unicode_literals
-import six
 
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -153,10 +149,6 @@ def main():
 
     if args.verbose >= 2:
         loggers.getLogger('test_names').setLevel('DEBUG')
-
-    if six.PY2 and args.ntasks and args.ntasks > 1:
-        logger.warning("The 'concurrent.futures' module is unavailable with Python2: " +
-                       "Won't test things in parallel.")
 
     if args.cprofile:
         logger.info("The number of tasks if resetted to 1 since a cProfile " +

@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# encoding: utf-8
-# python >= 3.5 required
 
 """
 Run a series of test and produce something close to what the test server would
@@ -653,9 +651,9 @@ def main():
     # Configuration data
     confdata = ContribCheckerConfig(args.vortexpath)
     try:
-        with open(args.config, 'r') as fhc:
+        with open(args.config) as fhc:
             confdata.read_file(fhc, source=args.config)
-    except (IOError, OSError):
+    except OSError:
         logger.error("Could not open the configuration file '%s'", args.config)
         raise
 

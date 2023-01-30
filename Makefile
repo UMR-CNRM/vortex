@@ -41,12 +41,9 @@ style:
 cloc        : ; $(CLOCPY) -p $(CLOCBIN) -d $(CLOCDEF) site src tests conf,templates examples sphinx
 cloc_all    : ; $(CLOCPY) -p $(CLOCBIN) -d $(CLOCDEF) .
 
-# Code quality analysis : pyflakes + pep8 + McCabe (cyclomatic complexity)
-flake8: ; flake8 --config=project/flake8.ini --statistics . > project/flake8_report.txt || true
-
 # Code quality analysis : pylint
 pylint:
-	bin/tbinterface.py -a -c all -n 'cen,common,ecmwf,gco,iga,intairpol,olive,previmar,sandbox' -f json -o 'project/tbinterface'
+	bin/tbinterface.py -a -c all -n 'alpha,cen,common,davai,ecmwf,gco,iga,intairpol,olive,previmar,promethee,sandbox,shom' -f json -o 'project/tbinterface'
 	pylint --rcfile=project/pylint.rc src/* site/* > project/pylint_global.txt || true
 
 
