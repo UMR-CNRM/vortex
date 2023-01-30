@@ -1,20 +1,14 @@
-# -*- coding: utf-8 -*-
-
 """
 Footprint utilities to handle the ``priority`` footprint's attribute.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import functools
-
-import six
 
 __all__ = ['top', ]
 
 
 @functools.total_ordering
-class PriorityLevel(object):
+class PriorityLevel:
     """Single level to be used inside footprints."""
 
     def __init__(self, tagname, pset):
@@ -43,14 +37,14 @@ class PriorityLevel(object):
     def __eq__(self, other):
         if not isinstance(other, PriorityLevel):
             try:
-                other = self.inset.level(six.text_type(other))
+                other = self.inset.level(str(other))
             except (ValueError, TypeError):
                 return False
         return self.rank == other.rank
 
     def __gt__(self, other):
         if not isinstance(other, PriorityLevel):
-            other = self.inset.level(six.text_type(other))
+            other = self.inset.level(str(other))
         return self.rank > other.rank
 
     def delete(self):
@@ -94,7 +88,7 @@ class PriorityLevel(object):
         return '{0.tag} (rank={0.rank:d})'.format(self)
 
 
-class PrioritySet(object):
+class PrioritySet:
     """
     Iterable class for handling unsortable priority levels.
     """
@@ -106,8 +100,7 @@ class PrioritySet(object):
         self._freeze = dict(default=self._levels[:])
 
     def __iter__(self):
-        for line in self._levels:
-            yield line
+        yield from self._levels
 
     def __call__(self):
         return tuple(self._levels)
@@ -131,8 +124,8 @@ class PrioritySet(object):
         if isinstance(tag, PriorityLevel):
             return tag
         pl = None
-        if tag and six.text_type(tag).upper() in self._levels:
-            pl = self.__dict__[six.text_type(tag).upper()]
+        if tag and str(tag).upper() in self._levels:
+            pl = self.__dict__[str(tag).upper()]
         return pl
 
     def reset(self):
@@ -197,7 +190,7 @@ class PrioritySet(object):
         if isinstance(tag, PriorityLevel):
             tag = tag.tag
         else:
-            tag = six.text_type(tag).upper()
+            tag = str(tag).upper()
         self._levels.remove(tag)
         del self.__dict__[tag]
 
@@ -206,7 +199,7 @@ class PrioritySet(object):
         if tag is None:
             return None
         else:
-            tag = six.text_type(tag).upper()
+            tag = str(tag).upper()
         self.extend(tag)
         if after is not None:
             self._levels.remove(tag)

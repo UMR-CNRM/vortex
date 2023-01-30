@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
 from unittest import TestCase, main
 
 import footprints
@@ -23,12 +18,12 @@ expected_doc_v1 = """
 
        Automatic parameters from the footprint:
 
-         * **stuff1** (:class:`{0:s}`) - rxx - This is stuff1
+         * **stuff1** (:class:`{:s}`) - rxx - This is stuff1
 
            * Values: set(['titi'])
            * Remap: dict(toto = 'titi',)
 
-         * **stuff2** (:class:`{1:s}`) - rxx - Not documented, sorry.
+         * **stuff2** (:class:`{:s}`) - rxx - Not documented, sorry.
 
            * Optional. Default is 'foo'.
 
@@ -36,7 +31,7 @@ expected_doc_v1 = """
        Aliases of some parameters:
 
          * **arg1** is an alias of stuff1.
-""".format(autofmt(six.text_type), autofmt(float))
+""".format(autofmt(str), autofmt(float))
 
 
 class utDoc(TestCase):

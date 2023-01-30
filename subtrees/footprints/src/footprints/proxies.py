@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Proxy objects to footprints catalogs.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 from bronx.fancies import loggers
 from bronx.patterns import getbytag
@@ -50,8 +46,7 @@ class FootprintProxy(getbytag.GetByTag):
 
     def __iter__(self):
         """Iterates over collectors."""
-        for item in collectors.values():
-            yield item
+        yield from collectors.values()
 
     def cat(self):
         """Print a list of all existing collectors."""
@@ -70,7 +65,7 @@ class FootprintProxy(getbytag.GetByTag):
 
     def objectsmap(self):
         """Return a dictionary of instances sorted by collectors entries."""
-        return dict([(k + 's', c.instances()) for k, c in collectors.items()])
+        return {k + 's': c.instances() for k, c in collectors.items()}
 
     def exists(self, tag):
         """Check if a given ``tag`` of objects is tracked or not."""

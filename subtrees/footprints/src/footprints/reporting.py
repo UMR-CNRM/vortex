@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Hierarchical documents to store footprints information.
 StandardReport is derived from :class:`xml.dom.minidom.Document`.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import six
 
 import collections
 from datetime import datetime
@@ -58,7 +52,7 @@ class FootprintBadLogEntry(Exception):
     pass
 
 
-class NullReport(object):
+class NullReport:
     """Fake reporting: accept any log report command but do nothing."""
 
     def __init__(self, *args, **kw):
@@ -84,7 +78,7 @@ class NullReport(object):
             self._blindlog.append(kw)
 
 
-class FootprintLogEntry(object):
+class FootprintLogEntry:
     """
     Generic entry item in the footprint log.
     Could be :
@@ -120,13 +114,12 @@ class FootprintLogCollector(FootprintLogEntry):
 
     def __init__(self, node, **kw):
         """Default name is the ``node`` entry keypoint."""
-        super(FootprintLogCollector, self).__init__(node, **kw)
+        super().__init__(node, **kw)
         self.name = self.node.tag
 
     def __iter__(self):
         """Iterates on :class:`FootprintLogClass` items."""
-        for kid in sorted(self._items, key=lambda item: item.name):
-            yield kid
+        yield from sorted(self._items, key=lambda item: item.name)
 
     def feed_xml(self, xmlnode):
         """Insert in the specified ``xmlnode`` informations relative to candidate classes."""
@@ -173,20 +166,19 @@ class FootprintLogClass(FootprintLogEntry):
 
     def __init__(self, node, parent, **kw):
         """Default name is the ``node`` fullname method output."""
-        super(FootprintLogClass, self).__init__(node, **kw)
+        super().__init__(node, **kw)
         self.name = self.node.fullname()
         self.parent = parent
         self.parent.add(self)
 
     def __iter__(self):
-        for kid in self._items:
-            yield kid
+        yield from self._items
 
     def feed_xml(self, xmlnode):
         """Insert in the specified ``xmlnode`` informations relative to attributes of the candidate class."""
         xmlnode.current(xmlnode.add('class', name=self.name))
         for kid in self._items:
-            kidstr = dict([(k, six.text_type(v)) for k, v in kid.items()])
+            kidstr = {k: str(v) for k, v in kid.items()}
             xmlnode.add('attribute', **kidstr)
 
     def as_dict(self):
@@ -234,8 +226,7 @@ class FootprintLog(getbytag.GetByTag):
         return len(self._log)
 
     def __iter__(self):
-        for x in self._log:
-            yield x
+        yield from self._log
 
     def items(self):
         """Internal list of items recorded."""
@@ -335,7 +326,7 @@ class FootprintLog(getbytag.GetByTag):
                 if stamp:
                     key += ' ' + item.stamp.isoformat()
                 else:
-                    key += '_{0:04d}'.format(i + 1)
+                    key += '_{:04d}'.format(i + 1)
                 self._dict[key] = item.as_dict()
             self._touch = False
         return self._dict
@@ -345,7 +336,7 @@ class FootprintLog(getbytag.GetByTag):
         print(dump.fulldump(self.as_dict(force=True, stamp=stamp)))
 
 
-class StandardReport(object):
+class StandardReport:
     """XML structured report."""
 
     def __init__(self, doc=None, tag=None):
@@ -405,7 +396,7 @@ class StandardReport(object):
                 yield dico
 
 
-class FlatReport(object):
+class FlatReport:
     """Store entries as simple dictionaries that could be hierarchically reshuffled afterward."""
 
     def __init__(self, sortlist=None):
@@ -445,7 +436,7 @@ class FlatReport(object):
             if done or skip:
                 focus = info.pop('focus')
                 if info:
-                    current[focus] = ' / '.join([six.text_type(x) + ': ' + six.text_type(info[x])
+                    current[focus] = ' / '.join([str(x) + ': ' + str(info[x])
                                                  for x in info.keys()])
                 else:
                     current[focus] = None
@@ -458,7 +449,7 @@ class FlatReport(object):
         print()
 
 
-class FactorizedReport(object):
+class FactorizedReport:
 
     def __init__(
             self,
@@ -528,7 +519,7 @@ class FactorizedReport(object):
             if v is None:
                 raise KeyError("Ordering key not found: {:s}".format(k))
         info = kw.get('args', '')
-        dic[tagvalue] = six.text_type(info)
+        dic[tagvalue] = str(info)
 
     def printer(self, dic, currentindent, depth, ordered=False):
         if depth == len(self):

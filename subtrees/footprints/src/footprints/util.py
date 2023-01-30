@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Utility functions of the :mod:`footprints` package.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import six
 
 import re
 import copy
@@ -64,7 +58,7 @@ def inplace(desc, key, value, globs=None, globalindex=None):
     newd = copy.deepcopy(desc)
     newd[key] = value
     if globs:
-        for k in [x for x in newd.keys() if (x != key and isinstance(newd[x], six.string_types))]:
+        for k in [x for x in newd.keys() if (x != key and isinstance(newd[x], str))]:
             for g in globs.keys():
                 newd[k] = re.sub(r'\[glob:' + g + r'\]', globs[g], newd[k])
     if globalindex is not None:
@@ -233,7 +227,7 @@ def expand(desc):
         while ld:
             d = ld.popleft()
             somechanges = False
-            for k, v in six.iteritems(d):
+            for k, v in d.items():
                 if v.__class__.__name__.startswith('FP'):
                     continue
                 if isinstance(v, list) or isinstance(v, tuple) or isinstance(v, set):
@@ -243,7 +237,7 @@ def expand(desc):
                         globalindex += 1
                     somechanges = True
                     break
-                if isinstance(v, six.string_types) and re.match(r'range\(\d+(,\d+)?(,\d+)?\)$', v, re.IGNORECASE):
+                if isinstance(v, str) and re.match(r'range\(\d+(,\d+)?(,\d+)?\)$', v, re.IGNORECASE):
                     logger.debug(' > Range expansion %s', v)
                     lv = [int(x) for x in re.split(r'[\(\),]+', v) if re.match(r'\d+$', x)]
                     if len(lv) < 2:
@@ -254,14 +248,14 @@ def expand(desc):
                         globalindex += 1
                     somechanges = True
                     break
-                if isinstance(v, six.string_types) and re.search(r',', v):
+                if isinstance(v, str) and re.search(r',', v):
                     logger.debug(' > Coma separated string %s', v)
                     for x in v.split(','):
                         newld.append(inplace(d, k, x, globalindex=globalindex))
                         globalindex += 1
                     somechanges = True
                     break
-                if isinstance(v, six.string_types) and re.search(r'{glob:\w+:', v):
+                if isinstance(v, str) and re.search(r'{glob:\w+:', v):
                     logger.debug(' > Globbing from string %s', v)
                     g_names, g_re, g_glob = _parse_globs(v)
                     repld = list()
@@ -280,7 +274,7 @@ def expand(desc):
                     for dk in [x for x in v.keys() if x in d]:
                         dv = d[dk]
                         if not (isinstance(dv, list) or isinstance(dv, tuple) or isinstance(dv, set)):
-                            newld.append(inplace(d, k, v[dk][six.text_type(dv)], globalindex=globalindex))
+                            newld.append(inplace(d, k, v[dk][str(dv)], globalindex=globalindex))
                             globalindex += 1
                             somechanges = True
                             break
@@ -303,7 +297,7 @@ class FoxyFormatter(string.Formatter):
 
     def get_field(self, field_name, args, kwargs):
         """Given a **field_name**, find the object it references."""
-        obj, used_key = super(FoxyFormatter, self).get_field(field_name, args, kwargs)
+        obj, used_key = super().get_field(field_name, args, kwargs)
         if callable(obj):
             obj = obj()
         return (obj, used_key)
