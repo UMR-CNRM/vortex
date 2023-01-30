@@ -234,7 +234,7 @@ class _SafranWorker(_S2MWorker):
             self.datebegin = self.datebegin + Period(days=1)
         self.datebegin.replace(hour=self.day_begins_at, minute=0, second=0, microsecond=0)
         if self.dateend.hour < self.day_begins_at:
-            self.dateend.day = self.dateend.day - Period(days=1)
+            self.dateend = self.dateend - Period(days=1)
         self.dateend.replace(hour=self.day_begins_at, minute=0, second=0, microsecond=0)
 
     @property
@@ -1355,11 +1355,9 @@ class Guess(ParaExpresso):
     def get_origin(self, rh, opts):
         """Get the subdirectories from the effective inputs"""
         avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
-        subdirs = list()
         cpl_model = list()
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
-                subdirs.append(am.rh.container.dirname)
                 cpl_model.append(am.rh.provider.vconf == '4dvarfr')
 
         return cpl_model
