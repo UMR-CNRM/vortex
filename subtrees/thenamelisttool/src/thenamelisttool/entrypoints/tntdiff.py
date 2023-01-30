@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 TNTdiff - The Namelist Tool: a namelist comparator.
 
@@ -23,13 +21,9 @@ ordered alphabetically and values are formatted in a "standard" way.
 
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import argparse
 import difflib
-import io
 import os
-import six
 import subprocess
 import tempfile
 
@@ -40,7 +34,7 @@ _outfilename = 'tntdiff.out'
 
 
 def _string_encode(valueslist):
-    return [("'{:s}'".format(v) if isinstance(v, six.string_types)
+    return [("'{:s}'".format(v) if isinstance(v, str)
              else "{}".format(v))
             for v in valueslist]
 
@@ -64,7 +58,7 @@ def htmldiff_view(before_filename, after_filename, outfilename):
 
     htmldiff = difflib.HtmlDiff()
     htmlout = htmldiff.make_file(namtxtB, namtxtA, before_filename, after_filename)
-    with io.open(outfilename, "w") as fh_ht:
+    with open(outfilename, "w") as fh_ht:
         fh_ht.writelines(htmlout)
     import webbrowser
     webbrowser.open(outfilename)
@@ -111,7 +105,7 @@ def actual_main(before_filename, after_filename, outfilename):
     keys_to_set = {(b, k): after_namelist[b][k] for b, k in keys_diff.created}
 
     # 4. Keys to be removed.
-    keys_to_remove = set([(b, k) for b, k in keys_diff.deleted if b in after_namelist])
+    keys_to_remove = {(b, k) for b, k in keys_diff.deleted if b in after_namelist}
 
     # 3. Keys to be moved. No way to discriminate from set/remove => treated this way
     # 2. Blocks to be moved. No way to discriminate from new/remove => treated this way
@@ -143,7 +137,7 @@ def actual_main(before_filename, after_filename, outfilename):
 
     # Write to file
     if outfilename is not None:
-        with io.open(outfilename, 'w', encoding='utf_8') as outfh:
+        with open(outfilename, 'w', encoding='utf_8') as outfh:
             outfh.write(outstr)
 
 

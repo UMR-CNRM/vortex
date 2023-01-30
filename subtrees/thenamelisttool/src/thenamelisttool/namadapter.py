@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Adapter classes for namelist's parsers.
 
@@ -7,26 +5,22 @@ Set of adapter classes that uses external namelist's parsers to provide
 functionalities that fit the needs of TNT utilities.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import abc
+import collections
 import re
 
-import six
-
-from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 
 tntlog = loggers.getLogger('tntlog')
 
 # Macros List from vortex's common.data.namelists
 #: TNT's predefined list of macros
-KNOWN_NAMELIST_MACROS = set(['NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
-                             'NBPROCIN', 'NBPROCOUT', 'IDAT', 'CEXP',
-                             'TIMESTEP', 'FCSTOP', 'NMODVAL', 'NBE', 'SEED',
-                             'MEMBER', 'NUMOD', 'OUTPUTID', 'NRESX', 'PERTURB',
-                             'JOUR', 'RES', 'LLADAJ', 'LLADMON', 'LLFLAG',
-                             'LLARO', 'LLVRP', 'LLCAN', ])
+KNOWN_NAMELIST_MACROS = {'NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
+                         'NBPROCIN', 'NBPROCOUT', 'IDAT', 'CEXP',
+                         'TIMESTEP', 'FCSTOP', 'NMODVAL', 'NBE', 'SEED',
+                         'MEMBER', 'NUMOD', 'OUTPUTID', 'NRESX', 'PERTURB',
+                         'JOUR', 'RES', 'LLADAJ', 'LLADMON', 'LLFLAG',
+                         'LLARO', 'LLVRP', 'LLCAN'}
 # Other known namelist's macros (not to be substituted)
 KNOWN_NAMELIST_MACROS.update(['substr6', 'substrA', 'substrC', 'XMP_TYPE',
                               'XLOPT_SCALAR', 'XNCOMBFLEN', 'val_sitr', 'val_sipr',
@@ -40,8 +34,7 @@ FIRST_ORDER_SORTING = 1
 SECOND_ORDER_SORTING = 2
 
 
-@six.add_metaclass(abc.ABCMeta)
-class AbstractNamelistAdapter(collections_abc.Mapping):
+class AbstractNamelistAdapter(collections.abc.Mapping, metaclass=abc.ABCMeta):
     """Every Namelist adapter must derive from this abstract class."""
 
     @abc.abstractmethod
@@ -347,7 +340,7 @@ class AbstractMapableNamelistAdapter(AbstractNamelistAdapter):
 
     @staticmethod
     def _assert_mapping(obj):
-        assert isinstance(obj, collections_abc.Mapping), \
+        assert isinstance(obj, collections.abc.Mapping), \
             'The "{!r}" must be some kind of Mapping.'
 
     def __contains__(self, item):
@@ -384,7 +377,7 @@ class BronxNamelistAdapter(AbstractMapableNamelistAdapter):
     """
 
     def __init__(self, namelistsfile, macros=None):
-        super(BronxNamelistAdapter, self).__init__(namelistsfile)
+        super().__init__(namelistsfile)
         # Delay the import of the bronx library since one may want to use another backend
         from bronx.datagrip import namelist
         actual_macros = self._all_macros(macros)

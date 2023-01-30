@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 A bunch of classes and functions that deal with TNT configuration files and
 directives.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-import six
 
 import collections
 import io
@@ -16,7 +11,6 @@ import re
 import string
 import sys
 
-from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.syntax.decorators import secure_getattr
 from .namadapter import BronxNamelistAdapter
@@ -41,7 +35,7 @@ class TntDirectiveUnkownError(TntDirectiveError):
 
     def __init__(self, name):
         errmsg = 'The "{:s}" directive is not allowed with TNT.'.format(name)
-        super(TntDirectiveUnkownError, self).__init__(errmsg)
+        super().__init__(errmsg)
 
 
 class TntDirectiveValueError(TntDirectiveError):
@@ -49,7 +43,7 @@ class TntDirectiveValueError(TntDirectiveError):
 
     def __init__(self, name, value):
         errmsg = '"{!s}" is not an appropriate value for the "{:s}" directive.'.format(value, name)
-        super(TntDirectiveValueError, self).__init__(errmsg)
+        super().__init__(errmsg)
 
 
 class TntStackDirectiveError(TntDirectiveError):
@@ -60,28 +54,28 @@ class TntStackDirectiveError(TntDirectiveError):
 # TNT directives part
 #
 
-class TntDirective(object):
+class TntDirective:
     """Class that holds all the necessary informations about TNT directives.
 
     It is in charge of checking the correctness of all the provided attributes.
     """
 
-    _ALLOWED_DIRECTIVES = set(('keys_to_remove', 'keys_to_set', 'keys_to_move',
-                               'blocks_to_move', 'blocks_to_remove', 'new_blocks',
-                               'macros', 'namdelta'))
+    _ALLOWED_DIRECTIVES = {'keys_to_remove', 'keys_to_set', 'keys_to_move',
+                           'blocks_to_move', 'blocks_to_remove', 'new_blocks',
+                           'macros', 'namdelta'}
 
     def _check_keytuple(self, val, theexc, unique=False):
         """Verify if *val* is some kind of a (block, key) tuple description."""
         keylist = list()
         # Reformat dictionaries, iterables, ...
-        if isinstance(val, collections_abc.Mapping):
+        if isinstance(val, collections.abc.Mapping):
             for b, v in val.items():
-                if isinstance(v, collections_abc.Iterable) and not isinstance(v, six.string_types):
+                if isinstance(v, collections.abc.Iterable) and not isinstance(v, str):
                     keylist.extend([(b, kk) for kk in v])
                 else:
                     keylist.append((b, v), )
-        elif isinstance(val, collections_abc.Iterable):
-            if all([isinstance(v, collections_abc.Iterable) and not isinstance(v, six.string_types)
+        elif isinstance(val, collections.abc.Iterable):
+            if all([isinstance(v, collections.abc.Iterable) and not isinstance(v, str)
                     for v in val]):
                 keylist.extend(val)
             else:
@@ -90,8 +84,8 @@ class TntDirective(object):
             raise theexc
         # Final check...
         if not all([len(k) == 2 and
-                    isinstance(k[0], six.string_types) and
-                    isinstance(k[1], six.string_types)
+                    isinstance(k[0], str) and
+                    isinstance(k[1], str)
                     for k in keylist]):
             raise theexc
         # Unique element wanted ?
@@ -109,12 +103,12 @@ class TntDirective(object):
     def _process_keys_to_set(self, val, theexc=None):
         kdict = dict()
         myexc = theexc or TntDirectiveValueError('keys_to_set', val)
-        if isinstance(val, collections_abc.Mapping):
+        if isinstance(val, collections.abc.Mapping):
             for k, v in val.items():
-                if isinstance(v, collections_abc.Mapping):
+                if isinstance(v, collections.abc.Mapping):
                     for kk, vv in v.items():
                         kdict[self._check_keytuple((k, kk), myexc, unique=True)] = vv
-                elif isinstance(k, collections_abc.Iterable):
+                elif isinstance(k, collections.abc.Iterable):
                     kdict[self._check_keytuple(k, myexc, unique=True)] = v
                 else:
                     raise myexc
@@ -131,19 +125,19 @@ class TntDirective(object):
         return kdict
 
     def _process_blocks_to_move(self, val):
-        if not (isinstance(val, collections_abc.Mapping) and
-                all([isinstance(k, six.string_types) and isinstance(v, six.string_types)
+        if not (isinstance(val, collections.abc.Mapping) and
+                all([isinstance(k, str) and isinstance(v, str)
                      for k, v in val.items()])):
             raise TntDirectiveValueError('blocks_to_move', val)
         return {k: v for k, v in val.items()}
 
     def _process_set_of_blocks(self, val, realname):
-        if (isinstance(val, collections_abc.Iterable) and
-                not isinstance(val, six.string_types) and
-                all([isinstance(v, six.string_types) for v in val])):
+        if (isinstance(val, collections.abc.Iterable) and
+                not isinstance(val, str) and
+                all([isinstance(v, str) for v in val])):
             return set(val)
-        elif isinstance(val, six.string_types):
-            return set([val, ])
+        elif isinstance(val, str):
+            return {val}
         else:
             raise TntDirectiveValueError(realname, val)
 
@@ -154,13 +148,13 @@ class TntDirective(object):
         return self._process_set_of_blocks(val, 'new_blocks')
 
     def _process_macros(self, val):
-        if not (isinstance(val, collections_abc.Mapping) and
-                all([isinstance(k, six.string_types) for k in val.keys()])):
+        if not (isinstance(val, collections.abc.Mapping) and
+                all([isinstance(k, str) for k in val.keys()])):
             raise TntDirectiveValueError('macros', val)
         return {k: v for k, v in val.items()}
 
     def _process_namdelta(self, val):
-        if not (isinstance(val, six.string_types)):
+        if not (isinstance(val, str)):
             raise TntDirectiveValueError('namdelta', val)
         return val
 
@@ -188,7 +182,7 @@ def read_directives(filename):
     """
     if os.path.splitext(filename)[1] in ('.yaml', '.yml'):
         import yaml
-        with io.open(filename, 'r') as yamlfh:
+        with open(filename) as yamlfh:
             return TntDirective(**yaml.load(yamlfh, Loader=yaml.SafeLoader))
     else:
         prev_bytecode_flag = sys.dont_write_bytecode
@@ -213,7 +207,7 @@ def read_directives(filename):
 # TNTstack directives part
 #
 
-class TntStackDirective(object):
+class TntStackDirective:
     """Class that holds all the necessary informations about TNTstack directives.
 
     :param str basedir: The name of the directory where the TNTstack reqests lies
@@ -233,8 +227,8 @@ class TntStackDirective(object):
         Read the *directives* attribute and create :class:`TntDirective` objects
         from that.
         """
-        if not (isinstance(directives, collections_abc.Mapping) and
-                all([isinstance(v, collections_abc.Mapping) for v in directives.values()])):
+        if not (isinstance(directives, collections.abc.Mapping) and
+                all([isinstance(v, collections.abc.Mapping) for v in directives.values()])):
             raise TntStackDirectiveError('The directives argument must be a mapping of mappings')
         for k, v in directives.items():
             if 'external' in v:
@@ -256,7 +250,7 @@ class TntStackDirective(object):
             tntlog.error("Error while processing todo list item:\n%s", values)
             raise TntStackDirectiveError('The "{:s}" entry is mandatory with the "{:s}" action'
                                          .format(attr, action))
-        if isinstance(stuff, six.string_types) or not isinstance(stuff, collections_abc.Iterable):
+        if isinstance(stuff, str) or not isinstance(stuff, collections.abc.Iterable):
             stuff = [stuff, ]
         else:
             stuff = [v for v in stuff]
@@ -271,8 +265,8 @@ class TntStackDirective(object):
 
     def _todolist_init(self, todolist):
         """Read the *todolist* attribute and check that everything is ok."""
-        if not (isinstance(todolist, collections_abc.Iterable) and
-                all([isinstance(v, collections_abc.Mapping) for v in todolist])):
+        if not (isinstance(todolist, collections.abc.Iterable) and
+                all([isinstance(v, collections.abc.Mapping) for v in todolist])):
             raise TntStackDirectiveError('The todolist argument must be an iterable of mappings')
         for todo in todolist:
             action = todo.get('action', None)
@@ -312,7 +306,7 @@ class TntStackDirective(object):
             # Check the directive entry against existing directives
             if 'directive' in action_d:
                 tocheck = ([action_d['directive'], ]
-                           if isinstance(action_d['directive'], six.string_types)
+                           if isinstance(action_d['directive'], str)
                            else action_d['directive'])
                 for a_dir in tocheck:
                     if a_dir not in self.directives:
@@ -335,7 +329,7 @@ class TntRecipeSyntaxError(ValueError):
     pass
 
 
-class TntRecipe(object):
+class TntRecipe:
     """
     A YAML Recipe reader, that collects namelists and possibly filter them,
     in sight of finally merging them.
@@ -365,14 +359,14 @@ class TntRecipe(object):
     def _read_init_final_elements(self, what, ingredient):
         """Read '__initial__' or '__final__' step **ingredient**."""
         if ingredient is not None:
-            if isinstance(ingredient, six.string_types):
+            if isinstance(ingredient, str):
                 # external namelist
                 if self.sourcenam_directory:
                     ingredient = os.path.join(self.sourcenam_directory, ingredient)
                 nam = BronxNamelistAdapter(ingredient, macros=self.macros)
             elif isinstance(ingredient, dict):
                 # internal dict/yaml namelist
-                nam = BronxNamelistAdapter(six.StringIO(), macros=self.macros)
+                nam = BronxNamelistAdapter(io.StringIO(), macros=self.macros)
                 nam.add_blocks(list(ingredient.keys()))
                 keys_to_add = {}
                 for b, kv in ingredient.items():
@@ -389,7 +383,7 @@ class TntRecipe(object):
                 self._throw_syntax_err(what, ingredient,
                                        "Should be 'null', a string or a dictionary")
         else:
-            nam = BronxNamelistAdapter(six.StringIO(), macros=self.macros)
+            nam = BronxNamelistAdapter(io.StringIO(), macros=self.macros)
         return nam
 
     def _process_ingredient(self, input_nam, blocks):
@@ -411,7 +405,7 @@ class TntRecipe(object):
         # Process the various blocks provided by the user
         if isinstance(blocks, (list, tuple, set)):
             for b in blocks:
-                if isinstance(b, six.string_types):
+                if isinstance(b, str):
                     blocks_filter[input_nam_m.group('filter')].append(b)
                 if isinstance(b, dict) and len(b) == 1:
                     bname, blist = list(b.items())[0]
@@ -430,7 +424,7 @@ class TntRecipe(object):
                 for a_keys_filter in keys_filter.values():
                     authorized_blocks.update(a_keys_filter.keys())
                 blocks_filter['-'] = list(set(ingredient) - authorized_blocks)
-        elif isinstance(blocks, six.string_types) and blocks == '__all__':
+        elif isinstance(blocks, str) and blocks == '__all__':
             pass  # Ok, includes everything
         else:
             self._throw_syntax_err(input_nam, blocks, 'invalid ingredient description')
@@ -473,22 +467,22 @@ class TntRecipe(object):
 def get_template(tplname, encoding=None):
     """Retrieve a template file in the dedicated directory."""
     tplfile = os.path.join(TPL_DIRECTORY, tplname)
-    with io.open(tplfile, 'r', encoding=encoding) as fhtpl:
+    with open(tplfile, encoding=encoding) as fhtpl:
         tpl = string.Template(fhtpl.read())
     return tpl
 
 
 def write_directives_template(out=sys.stdout, tplname='tnt-directive.tpl.py'):
     """Write out a directives template."""
-    if isinstance(out, six.string_types):
-        outfh = io.open(out, 'w')
+    if isinstance(out, str):
+        outfh = open(out, 'w')
     else:
         outfh = out
     outtpl = os.path.join(TPL_DIRECTORY, tplname)
     try:
-        with io.open(outtpl, 'r') as tplfh:
+        with open(outtpl) as tplfh:
             for line in tplfh:
                 outfh.write(line)
     finally:
-        if isinstance(out, six.string_types):
+        if isinstance(out, str):
             outfh.close()

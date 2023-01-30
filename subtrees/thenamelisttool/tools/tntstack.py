@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 TNT Stack - A namelist's pack updater.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os
 import sys

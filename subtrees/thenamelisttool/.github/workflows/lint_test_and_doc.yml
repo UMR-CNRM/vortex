@@ -30,10 +30,10 @@ jobs:
           pip install pycodestyle pydocstyle toml tomli
       - name: Run pycodestyle on src
         run: |
-          pycodestyle --max-line-length=120 --ignore=E741,W504 src
+          pycodestyle --max-line-length=120 --ignore=W504 src
       - name: Run pycodestyle on tests
         run: |    
-          pycodestyle --ignore=E402,E741,E501,W504 tests
+          pycodestyle --max-line-length=120 --ignore=W504 tests
       - name: Run pydocstyle
         run: |    
           pydocstyle
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
@@ -55,6 +55,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install toml pytest
           python -c 'import toml; c = toml.load("pyproject.toml"); print("\n".join(c["project"]["dependencies"]))' | pip install -r /dev/stdin
+          python -c 'import toml; c = toml.load("pyproject.toml"); print("\n".join(c["project"]["optional-dependencies"]["tests"]))' | pip install -r /dev/stdin
       - name: Test with pytest
         run: |
           pytest

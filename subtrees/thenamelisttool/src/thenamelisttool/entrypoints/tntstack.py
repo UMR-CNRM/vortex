@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 TNT Stack - A namelist's pack updater.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import argparse
-import io
 import os
 import yaml
 
@@ -58,7 +53,7 @@ def main():
         dirpath = os.path.realpath(args.directive)
         basedir = os.path.dirname(dirpath)
 
-        with io.open(args.directive, 'r') as fhyaml:
+        with open(args.directive) as fhyaml:
             directive = tnt.config.TntStackDirective(basedir, ** yaml.load(fhyaml))
 
         with tnt.util.set_verbose(args.verbose, args.directive):

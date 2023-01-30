@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Utility methods widely used in the various TNT utilities.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import contextlib
 import glob
-import io
 import logging
 import os
 import shutil
@@ -130,7 +125,7 @@ def process_namelist(filename, directives,
             tntlog.warning('Set of blocks is different from reference: ' + blocks_ref)
             tntlog.warning('diff: ' + str(cb))
 
-    with io.open(target_namfile, 'w', encoding='ascii') as fh_namout:
+    with open(target_namfile, 'w', encoding='ascii') as fh_namout:
         fh_namout.write(initial_nam.dumps(sorting=sorting))
 
 
@@ -217,7 +212,7 @@ def namelist_read_and_sort(namfile):
     """Read a namelist and return it as a sorted string."""
     try:
         namp = BronxNamelistAdapter(namfile)
-    except (ValueError, IOError):
+    except (ValueError, OSError):
         tntlog.error("Something went wrong will reading: %s", namfile)
         raise
     if not len(namp):
@@ -249,10 +244,10 @@ def colorise_diff(lines):
     """Colorise the lines of any kind of difflib outputs."""
     newdiff = list()
     prevline = None
-    for l in lines:
+    for line in lines:
         if prevline:
-            newdiff.append(_color_diffline(prevline, l))
-        prevline = l
+            newdiff.append(_color_diffline(prevline, line))
+        prevline = line
     newdiff.append(_color_diffline(prevline))
     return newdiff
 
@@ -292,7 +287,7 @@ def compose_namelist(recipe_filename,
     # write
     if fhoutput is None:
         namelistname = os.path.basename(recipe_filename.replace('.yaml', suffix))
-        with io.open(namelistname, 'w', encoding='ascii') as fh_namout:
+        with open(namelistname, 'w', encoding='ascii') as fh_namout:
             fh_namout.write(nam.dumps(sorting=sorting))
     else:
         fhoutput.write(nam.dumps(sorting=sorting))

@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 TNTdiff - The Namelist Tool: a namelist comparator.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os
 import sys

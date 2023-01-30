@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 TNTdiffpack - The Namelist Tool: a namelist pack comparator.
 
@@ -18,11 +16,8 @@ formatted in a "standard" way.
 
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import argparse
 import difflib
-import io
 import os
 import sys
 
@@ -90,11 +85,11 @@ def main():
     # Expand the generator objects into lists
     print('Creating diff outputs. It may take a while (depending on the amount of changes).')
     for i, n in enumerate(tracker.updated):
-        computediffs[n] = [l for l in computediffs[n]]
+        computediffs[n] = [line for line in computediffs[n]]
 
     outtpl = tnt.config.get_template('tnt-diffpack-output.tpl', encoding='utf_8')
 
-    with io.open(args.outputfilename, "w") as fhout:
+    with open(args.outputfilename, "w") as fhout:
         fhout.write(outtpl.substitute(ref=args.before, new=args.after,
                                       ko='\n'.join(['{:s}'.format(n) for n in sorted(ko)]),
                                       untouched='\n'.join(['{:s}'.format(n) for n in sorted(tracker.unchanged)]),

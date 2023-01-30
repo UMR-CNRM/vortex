@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import os
 import unittest
 
@@ -40,9 +38,9 @@ class TestTntConfig(unittest.TestCase):
         with self.assertRaises(TntDirectiveValueError):
             TntDirective(blocks_to_remove=1)
         self.assertSetEqual(TntDirective(blocks_to_remove='ARG').blocks_to_remove,
-                            set(['ARG', ]))
+                            {'ARG'})
         self.assertSetEqual(TntDirective(blocks_to_remove=('ARG', 'BLOP')).blocks_to_remove,
-                            set(['ARG', 'BLOP']))
+                            {'ARG', 'BLOP'})
         with self.assertRaises(TntDirectiveValueError):
             TntDirective(macros='MACHIN')
         with self.assertRaises(TntDirectiveValueError):
