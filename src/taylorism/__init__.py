@@ -1,22 +1,16 @@
-# -*- coding: utf-8 -*-
-
 """
 Framework for parallelisation of tasks.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import multiprocessing as mpc
+import queue
 import uuid
 import sys
 import traceback
 import copy
 import os
 from pickle import PickleError
-import subprocess
-from multiprocessing.queues import Empty
 
-import footprints
 from footprints import FootprintBase, FPList, proxy as fpx
 from bronx.fancies import loggers
 from bronx.system import interrupt, cpus  # because subprocesses must be killable properly
@@ -155,7 +149,7 @@ class Worker(FootprintBase):
     )
 
     def __init__(self, *args, **kwargs):
-        super(Worker, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.name is None:
             self.name = str(uuid.uuid4())
             taylorism_log.debug("Worker's name auto-assigned: %s", self.name)
@@ -199,19 +193,7 @@ class Worker(FootprintBase):
     def work(self):
         """Send the Worker to his job."""
         if not self._terminating:
-            try:
-                self._process.start()
-            finally:
-                if os.getpid() != self._parent_pid:
-                    # LFM
-                    # This should really not happened :-( but, because of a flaw
-                    # in Python2.7's multiprocessing.forking.Popen.__init__, in
-                    # the child process (hence the previous if-test), if
-                    # an exception is raised and un-handled in the target method
-                    # os._exit is not called immediately when the target method
-                    # exists... It looks better in Python3.5's multiprocessing.popen_fork
-                    # since a try/finally clause is there to handle that
-                    os._exit(1)
+            self._process.start()
             taylorism_log.debug('Worker process started: pid=%s. name=%s',
                                 self._process.pid, self.name)
         else:
@@ -318,7 +300,7 @@ class BindedWorker(Worker):
     _abstract = True
 
     def __init__(self, *kargs, **kwargs):
-        super(BindedWorker, self).__init__(*kargs, **kwargs)
+        super().__init__(*kargs, **kwargs)
         taylorism_log.warning('The %s class is deprecated. Please use "Worker" instead.',
                               self.__class__.__name__)
 
@@ -328,7 +310,7 @@ class BindedWorker(Worker):
             binding_setup(self)
 
 
-class Boss(object):
+class Boss:
     """
     Template for bosses.
     A Boss is an object supposed to order tasks to a series of workers.
@@ -604,7 +586,7 @@ class Boss(object):
             finally:
                 try:
                     self._send_report(report, splitmode=True)
-                except (ValueError, IOError) as e:
+                except (ValueError, OSError) as e:
                     # ValueError = to_be_sent_back too big.
                     # We are sure that a PickleError won't occur since data were
                     # already pickled once (by the workers)
@@ -624,7 +606,7 @@ class Boss(object):
         while not empty:
             try:
                 self.workers_messenger.get(timeout=communications_timeout)
-            except Empty:
+            except queue.Empty:
                 empty = True
         # Try to join everybody
         for wname in list(workers.keys()):
@@ -709,7 +691,7 @@ class Boss(object):
                 # B. listen to workers
                 try:
                     reported = self.workers_messenger.get(timeout=communications_timeout)
-                except Empty:
+                except queue.Empty:
                     pass
                 else:
                     # got a new message from workers !
@@ -774,4 +756,4 @@ class Boss(object):
             self._stop_them_working(workers)
             raise
 
-        return (report, pending_instructions)
+        return report, pending_instructions
