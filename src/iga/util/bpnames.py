@@ -41,7 +41,7 @@ def _reseau_suffix(cutoff, reseau, vconf=None, vapp=None, suffix_r=False):
     elif vconf in ('angola0025', 'assmp1', 'assms1', 'assms2', 'atourxarp01', 'caledaro01',
                    'euratarpc01', 'frangparo0025', 'frangparoifs0025', 'globalarp02',
                    'globalarpc02', 'globalcep01', 'polyaro01',
-                   'reuaro01', 'ctbto', 'medaroifs') or vapp == 'promethee':
+                   'reuaro01', 'ctbto', 'chimique', 'volcan', 'indonesie', 'medaroifs') or vapp == 'promethee':
         reseau_suff = _reseau
     else:
         logger.warning(
