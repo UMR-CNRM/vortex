@@ -82,7 +82,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
     )
 
     def spawn_hook(self):
-        """"""
+        """Display the namelist before run."""
         super().spawn_hook()
         if self.system.path.exists('fort.3'):
             self.system.subtitle('{:s} : dump namelist <fort.3>'.format(self.realkind))
