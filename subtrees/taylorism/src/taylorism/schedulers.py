@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Contains classes for Schedulers.
 
@@ -32,8 +30,6 @@ Dependencies
 
 :mod:`footprints` (MF package)
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 from footprints import FootprintBase
@@ -78,7 +74,7 @@ class BaseScheduler(FootprintBase):
                                    inheritant classes. (BaseScheduler is abstract).')
 
     def _all_tickets(self):
-        return set([None])
+        return {None}
 
     def _workers_hooks(self):
         """Return a list of callbacks to be triggered before workers task processing."""
@@ -86,7 +82,7 @@ class BaseScheduler(FootprintBase):
 
     def _assign_tickets(self, workers, launchable):
         """Assign available tickets in **launchable** instructions."""
-        assigned_tickets = set([w.scheduler_ticket for w in workers.values()])
+        assigned_tickets = {w.scheduler_ticket for w in workers.values()}
         possible_tickets = sorted(self._all_tickets() - assigned_tickets)
         for instructions in launchable:
             possible_tickets.append(None)
@@ -113,7 +109,7 @@ class NewLaxistScheduler(BaseScheduler):
     def launchable(self, pending_instructions, workers, report):
         """Very crude strategy: any pending instruction could be triggered."""
         launchable = self._assign_tickets(workers, pending_instructions)
-        return (launchable, list())
+        return launchable, list()
 
 
 class NewLimitedScheduler(BaseScheduler):
@@ -203,7 +199,7 @@ class NewMaxThreadsScheduler(NewLimitedScheduler):
         launchable = pending_instructions[0:max(available_threads, 0)]
         not_yet_launchable = pending_instructions[max(available_threads, 0):]
         launchable = self._assign_tickets(workers, launchable)
-        return (launchable, not_yet_launchable)
+        return launchable, not_yet_launchable
 
 
 @BindingAwareScheduler
@@ -248,7 +244,7 @@ class NewMaxMemoryScheduler(NewLimitedScheduler):
 
     def __init__(self, *args, **kw):
         """Setup the maximum available memory."""
-        super(NewMaxMemoryScheduler, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         if self.max_memory is None:
             # memory tools are all but generic, they might fail !
             try:
@@ -274,7 +270,7 @@ class NewMaxMemoryScheduler(NewLimitedScheduler):
             else:
                 not_yet_launchable.append(instructions)
         launchable = self._assign_tickets(workers, launchable)
-        return (launchable, not_yet_launchable)
+        return launchable, not_yet_launchable
 
 
 class LongerFirstScheduler(NewMaxMemoryScheduler):
@@ -328,7 +324,7 @@ class LongerFirstScheduler(NewMaxMemoryScheduler):
                 not_yet_launchable.append(instructions)
 
         launchable = self._assign_tickets(workers, launchable)
-        return (launchable, not_yet_launchable)
+        return launchable, not_yet_launchable
 
 
 class NewSingleOpenFileScheduler(NewMaxThreadsScheduler):
@@ -358,10 +354,10 @@ class NewSingleOpenFileScheduler(NewMaxThreadsScheduler):
             else:
                 launchable.append(pi)
         # and finally sort with regards to MaxThreads
-        (launchable, nyl) = super(NewSingleOpenFileScheduler, self).launchable(launchable, workers, report)
+        (launchable, nyl) = super().launchable(launchable, workers, report)
         not_yet_launchable.extend(nyl)
         launchable = self._assign_tickets(workers, launchable)
-        return (launchable, not_yet_launchable)
+        return launchable, not_yet_launchable
 
 
 # ------------------------------------------------------------------------------
@@ -369,7 +365,7 @@ class NewSingleOpenFileScheduler(NewMaxThreadsScheduler):
 # should abstain to use them.
 
 
-class _AbstractOldSchedulerProxy(object):
+class _AbstractOldSchedulerProxy:
     """the abstract class of deprecated scheduler objects."""
 
     _TARGET_CLASS = None
@@ -381,7 +377,7 @@ class _AbstractOldSchedulerProxy(object):
                        'Instead, use the footprint mechanism to create schedulers.',
                        self.__class__.__name__)
         self.__target_scheduler = self._TARGET_CLASS(*kargs, **kwargs)
-        super(_AbstractOldSchedulerProxy, self).__init__()
+        super().__init__()
 
     @secure_getattr
     def __getattr__(self, name):
@@ -394,7 +390,7 @@ class LaxistScheduler(_AbstractOldSchedulerProxy):
     _TARGET_CLASS = NewLaxistScheduler
 
     def __init__(self):
-        super(LaxistScheduler, self).__init__(nosort=True)
+        super().__init__(nosort=True)
 
 
 class MaxThreadsScheduler(_AbstractOldSchedulerProxy):
@@ -403,7 +399,7 @@ class MaxThreadsScheduler(_AbstractOldSchedulerProxy):
     _TARGET_CLASS = NewMaxThreadsScheduler
 
     def __init__(self, max_threads=0):
-        super(MaxThreadsScheduler, self).__init__(limit='threads', max_threads=max_threads)
+        super().__init__(limit='threads', max_threads=max_threads)
 
 
 class MaxMemoryScheduler(_AbstractOldSchedulerProxy):
@@ -420,9 +416,9 @@ class MaxMemoryScheduler(_AbstractOldSchedulerProxy):
             max_memory = total_system_memory * max_memory_percentage
         else:
             max_memory = None
-        super(MaxMemoryScheduler, self).__init__(limit='memory',
-                                                 max_memory=max_memory,
-                                                 memory_max_percentage=max_memory_percentage)
+        super().__init__(limit='memory',
+                         max_memory=max_memory,
+                         memory_max_percentage=max_memory_percentage)
 
 
 class SingleOpenFileScheduler(_AbstractOldSchedulerProxy):
@@ -431,5 +427,4 @@ class SingleOpenFileScheduler(_AbstractOldSchedulerProxy):
     _TARGET_CLASS = NewSingleOpenFileScheduler
 
     def __init__(self, max_threads=0):
-        super(SingleOpenFileScheduler, self).__init__(limit='threads', max_threads=max_threads,
-                                                      singlefile=True)
+        super().__init__(limit='threads', max_threads=max_threads, singlefile=True)

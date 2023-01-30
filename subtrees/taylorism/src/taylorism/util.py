@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
-
 """
 Various utility classes and functions to be used with the taylorism package.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import multiprocessing
 from multiprocessing import sharedctypes
 
 
-class SharedNumpyArray(object):
+class SharedNumpyArray:
     """
     Wrapper to multiprocessing.Array, for it to be shared in memory among
     Workers, while being handled as a numpy.ndarray or numpy.ma.masked_array.
@@ -72,7 +68,7 @@ class SharedNumpyArray(object):
 
     def __getattribute__(self, attr):
         if attr in ('_np_array', '_mp_array'):
-            return super(SharedNumpyArray, self).__getattribute__(attr)
+            return super().__getattribute__(attr)
         elif attr in ('get_lock', 'acquire', 'release'):
             return self._mp_array.__getattribute__(attr)
         else:
@@ -83,7 +79,7 @@ class SharedNumpyArray(object):
 
     def __setattr__(self, attr, value):
         if attr in ('_np_array', '_mp_array'):
-            super(SharedNumpyArray, self).__setattr__(attr, value)
+            super().__setattr__(attr, value)
         else:
             self._np_array.__setattr__(attr, value)
 

@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import sys
 import time
 
@@ -192,7 +188,7 @@ class UtTaylorism(TestCase):
         report = boss.get_report()
         self.assertEqual(len(report['workers_report']), 3,
                          "3 instructions have been sent, which is not the size of report.")
-        self.assertEqual(set([r['report'][1][0] for r in report['workers_report']]),
+        self.assertEqual({r['report'][1][0] for r in report['workers_report']},
                          set(list(li.socketpacked_cpulist())[:2]))
 
     @stderr2out_deco
