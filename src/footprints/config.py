@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Footprint dynamic configuration.
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 from bronx.fancies import loggers
 from bronx.patterns import getbytag
@@ -111,7 +107,7 @@ class FootprintSetup(getbytag.GetByTag):
 
     def as_dict(self):
         """Return a standalone dictionary or current setup attributes."""
-        return dict([(k.lstrip('_'), v) for k, v in self.__dict__.items()])
+        return {k.lstrip('_'): v for k, v in self.__dict__.items()}
 
     def info(self):
         """Summary of actual settings."""

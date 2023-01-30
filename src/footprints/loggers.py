@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This module provides a few functions on top of the standard logging module in
 order to easily create new loggers (including root ones) and control their
@@ -9,8 +7,6 @@ verbosity level.
 It is kept for backward compatibility, however :mod:`bronx.fancies.loggers` should
 be used now and on.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import sys
 

@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-from six import StringIO
+from io import StringIO
 import sys
 from unittest import TestCase, main
 
@@ -13,7 +9,7 @@ from footprints import reporting
 from footprints.config import FootprintSetup
 
 
-class Foo(object):
+class Foo:
     # noinspection PyUnusedLocal
     def __init__(self, *u_args, **kw):
         self.__dict__.update(kw)

@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Special derivated builtins to be used as attributes in footprints descriptions
 in order to avoid automatic value expansion (for example).
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
 
 import copy
 import re
@@ -59,7 +55,7 @@ class FPTuple(tuple):
         return list(self)
 
 
-class FPRegex(object):
+class FPRegex:
     """A Compiled Regex like object that can be deepcopied"""
 
     def __init__(self, pattern, flags=0):
@@ -80,8 +76,8 @@ class FPRegex(object):
         return (self._re.pattern, self._re.flags)
 
     def __str__(self):
-        return "FPRegex(r'{0:s}', flags={1:d})".format(self._re.pattern, self._re.flags)
+        return "FPRegex(r'{:s}', flags={:d})".format(self._re.pattern, self._re.flags)
 
     def __repr__(self):
-        parent_repr = super(FPRegex, self).__repr__().rstrip('>')
-        return "{0:s} | {1:s}>".format(parent_repr, str(self))
+        parent_repr = super().__repr__().rstrip('>')
+        return "{:s} | {:s}>".format(parent_repr, str(self))

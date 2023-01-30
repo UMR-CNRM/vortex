@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-from six import StringIO
-
 from unittest import TestCase, main
 
 from contextlib import contextmanager
 import copy
+from io import StringIO
 import datetime
 import logging
 import re
@@ -27,7 +21,7 @@ tloglevel = 'critical'
 
 # Classes to be used in module scope
 
-class Foo(object):
+class Foo:
     # noinspection PyUnusedLocal
     def __init__(self, *u_args, **kw):
         self.__dict__.update(kw)
@@ -277,7 +271,7 @@ class utFootprint(TestCase):
                     'default': None,
                     'optional': False,
                     'remap': {'hop': 'hip'},
-                    'values': set(['hip', 'hop']),
+                    'values': {'hip', 'hop'},
                     'outcast': set(),
                     'doc_visibility': doc.visibility.DEFAULT,
                     'doc_zorder': 0,
@@ -322,23 +316,23 @@ class utFootprint(TestCase):
 
         fp2 = copy.deepcopy(fp1)
         self.assertDictEqual(fp1.as_dict(), fp2.as_dict())
-        self.assertSetEqual(fp2.attr['stuff']['values'], set([0, 1]))
+        self.assertSetEqual(fp2.attr['stuff']['values'], {0, 1})
         self.assertIsNot(fp1.attr['stuff']['values'], fp2.attr['stuff']['values'])
 
         fp2 = Footprint(fp1)
         self.assertDictEqual(fp1.as_dict(), fp2.as_dict())
-        self.assertSetEqual(fp2.attr['stuff']['values'], set([0, 1]))
+        self.assertSetEqual(fp2.attr['stuff']['values'], {0, 1})
         self.assertIsNot(fp1.attr['stuff']['values'], fp2.attr['stuff']['values'])
 
     def test_footprint_optional(self):
         fp = self.fpbis
         self.assertIsInstance(fp, Footprint)
-        self.assertSetEqual(fp.as_opts(), set(['arg1', 'stuff1', 'stuff2']))
+        self.assertSetEqual(fp.as_opts(), {'arg1', 'stuff1', 'stuff2'})
         self.assertFalse(fp.optional('stuff1'))
         self.assertTrue(fp.optional('stuff2'))
         self.assertListEqual(fp.mandatory(), ['stuff1'])
         self.assertSetEqual(set(fp.track(dict(arg1=1, stuff2='hello', stuff3=3))),
-                            set(['arg1', 'stuff2']))
+                            {'arg1', 'stuff2'})
 
         with self.assertRaises(KeyError):
             self.assertTrue(fp.optional('stuff3'))
@@ -353,14 +347,14 @@ class utFootprint(TestCase):
         ))
 
         guess, inputattr = fp._firstguess(dict(stuff1='hello'))
-        self.assertSetEqual(inputattr, set(['stuff1']))
+        self.assertSetEqual(inputattr, {'stuff1'})
         self.assertDictEqual(guess, dict(
             stuff1='hello',
             stuff2='foo',
         ))
 
         guess, inputattr = fp._firstguess(dict(arg1='hello'))
-        self.assertSetEqual(inputattr, set(['stuff1']))
+        self.assertSetEqual(inputattr, {'stuff1'})
         self.assertDictEqual(guess, dict(
             stuff1='hello',
             stuff2='foo',
@@ -369,7 +363,7 @@ class utFootprint(TestCase):
         try:
             footprints.setup.defaults['stuff1'] = 'hello'
             guess, inputattr = fp._firstguess(dict())
-            self.assertSetEqual(inputattr, set(['stuff1']))
+            self.assertSetEqual(inputattr, {'stuff1'})
             self.assertDictEqual(guess, dict(
                 stuff1='hello',
                 stuff2='foo',
@@ -456,7 +450,7 @@ class utFootprint(TestCase):
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2]'))
         todo = list(guess.keys())
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2]', stuff2='foo'))
-        self.assertSetEqual(set(todo), set(['stuff1', 'stuff2']))
+        self.assertSetEqual(set(todo), {'stuff1', 'stuff2'})
         rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertFalse(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2]', stuff2='foo'))
@@ -469,7 +463,7 @@ class utFootprint(TestCase):
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2]_and_[more]', more=2))
         todo = list(guess.keys())
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2]_and_[more]', stuff2='foo'))
-        self.assertSetEqual(set(todo), set(['stuff1', 'stuff2']))
+        self.assertSetEqual(set(todo), {'stuff1', 'stuff2'})
         todo.remove('stuff2')
         extras = dict(more=2)
         rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
@@ -490,13 +484,13 @@ class utFootprint(TestCase):
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:value]'))
         todo = set(guess.keys())
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:value]', stuff2='foo', somefoo=None))
-        self.assertSetEqual(todo, set(['stuff1', 'stuff2', 'somefoo']))
+        self.assertSetEqual(todo, {'stuff1', 'stuff2', 'somefoo'})
 
         thisfoo = Foo(value=2)
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:value]', somefoo=thisfoo))
         todo = set(guess.keys())
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:value]', stuff2='foo', somefoo=thisfoo))
-        self.assertSetEqual(todo, set(['stuff1', 'stuff2', 'somefoo']))
+        self.assertSetEqual(todo, {'stuff1', 'stuff2', 'somefoo'})
 
         todo = ['stuff1']
         rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
@@ -536,7 +530,7 @@ class utFootprint(TestCase):
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justdoit]', somefoo=thisfoo))
         todo = set(guess.keys())
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justdoit]', stuff2='foo'))
-        self.assertSetEqual(todo, set(['stuff1', 'stuff2']))
+        self.assertSetEqual(todo, {'stuff1', 'stuff2'})
 
         todo = ['stuff1']
         rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
@@ -656,13 +650,13 @@ class utFootprint(TestCase):
 
         rv, attr_input, attr_seen = fp.resolve(dict(stuff1='misc', kind='deux'), fast=False, fatal=False)
         self.assertDictEqual(rv, dict(stuff1='misc', stuff2='foo', kind=None))
-        self.assertSetEqual(attr_input, set(['stuff1']))
-        self.assertSetEqual(attr_seen, set(['kind']))
+        self.assertSetEqual(attr_input, {'stuff1'})
+        self.assertSetEqual(attr_seen, {'kind'})
 
         rv, attr_input, attr_seen = fp.resolve(dict(stuff1='misc', kind='deux'), fast=True, fatal=False)
         self.assertDictEqual(rv, dict(stuff1='misc', stuff2='foo', kind=None))
-        self.assertSetEqual(attr_input, set(['stuff1']))
-        self.assertSetEqual(attr_seen, set(['kind']))
+        self.assertSetEqual(attr_input, {'stuff1'})
+        self.assertSetEqual(attr_seen, {'kind'})
 
         fp = Footprint(self.fpbis, dict(
             attr=dict(
@@ -672,12 +666,12 @@ class utFootprint(TestCase):
 
         rv, attr_input, attr_seen = fp.resolve(dict(stuff1='misc', stuff3='deux'), fast=False, fatal=False)
         self.assertDictEqual(rv, dict(stuff1='misc', stuff2='foo', stuff3=None))
-        self.assertSetEqual(attr_input, set(['stuff1']))
-        self.assertSetEqual(attr_seen, set(['stuff1', 'stuff2', 'stuff3']))
+        self.assertSetEqual(attr_input, {'stuff1'})
+        self.assertSetEqual(attr_seen, {'stuff1', 'stuff2', 'stuff3'})
 
         rv, attr_input, attr_seen = fp.resolve(dict(stuff1='misc', stuff3='deux'), fast=True, fatal=False)
         self.assertDictEqual(rv, dict(stuff1='misc', stuff2='foo', stuff3=None))
-        self.assertSetEqual(attr_input, set(['stuff1']))
+        self.assertSetEqual(attr_input, {'stuff1'})
         self.assertIn('stuff3', attr_seen)
 
         freezed_keys = footprints.setup.fastkeys
@@ -685,8 +679,8 @@ class utFootprint(TestCase):
 
         rv, attr_input, attr_seen = fp.resolve(dict(stuff1='misc', stuff3='deux'), fast=True, fatal=False)
         self.assertDictEqual(rv, dict(stuff1='misc', stuff2='foo', stuff3=None))
-        self.assertSetEqual(attr_input, set(['stuff1']))
-        self.assertSetEqual(attr_seen, set(['stuff3']))
+        self.assertSetEqual(attr_input, {'stuff1'})
+        self.assertSetEqual(attr_seen, {'stuff3'})
 
         footprints.setup.fastkeys = freezed_keys
 
@@ -750,7 +744,7 @@ class utFootprint(TestCase):
         class MoreFoo(Foo):
             pass
 
-        class FakeFoo(object):
+        class FakeFoo:
             pass
 
         rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='one', stuff3=FakeFoo), fatal=False)
@@ -772,7 +766,7 @@ class utFootprint(TestCase):
         self.assertDictEqual(rv, dict(stuff1=None, stuff2='foo'))
 
         fp.attr['stuff1']['values'].add('four')
-        self.assertSetEqual(fp.attr['stuff1']['values'], set(['one', 'two', 'four']))
+        self.assertSetEqual(fp.attr['stuff1']['values'], {'one', 'two', 'four'})
 
         rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'), fatal=False)
         self.assertDictEqual(rv, dict(stuff1='four', stuff2='foo'))
@@ -801,8 +795,8 @@ class utFootprint(TestCase):
             )
         ))
 
-        self.assertSetEqual(fp.attr['stuff1']['values'], set(['one', 'four']))
-        self.assertSetEqual(fp.attr['stuff1']['outcast'], set(['one', 'two']))
+        self.assertSetEqual(fp.attr['stuff1']['values'], {'one', 'four'})
+        self.assertSetEqual(fp.attr['stuff1']['outcast'], {'one', 'two'})
 
         rv, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='six'), fatal=False)
         self.assertDictEqual(rv, dict(stuff1=None, stuff2='foo'))
@@ -1109,7 +1103,7 @@ class utFootprintBase(TestCase):
         self.assertEqual(FpTmpC._footprint.attr['att1']['optional'], False)
         self.assertEqual(FpTmpC._footprint.attr['att1']['values'], set())
         self.assertEqual(FpTmpC._footprint.attr['att2']['type'], int)
-        self.assertEqual(FpTmpC._footprint.attr['att2']['values'], set((1, 2, 3)))
+        self.assertEqual(FpTmpC._footprint.attr['att2']['values'], {1, 2, 3})
         self.assertEqual(FpTmpC._footprint.attr['att3']['default'], 'scrontch')
         self.assertEqual(FpTmpC._footprint.attr['att3']['optional'], True)
 
@@ -1121,14 +1115,14 @@ class utFootprintBase(TestCase):
     def test_baseclass_fp1(self):
         self.assertFalse(FootprintTestOne.footprint_abstract())
         self.assertSetEqual(set(FootprintTestOne.footprint_mandatory()),
-                            set(['someint', 'kind']))
+                            {'someint', 'kind'})
         self.assertTrue(FootprintTestOne.footprint_optional('somestr'))
         self.assertTrue(FootprintTestOne.footprint_optional('someMixedCase'))
         self.assertSetEqual(set(FootprintTestOne.footprint_values('kind')),
-                            set(['hip', 'hop']))
+                            {'hip', 'hop'})
         self.assertSetEqual(
             FootprintTestOne.footprint_retrieve().as_opts(),
-            set(['someint', 'somestr', 'kind', 'stuff', 'someMixedCase'])
+            {'someint', 'somestr', 'kind', 'stuff', 'someMixedCase'}
         )
 
         footprints.logger.setLevel(logging.CRITICAL)
@@ -1210,13 +1204,13 @@ class utFootprintBase(TestCase):
     def test_baseclass_fp2(self):
         self.assertFalse(FootprintTestTwo.footprint_abstract())
         self.assertSetEqual(set(FootprintTestTwo.footprint_mandatory()),
-                            set(['someint', 'kind', 'somefoo']))
+                            {'someint', 'kind', 'somefoo'})
         self.assertTrue(FootprintTestTwo.footprint_optional('somestr'))
         self.assertSetEqual(set(FootprintTestTwo.footprint_values('kind')),
-                            set(['hip', 'hop', 'poom']))
+                            {'hip', 'hop', 'poom'})
         self.assertSetEqual(
             FootprintTestTwo.footprint_retrieve().as_opts(),
-            set(['someint', 'somestr', 'kind', 'stuff', 'somefoo', 'someMixedCase'])
+            {'someint', 'somestr', 'kind', 'stuff', 'somefoo', 'someMixedCase'}
         )
 
         thefoo = Foo(inside=2)
@@ -1307,7 +1301,7 @@ class utFootprintBase(TestCase):
 
         self.assertIsInstance(x.someint, int)
         self.assertIsInstance(x.somefoo, Foo)
-        self.assertIsInstance(x.somestr, six.string_types)
+        self.assertIsInstance(x.somestr, (str,))
 
         x.someint = 4
         self.assertEqual(x.someint, 4)
@@ -1339,7 +1333,7 @@ class utFootprintBase(TestCase):
     def test_baseclass_couldbe(self):
         rv, attr_input = FootprintTestOne.footprint_couldbe(dict(kind='hip'), mkreport=False)
         self.assertFalse(rv)
-        self.assertSetEqual(attr_input, set(['kind']))
+        self.assertSetEqual(attr_input, {'kind'})
 
         report = reporting.get(tag='void')
         self.assertIsInstance(report, reporting.FootprintLog)
@@ -1348,35 +1342,35 @@ class utFootprintBase(TestCase):
 
         rv, attr_input = FootprintTestOne.footprint_couldbe(dict(kind='hip'), mkreport=True)
         self.assertFalse(rv)
-        self.assertSetEqual(attr_input, set(['kind']))
+        self.assertSetEqual(attr_input, {'kind'})
         self.assertDictEqual(report.last.as_dict(), {
             __name__ + '.FootprintTestOne': {'someint': {'why': 'Missing value'}}
         })
 
         rv, attr_input = FootprintTestOne.footprint_couldbe(dict(kind='hip', someint=12), mkreport=True)
         self.assertFalse(rv)
-        self.assertSetEqual(attr_input, set(['kind']))
+        self.assertSetEqual(attr_input, {'kind'})
         self.assertDictEqual(report.last.as_dict(), {
             __name__ + '.FootprintTestOne': {'someint': {'why': 'Not in values', 'args': 12}}
         })
 
         rv, attr_input = FootprintTestOne.footprint_couldbe(dict(kind='hip', someint=2), mkreport=True)
         self.assertTrue(rv)
-        self.assertSetEqual(attr_input, set(['kind', 'someint']))
+        self.assertSetEqual(attr_input, {'kind', 'someint'})
         self.assertDictEqual(report.last.as_dict(), {
             __name__ + '.FootprintTestOne': {}
         })
 
         rv, attr_input = FootprintTestTwo.footprint_couldbe(dict(kind='hip', someint=1, somefoo=Foo(1)), mkreport=True)
         self.assertTrue(rv)
-        self.assertSetEqual(attr_input, set(['kind', 'someint', 'somefoo']))
+        self.assertSetEqual(attr_input, {'kind', 'someint', 'somefoo'})
         self.assertDictEqual(report.last.as_dict(), {
             __name__ + '.FootprintTestTwo': {}
         })
 
         rv, attr_input = FootprintTestTwo.footprint_couldbe(dict(kind='hip', someint=1, somefoo=1), mkreport=True)
         self.assertTrue(rv)
-        self.assertSetEqual(attr_input, set(['kind', 'someint', 'somefoo']))
+        self.assertSetEqual(attr_input, {'kind', 'someint', 'somefoo'})
         self.assertDictEqual(report.last.as_dict(), {
             __name__ + '.FootprintTestTwo': {}
         })
@@ -1387,7 +1381,7 @@ class utFootprintBase(TestCase):
                                                                     somefoo=FooFP(blop=1, scrontch='hello')),
                                                                mkreport=True)
         self.assertTrue(rv)
-        self.assertSetEqual(attr_input, set(['kind', 'someint', 'somestr', 'somefoo']))
+        self.assertSetEqual(attr_input, {'kind', 'someint', 'somestr', 'somefoo'})
         self.assertDictEqual(report.last.as_dict(), {
             __name__ + '.FootprintTestFpAttr': {}
         })
@@ -1400,7 +1394,7 @@ class utFootprintBase(TestCase):
                                                                     somefoo=a_foo),
                                                                mkreport=True)
         self.assertFalse(rv)
-        self.assertSetEqual(attr_input, set(['kind', 'someint', 'somestr']))
+        self.assertSetEqual(attr_input, {'kind', 'someint', 'somestr'})
         self.assertDictEqual(report.last.as_dict(), {
             __name__ + '.FootprintTestFpAttr': {'somefoo': {'args': ('FooFP', repr(a_foo)),
                                                 'why': 'Could not reclass'}}
@@ -1451,10 +1445,10 @@ class utCollector(TestCase):
         ingest = col.pickup(ingest)
         obj = ingest['garbage']
         self.assertTrue(isinstance(obj, FootprintTestOne))
-        self.assertSetEqual(set(ingest.keys()), set(['somefoo', 'garbage']))
+        self.assertSetEqual(set(ingest.keys()), {'somefoo', 'garbage'})
         ingest = col.pickup(ingest)
         self.assertTrue(ingest['garbage'], obj)
-        self.assertSetEqual(set(ingest.keys()), set(['somefoo', 'garbage']))
+        self.assertSetEqual(set(ingest.keys()), {'somefoo', 'garbage'})
         # Reuse some of the instances
         obj2 = col.default(kind='hip', someint=2, somefoo=Foo())
         self.assertIs(obj, obj2)
@@ -1462,7 +1456,7 @@ class utCollector(TestCase):
         self.assertIsNot(obj, obj2)
         self.assertTrue(isinstance(obj2, FootprintTestOne))
         # grep among instances
-        self.assertSetEqual(set(col.instances), set([obj, obj2, ]))
+        self.assertSetEqual(set(col.instances), {obj, obj2})
         self.assertListEqual(col.grep(someMixedCase='why ?'), [obj2, ])
         self.assertListEqual(col.grep(someMixedCase='nope'), [])
 

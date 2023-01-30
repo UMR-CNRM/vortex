@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Footprint's docstring generator
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import six
 
 import collections
 import re
@@ -84,7 +78,7 @@ def _formating_sphinx_v1(fp, abstractfpobj=False):
                      key=lambda item: item[1]['doc_visibility'].rank * 200 - item[1]['doc_zorder'])
     for attr, desc in s_attrs:
         # Find out the type name
-        t = desc.get('type', six.text_type)
+        t = desc.get('type', str)
         tname = (t.__module__ + '.' if not t.__module__.startswith('__') else '')
         tname += t.__name__
         # The attribute name, typen ...
@@ -94,15 +88,15 @@ def _formating_sphinx_v1(fp, abstractfpobj=False):
         subdesc = list()
         # Is it optional ?
         if desc['optional']:
-            subdesc.append('       * Optional. Default is {0:}.'.format(_sphinx_secured_dump(desc['default'])))
+            subdesc.append('       * Optional. Default is {}.'.format(_sphinx_secured_dump(desc['default'])))
         # The superstars
         for k, v in [(i, desc[i]) for i in ['values', 'outcast'] if desc[i]]:
-            subdesc.append('       * {0:}: {1:}'.format(k.capitalize(), _sphinx_secured_dump(v)))
+            subdesc.append('       * {}: {}'.format(k.capitalize(), _sphinx_secured_dump(v)))
         # Now, print out the rest (whatever is found)
         for k, v in [(i, v) for i, v in desc.items()
                      if i not in ['info', 'type', 'values', 'outcast', 'optional', 'alias',
                                   'default', 'access', 'doc_visibility', 'doc_zorder'] and v]:
-            subdesc.append('       * {0:}: {1:}'.format(k.capitalize(), _sphinx_secured_dump(v)))
+            subdesc.append('       * {}: {}'.format(k.capitalize(), _sphinx_secured_dump(v)))
         if subdesc:
             out.extend(['', ] + subdesc + ['', ])
         # Store aliases (they will be displayed later)

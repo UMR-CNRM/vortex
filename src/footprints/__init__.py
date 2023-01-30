@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 A generic multi-purpose fabric for objects with tunable footprints,
 i.e. some set of key/value pairs that attributes (possibly optional) could cover.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import six
 
 import os
 import re
@@ -123,9 +117,9 @@ def collected_classes():
 def collected_priorities(tag):
     """Print a table of collected classes with a priority level higher or equal to ``tag``."""
     plevel = priorities.top.level(tag)
-    for cl in sorted(set([c
-                          for cv in collectors.values()
-                          for c in cv.filter_higher_level(plevel)]),
+    for cl in sorted({c
+                      for cv in collectors.values()
+                      for c in cv.filter_higher_level(plevel)},
                      key=lambda z: z.fullname()):
         pl = cl.footprint_level()
         print(pl.rjust(10), '-', cl.fullname())
@@ -139,7 +133,7 @@ def reset_package_priority(packname, tag):
 
 # Base classes
 
-class Footprint(object):
+class Footprint:
     """
     This class defines the objects in charge of handling the footprint definition itself
     and the resolution mecanism through keys-values description matching.
@@ -205,7 +199,7 @@ class Footprint(object):
                         fp['attr'][a]['remap'][x] = vfirst
             fp['attr'][a]['values'] = set(fp['attr'][a].get('values', set()))
             fp['attr'][a]['outcast'] = set(fp['attr'][a].get('outcast', set()))
-            ktype = fp['attr'][a].get('type', six.text_type)
+            ktype = fp['attr'][a].get('type', str)
             kargs = fp['attr'][a].get('args', dict())
             for autoreclass in ('values', 'outcast'):
                 for v in fp['attr'][a][autoreclass]:
@@ -260,7 +254,7 @@ class Footprint(object):
         return self._firstguess_keys_internal
 
     def __str__(self):
-        return six.text_type(self.attr)
+        return str(self.attr)
 
     def __repr__(self):
         """A condensed string representation of the present Footprint."""
@@ -455,7 +449,7 @@ class Footprint(object):
         changed = 1
         while changed:
             changed = 0
-            if isinstance(guessk, six.string_types):
+            if isinstance(guessk, str):
                 mobj = replattr.search(guessk)
                 if mobj:
                     replk = mobj.group(1)
@@ -474,7 +468,7 @@ class Footprint(object):
                                              mobj.group(0))
                                 raise
                         else:
-                            return six.text_type(repl)
+                            return str(repl)
 
                     if replk not in guess and replk not in extras:
                         if replx:
@@ -507,7 +501,7 @@ class Footprint(object):
                             guessk = replattr.sub(myautofmt(extras[replk]), guessk, 1)
 
         if (guessk is not None and
-                isinstance(guessk, six.string_types) and
+                isinstance(guessk, str) and
                 replattr.search(guessk)):
             # logger.debug(' > Requeue resolve < %s > : %s (npass=%d)', k, guessk, nbpass)
             todok.append(k)
@@ -578,7 +572,7 @@ class Footprint(object):
                 guess[k] = kdef['remap'][guess[k]]
 
             if guess[k] is not UNKNOWN:
-                ktype = kdef.get('type', six.text_type)
+                ktype = kdef.get('type', str)
                 if kdef.get('isclass', False):
                     if not issubclass(guess[k], ktype):
                         # logger.debug(' > Attr %s class %s not a subclass %s', k, guess[k], ktype)
@@ -594,7 +588,7 @@ class Footprint(object):
                     except (ValueError, TypeError, FootprintException):
                         # logger.debug(' > Attr %s badly reclassed as %s = %s', k, ktype, guess[k])
                         report.add(attribute=k, why=reporting.REPORT_WHY_RECLASS,
-                                   args=(ktype.__name__, six.text_type(guess[k])))
+                                   args=(ktype.__name__, str(guess[k])))
                         diags[k] = True
                         guess[k] = None
                 if kdef['values'] and not self.in_values(guess[k], kdef['values']):
@@ -726,7 +720,7 @@ class DecorativeFootprint(Footprint):
     """
 
     def __init__(self, *args, **kw):
-        super(DecorativeFootprint, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self._decorators = list()
         for a in args:
             if isinstance(a, DecorativeFootprint):
@@ -807,7 +801,7 @@ class FootprintBaseMeta(type):
                     d[kshort] = d.get(k)
 
         # At least build the class itself as a default type
-        realcls = super(FootprintBaseMeta, cls).__new__(cls, n, b, d)
+        realcls = super().__new__(cls, n, b, d)
 
         # Apply local decorators
         for deco in localdeco:
@@ -842,8 +836,7 @@ class FootprintBaseMeta(type):
 
 
 # noinspection PyUnresolvedReferences
-@six.add_metaclass(FootprintBaseMeta)
-class FootprintBase(object):
+class FootprintBase(metaclass=FootprintBaseMeta):
     """
     Base class for any other thematic class that would need to incorporate a :class:`Footprint`.
     Its metaclass is :class:`FootprintBaseMeta`.
@@ -916,7 +909,7 @@ class FootprintBase(object):
     @classmethod
     def fullname(cls):
         """Returns a nicely formatted name of the current class (dump usage)."""
-        return '{0:s}.{1:s}'.format(cls.__module__, cls.__name__)
+        return '{:s}.{:s}'.format(cls.__module__, cls.__name__)
 
     def SUPER(self):
         """A kind of shortcut to parent class. Warning: use with care."""
@@ -1028,7 +1021,7 @@ class FootprintBase(object):
         Basic layout for nicely formatted print, built as the concatenation
         of the class full name and some :meth:`_str_more` additional information.
         """
-        return '{0:s} | {1:s}>'.format(repr(self).rstrip('>'), self._str_more())
+        return '{:s} | {:s}>'.format(repr(self).rstrip('>'), self._str_more())
 
     @property
     def footprint_info(self):

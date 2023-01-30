@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from unittest import TestCase, main
 
 import os
@@ -10,10 +6,10 @@ import tempfile
 
 from bronx.fancies import loggers
 
-from footprints import util, FPList, FPDict
+from footprints import util, FPList
 
 
-class Foo(object):
+class Foo:
     # noinspection PyUnusedLocal
     def __init__(self, *u_args, **kw):
         self.__dict__.update(kw)
@@ -52,7 +48,7 @@ class utList2Dict(TestCase):
 class utInPlace(TestCase):
 
     def setUp(self):
-        class Foo(object):
+        class Foo:
             def __init__(self, **kw):
                 self.__dict__.update(kw)
         self.foo = Foo(inside=['one', 'two'])
@@ -112,7 +108,7 @@ class utExpand(TestCase):
             {'arg': 'hop', 'item': 6, 'index_expansion': 3}
         ])
 
-        rv = util.expand(dict(arg='hop', item=set([7, 8, 9])))
+        rv = util.expand(dict(arg='hop', item={7, 8, 9}))
         rv = sorted(rv,
                     key=lambda i: '_'.join([i['arg'], str(i['item'])]))
         self.assertListEqual(
@@ -172,10 +168,10 @@ class utExpand(TestCase):
             (tmpio, tmpf) = tempfile.mkstemp(dir=tmpd)
             for a in ('hip', 'hop'):
                 for b in range(3):
-                    shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}'.format(tmpd, a, b))
-                    shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:{3:02d}'.format(tmpd, a, b, b * 9))
-                    shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:0'.format(tmpd, a, b))
-                    shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:tr'.format(tmpd, a, b))
+                    shutil.copyfile(tmpf, '{:s}/xx_{:s}_{:04d}'.format(tmpd, a, b))
+                    shutil.copyfile(tmpf, '{:s}/xx_{:s}_{:04d}:{:02d}'.format(tmpd, a, b, b * 9))
+                    shutil.copyfile(tmpf, '{:s}/xx_{:s}_{:04d}:0'.format(tmpd, a, b))
+                    shutil.copyfile(tmpf, '{:s}/xx_{:s}_{:04d}:tr'.format(tmpd, a, b))
             os.close(tmpio)
             os.unlink(tmpf)
             # No match
@@ -272,7 +268,7 @@ class utExpand(TestCase):
             arg='hop',
             atuple=('one', 'two'),
             alist=['a', 'b'],
-            aset=set(['banana', 'orange']),
+            aset={'banana', 'orange'},
             astr='this,that',
             arange='range(1,7,3)'
         ))

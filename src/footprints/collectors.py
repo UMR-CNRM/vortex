@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 Handling of footprints collectors.
 Module's usage is mostly dedicated to the main footprints package.
 The footprints proxy could make some part of the interface visible as well.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import six
 
 from weakref import WeakSet
 import collections
@@ -160,10 +154,10 @@ class Collector(getbytag.GetByTag, Catalog, observer.Observer):
                 if myvalues:
                     # Ensure that the attribute types are consistent
                     if self._fasttrack_type[myattr] is None:
-                        self._fasttrack_type[myattr] = myfp.attr[myattr].get('type', six.text_type)
+                        self._fasttrack_type[myattr] = myfp.attr[myattr].get('type', str)
                         self._fasttrack_typeargs[myattr] = myfp.attr[myattr].get('args', dict())
                     else:
-                        if not (self._fasttrack_type[myattr] is myfp.attr[myattr].get('type', six.text_type) and
+                        if not (self._fasttrack_type[myattr] is myfp.attr[myattr].get('type', str) and
                                 self._fasttrack_typeargs[myattr] == myfp.attr[myattr].get('args', dict())):
                             logger.warning("Inconsistent types (%s vs %s) for fasttrack attributes (class: %s). " +
                                            "Removing it (%s) from the fasttrack list.",
@@ -195,10 +189,10 @@ class Collector(getbytag.GetByTag, Catalog, observer.Observer):
                     del self._fasttrack_trap[myattr]
 
     def _upd_fasttrack_delete(self, cls):
-        for fvalues in six.itervalues(self._fasttrack_index):
-            for classes in six.itervalues(fvalues):
+        for fvalues in self._fasttrack_index.values():
+            for classes in fvalues.values():
                 classes.discard(cls)
-        for classes in six.itervalues(self._fasttrack_trap):
+        for classes in self._fasttrack_trap.values():
             classes.discard(cls)
 
     def _del_fasttrack(self):
@@ -227,7 +221,7 @@ class Collector(getbytag.GetByTag, Catalog, observer.Observer):
     def _fasttrack_subsetting(self, desc):
         if self._fasttrack_attr:
             objgroup_list = list()
-            for k, v in six.iteritems(desc):
+            for k, v in desc.items():
                 if k in self._fasttrack_attr:
                     # Check if the key's value is in the index
                     if v in self._fasttrack_index[k]:
@@ -264,13 +258,13 @@ class Collector(getbytag.GetByTag, Catalog, observer.Observer):
         if kwargs.get('abstract', False):
             self.abstract_classes.add(*items)
         else:
-            super(Collector, self).add(*items)
+            super().add(*items)
             for item in items:
                 self._upd_fasttrack_index(item)
 
     def discard(self, bye):
         """Remove the ``bye`` entry from current catalog."""
-        super(Collector, self).discard(bye)
+        super().discard(bye)
         self._upd_fasttrack_delete(bye)
 
     def pickup_and_cache(self, desc, resolvecache=None):
@@ -299,9 +293,9 @@ class Collector(getbytag.GetByTag, Catalog, observer.Observer):
                     self.report_last.lightdump()
                 if reportstyle == config.FLAT_REPORTINGSTYLE:
                     altreport = self.report_last.as_flat()
-                    altreport.reshuffle([str('why'), str('attribute')], skip=False)
+                    altreport.reshuffle(['why', 'attribute'], skip=False)
                     altreport.fulldump()
-                    altreport.reshuffle([str('only'), str('attribute')], skip=False)
+                    altreport.reshuffle(['only', 'attribute'], skip=False)
                     altreport.fulldump()
                 if reportstyle == config.FACTORIZED1_REPORTINGSTYLE:
                     altreport = self.report_sorted()
@@ -513,7 +507,7 @@ class Collector(getbytag.GetByTag, Catalog, observer.Observer):
 
 
 # Utility classes that cache some results in order to speed-up the resolution
-class ResolveCache(object):
+class ResolveCache:
 
     def __init__(self):
         setup = config.get()

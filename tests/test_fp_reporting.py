@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from contextlib import contextmanager
 import copy
 from datetime import datetime
+from io import StringIO
 import gc
 from unittest import TestCase, main
-from six import StringIO
 import sys
 
 from footprints import dump, reporting
@@ -91,11 +87,11 @@ def capture(command, *args, **kwargs):
         sys.stdout = out
 
 
-class FakeCollector(object):
+class FakeCollector:
     tag = 'fake'
 
 
-class _FakeClassBase(object):
+class _FakeClassBase:
 
     @classmethod
     def fullname(cls):
@@ -128,8 +124,8 @@ class utReporting(TestCase):
         report.add(attribute='otherint', why=reporting.REPORT_WHY_SUBCLASS, args=11)
         report.add(attribute='someint', why=reporting.REPORT_WHY_OUTCAST, args=7)
         report.add(attribute='kind', why=reporting.REPORT_WHY_OUTSIDE, args='rock')
-        report.add(attribute='thirdint', why=reporting.REPORT_WHY_RECLASS, args=(str('int'),
-                                                                                 str('not_a_number')))
+        report.add(attribute='thirdint', why=reporting.REPORT_WHY_RECLASS, args=('int',
+                                                                                 'not_a_number'))
         last_asdict = {'FakeClass1': {'kind': {'args': 'rock', 'why': 'Not in values'},
                                       'otherint': {'args': 11, 'why': 'Not a subclass'}},
                        'FakeClass2': {'kind': {'args': 'rock', 'why': 'Not in values'},
@@ -222,7 +218,7 @@ class utReporting(TestCase):
 
         # Flat Report
         flatreport = rv.last.as_flat()
-        flatreport.reshuffle([str('why'), str('attribute')], skip=False)
+        flatreport.reshuffle(['why', 'attribute'], skip=False)
         with capture(flatreport.fulldump) as output:
             self.assertEqual("\n".join([o.rstrip(' ') if i < 3 else o
                                         for i, o in enumerate(output.split("\n"))]),
