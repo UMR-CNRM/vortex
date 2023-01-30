@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 TNT - The Namelist Tool: a namelist updater.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import argparse
-import io
 import os
 
 import thenamelisttool as tnt
@@ -121,7 +116,7 @@ def main():
             if args.check_namelist or args.squeeze:
                 directives = tnt.config.TntDirective()
             else:
-                with io.open(args.namdelta, 'r') as fhnam:
+                with open(args.namdelta) as fhnam:
                     directives = tnt.config.TntDirective(namdelta=fhnam.read())
         for nam in args.namelists:
             with tnt.util.set_verbose(args.verbose, nam):

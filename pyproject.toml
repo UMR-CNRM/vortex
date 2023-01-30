@@ -17,7 +17,6 @@ classifiers = [
     "License :: CeCILL-C Free Software License Agreement (CECILL-C)",
 ]
 dependencies = [
-    "six",
     "pyyaml",
     "bronx",
 ]
@@ -36,6 +35,9 @@ repository = "https://github.com/meunierlf/thenamelisttool"
 [project.optional-dependencies]
 docs = [
     "sphinx",
+]
+tests = [
+    "pyyaml",
 ]
 
 [tool.setuptools.package-data]

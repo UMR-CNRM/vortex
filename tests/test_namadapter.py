@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import os
 import unittest
 
@@ -60,8 +58,10 @@ class TestTntNamAdapter(unittest.TestCase):
         nadapt.remove_keys([('NAM_WRITE_SURF_ATM', 'LNOWRITE_TEXFILE'),
                             ('NAM_PREP_SEAFLUX', 'LSEA_SBL'), ])
         self.assertEqual(nadapt.dumps(sorting=NO_SORTING), TEST_FINALREF)
-        self.assertSetEqual(set(['NAM_IO', 'NAM_IO_OFFLINE', 'NAM_FILE_NAMES', 'NAM_FILENAMES', 'NAM_TOTO', 'NAM_PREP_ISBA']),
-                            nadapt.check_blocks(nampath))
+        self.assertSetEqual(
+            {'NAM_IO', 'NAM_IO_OFFLINE', 'NAM_FILE_NAMES', 'NAM_FILENAMES', 'NAM_TOTO', 'NAM_PREP_ISBA'},
+            nadapt.check_blocks(nampath)
+        )
         nadapt.merge(BronxNamelistAdapter('&NAM_PREP_WATFLUX LWAT_SBL=T, /'))
         self.assertIs(nadapt['NAM_PREP_WATFLUX']['LWAT_SBL'], True)
         self.assertIn('NAM_TOTO', nadapt)

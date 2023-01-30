@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 TNT - The Namelist Tool - Compose: a namelist composer merging parts of others.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import argparse
 import os

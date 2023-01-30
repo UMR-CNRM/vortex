@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 TNT stands for "The Namelist Tool".
 
@@ -18,8 +16,6 @@ directive files. A template of such directive files can be generated using the
 ``-D`` option (``tnt.py -D`` or ``tntstack.py -D``). The template directives
 files are thoroughly documented and should be regarded as documentation.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from . import config
 from . import namadapter
