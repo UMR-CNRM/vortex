@@ -1695,12 +1695,12 @@ class S2MReforecast(S2MComponent):
             # Guess files are now stored in a tar archive
             if self.system.is_tarfile(am.rh.container.basename):
                 for fic in self.system.untar(am.rh.container.basename):
-                    # fic = YYYYMMDD00/mbXXX/PYYMMDDHH
-                    dirname = self.system.path.dirname(fic)  # YYYYMMDD00/mbXXX
+                    # fic = YYYYMMDDHH/mbXXX/PYYMMDDhh
+                    dirname = self.system.path.dirname(fic)  # YYYYMMDDHH/mbXXX
                     if dirname not in subdirs:
                         subdirs.append(dirname)
-                        rundate = Date(fic.split('/')[0])
-                        dt = rundate.hour - 6
+                        rundate = Date(fic.split('/')[0])  # YYYYMMDDHH
+                        dt = rundate.hour - 6  if rundate.hour in [6, 18] else 6
                         list_dates_begin.append(rundate + Period(hours=dt))
                         list_dates_end.append(rundate + Period(hours=dt) + Period(days=4))
             elif am.rh.container.dirname not in subdirs:
