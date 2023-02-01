@@ -81,7 +81,7 @@ def uriunparse(uridesc):
 
 
 def http_post_data(url, data, ok_statuses=(), proxies=None, headers={}):
-    """Make a http POST request, encoding **data**."""
+    """DEPRECATED (use requests.post) - Make a http POST request, encoding **data**."""
     if not isinstance(data, bytes if six.PY3 else str):
         data = urlparse.urlencode(data).encode('utf-8')
     handlers = []

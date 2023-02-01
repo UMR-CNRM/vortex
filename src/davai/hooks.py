@@ -9,6 +9,7 @@ import json
 from bronx.fancies import loggers
 
 from vortex.tools.net import uriparse
+from vortex.tools.systems import istruedef
 from .util import SummariesStack, DavaiException, send_task_to_DAVAI_server
 
 #: No automatic export
@@ -51,8 +52,10 @@ def send_to_DAVAI_server(t, rh, fatal=True):  # @UnusedVariables
 
     :param fatal: if False, catch errors, log but do not raise
     """
-    server_syntax = 'http://<host>[:<port>]/<url> (port is optional)'
+    scheme2port = {'http':80, 'https':443}
+    server_syntax = 'http[s]://<host>[:<port>]/<url> (port is optional)'
     try:
+        # get data from file
         summary = t.sh.json_load(rh.container.localpath())
         if rh.resource.kind == 'xpinfo':
             jsonData = {rh.resource.kind: summary}
@@ -60,37 +63,43 @@ def send_to_DAVAI_server(t, rh, fatal=True):  # @UnusedVariables
             jsonData = {rh.provider.block: {rh.resource.scope: summary}}
         else:
             raise DavaiException("Only kind=('xpinfo','taskinfo', 'statictaskinfo') resources can be sent.")
+        # get URL to post to
         davai_server_url = t.env.get('DAVAI_SERVER')
         if davai_server_url == '':
             raise DavaiException("DAVAI_SERVER must be defined ! Expected syntax: " + server_syntax)
         else:
             if not davai_server_url.endswith('/api/'):
-                davai_server_url = t.sh.path.join(davai_server_url, 'api', '')
-            davai_server = uriparse(davai_server_url)
+                davai_server_url = '/'.join([davai_server_url, 'api', ''])
+        davai_server = uriparse(davai_server_url)
         if not t.sh.default_target.isnetworknode:
+            # Verify certificate ?
+            target = t.sh.target()
+            verify = bool(istruedef.match(t.sh.default_target.get('davai:ciboulai_verify_ssl_certificate', 'True')))
             # Compute node: open tunnel for send to target
             if davai_server['port'] is None:
-                davai_server['port'] = 80
+                davai_server['port'] = scheme2port[davai_server['scheme']]
             # open tunnel
             sshobj = t.sh.ssh('network', virtualnode=True, maxtries=1,
                               mandatory_hostcheck=False)
             with sshobj.tunnel(davai_server['netloc'], int(davai_server['port'])) as tunnel:
                 # 127.0.0.1 == localhost == tunnel entrance
-                proxies = {'http': 'http://127.0.0.1:{}'.format(tunnel.entranceport)}
+                davai_server_url = '{}://127.0.0.1:{}{}'.format(davai_server['scheme'],
+                                                                tunnel.entranceport,
+                                                                davai_server['path'])
                 send_task_to_DAVAI_server(davai_server_url,
                                           rh.provider.experiment,
                                           json.dumps(jsonData),
                                           kind=rh.resource.kind,
                                           fatal=fatal,
-                                          proxies=proxies,
+                                          verify=verify,
                                           headers={'Host': davai_server['netloc']})
         else:
+            # login/transfer node: send directly
             send_task_to_DAVAI_server(davai_server_url,
                                       rh.provider.experiment,
                                       json.dumps(jsonData),
                                       kind=rh.resource.kind,
-                                      fatal=fatal,
-                                      headers={'Host': davai_server['netloc']})
+                                      fatal=fatal)
     except Exception as e:
         if fatal:
             raise
