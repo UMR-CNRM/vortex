@@ -67,6 +67,11 @@ SOPRANO Servers
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MeteoSopranoDevCTOS8
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Archive targets (pre-staging stuff)
 -----------------------------------
 
