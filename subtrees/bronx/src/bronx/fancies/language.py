@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Various tools related to languages.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import locale
 import re
@@ -49,7 +45,7 @@ _EN_ABERRANT_PLURAL_MAP = {
 }
 
 
-class Pluralise(object):
+class Pluralise:
     """Given a singular word, returns the plural form.
 
     We try to preserve the case as much as possible

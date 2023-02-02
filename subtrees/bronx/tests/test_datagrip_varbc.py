@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 """Tests both :mod:`bronx.datagrip.varbc` and :mod:`bronx.datagrip.varbcheaders`."""
 
 import copy
-import io
 import os
 import unittest
 
 from bronx.syntax.externalcode import ExternalCodeImportChecker
+
+from bronx.datagrip import varbcheaders
 
 # Numpy is not mandatory
 npchecker = ExternalCodeImportChecker('numpy')
@@ -18,8 +15,6 @@ with npchecker as npregister:
 
 if npchecker.is_available():
     from bronx.datagrip import varbc
-
-from bronx.datagrip import varbcheaders
 
 
 DATADIR = os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
@@ -63,22 +58,22 @@ class TestVarbcFile(unittest.TestCase):
         self.assertEqual(vbc_h['date'].ymdh, '2020012306')
         self.assertEqual(vbc_h['nentries'], 3)
         self.assertEqual(vbc_h['expver'], 'TRAJ')
-        self.assertSetEqual(set(vbc_h), set(['version', 'date', 'nentries', 'expver']))
+        self.assertSetEqual(set(vbc_h), {'version', 'date', 'nentries', 'expver'})
         self.assertEqual(len(vbc_h), 4)
 
     def test_varbc_read(self):
-        with io.open(_find_testfile('varbc.arpege-traj.txt.li')) as fhvbc:
+        with open(_find_testfile('varbc.arpege-traj.txt.li')) as fhvbc:
             vbc = varbc.VarbcFile(fhvbc)
         self._assert_ok_varbc(vbc)
-        with io.open(_find_testfile('varbc.arpege-traj.txt.li.ko1')) as fhvbc:
+        with open(_find_testfile('varbc.arpege-traj.txt.li.ko1')) as fhvbc:
             with self.assertRaises(ValueError):
                 varbc.VarbcFile(fhvbc)
-        with io.open(_find_testfile('varbc.arpege-traj.txt.li.ko2')) as fhvbc:
+        with open(_find_testfile('varbc.arpege-traj.txt.li.ko2')) as fhvbc:
             with self.assertRaises(ValueError):
                 varbc.VarbcFile(fhvbc)
 
     def test_varbc_headers(self):
-        with io.open(_find_testfile('varbc.arpege-traj.txt.li')) as fhvbc:
+        with open(_find_testfile('varbc.arpege-traj.txt.li')) as fhvbc:
             vbc = varbcheaders.VarbcHeadersFile(fhvbc)
         self._assert_ok_headers(vbc)
         with self.assertRaises(StopIteration):

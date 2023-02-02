@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from collections import defaultdict
 import gc
 from unittest import TestCase, main
@@ -31,7 +27,7 @@ class SlurpObserver(observer.Observer):
             self.messages[item.tag].append(info)
 
 
-class Foo(object):
+class Foo:
 
     def __init__(self, obsboard, tag):
         self.tag = tag
@@ -72,8 +68,8 @@ class utObservers(TestCase):
         sec_obs.notify_upd(c, 'impostor')
         sec_obs.notify_del(c, 'impostor')
         for obs in (slurper, slurper2):
-            self.assertSetEqual(obs.once_observed, set(['a', 'b']))
-            self.assertSetEqual(obs.currently_observed, set(['b']))
+            self.assertSetEqual(obs.once_observed, {'a', 'b'})
+            self.assertSetEqual(obs.currently_observed, {'b'})
             self.assertDictEqual(obs.messages,
                                  dict(a=['Hey guys!', "I feel like I'm observed", 'Bye Bye'],
                                       b=['Hey guys!', ]))
@@ -82,7 +78,7 @@ class utObservers(TestCase):
         sec_obs.unregister(slurper)
         self.assertEqual(len(sec_obs.observers()), 2)
         b.quit()
-        self.assertSetEqual(slurper.currently_observed, set(['b']))
+        self.assertSetEqual(slurper.currently_observed, {'b'})
         self.assertSetEqual(slurper2.currently_observed, set())
         self.assertDictEqual(slurper.messages,
                              dict(a=['Hey guys!', "I feel like I'm observed", 'Bye Bye'],

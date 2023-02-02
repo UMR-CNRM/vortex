@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Tools for handling axes within figures.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import matplotlib
 import datetime

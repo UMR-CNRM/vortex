@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import unittest
 
 from bronx.system.numa import LibNumaNodesInfo, numa_nodes_info
@@ -100,7 +96,7 @@ _DUAL = dict(nodes=[[list(range(4)), 34359738368, 17179869184],
                      1: {0: 12, 1: 10}, })
 
 
-class FakeLibnumaGateway(object):
+class FakeLibnumaGateway:
     """Behaves like the real libnuma gateway class."""
 
     def __init__(self, nodes, matrix):

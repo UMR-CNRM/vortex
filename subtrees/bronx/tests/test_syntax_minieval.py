@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import ast
 import itertools
 import unittest
@@ -47,7 +43,7 @@ class TestMiniEval(unittest.TestCase):
     def test_ok(self):
         self.assert_eval('"{:s}".format("Toto")', 'Toto')
         self.assert_eval('None', None)
-        self.assert_eval('set([1 + 2, 4])', set([3, 4]))
+        self.assert_eval('set([1 + 2, 4])', {3, 4})
         self.assert_eval('sorted([(1, 2), (2, 0), (3, 1)], key=lambda x: x[1])',
                          [(2, 0), (3, 1), (1, 2)])
         self.assert_eval('sorted([(1, 2), (2, 0), (3, 1)], key=lambda x, d=1: x[d])',
@@ -57,7 +53,7 @@ class TestMiniEval(unittest.TestCase):
                          ['Member00', 'Member01'],
                          members=range(0, 3))
         self.assert_eval('{"Member{:02d}".format(m) if m % 2 == 0 else "strange" for m in members}',
-                         set(['strange', 'Member02', 'Member00']),
+                         {'strange', 'Member02', 'Member00'},
                          members=range(0, 4))
         self.assert_eval('{m: dict(physic="P{:02d}".format(p)) for m, p in zip(members, physics) if p == 0}',
                          {0: {'physic': 'P00'}, 2: {'physic': 'P00'}},

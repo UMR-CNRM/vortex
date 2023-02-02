@@ -1,12 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Useful decorators.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
-
 import time
 
 
@@ -74,7 +68,7 @@ def unicode_filter(func):
     def unicode_func(*args, **kw):
         out = func(*args, **kw)
         if isinstance(out, str):
-            out = six.text_type(out)
+            out = str(out)
         return out
     return unicode_func
 

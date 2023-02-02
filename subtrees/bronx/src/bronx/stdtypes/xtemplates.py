@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 A templating system for nested dictionaries and lists.
 
 The :class:`DefaultTemplate` class should be used directly. See its documentation.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import six
 
 import copy
 import re
@@ -26,10 +20,10 @@ class TemplateLoopRenderingError(TemplateRenderingError):
     """Any exception raised by the :class:`DefaultTemplate` class. during loop expansion"""
 
     def __init__(self, msg):
-        super(TemplateLoopRenderingError, self).__init__('loop rendering: {:s}'.format(msg))
+        super().__init__('loop rendering: {:s}'.format(msg))
 
 
-class DefaultTemplate(object):
+class DefaultTemplate:
     """Recursively walk into nested dictionaries and/or lists templates.
 
     This templating class provides two features:
@@ -163,7 +157,7 @@ class DefaultTemplate(object):
         elif isinstance(tpl, list):
             return [self._recursive_render(v, subs) for v in tpl]
 
-        elif isinstance(tpl, six.string_types):
+        elif isinstance(tpl, str):
             e_match = self._INLINE_EVAL_RE.match(tpl)
             if e_match:
                 return self._sls(e_match.group(1), ** subs)

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*
-
 """
 This module aims at reading tiff with private IFDs.
 It uses PIL for image reading.
@@ -8,10 +6,6 @@ This module uses code from pylibtiff (https://pypi.python.org/pypi/libtiff,
 https://code.google.com/p/pylibtiff or https://github.com/hmeine/pylibtiff)
 """
 
-from __future__ import print_function, absolute_import, division  # , unicode_literals
-import six
-
-import io
 import mmap
 import numpy
 import os
@@ -23,7 +17,7 @@ class PyexttiffError(Exception):
     pass
 
 
-class TiffFile(object):
+class TiffFile:
     """
     This class allows the access to the entire tiff file (tags and images).
     """
@@ -35,7 +29,7 @@ class TiffFile(object):
                   6: 'SBYTE', 7: 'UNDEFINED', 8: 'SSHORT', 9: 'SLONG', 10: 'SRATIONAL',
                   11: 'FLOAT', 12: 'DOUBLE',
                   }
-    _name2type = dict((v, k) for k, v in _type2name.items())
+    _name2type = {v: k for k, v in _type2name.items()}
     _name2type['SHORT|LONG'] = _name2type['LONG']
     _name2type['LONG|SHORT'] = _name2type['LONG']
     _type2bytes = {1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 6: 1, 7: 1, 8: 2, 9: 4, 10: 8, 11: 4, 12: 8}
@@ -43,7 +37,7 @@ class TiffFile(object):
                    6: numpy.int8, 7: numpy.uint8, 8: numpy.int16, 9: numpy.int32, 10: _srational,
                    11: numpy.float32, 12: numpy.float64}
 
-    class _LittleEndianNumpyDTypes(object):
+    class _LittleEndianNumpyDTypes:
         uint8 = numpy.dtype('<u1')
         uint16 = numpy.dtype('<u2')
         uint32 = numpy.dtype('<u4')
@@ -59,9 +53,9 @@ class TiffFile(object):
 
         @property
         def type2dt(self):
-            return dict((k, numpy.dtype(v).newbyteorder('<')) for k, v in TiffFile._type2dtype.items())
+            return {k: numpy.dtype(v).newbyteorder('<') for k, v in TiffFile._type2dtype.items()}
 
-    class _BigEndianNumpyDTypes(object):
+    class _BigEndianNumpyDTypes:
         uint8 = numpy.dtype('>u1')
         uint16 = numpy.dtype('>u2')
         uint32 = numpy.dtype('>u4')
@@ -77,7 +71,7 @@ class TiffFile(object):
 
         @property
         def type2dt(self):
-            return dict((k, numpy.dtype(v).newbyteorder('>')) for k, v in TiffFile._type2dtype.items())
+            return {k: numpy.dtype(v).newbyteorder('>') for k, v in TiffFile._type2dtype.items()}
 
     def __init__(self, filename, subIFDpaths=[], method=1):
         """Opens a tiff file, reads header and IFDs.
@@ -93,8 +87,8 @@ class TiffFile(object):
 
         *method* is the method used to read data:
 
-            * 1: f=io.open(..., 'rb') ; numpy.frombuffer(f.read(), dtype=numpy.ubyte)
-            * 2: f=io.open(..., 'rb') ; numpy.ndarray(buffer=mmap(f), dtype=numpy.ubyte)
+            * 1: f=open(..., 'rb') ; numpy.frombuffer(f.read(), dtype=numpy.ubyte)
+            * 2: f=open(..., 'rb') ; numpy.ndarray(buffer=mmap(f), dtype=numpy.ubyte)
             * 3: same as 2 but with modifications allowed - DANGEROUS
 
         """
@@ -102,18 +96,18 @@ class TiffFile(object):
         self._subIFDpaths = subIFDpaths
         self._fileHandle = None
         if not os.path.exists(filename):
-            raise IOError(filename + " must exists.")
+            raise OSError(filename + " must exists.")
 
         # Reading file
         if method == 1:
-            with io.open(filename, 'rb') as f:
+            with open(filename, 'rb') as f:
                 self._data = numpy.frombuffer(f.read(), dtype=numpy.ubyte)
         elif method == 2:
-            self._fileHandle = io.open(filename, 'rb')
+            self._fileHandle = open(filename, 'rb')
             mm = mmap.mmap(self._fileHandle.fileno(), 0, prot=mmap.PROT_READ)
             self._data = numpy.ndarray(shape=(mm.size(),), buffer=mm, dtype=numpy.ubyte)
         elif method == 3:
-            self._fileHandle = io.open(filename, 'r+b')
+            self._fileHandle = open(filename, 'r+b')
             mm = mmap.mmap(self._fileHandle.fileno(), 0)
             self._data = numpy.ndarray(shape=(mm.size(),), buffer=mm, dtype=numpy.ubyte)
         else:
@@ -128,12 +122,12 @@ class TiffFile(object):
             self.endian = 'big'
             self.dtypes = TiffFile._BigEndianNumpyDTypes()
         else:
-            raise IOError('unrecognized byteorder: %s' % (hex(byteorder)))
+            raise OSError('unrecognized byteorder: %s' % (hex(byteorder)))
 
         # Decoding header - magic number
         magic = self._get_uint16(2)
         if magic != 42:
-            raise IOError('wrong magic number for TIFF file: %s' % magic)
+            raise OSError('wrong magic number for TIFF file: %s' % magic)
 
         # Decoding header - first IFD offset
         IFD0offset = self._get_uint32(4)
@@ -216,7 +210,7 @@ class TiffFile(object):
         """
         Returns the stringio representeing the buffer.
         """
-        return six.StringIO(self.get_buffer())
+        return io.StringIO(self.get_buffer())
 
     def get_PILImage(self):
         """
@@ -241,7 +235,7 @@ class TiffFile(object):
             dtype = typ
             size = typ().itemsize
         else:
-            if isinstance(typ, six.string_types):
+            if isinstance(typ, str):
                 ntyp = typ
                 typ = TiffFile._name2type.get(typ)
             else:
@@ -321,10 +315,10 @@ class IFD(list):
 
     def as_dict(self):
         """Returns a dictionary containing all entries."""
-        return dict([(entry.get_tag(), entry.get_value()) for entry in self])
+        return {entry.get_tag(): entry.get_value() for entry in self}
 
 
-class IFDEntry(object):
+class IFDEntry:
     """This class represent an IFD entry."""
 
     # <TagName> <Hex> <Type> <Number of values>
@@ -549,7 +543,7 @@ EXIF_ImageUniqueID a420 ASCII 33
 
     def get_tagName(self):
         """Returns the tag name."""
-        return self._tag_value2name.get(self.get_tag, 'TAG%s' % (hex(self._tag),))
+        return self._tag_value2name.get(self.get_tag, 'TAG{}'.format(hex(self._tag)))
 
     def get_type(self):
         """Returns the type of entry."""

@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """Utility class to read the headers of a VarBC files."""
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
+import collections
 import re
 
-from bronx.compat.moves import collections_abc
 from bronx.stdtypes.date import Date
 
 
@@ -14,7 +9,7 @@ from bronx.stdtypes.date import Date
 __all__ = []
 
 
-class VarbcHeadersFile(collections_abc.Mapping):
+class VarbcHeadersFile(collections.abc.Mapping):
     r"""Class to handle the headers of a VarBC file.
 
     By headers, we mean the first 3 lines that contain informations about the
@@ -77,8 +72,7 @@ other stuff..."""
         return self._metadata[item]
 
     def __iter__(self):
-        for k in self._metadata.keys():
-            yield k
+        yield from self._metadata.keys()
 
     def __len__(self):
         return len(self._metadata)

@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from contextlib import contextmanager
-from six import StringIO
+from io import StringIO
 import os
 import sys
 import unittest
@@ -17,7 +13,7 @@ class FanciesDisplayTest(unittest.TestCase):
     def _divert_stdin(self, *lines):
         oldstdin = sys.stdin
         newstdin = StringIO()
-        newstdin.writelines([l + '\n' for l in lines])
+        newstdin.writelines([line + '\n' for line in lines])
         newstdin.seek(0)
         sys.stdin = newstdin
         yield
@@ -26,7 +22,7 @@ class FanciesDisplayTest(unittest.TestCase):
     @contextmanager
     def _quiet_stdout(self):
         oldstdout = sys.stdout
-        # io.open would be better but it fails in eclipse/pydev...
+        # open would be better but it fails in eclipse/pydev...
         with open(os.devnull, "w") as newstdout:
             sys.stdout = newstdout
             yield
@@ -40,7 +36,7 @@ class FanciesDisplayTest(unittest.TestCase):
         yield
         sys.stdout = oldstdout
         newstdout.seek(0)
-        s_list.extend([l.rstrip('\n') for l in newstdout.readlines()])
+        s_list.extend([line.rstrip('\n') for line in newstdout.readlines()])
 
     def test_query_yes_no(self):
         with self._quiet_stdout():

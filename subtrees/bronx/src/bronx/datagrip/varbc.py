@@ -1,21 +1,14 @@
-# -*- coding: utf-8 -*-
-
 """Utility class to read VarBC files.
 
 The :class:`VarbcFile` should be used to read VarBC files (see its documentation
 below).
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-
-from collections import namedtuple, OrderedDict
+from collections import namedtuple, OrderedDict, abc
 from contextlib import contextmanager
 import numpy as np
 import re
 
-from bronx.compat.moves import collections_abc
 from bronx.datagrip import varbcheaders
 
 
@@ -23,7 +16,7 @@ from bronx.datagrip import varbcheaders
 __all__ = []
 
 
-class _VarbcEntryTypeDescriptor(object):
+class _VarbcEntryTypeDescriptor:
     """Handle to an object's data of a specific type."""
 
     def __init__(self, attr, objtype, doc='Undocumented footprint attribute'):
@@ -46,12 +39,12 @@ class _VarbcEntryNumpyDescriptor(_VarbcEntryTypeDescriptor):
     """Handle access to an object's data contained in NumPy arrays."""
 
     def __set__(self, obj, value):
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             value = [self._objtype(st) for st in value.split()]
         setattr(obj, '_' + self._attr, np.array(value, dtype=self._objtype))
 
 
-class VarbcEntry(object):
+class VarbcEntry:
     """One entry of a VarBC file.
 
     The comparison operator ``==`` is available between objects of this class.
@@ -114,7 +107,7 @@ class VarbcEntry(object):
 _VarbcMatchElement = namedtuple('_VarbcMatchElement', ('element', 'regex'))
 
 
-class _VarbcMatchTool(object):
+class _VarbcMatchTool:
     """Object that uses regular expressions to parse varbc entry."""
 
     def __init__(self, matches, stack):
@@ -157,7 +150,7 @@ class _VarbcMatchTool(object):
                 self._imatch = (self._imatch + 1) % len(self._matches)
 
 
-class _VarbcMatchList(object):
+class _VarbcMatchList:
     """Object that uses regular expressions to parse varbc entry."""
 
     def __init__(self, matches):
@@ -174,7 +167,7 @@ class _VarbcMatchList(object):
         mt.save_entry()
 
 
-class VarbcFile(collections_abc.Mapping):
+class VarbcFile(abc.Mapping):
     """Class to handle a full VarBC file.
 
     It provides then two simple methods to access to elements :class:`ObsVarbcEntry`,
@@ -231,7 +224,7 @@ class VarbcFile(collections_abc.Mapping):
         If **entry** is an integer, this is equivalent to :meth:`getix`. If
         **entry** is a string, this is equivalent to :meth:`getkey`.
         """
-        if isinstance(item, six.string_types):
+        if isinstance(item, str):
             return self.getkey(item)
         elif isinstance(item, int):
             return self.getix(item)
@@ -240,8 +233,7 @@ class VarbcFile(collections_abc.Mapping):
 
     def keys(self):
         """Iterate over all the keys available in the VarBC file."""
-        for k in self._key2entry.keys():
-            yield k
+        yield from self._key2entry.keys()
 
     def __iter__(self):
         """Iterate over all the keys available in the VarBC file."""
@@ -249,13 +241,11 @@ class VarbcFile(collections_abc.Mapping):
 
     def values(self):
         """Iterate over all the :class:`ObsVarbcEntry` objects read from file."""
-        for entry in self._datalist:
-            yield entry
+        yield from self._datalist
 
     def items(self):
         """Iterate over all the (key, entry) pairs available in the VarBC file."""
-        for k, e in self._key2entry.items():
-            yield (k, e)
+        yield from self._key2entry.items()
 
     def getix(self, ix):
         """Gives the **ix** th entry of the VarBC file

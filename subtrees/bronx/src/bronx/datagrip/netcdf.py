@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Utility class to deal with netcdf files.
 
@@ -125,9 +123,6 @@ Clean things up...
     >>> demofile2.close()
 
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import netCDF4
 import numpy as np
 
@@ -148,7 +143,7 @@ class NetCDF4ParentStructure(dict):
         if not isinstance(netcdf4_obj, (netCDF4.Dataset, netCDF4.Group)):
             raise ValueError("'{!r}' is not an appropriate netCDF4 object"
                              .format(netcdf4_obj))
-        super(NetCDF4ParentStructure, self).__init__()
+        super().__init__()
         # Read the object's properties
         self['ncattrs'] = {k: netcdf4_obj.getncattr(k) for k in netcdf4_obj.ncattrs()}
         self['groups'] = {k: NetCDF4ParentStructure(g)
@@ -170,7 +165,7 @@ class NetCDF4DimensionStructure(dict):
         if not isinstance(netcdf4_obj, netCDF4.Dimension):
             raise ValueError("'{!r}' is not an appropriate netCDF4 object"
                              .format(netcdf4_obj))
-        super(NetCDF4DimensionStructure, self).__init__()
+        super().__init__()
         # Read the object's properties
         self['size'] = netcdf4_obj.size
         self['unlimited'] = netcdf4_obj.isunlimited()
@@ -187,7 +182,7 @@ class NetCDF4VariableStructure(dict):
         if not isinstance(netcdf4_obj, netCDF4.Variable):
             raise ValueError("'{!r}' is not an appropriate netCDF4 object"
                              .format(netcdf4_obj))
-        super(NetCDF4VariableStructure, self).__init__()
+        super().__init__()
         # Read the object's properties
         self['datatype'] = netcdf4_obj.datatype
         self['dimensions'] = netcdf4_obj.dimensions

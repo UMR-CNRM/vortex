@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import json
 from unittest import TestCase, main
 
@@ -60,28 +56,28 @@ JSON_TEST = """{
 }"""
 
 JSON_TEST_REF = {
-    u'Jb': {u'covariance': u'static',
-            u'date': u'2019010100',
-            u'namelist': u'naml_bmatrix'},
-    u'ensemble': [{u'state': [{u'expver': u'unused',
-                               u'filename': 'ICMSHM000+0000',
-                               u'ifile': u'0',
-                               u'namelist': 'naml_write_dx_m000',
-                               u'physics': [2, 3, 103]},
-                              {u'expver': u'unused',
-                               u'filename': 'ICMSHM001+0000',
-                               u'ifile': u'0',
-                               u'namelist': 'naml_write_dx_m001',
-                               u'physics': [11, 12, 112]}]}],
-    u'expver': u'OOPS',
-    u'linear_variables': {u'variables': u'1'},
-    u'logging': {u'categories': u'Trace,Info, Debug, Warning, Error'},
-    u'state': {u'date': u'2018123121',
-               u'expver': u'OOPS',
-               u'ifile': u'0',
-               u'variables': u'0'},
-    u'variables': {u'variables': u'0'},
-    u'window_length': u'PT6H'}
+    'Jb': {'covariance': 'static',
+           'date': '2019010100',
+           'namelist': 'naml_bmatrix'},
+    'ensemble': [{'state': [{'expver': 'unused',
+                             'filename': 'ICMSHM000+0000',
+                             'ifile': '0',
+                             'namelist': 'naml_write_dx_m000',
+                             'physics': [2, 3, 103]},
+                            {'expver': 'unused',
+                             'filename': 'ICMSHM001+0000',
+                             'ifile': '0',
+                             'namelist': 'naml_write_dx_m001',
+                             'physics': [11, 12, 112]}]}],
+    'expver': 'OOPS',
+    'linear_variables': {'variables': '1'},
+    'logging': {'categories': 'Trace,Info, Debug, Warning, Error'},
+    'state': {'date': '2018123121',
+              'expver': 'OOPS',
+              'ifile': '0',
+              'variables': '0'},
+    'variables': {'variables': '0'},
+    'window_length': 'PT6H'}
 
 
 class UtXTemplates(TestCase):

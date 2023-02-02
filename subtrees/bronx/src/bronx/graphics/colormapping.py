@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Custom colormaps reading and scaling.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import numpy
 import copy

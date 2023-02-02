@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Various tools to crawl the file system in order to find some config files
 
@@ -10,8 +8,6 @@ TODO: unittest
              changes will be made in future versions. DO NOT USE YET.
 
 """
-
-from __future__ import absolute_import, unicode_literals, print_function, division
 
 import os
 

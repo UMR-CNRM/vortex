@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import os
 import unittest
 
@@ -16,10 +12,10 @@ class LinuxCpusInfoTester(LinuxCpusInfo):
     _INFOFILE_CHECK = False
 
     def __new__(cls, finput):
-        return super(LinuxCpusInfoTester, cls).__new__(cls)
+        return super().__new__(cls)
 
     def __init__(self, finput):
-        super(LinuxCpusInfoTester, self).__init__()
+        super().__init__()
         self._INFOFILE = os.path.join(DATADIR, finput)
 
 

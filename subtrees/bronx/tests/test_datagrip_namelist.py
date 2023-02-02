@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from decimal import Decimal
-import six
+import io
 from unittest import TestCase, skipUnless, main
 
 from bronx.datagrip import namelist
@@ -209,7 +205,7 @@ class UtFortranNamelist(TestCase):
         self.assertEqual(nb_res["A"], [25, 30, 15])
         self.assertEqual(nb_res.M1, '$MYMACRO1')
         self.assertEqual(nb_res.M1b, "'MYMACRO1'")
-        self.assertSetEqual(nb_res.rmkeys(), set(['C', 'GRUIK']))
+        self.assertSetEqual(nb_res.rmkeys(), {'C', 'GRUIK'})
         self.assertFalse(nb_res.dumps_needs_update)
         nb_res.addmacro('MYMACRO1', 'Toto')
         self.assertTrue(nb_res.dumps_needs_update)
@@ -288,11 +284,11 @@ C='Trash',
 
     def test_namparser_namset_basics(self):
         np = namelist.NamelistParser(macros=('NBPROC', ))
-        ori = six.StringIO()
+        ori = io.StringIO()
         ori.write(DIRTYNAM)
         parse_res = np.parse(ori)
-        self.assertSetEqual(set(six.iterkeys(parse_res)),
-                            set(['MYNAMELISTTEST', 'MYSECONDONE']))
+        self.assertSetEqual(set((parse_res).keys()),
+                            {'MYNAMELISTTEST', 'MYSECONDONE'})
         self.assertFalse(parse_res.dumps_needs_update)
         self.assertEqual(parse_res.dumps(), CLEANEDNAM)
         self.assertEqual(parse_res.dumps(sorting=namelist.FIRST_ORDER_SORTING),
@@ -307,7 +303,7 @@ C='Trash',
         parse_res.mvblock('MyNamelistTest', 'MyThirdOne')
         self.assertTrue(parse_res.dumps_needs_update)
         self.assertSetEqual(set(parse_res.keys()),
-                            set(['MYTHIRDONE', 'MYSECONDONE']))
+                            {'MYTHIRDONE', 'MYSECONDONE'})
         nset2 = namelist.NamelistSet(parse_res)
         self.assertEqual(parse_res.keys(), nset2.keys())
 
@@ -339,7 +335,7 @@ C='Trash',
         # Test removes
         nset.merge({}, rmkeys=('A ', 'z'), rmblocks=('MySecondOne', ))
         self.assertTrue(nset.dumps_needs_update)
-        self.assertSetEqual(set(nset.keys()), set(('MYNAMELISTTEST', )))
+        self.assertSetEqual(set(nset.keys()), {'MYNAMELISTTEST'})
         self.assertNotIn('A ', nset['MyNamelistTest'])
         self.assertNotIn('Z', nset['MyNamelistTest'])
         # Test clear
@@ -354,7 +350,7 @@ C='Trash',
         nset.merge(nset_d)
         self.assertNotIn('C', nset['MyNamelistTest'])
         self.assertIn('C', nset['MySecondOne'])
-        self.assertSetEqual(nset['MyNamelistTest'].rmkeys(), set(['C', 'GRUIK']))
+        self.assertSetEqual(nset['MyNamelistTest'].rmkeys(), {'C', 'GRUIK'})
         self.assertEqual(nset['MyNamelistTest'].A, list((25, 30, 15)))
         self.assertEqual(nset['ANOTHERBLOCK'].TOTO, 'Truc')
         nset.setmacro('MYMACRO1', 1)

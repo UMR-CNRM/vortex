@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This module provides a few functions on top of the standard logging module in
 order to easily create new loggers (including root ones) and control their
@@ -49,10 +47,6 @@ Example::
     True
 
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import six
 
 import contextlib
 import logging
@@ -114,7 +108,7 @@ def setGlobalLevel(level):
     if thislevel is None:
         print('ERROR!!! Try to set an unknown log level {:s}'.format(level))
     else:
-        for a_logger in [logging.getLogger(l) for l in roots | lognames]:
+        for a_logger in [logging.getLogger(lg) for lg in roots | lognames]:
             a_logger.setLevel(logging.NOTSET)
         _logging_root.setLevel(thislevel)
     return thislevel
@@ -134,8 +128,8 @@ def contextboundGlobalLevel(level):
         yield
     else:
         with _logging_threading_lock:
-            known_loggers = [logging.getLogger(l) for l in roots | lognames]
-            known_levels = [l.level for l in known_loggers]
+            known_loggers = [logging.getLogger(lg) for lg in roots | lognames]
+            known_levels = [lg.level for lg in known_loggers]
             for a_logger in known_loggers:
                 a_logger.setLevel(logging.NOTSET)
             previous_r_logger_level = _logging_root.level
@@ -153,7 +147,7 @@ def contextboundGlobalLevel(level):
 def contextboundRedirectStdout(outputs=None):
     """Within this context manager, redirect all the outputs to a StringIO object."""
     if outputs is None:
-        outputs = six.StringIO()
+        outputs = io.StringIO()
     with _logging_threading_lock:
         # Tweak the root logger
         r_handlers = dict()
@@ -213,8 +207,8 @@ def unittestGlobalLevel(level):
         else:
             def setUp(self):
                 with _logging_threading_lock:
-                    self._log_known_loggers = [logging.getLogger(l) for l in roots | lognames]
-                    self._log_known_levels = [l.level for l in self._log_known_loggers]
+                    self._log_known_loggers = [logging.getLogger(lg) for lg in roots | lognames]
+                    self._log_known_levels = [lg.level for lg in self._log_known_loggers]
                     for a_logger in self._log_known_loggers:
                         a_logger.setLevel(logging.NOTSET)
                     self._log_r_logger_level = _logging_root.level
@@ -259,27 +253,13 @@ def setRootLogger(logger):
     return logger
 
 
-def setLogMethods(logger, methods=('debug', 'info', 'warning', 'error', 'critical')):
-    """Reset some loggers methods with methods from an external logger.
-
-    :note: This method is realy disturbing. Its use won't be allowed anymore
-           with Python3
-    """
-    if not six.PY2:
-        raise RuntimeError('The ``setLogMethod`` is deprecated.')
-    for modname in lognames:
-        thislog = logging.getLogger(modname)
-        for logmethod in methods:
-            setattr(thislog, logmethod, getattr(logger, logmethod))
-
-
 def getActualLevel(level):
     """Return the actual level value as long as the argument is valid.
 
     ``level`` can be a verbosity level name (e.g debug, info, ...) or the
     number associated with it.
     """
-    lnames = logging._levelNames if six.PY2 else logging._nameToLevel
+    lnames = logging._nameToLevel
     if type(level) is not int:
         level = lnames.get(level.upper(), None)
     return level
@@ -305,7 +285,7 @@ class SlurpHandler(logging.Handler):
     """
 
     def __init__(self, records_stack):
-        super(SlurpHandler, self).__init__()
+        super().__init__()
         self._stack = records_stack
 
     def prepare(self, record):

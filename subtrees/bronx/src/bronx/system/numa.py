@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This module provides informations on the NUMA partitioning of the CPUs.
 
@@ -81,18 +79,15 @@ On Belenos (2x AMD Rome socket with 64 cores each)::
 
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-
 import abc
 from collections import defaultdict, deque
+from collections.abc import Mapping
 import copy
+
 from ctypes import CDLL, byref, c_longlong
 from ctypes.util import find_library
 from itertools import chain, cycle, combinations
 
-from bronx.compat.moves import collections_abc
 from bronx.patterns import Singleton
 
 
@@ -116,7 +111,7 @@ def numa_nodes_info():
         raise NotImplementedError('No suitable NumaNodesInfo implementation could be found')
 
 
-class NumaNodeInfo(object):
+class NumaNodeInfo:
     """Hold information on a single Numa node."""
 
     def __init__(self, cpus, distances, totalsize):
@@ -150,8 +145,7 @@ class NumaNodeInfo(object):
         return s_out
 
 
-@six.add_metaclass(abc.ABCMeta)
-class _NumaAbstractCpuIdDispencer(object):
+class _NumaAbstractCpuIdDispencer(metaclass=abc.ABCMeta):
     """Dispenser object return blocks of CPUs of a given size.
 
     It can be used as an iterator (in this case, the block's size needs to be
@@ -178,9 +172,6 @@ class _NumaAbstractCpuIdDispencer(object):
     def __next__(self):
         return self(self._default_bsize)
 
-    if six.PY2:
-        next = __next__
-
     @abc.abstractmethod
     def __call__(self, blocksize):
         pass
@@ -193,7 +184,7 @@ class _NumaPackedCpuIdDispenser(_NumaAbstractCpuIdDispencer):
     """
 
     def __init__(self, total_avcpus, xnodesclust, default_bsize=None):
-        super(_NumaPackedCpuIdDispenser, self).__init__(default_bsize=default_bsize)
+        super().__init__(default_bsize=default_bsize)
         self._total_avcpus = total_avcpus
         self._last_blocksize = None
         self._xnodesclust = xnodesclust
@@ -257,7 +248,7 @@ class _NumaBalancedCpuIdDispenser(_NumaAbstractCpuIdDispencer):
     """
 
     def __init__(self, cpuiterator, default_bsize=None):
-        super(_NumaBalancedCpuIdDispenser, self).__init__(default_bsize=default_bsize)
+        super().__init__(default_bsize=default_bsize)
         self._cpuiter = cpuiterator
 
     def __call__(self, blocksize):
@@ -268,7 +259,7 @@ class _NumaBalancedCpuIdDispenser(_NumaAbstractCpuIdDispencer):
         return sorted(res)
 
 
-class _MetaCpuIdDispenser(object):
+class _MetaCpuIdDispenser:
     """Group several :class:`_NumaAbstractCpuIdDispencer` into one."""
 
     def __init__(self, *dispensers):
@@ -289,8 +280,7 @@ class _MetaCpuIdDispenser(object):
         raise StopIteration()
 
 
-@six.add_metaclass(abc.ABCMeta)
-class NumaNodesInfo(collections_abc.Mapping):
+class NumaNodesInfo(Mapping, metaclass=abc.ABCMeta):
     """Hold information on the system's NUMA nodes.
 
     Abstract class.
@@ -361,7 +351,7 @@ class NumaNodesInfo(collections_abc.Mapping):
             physicalcpus = set(smtlayout.keys())
             numa_nodes_iterator = dict()
             for nnode, ninfo in self.items():
-                linfo = NumaNodeInfo(set([c for c in ninfo.cpus if c in physicalcpus]),
+                linfo = NumaNodeInfo({c for c in ninfo.cpus if c in physicalcpus},
                                      ninfo.distances, ninfo.totalsize)
                 numa_nodes_iterator[nnode] = linfo
         else:
@@ -376,7 +366,7 @@ class NumaNodesInfo(collections_abc.Mapping):
             nodesclust = {self[0].distances[1]: [set(self.keys()), ]}
         else:
             nodesclust = copy.copy(self.nodes_clustering)
-        nodesclust[0] = [set([n, ]) for n in sorted(self.keys())]
+        nodesclust[0] = [{n} for n in sorted(self.keys())]
 
         # Re-order things in order to spread the blocks all over the NUMA nodes
         distances = sorted(nodesclust.keys())
@@ -595,7 +585,7 @@ class LibNumaNodesInfo(NumaNodesInfo):
 
     def __init__(self, **kwargs):
         self._gateway = self._gateway_class(** kwargs)
-        super(LibNumaNodesInfo, self).__init__()
+        super().__init__()
 
     def _fill_nodes(self):
         """Fill the self._nodes dictionary with :class:`NumaNodeInfo` objects."""

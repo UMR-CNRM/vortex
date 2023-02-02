@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import re
 from unittest import TestCase, main
 
@@ -10,7 +6,7 @@ from bronx.fancies.dump import TxtDumper, JsonableDumper, XmlDomDumper,\
     OneLineTxtDumper
 
 
-class Foo(object):
+class Foo:
     # noinspection PyUnusedLocal
     def __init__(self, *u_args, **kw):
         self.__dict__.update(kw)
@@ -22,7 +18,7 @@ class Foo(object):
         return "The Foo"
 
 
-class DTestAsDict(object):
+class DTestAsDict:
 
     def as_dict(self):
         return dict(me='AsDict')
@@ -44,7 +40,7 @@ class DTestProxyTuple(tuple):
     pass
 
 
-class DTestAsDump(object):
+class DTestAsDump:
 
     def as_dump(self):
         return "Simply as_dump said"
@@ -172,7 +168,7 @@ class utDump(TestCase):
         self.assertJsonableDumper(DTestProxyList((1, 2)), [1, 2, ])
         self.assertJsonableDumper((1, 2), [1, 2, ])
         self.assertJsonableDumper(DTestProxyTuple((1, 2)), [1, 2, ])
-        self.assertJsonableDumper(set((1,)), [1, ])
+        self.assertJsonableDumper({1}, [1, ])
         self.assertJsonableDumper(DTestProxySet((1,)), [1, ])
         self.assertJsonableDumper(DTestAsDump(), __name__ + ".DTestAsDump::Simply as_dump said")
         self.assertJsonableDumper(None, "None")
@@ -217,7 +213,7 @@ class utDump(TestCase):
         self.assertTxtDumper(DTestProxyList((1, 2)), expected_txt_Plist)
         self.assertTxtDumper((1, 2), "(1, 2)")
         self.assertTxtDumper(DTestProxyTuple((1, 2)), expected_txt_Ptuple)
-        self.assertTxtDumper(set((1,)), "set([1])")
+        self.assertTxtDumper({1}, "set([1])")
         self.assertTxtDumper(DTestProxySet((1,)), expected_txt_Pset)
         self.assertTxtDumper(DTestAsDump(),
                              "{me:s}.DTestAsDump::Simply as_dump said")

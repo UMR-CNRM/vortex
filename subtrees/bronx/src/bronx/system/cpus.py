@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This module is in charge of getting informations on CPUs.
 
@@ -157,14 +155,9 @@ On Belenos (2x AMD Rome socket with 64 cores each)::
 
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-
 import abc
 from collections import namedtuple, defaultdict
 from functools import partial
-import io
 import locale
 import re
 
@@ -186,8 +179,7 @@ class CpusToolUnavailableError(Exception):
     pass
 
 
-@six.add_metaclass(abc.ABCMeta)
-class CpusInfo(object):
+class CpusInfo(metaclass=abc.ABCMeta):
     """Provide various informations about CPUs (abstract class)."""
 
     def __init__(self):
@@ -222,7 +214,7 @@ class CpusInfo(object):
     @property
     def nphysical_cores(self):
         """The total number of physical cores on this system."""
-        return len(set([(c.socket_id, c.core_id) for c in self.cpus.values()]))
+        return len({(c.socket_id, c.core_id) for c in self.cpus.values()})
 
     @property
     def nvirtual_cores(self):
@@ -237,16 +229,16 @@ class CpusInfo(object):
     @property
     def nphysical_cores_per_socket(self):
         """The number of physical cores per socket."""
-        ncores = set([len(socket) for socket in self.cpus_hierarchy.values()])
+        ncores = {len(socket) for socket in self.cpus_hierarchy.values()}
         assert len(ncores) == 1
         return ncores.pop()
 
     @property
     def smt_threads(self):
         """The Simultaneous MultiThreading threads count."""
-        nsmt = set([len(core)
-                    for socket in self.cpus_hierarchy.values()
-                    for core in socket.values()])
+        nsmt = {len(core)
+                for socket in self.cpus_hierarchy.values()
+                for core in socket.values()}
         assert len(nsmt) == 1
         return nsmt.pop()
 
@@ -323,8 +315,7 @@ class CpusInfo(object):
                     yield flatcores[isocket][i]
         # Impossible... switch back to blocksize = 1 (round-robin over socket)
         else:
-            for cpu in list(self.socketpacked_cpulist(bsize=1)):
-                yield cpu
+            yield from list(self.socketpacked_cpulist(bsize=1))
 
 
 class LinuxCpusInfo(CpusInfo):
@@ -340,7 +331,7 @@ class LinuxCpusInfo(CpusInfo):
         """Check the the /proc/cpuinfo file exists before going on."""
         if cls._INFOFILE_CHECK and not os.path.exists(cls._INFOFILE):
             raise CpusToolUnavailableError('The {:s} file was not found'.format(cls._INFOFILE))
-        return super(LinuxCpusInfo, cls).__new__(cls)
+        return super().__new__(cls)
 
     @property
     def cpus(self):
@@ -352,7 +343,7 @@ class LinuxCpusInfo(CpusInfo):
             self._cpus = dict()
             cpu_n = None
             cpu = None
-            with io.open(self._INFOFILE, 'r') as infofd:
+            with open(self._INFOFILE) as infofd:
                 for line in infofd:
                     # Detect the begining of a new CPU description
                     cpumatch = self._CPU_RE.match(line)
@@ -377,46 +368,6 @@ class LinuxCpusInfo(CpusInfo):
             if cpu_n is not None:
                 self._cpus[cpu_n] = CpuInfo(**cpu)
         return self._cpus
-
-
-if six.PY2:
-
-    def get_affinity(pid=None):
-        """Get the cpu affinity of a process. Returns None if no affinity is set."""
-        if pid is None:
-            pid = os.getpid()
-        _re_get_out = re.compile(r'.*:\s*(?P<binproc>[0-9a-f]+)\s*$')
-        try:
-            t_out = subprocess.check_output([AFFINITY_CMD, '-p', str(pid)])
-        except OSError:
-            raise CpusToolUnavailableError('No {:s} command on this system.'.format(AFFINITY_CMD))
-        locencode = locale.getlocale()[1] or 'ascii'
-        uni_out = t_out.decode(locencode, 'replace')  # Unicode stuff...
-        binproc = int(_re_get_out.match(uni_out).group('binproc'), 16)  # It's hexadecimal
-        binlist = list()
-        while binproc:
-            binlist.append(binproc % 2)
-            binproc = binproc >> 1
-        list_of_cpus = [i for i, v in enumerate(binlist) if v]
-        return set(list_of_cpus)
-
-    def set_affinity(cpus, pid=None):
-        """Set the cpu affinity of a process."""
-        if pid is None:
-            pid = os.getpid()
-        if isinstance(cpus, int):
-            cpus = [cpus]
-        cpus = ','.join([str(c) for c in cpus])
-        try:
-            subprocess.check_output([AFFINITY_CMD, '-p', '--cpu-list', cpus, str(pid)], stderr=subprocess.STDOUT)
-        except OSError:
-            raise CpusToolUnavailableError('No {:s} command on this system.'.format(AFFINITY_CMD))
-        except subprocess.CalledProcessError as e:
-            logger.error(str(e))
-            logger.error("stdout/stderr: %s", e.output)
-            raise
-
-else:
 
     def get_affinity(pid=None):
         """Get the cpu affinity of a process. Returns None if no affinity is set."""
