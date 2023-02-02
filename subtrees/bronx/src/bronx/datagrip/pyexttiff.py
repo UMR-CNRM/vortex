@@ -6,6 +6,7 @@ This module uses code from pylibtiff (https://pypi.python.org/pypi/libtiff,
 https://code.google.com/p/pylibtiff or https://github.com/hmeine/pylibtiff)
 """
 
+import io
 import mmap
 import numpy
 import os

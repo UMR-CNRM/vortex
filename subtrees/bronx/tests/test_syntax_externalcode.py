@@ -11,6 +11,7 @@ class TestExternalCodeImport(unittest.TestCase):
         ec_checker = ExternalCodeImportChecker()
         with ec_checker:
             import datetime  # @UnusedImport
+            assert datetime
         self.assertTrue(ec_checker.is_available())
 
         @ec_checker.disabled_if_unavailable
@@ -31,6 +32,7 @@ class TestExternalCodeImport(unittest.TestCase):
         ec_checker = ExternalCodeImportChecker('a_very_unlikely_package_name')
         with ec_checker:
             import a_very_unlikely_package_name  # @UnusedImport @UnresolvedImport
+            assert a_very_unlikely_package_name
         self.assertFalse(ec_checker.is_available())
 
         @ec_checker.disabled_if_unavailable
@@ -54,6 +56,7 @@ class TestExternalCodeImport(unittest.TestCase):
             ec_checker.is_available()
         with ec_checker as ec_register:
             import datetime  # @UnusedImport
+            assert datetime
             ec_register.update(version='1.0.0', other='gruik')
         self.assertTrue(ec_checker.is_available())
         self.assertTrue(ec_checker.is_available(version='0.9.0'))
@@ -78,6 +81,7 @@ class TestExternalCodeImport(unittest.TestCase):
         ec_checker = ExternalCodeImportChecker()
         with ec_checker:
             import collections  # @UnusedImport
+            assert collections
 
         with self.assertRaises(RuntimeError):
             self.assertTrue(ec_checker.is_available(version='0.9.0'))

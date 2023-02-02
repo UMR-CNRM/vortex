@@ -11,12 +11,14 @@ from bronx.syntax import externalcode, iterators, minieval, parsing
 # Numpy is not mandatory
 npchecker = externalcode.ExternalCodeImportChecker('numpy')
 with npchecker as npregister:
-    import numpy as np  # @UnusedImport
+    import numpy as np
+    assert np
 
 # NetCDF4 is not mandatory
 nc4checker = externalcode.ExternalCodeImportChecker('netdcf4')
 with nc4checker as npregister:
-    import netCDF4  # @UnusedImport
+    import netCDF4
+    assert netCDF4
 
 
 class utDocTests(unittest.TestCase):

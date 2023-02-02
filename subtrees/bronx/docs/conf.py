@@ -38,6 +38,8 @@ autosummary_generate = True  # Turn on sphinx.ext.autosummary
 # Concatenate the class docstring and the __init__ docstring
 autoclass_content = 'both'
 
+html_static_path = ['_static']
+
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
