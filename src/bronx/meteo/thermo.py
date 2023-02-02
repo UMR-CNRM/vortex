@@ -2,13 +2,9 @@
 This modules implements constants and conversions used in thermodynamics.
 
 A brief description of the equations can be found in this document:
-`thermo.pdf <../../../_static/thermo.pdf>`_
-
-If you find mistakes in the above document or in this module, please,
-send an email to sebastien.riette@meteo.fr.
+`thermo.pdf <../_static/thermo.pdf>`_
 """
 
-import sys
 import numpy as np
 
 from bronx.fancies import loggers
@@ -17,61 +13,55 @@ from bronx.meteo import constants as csts
 
 logger = loggers.getLogger(__name__)
 
-_names = [('T', 'Temperature (K)'),
-          ('Theta', 'Potential temperature (K)'),
-          ('ThetaV', 'Potential virtual temperature (K)'),
-          ('TV', 'Virtual temperature (K)'),
-
-          ('Td', 'Dew point temperature (K)'),
-          ('Hui', 'Relative humidity with respect to ice (0-100)'),
-          ('Huw', 'Relative humidity with respect to water (0-100)'),
-          ('rv', 'Mixing ration of water vapor (kg/kg)'),
-          ('rc', 'Mixing ration of cloud liquid water (kg/kg)'),
-          ('ri', 'Mixing ration of cloud ice (kg/kg)'),
-          ('rr', 'Mixing ration of rain (kg/kg)'),
-          ('rs', 'Mixing ration of snow (kg/kg)'),
-          ('rg', 'Mixing ration of graupel (kg/kg)'),
-          ('rh', 'Mixing ration of hail (kg/kg)'),
-          ('qv', 'Specific humidity of water vapor (kg/kg)'),
-          ('qc', 'Specific humidity of cloud liquid water (kg/kg)'),
-          ('qi', 'Specific humidity of cloud ice (kg/kg)'),
-          ('qr', 'Specific humidity of rain (kg/kg)'),
-          ('qs', 'Specific humidity of snow (kg/kg)'),
-          ('qg', 'Specific humidity of graupel (kg/kg)'),
-          ('qh', 'Specific humidity of hail (kg/kg)'),
-          ('qci', 'Specific humidity of cloud liquid water and ice (kg/kg)'),
-          ('esatw', 'Water vapour pressure at saturation over liquid water (Pa)'),
-          ('esati', 'Water vapour pressure at saturation over ice (Pa)'),
-          ('rsatw', 'Mixing ratio at saturation of liquid water (kg/kg)'),
-          ('rsati', 'Mixing ratio at saturation of ice (kg/kg)'),
-          ('e', 'Water vapour pressure (Pa)'),
-          ('qliquid', 'Specific content of liquid species (kg/kg)'),
-          ('qice', 'Specific content of ice species (kg/kg)'),
-          ('rliquid', 'Mixing ratio of liquid species (kg/kg)'),
-          ('rice', 'Mixing ratio of ice species (kg/kg)'),
-          ('qt', 'Specific content of all species, including water vapor (kg/kg)'),
-          ('rt', 'Mixing ratio of all species, including water vapor (kg/kg)'),
-          ('R', 'Perfect gaz constant for dry and wet air mixture (J/kg/K)'),
-          ('Rstar', "I don't know the name... (J/kg/K)"),
-          ('Cp', 'Heat capacity at constant pressure (J/kg/K)'),
-          ('Cph', 'Specific heat capacity at constant pressure (J/kg/K)'),
-
-          ('ff', 'Wind force (m/s)'),
-          ('dd', 'Wind direction (deg)'),
-          ('u', 'Zonal wind (m/s)'),
-          ('v', 'Meridional wind (m/s'),
-          ('w', 'Vertical wind (m/s)'),
-          ('P', 'Pressure (Pa)'),
-          ('rho', 'Volumic mass of wet atmosphere'),
-          ('rhov', 'Volumic mass of water vapor'),
-          ('rhod', 'Volumic mass of dry atmosphere'),
-          ('H', 'Height (m)'),
-          ('altitude', 'Altitude (m)'),
-          ('nebulosity', 'Nebulosity'),  # 0-100 0-1 0-8 ??
-          ]
-for item in _names:
-    sys.modules[__name__].__dict__['N_' + item[0]] = item[0]
-    sys.modules[__name__].__dict__['C_' + item[0]] = item[1]
+N_T, C_T = ("T", "Temperature (K)")
+N_Theta, C_Theta = ("Theta", "Potential temperature (K)")
+N_ThetaV, C_ThetaV = ("ThetaV", "Potential virtual temperature (K)")
+N_TV, C_TV = ("TV", "Virtual temperature (K)")
+N_Td, C_Td = ("Td", "Dew point temperature (K)")
+N_Hui, C_Hui = ("Hui", "Relative humidity with respect to ice (0-100)")
+N_Huw, C_Huw = ("Huw", "Relative humidity with respect to water (0-100)")
+N_rv, C_rv = ("rv", "Mixing ration of water vapor (kg/kg)")
+N_rc, C_rc = ("rc", "Mixing ration of cloud liquid water (kg/kg)")
+N_ri, C_ri = ("ri", "Mixing ration of cloud ice (kg/kg)")
+N_rr, C_rr = ("rr", "Mixing ration of rain (kg/kg)")
+N_rs, C_rs = ("rs", "Mixing ration of snow (kg/kg)")
+N_rg, C_rg = ("rg", "Mixing ration of graupel (kg/kg)")
+N_rh, C_rh = ("rh", "Mixing ration of hail (kg/kg)")
+N_qv, C_qv = ("qv", "Specific humidity of water vapor (kg/kg)")
+N_qc, C_qc = ("qc", "Specific humidity of cloud liquid water (kg/kg)")
+N_qi, C_qi = ("qi", "Specific humidity of cloud ice (kg/kg)")
+N_qr, C_qr = ("qr", "Specific humidity of rain (kg/kg)")
+N_qs, C_qs = ("qs", "Specific humidity of snow (kg/kg)")
+N_qg, C_qg = ("qg", "Specific humidity of graupel (kg/kg)")
+N_qh, C_qh = ("qh", "Specific humidity of hail (kg/kg)")
+N_qci, C_qci = ("qci", "Specific humidity of cloud liquid water and ice (kg/kg)")
+N_esatw, C_esatw = ("esatw", "Water vapour pressure at saturation over liquid water (Pa)")
+N_esati, C_esati = ("esati", "Water vapour pressure at saturation over ice (Pa)")
+N_rsatw, C_rsatw = ("rsatw", "Mixing ratio at saturation of liquid water (kg/kg)")
+N_rsati, C_rsati = ("rsati", "Mixing ratio at saturation of ice (kg/kg)")
+N_e, C_e = ("e", "Water vapour pressure (Pa)")
+N_qliquid, C_qliquid = ("qliquid", "Specific content of liquid species (kg/kg)")
+N_qice, C_qice = ("qice", "Specific content of ice species (kg/kg)")
+N_rliquid, C_rliquid = ("rliquid", "Mixing ratio of liquid species (kg/kg)")
+N_rice, C_rice = ("rice", "Mixing ratio of ice species (kg/kg)")
+N_qt, C_qt = ("qt", "Specific content of all species, including water vapor (kg/kg)")
+N_rt, C_rt = ("rt", "Mixing ratio of all species, including water vapor (kg/kg)")
+N_R, C_R = ("R", "Perfect gaz constant for dry and wet air mixture (J/kg/K)")
+N_Rstar, C_Rstar = ("Rstar", "I don't know the name... (J/kg/K)")
+N_Cp, C_Cp = ("Cp", "Heat capacity at constant pressure (J/kg/K)")
+N_Cph, C_Cph = ("Cph", "Specific heat capacity at constant pressure (J/kg/K)")
+N_ff, C_ff = ("ff", "Wind force (m/s)")
+N_dd, C_dd = ("dd", "Wind direction (deg)")
+N_u, C_u = ("u", "Zonal wind (m/s)")
+N_v, C_v = ("v", "Meridional wind (m/s")
+N_w, C_w = ("w", "Vertical wind (m/s)")
+N_P, C_P = ("P", "Pressure (Pa)")
+N_rho, C_rho = ("rho", "Volumic mass of wet atmosphere")
+N_rhov, C_rhov = ("rhov", "Volumic mass of water vapor")
+N_rhod, C_rhod = ("rhod", "Volumic mass of dry atmosphere")
+N_H, C_H = ("H", "Height (m)")
+N_altitude, C_altitude = ("altitude", "Altitude (m)")
+N_nebulosity, C_nebulosity = ("nebulosity", "Nebulosity")
 
 
 class ThermoError(Exception):
@@ -263,7 +253,7 @@ class Thermo:
             r[s] = target[s]
         return T
 
-    def evaporate(self, species, extra_variables=[], precision='full'):
+    def evaporate(self, species, extra_variables=(), precision='full'):
         """
         This method returns a Thermo instance in which **species** are evaporated
         (others are kept untouched).
@@ -299,7 +289,7 @@ class Thermo:
 
         return result
 
-    def adjust(self, species, mix_rule=None, iteration=1, extra_variables=[], precision='full'):
+    def adjust(self, species, mix_rule=None, iteration=1, extra_variables=(), precision='full'):
         """
         This method returns a :class:`Thermo` instance in which **species** are
         adjusted with respect to water vapour (others are kept untouched).

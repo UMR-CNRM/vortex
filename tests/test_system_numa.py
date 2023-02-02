@@ -4,6 +4,7 @@ from bronx.system.numa import LibNumaNodesInfo, numa_nodes_info
 
 try:
     import scipy.cluster.hierarchy  # @UnusedImport
+    assert scipy.cluster.hierarchy
 except ImportError:
     scipy_ok = False
 else:
