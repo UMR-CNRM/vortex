@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This modules implements constants and conversions used in thermodynamics.
 
@@ -9,8 +7,6 @@ A brief description of the equations can be found in this document:
 If you find mistakes in the above document or in this module, please,
 send an email to sebastien.riette@meteo.fr.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import sys
 import numpy as np
@@ -82,7 +78,7 @@ class ThermoError(Exception):
     """Errors in thermo."""
 
 
-class Thermo(object):
+class Thermo:
     """This class aims at containing states parameter.
 
     Values are retrieved by special method which can compute derived parameters.
@@ -345,7 +341,7 @@ class Thermo(object):
             assert mix_rule in [None], "mix_rule must be None or 'same' when adjusting only 'c'"
         elif species == ['i']:
             assert mix_rule in [None], "mix_rule must be None or 'same' when adjusting only 'i'"
-        elif set(species) == set(['c', 'i']):
+        elif set(species) == {'c', 'i'}:
             assert mix_rule in ['same', '0T-20'], "mix_rule must be 'same' or '0T-20'"
         else:
             raise ValueError("species can only contain 'c' and/or 'i'.")
@@ -363,7 +359,7 @@ class Thermo(object):
                 ice_fraction = 1.
                 cond = tempo.get(N_ri)
                 rsat = tempo.get(N_rsati)
-            elif set(species) == set(['c', 'i']):
+            elif set(species) == {'c', 'i'}:
                 if mix_rule == 'same':
                     ice_fraction = np.where(tempo.get(N_rc) + tempo.get(N_ri) > 0.,
                                             tempo.get(N_ri) / (tempo.get(N_rc) + tempo.get(N_ri)), 0.)

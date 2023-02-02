@@ -1,13 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 A simple class for managing a collection of *items*.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import six
-
 from weakref import WeakSet
 
 from bronx.fancies import loggers
@@ -15,7 +8,7 @@ from bronx.fancies import loggers
 logger = loggers.getLogger(__name__)
 
 
-class Catalog(object):
+class Catalog:
     """A simple class for managing a collection of *items*.
 
     The interface is very light : :meth:`add`, :meth:`discard` and
@@ -53,7 +46,7 @@ class Catalog(object):
     @classmethod
     def fullname(cls):
         """Returns a nicely formatted name of the current class (dump usage)."""
-        return '{0:s}.{1:s}'.format(cls.__module__, cls.__name__)
+        return '{:s}.{:s}'.format(cls.__module__, cls.__name__)
 
     @property
     def filled(self):
@@ -80,12 +73,11 @@ class Catalog(object):
         In python2, a list that contains a copy of the catalog items. In python3;
         an iterator over catalog items.
         """
-        return list(self) if six.PY2 else iter(self)
+        return iter(self)
 
     def __iter__(self):
         """Iterate over catalog items"""
-        for c in self._items:
-            yield c
+        yield from self._items
 
     def __call__(self):
         """Return a list that contains a copy of the catalog items."""

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 A handy class that checks that an external code import worked properly.
 
@@ -46,8 +44,6 @@ Example of that also checks a version number::
 
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import re
 import sys
 import traceback
@@ -58,8 +54,7 @@ from bronx.fancies.display import join_list_in_proper_english
 
 logger = loggers.getLogger(__name__)
 
-if (sys.version_info.major == 2 or
-        (sys.version_info.major == 3 and sys.version_info.minor < 10)):
+if (sys.version_info.minor < 10):
     from distutils.version import LooseVersion as version_cb
 else:
     # distutils is now deprecated
@@ -79,7 +74,7 @@ class ExternalCodeUnavailableError(Exception):
     pass
 
 
-class ExternalCodeImportChecker(object):
+class ExternalCodeImportChecker:
     """
     Catches any import error and allow for the developer to test whether it
     succeeded or not.
@@ -186,7 +181,7 @@ class ExternalCodeImportChecker(object):
                 else:
                     def error_new(*args, **kw):
                         raise ExternalCodeUnavailableError(excmsg)
-                    error_new.__name__ = str('__new__')
+                    error_new.__name__ = '__new__'
                     error_new.__doc__ = func_or_cls.__new__.__doc__
                     func_or_cls.__new__ = classmethod(error_new)
                     return func_or_cls

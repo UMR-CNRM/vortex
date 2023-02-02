@@ -1,18 +1,12 @@
-# -*- coding: utf-8 -*-
-
 """
 Interface to the Python's :mod:`hashlib` module that generates hashes on files, strings, ...
 """
-
-from __future__ import print_function, division, absolute_import, unicode_literals
-import six
-
 import hashlib
-import io
 import os
+from io import BytesIO
 
 
-class HashAdapter(object):
+class HashAdapter:
     """
     This class provides convenient methods to generate and check hash sums on
     files, File objects or strings.
@@ -68,22 +62,22 @@ class HashAdapter(object):
 
         :param input_file: Path to a file or opened File-like object
         """
-        if isinstance(input_file, six.string_types):
+        if isinstance(input_file, str):
             # input_file should be a file path
-            with io.open(input_file, 'rb') as i_fh:
+            with open(input_file, 'rb') as i_fh:
                 h = self._hinstance_from_fh(i_fh)
         elif hasattr(input_file, 'seek') and hasattr(input_file, 'read'):
             # input_file should be a file like object
             input_file.seek(0)
             h = self._hinstance_from_fh(input_file)
-        return six.text_type(h.hexdigest())
+        return str(h.hexdigest())
 
     def file2hash_fh(self, input_file):
         """Returns a File-like object that contains a hash string
 
         :param input_file: Path to a file or opened File-like object
         """
-        output = six.BytesIO()
+        output = BytesIO()
         output.write(self.file2hash(input_file).encode(encoding='utf-8'))
         output.seek(0)
         return output
@@ -94,7 +88,7 @@ class HashAdapter(object):
         :param input_file: Path to a file or opened File-like object
         :param output_file: Path to the output file
         """
-        with io.open(output_file, 'w', encoding='utf-8') as o_fh:
+        with open(output_file, 'w', encoding='utf-8') as o_fh:
             o_fh.write(self.file2hash(input_file))
         return output_file
 
@@ -115,9 +109,9 @@ class HashAdapter(object):
             or string that contains the reference hash sum)
         """
         # Get the reference hash string
-        if isinstance(reference, six.string_types):
+        if isinstance(reference, str):
             if os.path.isfile(reference):
-                with io.open(reference, 'r', encoding='utf-8') as i_fh:
+                with open(reference, encoding='utf-8') as i_fh:
                     hashref = self._read_hashline(i_fh)
             else:
                 hashref = reference

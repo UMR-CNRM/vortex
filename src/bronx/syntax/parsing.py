@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Parsing tools.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 
 import itertools
 import re
@@ -42,7 +37,7 @@ class StringDecoderSubstError(RuntimeError):
     """
     def __init__(self, sub, msg):
         msg = 'Unable to substitute "{}". {}.'.format(sub, msg)
-        super(StringDecoderSubstError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class StringDecoderRemapError(RuntimeError):
@@ -52,7 +47,7 @@ class StringDecoderRemapError(RuntimeError):
     """
     def __init__(self, rmap):
         msg = 'Re-mapping to "{}" is not implemented'.format(rmap)
-        super(StringDecoderRemapError, self).__init__(msg)
+        super().__init__(msg)
 
 
 class StringDecoderSyntaxError(ValueError):
@@ -62,10 +57,10 @@ class StringDecoderSyntaxError(ValueError):
     """
     def __init__(self, value, msg):
         msg = 'Unable to parse "{}". {}.'.format(value, msg)
-        super(StringDecoderSyntaxError, self).__init__(msg)
+        super().__init__(msg)
 
 
-class StringDecoder(object):
+class StringDecoder:
     """Convert a string into a proper Python's object.
 
     This generic decoder only supports list, dictionaries and conversion to basic
@@ -161,7 +156,7 @@ class StringDecoder(object):
 
     def remap_xbool(self, value):
         """Convert all values to booleans."""
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             value = bool(self._XBOOL_RE.match(value))
         else:
             try:
@@ -240,12 +235,12 @@ class StringDecoder(object):
     def _build_dict(self, value, remap, subs):
         """Build a dictionary from the **value** string."""
         return {k: self._value_expand(v, remap, subs)
-                for k, v in six.iteritems(self._sparser(value, itemsep=' ', keysep=':'))}
+                for k, v in self._sparser(value, itemsep=' ', keysep=':').items()}
 
     def _build_xbool(self, value, remap, subs):
         """Build a boolean from the **value** string."""
         val = self._value_expand(value, remap, subs)
-        if isinstance(val, six.string_types):
+        if isinstance(val, str):
             val = bool(self._XBOOL_RE.match(value))
         else:
             val = bool(val)
@@ -258,7 +253,7 @@ class StringDecoder(object):
 
     def _value_expand(self, value, remap, subs):
         """Recursively expand the configuration file's string."""
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             # Substitution
             sub_m = self._sub2_re.match(value)
             if sub_m is not None:
@@ -268,7 +263,7 @@ class StringDecoder(object):
             if len(separeted) > 1:
                 return [self._value_expand(v, remap, subs) for v in separeted]
             # complex builders...
-            for b, bre in six.iteritems(self._builders_re):
+            for b, bre in self._builders_re.items():
                 value_m = bre.match(value)
                 if value_m is not None:
                     return getattr(self, '_build_' + b)(value_m.group(1), remap, subs)
@@ -304,12 +299,12 @@ class StringDecoder(object):
                 l_value = self._subcb(sub)
             except (ValueError, KeyError, RuntimeError, AttributeError) as e:
                 raise StringDecoderSubstError(sub, 'The callback raised an exception: {!s}'.format(e))
-            if not isinstance(l_value, six.string_types):
+            if not isinstance(l_value, str):
                 raise StringDecoderSubstError(sub, 'The Callback did not return a string: {!s}'.format(l_value))
             else:
                 l_value = self._litteral_cleaner(l_value)
             (l_u_subs, l_hashkey) = self._substitute_lookup(l_value,
-                                                            substitute_set | set([sub]))
+                                                            substitute_set | {sub})
             u_subs.update(l_u_subs)
             u_subs[sub] = l_value
             hashstack.append(l_hashkey)
@@ -347,7 +342,7 @@ class StringDecoder(object):
 
     def __call__(self, value):
         """Return the decoded configuration string (possibly from cache)."""
-        if value is not None and isinstance(value, six.string_types):
+        if value is not None and isinstance(value, str):
             clean_value = self._litteral_cleaner(value)
             u_subs, hashkey = self._substitute_lookup(clean_value, set())
             if self._cache_check(hashkey):

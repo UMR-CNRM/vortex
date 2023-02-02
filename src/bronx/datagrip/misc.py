@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Miscellaneous I/O tools.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import csv
-import io
 import yaml
 from collections import OrderedDict
 
@@ -26,7 +20,7 @@ def read_dict_in_CSV(filename):
 
     """
     field_dict = []
-    with io.open(filename, 'r') as f:
+    with open(filename) as f:
         delimiter = str(f.readline()[0])
         file_priority = str(f.readline()[0:-1])
         field_table = csv.reader(f, delimiter=delimiter)
@@ -53,11 +47,11 @@ class OrderedYAMLLoader(yaml.SafeLoader):
             return OrderedDict(loader.construct_pairs(node))
         self.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
                              _dict_constructor)
-        super(OrderedYAMLLoader, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 def load_ordered_yaml(filename):
     """Proxy to load with OrderedYAMLLoader."""
-    with io.open(filename, 'r') as yamlfh:
+    with open(filename) as yamlfh:
         odict = yaml.load(yamlfh, Loader=OrderedYAMLLoader)
     return odict

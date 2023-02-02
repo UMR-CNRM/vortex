@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 from calendar import IllegalMonthError
 from datetime import datetime, timedelta
 import pickle
@@ -359,8 +355,10 @@ class utDate(TestCase):
                          "2011072618")
         self.assertEqual(rv.addterm_ymdh(dict(), dict(term=date.Period('PT6H'))),
                          "2011072618")
-        with self.assertRaises(KeyError):
+        with self.assertRaises(AttributeError):
             rv.addadd_ymdh(dict(), dict(toto=date.Period('PT6H')))
+        with self.assertRaises(AttributeError):
+            rv.addnewadd_ymdh(dict(), dict(toto=date.Period('PT6H')))
         with self.assertRaises(KeyError):
             rv.addterm_ymdh(dict(), dict(toto=date.Period('PT6H')))
         # Now look for very complex stuff
@@ -608,7 +606,7 @@ class utTime(TestCase):
                          "0018")
         self.assertEqual(rv.addmachin_fmth(dict(), dict(machin=date.Period('PT6H'))),
                          "0018")
-        with self.assertRaises(KeyError):
+        with self.assertRaises(AttributeError):
             rv.addadd_fmth(dict(), dict(toto=date.Period('PT6H')))
         with self.assertRaises(KeyError):
             rv.addterm_fmth(dict(), dict(toto=date.Period('PT6H')))
@@ -656,7 +654,9 @@ class utTime(TestCase):
         self.assertTimeListEqual(rv, ['2:15', '3:45'])
 
         rv = date.timerangex('10:00', '3:10', '-:15')
-        self.assertTimeListEqual(rv, ['3:15', '3:30', '3:45', '4:00', '4:15', '4:30', '4:45', '5:00', '5:15', '5:30', '5:45', '6:00', '6:15', '6:30', '6:45', '7:00', '7:15', '7:30', '7:45', '8:00', '8:15', '8:30', '8:45', '9:00', '9:15', '9:30', '9:45', '10:00'])
+        self.assertTimeListEqual(rv, ['3:15', '3:30', '3:45', '4:00', '4:15', '4:30', '4:45', '5:00', '5:15', '5:30',
+                                      '5:45', '6:00', '6:15', '6:30', '6:45', '7:00', '7:15', '7:30', '7:45', '8:00',
+                                      '8:15', '8:30', '8:45', '9:00', '9:15', '9:30', '9:45', '10:00'])
 
         rv = date.timerangex('-9:00', '-7:00', shift=2)
         self.assertTimeListEqual(rv, [-7, -6, -5])
@@ -688,13 +688,17 @@ class utTime(TestCase):
 
     def test_timetimerangex_minus_times(self):
         rv = date.timerangex('0-3-:15,3:30-6-:30')
-        self.assertTimeListEqual(rv, ['0000:00', '0000:15', '0000:30', '0000:45', '0001:00', '0001:15', '0001:30', '0001:45', '0002:00', '0002:15', '0002:30', '0002:45', '0003:00', '0003:30', '0004:00', '0004:30', '0005:00', '0005:30', '0006:00'])
+        self.assertTimeListEqual(rv, ['0000:00', '0000:15', '0000:30', '0000:45', '0001:00', '0001:15', '0001:30',
+                                      '0001:45', '0002:00', '0002:15', '0002:30', '0002:45', '0003:00', '0003:30',
+                                      '0004:00', '0004:30', '0005:00', '0005:30', '0006:00'])
 
         rv = date.timerangex('0-3-:30,0:15', 6, '00:45')
-        self.assertTimeListEqual(rv, ['0000:00', '0000:15', '0000:30', '0001:00', '0001:30', '0001:45', '0002:00', '0002:30', '0003:00', '0003:15', '0004:00', '0004:45', '0005:30'])
+        self.assertTimeListEqual(rv, ['0000:00', '0000:15', '0000:30', '0001:00', '0001:30', '0001:45', '0002:00',
+                                      '0002:30', '0003:00', '0003:15', '0004:00', '0004:45', '0005:30'])
 
         rv = date.timerangex('0:30-12', step='1:00', shift=1)
-        self.assertTimeListEqual(rv, ['0001:30', '0002:30', '0003:30', '0004:30', '0005:30', '0006:30', '0007:30', '0008:30', '0009:30', '0010:30', '0011:30', '0012:30'])
+        self.assertTimeListEqual(rv, ['0001:30', '0002:30', '0003:30', '0004:30', '0005:30', '0006:30', '0007:30',
+                                      '0008:30', '0009:30', '0010:30', '0011:30', '0012:30'])
 
         rv = date.timerangex('00:30--1--:30')
         self.assertTimeListEqual(rv, [date.Time(-1, 0), date.Time(0, -30), date.Time(0, 0), date.Time(0, 30)])
@@ -726,13 +730,15 @@ class utTime(TestCase):
 
     def test_timetimerangex_prefix_times(self):
         rv = date.timerangex('10:00', '8:10', '-:15', prefix='toto-')
-        self.assertListEqual(rv, ['toto-08:15', 'toto-08:30', 'toto-08:45', 'toto-09:00', 'toto-09:15', 'toto-09:30', 'toto-09:45', 'toto-10:00'])
+        self.assertListEqual(rv, ['toto-08:15', 'toto-08:30', 'toto-08:45', 'toto-09:00', 'toto-09:15', 'toto-09:30',
+                                  'toto-09:45', 'toto-10:00'])
 
         rv = date.timerangex('10:00', '9:10', '-:15', prefix='toto-', shift='0:01')
         self.assertListEqual(rv, ['toto-09:16', 'toto-09:31', 'toto-09:46', 'toto-10:01'])
 
         rv = date.timerangex('10:00', '9:10', '-:15', prefix='value no.', fmt='{1:d} is {0!s}')
-        self.assertListEqual(rv, ['value no.1 is 09:15', 'value no.2 is 09:30', 'value no.3 is 09:45', 'value no.4 is 10:00'])
+        self.assertListEqual(rv, ['value no.1 is 09:15', 'value no.2 is 09:30', 'value no.3 is 09:45',
+                                  'value no.4 is 10:00'])
 
 
 # A pure internal usage
@@ -855,7 +861,11 @@ class utTimeInt(TestCase):
         self.assertListEqual(rv, ['0002:15', '0003:45'])
 
         rv = date.timeintrangex('10:00', '3:10', '-:15')
-        self.assertListEqual(rv, ['0003:15', '0003:30', '0003:45', '0004:00', '0004:15', '0004:30', '0004:45', '0005:00', '0005:15', '0005:30', '0005:45', '0006:00', '0006:15', '0006:30', '0006:45', '0007:00', '0007:15', '0007:30', '0007:45', '0008:00', '0008:15', '0008:30', '0008:45', '0009:00', '0009:15', '0009:30', '0009:45', '0010:00'])
+        self.assertListEqual(rv,
+                             ['0003:15', '0003:30', '0003:45', '0004:00', '0004:15', '0004:30', '0004:45', '0005:00',
+                              '0005:15', '0005:30', '0005:45', '0006:00', '0006:15', '0006:30', '0006:45', '0007:00',
+                              '0007:15', '0007:30', '0007:45', '0008:00', '0008:15', '0008:30', '0008:45', '0009:00',
+                              '0009:15', '0009:30', '0009:45', '0010:00'])
 
         rv = date.timeintrangex('-9:00', '-7:00', shift=2)
         self.assertListEqual(rv, [-7, -6, -5])
@@ -887,13 +897,20 @@ class utTimeInt(TestCase):
 
     def test_rangex_minus_times(self):
         rv = date.timeintrangex('0-3-:15,3:30-6-:30')
-        self.assertListEqual(rv, ['0000:00', '0000:15', '0000:30', '0000:45', '0001:00', '0001:15', '0001:30', '0001:45', '0002:00', '0002:15', '0002:30', '0002:45', '0003:00', '0003:30', '0004:00', '0004:30', '0005:00', '0005:30', '0006:00'])
+        self.assertListEqual(rv,
+                             ['0000:00', '0000:15', '0000:30', '0000:45', '0001:00', '0001:15', '0001:30', '0001:45',
+                              '0002:00', '0002:15', '0002:30', '0002:45', '0003:00', '0003:30', '0004:00', '0004:30',
+                              '0005:00', '0005:30', '0006:00'])
 
         rv = date.timeintrangex('0-3-:30,0:15', 6, '00:45')
-        self.assertListEqual(rv, ['0000:00', '0000:15', '0000:30', '0001:00', '0001:30', '0001:45', '0002:00', '0002:30', '0003:00', '0003:15', '0004:00', '0004:45', '0005:30'])
+        self.assertListEqual(rv,
+                             ['0000:00', '0000:15', '0000:30', '0001:00', '0001:30', '0001:45', '0002:00', '0002:30',
+                              '0003:00', '0003:15', '0004:00', '0004:45', '0005:30'])
 
         rv = date.timeintrangex('0:30-12', step='1:00', shift=1)
-        self.assertListEqual(rv, ['0001:30', '0002:30', '0003:30', '0004:30', '0005:30', '0006:30', '0007:30', '0008:30', '0009:30', '0010:30', '0011:30', '0012:30'])
+        self.assertListEqual(rv,
+                             ['0001:30', '0002:30', '0003:30', '0004:30', '0005:30', '0006:30', '0007:30', '0008:30',
+                              '0009:30', '0010:30', '0011:30', '0012:30'])
 
         rv = date.timeintrangex('00:30--1--:30')
         self.assertListEqual(rv, ['-0000:30', '-0001:00', '0000:00', '0000:30'])
@@ -937,7 +954,9 @@ class utTimeInt(TestCase):
 
     def test_rangex_prefix_times(self):
         rv = date.timeintrangex('foo_0:15', 2, ':15')
-        self.assertListEqual(rv, ['foo_0000:15', 'foo_0000:30', 'foo_0000:45', 'foo_0001:00', 'foo_0001:15', 'foo_0001:30', 'foo_0001:45', 'foo_0002:00'])
+        self.assertListEqual(rv,
+                             ['foo_0000:15', 'foo_0000:30', 'foo_0000:45', 'foo_0001:00', 'foo_0001:15', 'foo_0001:30',
+                              'foo_0001:45', 'foo_0002:00'])
 
         rv = date.timeintrangex('foo_0', -2, ':15')
         self.assertListEqual(rv, [])
@@ -946,13 +965,15 @@ class utTimeInt(TestCase):
         self.assertListEqual(rv, ['foo_-0000:15', 'foo_-0000:30', 'foo_-0000:45', 'foo_-0001:00', 'foo_0000:00'])
 
         rv = date.timeintrangex('10:00', '8:10', '-:15', prefix='toto-')
-        self.assertListEqual(rv, ['toto-0008:15', 'toto-0008:30', 'toto-0008:45', 'toto-0009:00', 'toto-0009:15', 'toto-0009:30', 'toto-0009:45', 'toto-0010:00'])
+        self.assertListEqual(rv, ['toto-0008:15', 'toto-0008:30', 'toto-0008:45', 'toto-0009:00', 'toto-0009:15',
+                                  'toto-0009:30', 'toto-0009:45', 'toto-0010:00'])
 
         rv = date.timeintrangex('10:00', '9:10', '-:15', prefix='toto-', shift='0:01')
         self.assertListEqual(rv, ['toto-0009:16', 'toto-0009:31', 'toto-0009:46', 'toto-0010:01'])
 
         rv = date.timeintrangex('10:00', '9:10', '-:15', prefix='value no.', fmt='{1:d} is {0:s}')
-        self.assertListEqual(rv, ['value no.1 is 0009:15', 'value no.2 is 0009:30', 'value no.3 is 0009:45', 'value no.4 is 0010:00'])
+        self.assertListEqual(rv, ['value no.1 is 0009:15', 'value no.2 is 0009:30', 'value no.3 is 0009:45',
+                                  'value no.4 is 0010:00'])
 
 
 # noinspection PyUnusedLocal
@@ -973,8 +994,8 @@ class utMonth(TestCase):
                 self.assertEqual(rv.nextmonth().month, m + 1)
             else:
                 self.assertEqual(rv.nextmonth().month, 1)
-            self.assertEqual(rv.fmtraw, '{0:04d}{1:02d}'.format(thisyear, m))
-            self.assertEqual(rv.fmtym, '{0:04d}-{1:02d}'.format(thisyear, m))
+            self.assertEqual(rv.fmtraw, '{:04d}{:02d}'.format(thisyear, m))
+            self.assertEqual(rv.fmtym, '{:04d}-{:02d}'.format(thisyear, m))
 
         rv = date.Month(2, 2014)
         self.assertEqual(rv.month, 2)

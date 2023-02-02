@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 Some types to manage history of commands, actions, etc.
 """
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-import six
 
 import collections
 import datetime
@@ -14,7 +9,7 @@ import re
 from bronx.patterns import getbytag
 
 
-class PrivateHistory(object):
+class PrivateHistory:
     r"""Multi-purpose history like object.
 
     Items added to an History object are recorded along with a number (starting
@@ -138,15 +133,14 @@ class PrivateHistory(object):
     def nice(self, item):
         """Try to build some nice string of the item."""
         if type(item) is list or type(item) is tuple:
-            niceitem = ' '.join([six.text_type(x) for x in item])
+            niceitem = ' '.join([str(x) for x in item])
         else:
             niceitem = item
         return niceitem
 
     def __iter__(self):
         """Iterate over history entries."""
-        for item in self._history:
-            yield item
+        yield from self._history
 
     def __len__(self):
         """The the amount of history entries currently retained in this object."""

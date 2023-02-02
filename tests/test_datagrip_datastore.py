@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import tempfile
 import shutil
 import unittest
@@ -7,7 +5,7 @@ import unittest
 from bronx.datagrip.datastore import DataStore
 
 
-class Parasite(object):
+class Parasite:
 
     def __init__(self, **kwargs):
         self.mydata = kwargs

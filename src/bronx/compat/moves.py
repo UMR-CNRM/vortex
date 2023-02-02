@@ -1,16 +1,10 @@
-# -*- coding: utf-8 -*-
-
 """
 Compatibility for modules or attributes that move or change their name across versions of Python
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
+import collections
 import abc
 import re
 import sys
-
-import six
 
 
 def _require_version(major, minor=0):
@@ -20,15 +14,12 @@ def _require_version(major, minor=0):
 
 
 # ABCs are moved from "collections" to "collections.abc" in 3.8
-six.add_move(six.MovedModule("collections_abc", "collections", "collections.abc"))
-collections_abc = six.moves.collections_abc
-collections_abc.__doc__ = "Compatibility module for abstract classes that move from 'collections' " \
-                          "in Python 2.7 to 'collections.abc' in Python 3.x (will break in 3.8)"
+collections_abc = collections.abc
+collections_abc.__doc__ = "retrocompatibility artifact when dealing with python 2 and 3 compatibility"
 
 
 # re._pattern_type is removed in python3.7
-@six.add_metaclass(abc.ABCMeta)
-class re_Pattern(object):
+class re_Pattern(metaclass=abc.ABCMeta):
     """Mimics Python3.7 re.Pattern behaviour."""
 
     def __new__(self, *args, **kwargs):

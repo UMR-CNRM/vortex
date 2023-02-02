@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import copy
 from unittest import TestCase, main
 
@@ -40,10 +36,9 @@ class utGetByTag(TestCase):
         self.assertIsNot(a, b)
         # Some of the class methods
         self.assertSequenceEqual(Tag0.tag_keys(), ['default', 'truc'])
-        self.assertSetEqual(set(Tag0.tag_values()), set([a, c]))
-        self.assertSetEqual(set(Tag0.tag_items()), set([('default', a),
-                                                        ('truc', c)]))
-        self.assertSetEqual(set(Tag0.tag_classes()), set([Tag0, Tag2]))
+        self.assertSetEqual(set(Tag0.tag_values()), {a, c})
+        self.assertSetEqual(set(Tag0.tag_items()), {('default', a), ('truc', c)})
+        self.assertSetEqual(set(Tag0.tag_classes()), {Tag0, Tag2})
         # Ugly copies
         self.assertIs(copy.copy(a), a)
         self.assertIs(copy.deepcopy(a), a)
@@ -59,15 +54,15 @@ class utGetByTag(TestCase):
                 self.flag = 'bare'
 
             def focus_loose_hook(self):
-                super(Tag0, self).focus_loose_hook()
+                super().focus_loose_hook()
                 self.flag = 'sleeping'
 
             def focus_gain_hook(self):
-                super(Tag0, self).focus_gain_hook()
+                super().focus_gain_hook()
                 self.flag = 'focused'
 
             def focus_gain_allow(self):
-                super(Tag0, self).focus_gain_allow()
+                super().focus_gain_allow()
                 if self.tag == 'third':
                     raise RuntimeError('No way I will get focus')
 

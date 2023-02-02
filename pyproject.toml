@@ -17,7 +17,6 @@ classifiers = [
     "License :: CeCILL-C Free Software License Agreement (CECILL-C)",
 ]
 dependencies = [
-    "six",
 ]
 dynamic = ["version"]
 

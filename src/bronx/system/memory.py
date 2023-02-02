@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 This module is in charge of getting informations on Memory.
 
@@ -8,9 +6,6 @@ information on Memory may not be portable across platforms.
 At the present time, the only concrete implementation is
 the :class:`LinuxMemInfo`.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 
 import abc
 import os
@@ -41,8 +36,7 @@ def convert_bytes_in_unit(mem_b, unit):
     return mem_b / ((1024 if 'i' in unit else 1000) ** unit_power[unit])
 
 
-@six.add_metaclass(abc.ABCMeta)
-class MemInfo(object):
+class MemInfo(metaclass=abc.ABCMeta):
     """Provide various informations about Memory (abstract class)."""
 
     @abc.abstractmethod
@@ -75,7 +69,7 @@ class LinuxMemInfo(MemInfo):
 
     def __init__(self):
         # The RAM size in bytes
-        self._system_RAM = os.sysconf(str('SC_PAGE_SIZE')) * os.sysconf(str('SC_PHYS_PAGES'))
+        self._system_RAM = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
 
     def process_maxRSS(self, unit=DEFAULT_MEM_UNIT):
         """

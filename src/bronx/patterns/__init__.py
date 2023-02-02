@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 This package defines some useful Design Patterns.
 
 Implementations may be not the most efficient or
 thread-safe proof ones.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
@@ -16,7 +12,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class Borg(object):
+class Borg:
     """A base class for sharing a common state by different objects."""
     __state = {}
 
@@ -28,7 +24,7 @@ class Borg(object):
         return self
 
 
-class Singleton(object):
+class Singleton:
     """Obviously a base class for any *real* singleton."""
 
     def __new__(cls, *args, **kw):

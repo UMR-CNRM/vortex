@@ -1,10 +1,6 @@
-# -*- coding: utf-8 -*-
-
 """
 This module handles advanced signal catching.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import logging
 import signal
@@ -19,7 +15,7 @@ class SignalInterruptError(BaseException):
     pass
 
 
-class SignalInterruptHandler(object):
+class SignalInterruptHandler:
     """Handler class to deal with system signals."""
 
     def __init__(self, signals=(signal.SIGHUP, signal.SIGINT, signal.SIGQUIT,

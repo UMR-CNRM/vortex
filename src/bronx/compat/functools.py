@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Compatibility for some of the features of the functools modules.
 
@@ -9,18 +7,14 @@ on Python 3.8+ the :class:`cached_property` decorator from the standard library
 is used.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import sys
 from threading import RLock
 
-import six
-
-if six.PY2 or (sys.version_info.major == 3 and sys.version_info.major < 8):
+if sys.version_info.major == 3 and sys.version_info.major < 8:
 
     _NOT_FOUND = object()
 
-    class cached_property(object):
+    class cached_property:
         """Call the function only once and cache its result."""
 
         def __init__(self, func):

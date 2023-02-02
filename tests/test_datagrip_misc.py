@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals
-
-import io
 import tempfile
 import os
 import unittest
@@ -24,7 +19,7 @@ class TestDictCSV(unittest.TestCase):
 
     def setUp(self):
         self.testfilename = tempfile.mkstemp()[1]
-        with io.open(self.testfilename, 'w') as f:
+        with open(self.testfilename, 'w') as f:
             f.write(';\n')
             f.write('main\n')
             f.write('a:1;b:ok\n')
@@ -33,8 +28,8 @@ class TestDictCSV(unittest.TestCase):
 
     def test_read_dict_in_CSV(self):
         self.assertEqual(read_dict_in_CSV(self.testfilename),
-                         ([{u'a': 1, u'b': u'ok'},
-                           {u'a': 2, u'c': u'why?', u'b': u'not ok'}],
+                         ([{'a': 1, 'b': 'ok'},
+                           {'a': 2, 'c': 'why?', 'b': 'not ok'}],
                           'main')
                          )
 

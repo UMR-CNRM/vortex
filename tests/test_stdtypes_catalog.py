@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import pickle
 from unittest import TestCase, main
 from weakref import WeakSet
@@ -9,7 +5,7 @@ from weakref import WeakSet
 from bronx.stdtypes.catalog import Catalog
 
 
-class Foo(object):
+class Foo:
     # noinspection PyUnusedLocal
     def __init__(self, *u_args, **kw):
         self.__dict__.update(kw)
@@ -60,11 +56,11 @@ class utCatalog(TestCase):
 
         rv.add(2)
         self.assertTrue(rv.filled)
-        self.assertSetEqual(set(rv()), set([2, self.o1]))
+        self.assertSetEqual(set(rv()), {2, self.o1})
 
         rv.discard(5)
         self.assertTrue(rv.filled)
-        self.assertSetEqual(set(rv()), set([2, self.o1]))
+        self.assertSetEqual(set(rv()), {2, self.o1})
 
         rv.discard(2)
         self.assertTrue(rv.filled)

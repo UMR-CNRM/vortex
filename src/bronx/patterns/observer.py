@@ -1,5 +1,3 @@
-# -*- coding:Utf-8 -*-
-
 r"""
 A personal implementation of the Observer design pattern.
 
@@ -85,8 +83,6 @@ Example::
 
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import copy
 
 from bronx.fancies import loggers
@@ -122,7 +118,7 @@ def items():
     return ObserverBoard.tag_items()
 
 
-class Observer(object):
+class Observer:
     """
     Pseudo-Interface class.
     The three public methods should be implemented by any Observer object.
@@ -151,7 +147,7 @@ class ParrotObserver(Observer):
         logger.info('Notified %s ' + msg, self, *kargs)
 
 
-class SecludedObserverBoard(object):
+class SecludedObserverBoard:
     """A SecludedObserverBoard provides an indirection for the observing pattern.
 
     It holds two lists: one list of objects that are observed and

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Parse, check and execute single-line Python's statements.
 
@@ -38,8 +36,6 @@ Examples::
 
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import ast
 from contextlib import contextmanager
 import sys
@@ -76,7 +72,7 @@ class SafetyCheckNodeVisitor(ast.NodeVisitor):
     """
 
     #: Allowed AST nodes (regardless of their content)
-    _GENERIC_WHITELIST = set([
+    _GENERIC_WHITELIST = {
         ast.Expression,
         # Literals
         ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict,
@@ -94,22 +90,21 @@ class SafetyCheckNodeVisitor(ast.NodeVisitor):
         ast.keyword,
         # Subscripting
         ast.Subscript, ast.Index, ast.Slice, ast.ExtSlice,
-    ])
+    }
 
     # Some new AST nodes came up with Python 3
-    if sys.version_info.major >= 3:
-        _GENERIC_WHITELIST.update([ast.Bytes, ast.Starred, ])
-        if sys.version_info.major > 3 or sys.version_info.minor >= 4:
-            _GENERIC_WHITELIST.add(ast.NameConstant)
-        if sys.version_info.major > 3 or sys.version_info.minor >= 5:
-            _GENERIC_WHITELIST.add(ast.MatMult)
-        if sys.version_info.major > 3 or sys.version_info.minor >= 6:
-            _GENERIC_WHITELIST.update([ast.FormattedValue, ast.JoinedStr, ])
+    _GENERIC_WHITELIST.update([ast.Bytes, ast.Starred, ])
+    if sys.version_info.minor >= 4:
+        _GENERIC_WHITELIST.add(ast.NameConstant)
+    if sys.version_info.minor >= 5:
+        _GENERIC_WHITELIST.add(ast.MatMult)
+    if sys.version_info.minor >= 6:
+        _GENERIC_WHITELIST.update([ast.FormattedValue, ast.JoinedStr, ])
 
     _GENERIC_WHITELIST = tuple(_GENERIC_WHITELIST)
 
     #: The list of allowed builtins
-    _BUILTINS_WHITELIST = set([
+    _BUILTINS_WHITELIST = {
         'abs', 'all', 'any', 'ascii', 'bin', 'bool', 'bytearray',
         'bytes', 'chr', 'complex', 'dict', 'divmod', 'enumerate',
         'filter', 'float', 'frozenset', 'hasattr', 'hash', 'hex',
@@ -117,17 +112,16 @@ class SafetyCheckNodeVisitor(ast.NodeVisitor):
         'map', 'max', 'min', 'next', 'oct', 'ord', 'pow', 'range',
         'reversed', 'round', 'set', 'sorted', 'str', 'sum', 'tuple',
         'zip'
-    ])
+    }
 
     def __init__(self, varnames):
         """
         :param varnames: A list of allowed global variable names
         """
-        super(SafetyCheckNodeVisitor, self).__init__()
+        super().__init__()
         self._varnames = varnames
         self._allowednames = set(varnames)
-        if not (sys.version_info.major > 3 or
-                (sys.version_info.major == 3 and sys.version_info.minor >= 4)):
+        if not (sys.version_info.minor >= 4):
             # In Python >= 3.4, this is described by the ast.NameConstant node
             self._allowednames.update(['False', 'True', 'None'])
 
@@ -147,7 +141,7 @@ class SafetyCheckNodeVisitor(ast.NodeVisitor):
         if not isinstance(node, self._GENERIC_WHITELIST):
             raise SingleLineStatementSecurityError('The "{:s}" AST node is not allowed'
                                                    .format(type(node)))
-        super(SafetyCheckNodeVisitor, self).generic_visit(node)
+        super().generic_visit(node)
 
     def visit_Call(self, node):
         """Check :class:`ast.Call` objects."""
@@ -235,21 +229,14 @@ class SafetyCheckNodeVisitor(ast.NodeVisitor):
 
     def visit_Lambda(self, node):
         """Check :class:`ast.Lambda` objects."""
-        if sys.version_info.major >= 3:
-            argsbase = node.args.args + node.args.kwonlyargs
-            defaultbase = node.args.defaults + node.args.kw_defaults
-        else:
-            argsbase = list(node.args.args)
-            defaultbase = list(node.args.defaults)
+        argsbase = node.args.args + node.args.kwonlyargs
+        defaultbase = node.args.defaults + node.args.kw_defaults
         # Find out the argument names and defaults
         if node.args.vararg is not None:
             argsbase.append(node.args.vararg)
         if node.args.kwarg is not None:
             argsbase.append(node.args.kwarg)
-        if sys.version_info.major >= 3:
-            controlvariables = set([a.arg for a in argsbase])  # arg objects
-        else:
-            controlvariables = set([a.id for a in argsbase])  # Name objects
+        controlvariables = {a.arg for a in argsbase}  # arg objects
         for d in defaultbase:
             if d is not None:
                 self.visit(d)
@@ -258,7 +245,7 @@ class SafetyCheckNodeVisitor(ast.NodeVisitor):
             self.visit(node.body)
 
 
-class SingleLineStatement(object):
+class SingleLineStatement:
     """Safely parse, check and evaluate a code statement.
 
     The interface of such a class is fairly simple. One just needs to create an

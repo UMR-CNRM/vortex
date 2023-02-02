@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import unittest
 
 from bronx.syntax import dictmerge, mktuple
 
 
-class Foo(object):
+class Foo:
     pass
 
 
@@ -47,7 +43,7 @@ class utMktuple(unittest.TestCase):
     def test_mktuple_direct(self):
         self.assertTupleEqual(mktuple([1, 2, 3]), (1, 2, 3))
         self.assertTupleEqual(mktuple((1, 2, 3)), (1, 2, 3))
-        self.assertSetEqual(set(mktuple(set([1, 2, 3]))), set((1, 2, 3)))
+        self.assertSetEqual(set(mktuple({1, 2, 3})), {1, 2, 3})
 
     def test_mktuple_weird(self):
         thefoo = Foo()
