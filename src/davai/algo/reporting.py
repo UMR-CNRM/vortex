@@ -136,6 +136,7 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
                 ),
                 mkjob_jobname = dict(
                     info = "Job name in mkjob context",
+                    optional=True,
                 ),
             )
         )

@@ -56,6 +56,7 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
                 ),
                 mkjob_jobname=dict(
                     info="Job name in mkjob context",
+                    optional=True,
                 ),
             )
         ),
