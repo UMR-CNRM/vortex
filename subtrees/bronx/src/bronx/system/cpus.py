@@ -158,11 +158,8 @@ On Belenos (2x AMD Rome socket with 64 cores each)::
 import abc
 from collections import namedtuple, defaultdict
 from functools import partial
-import locale
-import re
-
 import os
-import subprocess
+import re
 
 from bronx.fancies import loggers
 
@@ -369,16 +366,18 @@ class LinuxCpusInfo(CpusInfo):
                 self._cpus[cpu_n] = CpuInfo(**cpu)
         return self._cpus
 
-    def get_affinity(pid=None):
-        """Get the cpu affinity of a process. Returns None if no affinity is set."""
-        if pid is None:
-            pid = 0
-        return os.sched_getaffinity(pid)
 
-    def set_affinity(cpus, pid=None):
-        """Set the cpu affinity of a process."""
-        if pid is None:
-            pid = 0
-        if isinstance(cpus, int):
-            cpus = [cpus]
-        os.sched_setaffinity(pid, cpus)
+def get_affinity(pid=None):
+    """Get the cpu affinity of a process. Returns None if no affinity is set."""
+    if pid is None:
+        pid = 0
+    return os.sched_getaffinity(pid)
+
+
+def set_affinity(cpus, pid=None):
+    """Set the cpu affinity of a process."""
+    if pid is None:
+        pid = 0
+    if isinstance(cpus, int):
+        cpus = [cpus]
+    os.sched_setaffinity(pid, cpus)

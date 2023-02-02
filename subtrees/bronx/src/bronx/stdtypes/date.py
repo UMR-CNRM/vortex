@@ -43,7 +43,6 @@ import calendar
 import datetime
 import functools
 import inspect
-import locale
 import operator
 import re
 
