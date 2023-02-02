@@ -1,14 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """
 Various utility functions used when parsinf ArpIFS listings.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import io
 import re
-import six
 
 #: No automatic export
 __all__ = []
@@ -167,7 +161,7 @@ def get_maxint(container, infinity=-999):
     for d in container:
         if isinstance(d, int):
             digit = max(digit, d)
-        elif isinstance(d, six.string_types):
+        elif isinstance(d, str):
             digit = d
             break
         elif d is None:
@@ -197,8 +191,8 @@ def read_listing(source):
     """
     if isinstance(source, list):
         lines = source
-    elif isinstance(source, six.string_types):
-        with io.open(source, 'r') as listfh:
+    elif isinstance(source, str):
+        with open(source) as listfh:
             lines = [line.rstrip("\n") for line in listfh]
     return lines
 

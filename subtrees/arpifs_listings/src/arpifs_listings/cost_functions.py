@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """
 Module that deals with part of the Arpege/IFS listings related to the variational
 data assimilation's cost functions.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-from six import StringIO
+from io import StringIO
 
 import re
 from collections import OrderedDict, namedtuple
@@ -34,10 +30,10 @@ class CostFunctionKey(namedtuple('BareCostFunctionKey', ('iter', 'sim'))):
     def __new__(cls, *kargs, **kwargs):
         kargs = [int(n) for n in kargs]
         kwargs = {k: int(n) for k, n in kwargs.items()}
-        return super(CostFunctionKey, cls).__new__(cls, *kargs, **kwargs)
+        return super().__new__(cls, *kargs, **kwargs)
 
 
-class CostFunctionData(object):
+class CostFunctionData:
     """A bunch of information about the cost function (at a given step)."""
 
     def __init__(self):
@@ -109,7 +105,7 @@ class CostFunctionData(object):
         return self._gradj
 
 
-class CostFunctions(object):
+class CostFunctions:
     """Object enclosing one or more cost function data.
 
     It behaves mostly like a dictionary:

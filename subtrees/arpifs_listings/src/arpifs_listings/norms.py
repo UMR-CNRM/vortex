@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Module that deals with part of the Arpege/IFS listings related to the
 spectral norms of model or post-processing fields.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import sys
 import collections
@@ -70,7 +66,7 @@ CNT_steps = {'openfa_info': r'\s*' + _re_openfa + r':' + _re_comment + r'\s*$',
 CNT_steps = {k: re.compile(v) for k, v in CNT_steps.items()}
 
 
-class NormsSet(object):
+class NormsSet:
     """
     Handling several Norm objects at different steps.
     """
@@ -98,8 +94,7 @@ class NormsSet(object):
         return len(self.norms_at_each_step)
 
     def __iter__(self):
-        for n in self.norms_at_each_step:
-            yield n
+        yield from self.norms_at_each_step
 
     def __eq__(self, other):
         return (len(self) == len(other) and
@@ -165,7 +160,7 @@ class NormsSet(object):
                 self.steps_linerecord.append(lineno)
 
 
-class Norms(object):
+class Norms:
     """
     Handling of fields norms at one moment/step.
     """
@@ -359,7 +354,7 @@ class Norms(object):
                     for a in ('step', 'spnorms', 'gpnorms')])
 
 
-class NormsComparison(object):
+class NormsComparison:
     """
     Handling of the differences between two Norm objects.
     """
@@ -450,8 +445,8 @@ def compare_normsets(test, ref, mode,
     :param plot_out: if mode == 'plot', name of the plot output file
     """
     if not test.steps_equal(ref):
-        st = set([n.format_step() for n in test])
-        sr = set([n.format_step() for n in ref])
+        st = {n.format_step() for n in test}
+        sr = {n.format_step() for n in ref}
         stepset = st.intersection(sr)
         test_rm = [i for i in range(len(test))
                    if test[i].format_step() not in stepset]

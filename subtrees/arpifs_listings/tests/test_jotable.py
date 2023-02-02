@@ -1,10 +1,5 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 import io
 import os
-import six
 import unittest
 
 from arpifs_listings import jo_tables
@@ -38,7 +33,7 @@ Jo/n:           1.36 (100.00%)
     @staticmethod
     def _ingest(fname):
         filename = _find_testfile(fname)
-        with io.open(filename, 'r') as fh:
+        with open(filename) as fh:
             return (filename, [line.rstrip("\n") for line in fh])
 
     def test_single(self):
@@ -76,7 +71,7 @@ Jo/n:           1.36 (100.00%)
                                    'jo/n': ovar['jo/n'],
                                    'n': ovar['n'], }
                         self.assertDictEqual(tmpdiff, nulldiff)
-        str_out = six.StringIO()
+        str_out = io.StringIO()
         l2_j.print_diff(l1_j, out=str_out, onlymaxdiff=True)
         str_out.seek(0)
         self.assertEqual(str_out.read(), self.NODIFFS_STR)
@@ -90,7 +85,7 @@ Jo/n:           1.36 (100.00%)
                    'jo': dict(diff=3395197.925141, reldiff=1.),
                    'jo/n': dict(diff=1.3627999089409717, reldiff=1.)}
         self.assertDictEqual(l2_j.maxdiff(l1_j), bigdiff)
-        str_out = six.StringIO()
+        str_out = io.StringIO()
         l2_j.print_diff(l1_j, out=str_out, onlymaxdiff=True)
         str_out.seek(0)
         self.assertEqual(str_out.read(), self.BIGDIFFS_STR)

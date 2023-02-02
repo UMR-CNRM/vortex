@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Module that deals with part of the Arpege/IFS listings related to the
 tests of the Tangent Linear and Adjoint models.
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 import math
@@ -21,7 +17,7 @@ from .util import (read_listing,
 __all__ = []
 
 
-class ADTest(object):
+class ADTest:
     """
     Handle results of the test of the adjoint from a listing.
 
@@ -88,7 +84,7 @@ class ADTest(object):
         return s
 
 
-class TLTest(object):
+class TLTest:
     """
     Handle results of the test of the tangent linear from a listing.
 
@@ -189,7 +185,7 @@ class TLTest(object):
         colors = ['red', 'blue', 'green', 'orange', 'magenta', 'darkolivegreen',
                   'yellow', 'salmon', 'black']
         linestyles = ['-', '--', '-.', ':']
-        variables = sorted(set([i[0] for i in self.scores_per_id.keys()]))
+        variables = sorted({i[0] for i in self.scores_per_id.keys()})
         cmap = {v: colors[i] for i, v in enumerate(variables)}
         gridpoints = {v: [i[1] for i in self.scores_per_id.keys() if i[0] == v]
                       for v in variables}

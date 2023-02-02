@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Module that deal with any Arpege/IFS listing.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import io
 import sys
 
 from .util import PARSING_ERROR_CODE, FOUND_NAN_ERROR_CODE
@@ -19,7 +14,7 @@ from .TLAD import ADTest, TLTest
 __all__ = []
 
 
-class OutputListing(object):
+class OutputListing:
     """Handling of a model configuration output listing."""
 
     patterns = {'end_is_reached': ['*** END CNT0 ***',
@@ -53,7 +48,7 @@ class OutputListing(object):
         self.tl_test = None
 
         # read listing in file
-        with io.open(self.filename, 'r') as f:
+        with open(self.filename) as f:
             self.lines = [line.rstrip("\n") for line in f]  # to remove trailing '\n'
 
     def __len__(self):
