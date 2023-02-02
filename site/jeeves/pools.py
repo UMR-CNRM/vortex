@@ -16,8 +16,6 @@ import zipfile
 from datetime import datetime, timedelta
 from glob import glob
 
-import six
-
 from bronx.patterns import getbytag
 from bronx.syntax import mktuple
 
@@ -209,7 +207,7 @@ class Request:
     def dump(self):
         """Dump request as a json file."""
         self._dumpfiles.append(self.filename())
-        with open(self._dumpfiles[-1] + '.tmp', 'wb' if six.PY2 else 'w') as fd:
+        with open(self._dumpfiles[-1] + '.tmp', 'w') as fd:
             json.dump(self.as_dict(), fd, sort_keys=True, indent=4)
         shutil.move(self._dumpfiles[-1] + '.tmp', self._dumpfiles[-1])
         return True
