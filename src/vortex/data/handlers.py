@@ -608,7 +608,7 @@ class Handler:
         try:
             store = self.store
         except Exception as e:
-            logger.error("The Resource hndler was unable to create a store object (%s).",
+            logger.error("The Resource handler was unable to create a store object (%s).",
                          str(e))
             store = None
         if store:

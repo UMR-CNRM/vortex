@@ -1355,9 +1355,11 @@ class Guess(ParaExpresso):
     def get_origin(self, rh, opts):
         """Get the subdirectories from the effective inputs"""
         avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        subdirs = list()
         cpl_model = list()
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
+                subdirs.append(am.rh.container.dirname)
                 cpl_model.append(am.rh.provider.vconf == '4dvarfr')
 
         return cpl_model
@@ -1686,12 +1688,14 @@ class S2MReforecast(S2MComponent):
             # Guess files are now stored in a tar archive
             if self.system.is_tarfile(am.rh.container.basename):
                 for fic in self.system.untar(am.rh.container.basename):
-                    # fic = YYYYMMDD00/mbXXX/PYYMMDDHH
-                    dirname = self.system.path.dirname(fic)  # YYYYMMDD00/mbXXX
+                    # fic = YYYYMMDDHH/mbXXX/PYYMMDDhh
+                    dirname = self.system.path.dirname(fic)  # YYYYMMDDHH/mbXXX
                     if dirname not in subdirs:
                         subdirs.append(dirname)
-                        list_dates_begin.append(Date(fic.split('/')[0]) + Period(hours=6))
-                        list_dates_end.append(Date(fic.split('/')[0]) + Period(hours=6) + Period(days=4))
+                        rundate = Date(fic.split('/')[0])  # YYYYMMDDHH
+                        dt = rundate.hour - 6  if rundate.hour in [6, 18] else 6
+                        list_dates_begin.append(rundate + Period(hours=dt))
+                        list_dates_end.append(rundate + Period(hours=dt) + Period(days=4))
             elif am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
                 # WARNING : The first ech in the corresponding footprint must correspond to 6:00 at day D
