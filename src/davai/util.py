@@ -4,8 +4,6 @@ Functions and classes used by other modules from package.
 """
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from six.moves.urllib import error as urlerror  # @UnresolvedImport
-
 from footprints import proxy as fpx
 
 import errno
@@ -18,7 +16,6 @@ import json
 from bronx.fancies import loggers
 
 from vortex import sessions
-from vortex.tools.net import http_post_data
 
 #: No automatic export
 __all__ = []

@@ -52,7 +52,7 @@ def send_to_DAVAI_server(t, rh, fatal=True):  # @UnusedVariables
 
     :param fatal: if False, catch errors, log but do not raise
     """
-    scheme2port = {'http':80, 'https':443}
+    scheme2port = {'http': 80, 'https': 443}
     server_syntax = 'http[s]://<host>[:<port>]/<url> (port is optional)'
     try:
         # get data from file
