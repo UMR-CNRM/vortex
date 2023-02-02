@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 """
 Module that deals with part of the Arpege/IFS listings related to the
 processing of observations (JO-tables).
 """
-
-from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 import sys
@@ -68,7 +64,7 @@ def _write_n(out, sthg):
     out.write(sthg + '\n')
 
 
-class _JoMixin(object):
+class _JoMixin:
     """Some internal method common to all of the Jo classes."""
 
     _ChildClass = object  # Define the basic child class
@@ -141,7 +137,7 @@ class _JoMixinPlus(_JoMixin):
         return keys
 
 
-class JoVariable(object):
+class JoVariable:
     """Object containing data on a given variable."""
 
     def __init__(self, name, n=0, jo=0, obserr=0, bgerr=0, dummy=False):
@@ -248,12 +244,12 @@ class JoSensor(_JoMixinPlus):
         :param idnum: Codetype Id
         :param name: Name of the sensor
         """
-        super(JoSensor, self).__init__(name)
+        super().__init__(name)
         self.id = int(idnum)
         self.dummy = dummy
 
     def __str__(self):
-        return "\n".join(['%s: %s' % (var, self.name) for var in self.values()]) + "\n"
+        return "\n".join(['{}: {}'.format(var, self.name) for var in self.values()]) + "\n"
 
     def __eq__(self, other):
         assert isinstance(other, self.__class__)
@@ -319,7 +315,7 @@ class JoObstype(_JoMixinPlus):
         :param idnum: Obstype Id
         :param name: Name of the Obstype
         """
-        super(JoObstype, self).__init__(name)
+        super().__init__(name)
         self.id = int(idnum)
         self.ntotal = 0
         self.jo = 0
@@ -438,7 +434,7 @@ class JoTable(_JoMixinPlus):
     _ChildClass = JoObstype
 
     def __init__(self, name):
-        super(JoTable, self).__init__(name)
+        super().__init__(name)
         self.ntotal = 0
         self.jo = 0
 
@@ -554,7 +550,7 @@ class JoTables(_JoMixin):
         :param fcontent: Array of listing lines (if not provided, **filename** is
             opened and read it.
         """
-        super(JoTables, self).__init__(filename)
+        super().__init__(filename)
         self.filename = filename
 
         if fcontent is None:
