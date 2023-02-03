@@ -9,7 +9,6 @@ import json
 import re
 import tarfile
 import tempfile
-from urllib import error as urlerror
 
 from bronx.fancies import loggers
 
@@ -100,7 +99,7 @@ def bundle_guess_packname(bundle,
 
 
 def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
-                              fatal=True, **kwargs):
+                              fatal=True, proxies=None, **kwargs):
     """
     Send JSON data to DAVAI server.
 
@@ -126,8 +125,9 @@ def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
             'token': token}
     # sending post request and saving response as response object
     try:
-        rc, status, headers, rdata = http_post_data(url=davai_server_post_url, data=data, **kwargs)
-    except urlerror.URLError as e:
+        rc, status, headers, rdata = http_post_data(url=davai_server_post_url, data=data,
+                                                    proxies=proxies, **kwargs)
+    except OSError as e:
         logger.error('Connection with remote server: {} failed: {}'.format(
             davai_server_post_url,
             str(e)))

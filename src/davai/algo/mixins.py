@@ -21,7 +21,7 @@ from common.algo.fpserver import FullPosServer
 __all__ = []
 
 
-def context_info_for_task_summary(context):
+def context_info_for_task_summary(context, jobname=None):
     """Get some infos from context for task summary."""
     info = {'rundir': context.rundir}
     for k in ('MTOOL_STEP_ABORT', 'MTOOL_STEP_DEPOT', 'MTOOL_STEP_SPOOL'):
@@ -32,6 +32,8 @@ def context_info_for_task_summary(context):
         abort_dir = context.system.path.join(info['MTOOL_STEP_ABORT'],
                                              context.rundir[len(info['MTOOL_STEP_SPOOL']) + 1:])
         info['(if aborted)'] = abort_dir
+    if jobname is not None:
+        info['jobname'] = jobname
     return info
 
 
@@ -50,13 +52,17 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
                     optional=False,
                     values=[True, ]
                 ),
+                mkjob_jobname=dict(
+                    info="Job name in mkjob context",
+                    optional=True,
+                ),
             )
         ),
     )
 
     @property
     def context_info_for_task_summary(self):
-        return context_info_for_task_summary(self.context)
+        return context_info_for_task_summary(self.context, jobname=self.mkjob_jobname)
 
     def crash_witness_fail_execute(self, e, rh, kw):  # @UnusedVariables
         from ial_expertise.task import task_status  # @UnresolvedImport
