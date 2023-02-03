@@ -16,6 +16,7 @@ import json
 from bronx.fancies import loggers
 
 from vortex import sessions
+from vortex.tools.net import http_post_data
 
 #: No automatic export
 __all__ = []
@@ -101,7 +102,7 @@ def bundle_guess_packname(bundle,
 
 
 def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
-                              fatal=True, **kwargs):
+                              fatal=True, proxies=None, **kwargs):
     """
     Send JSON data to DAVAI server.
 
@@ -112,7 +113,6 @@ def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
 
     Additional kwargs are passed to requests.post()
     """
-    import requests  # not in file head cause not in standard library
     # token
     t = sessions.current()
     token = t.env.get('CIBOULAI_TOKEN', '')
@@ -126,7 +126,27 @@ def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
             'xpid': xpid,
             'type': kind,
             'token': token}
-    return requests.post(url=davai_server_post_url, data=data, **kwargs)
+    # sending post request and saving response as response object
+    try:
+        rc, status, headers, rdata = http_post_data(url=davai_server_post_url, data=data,
+                                                    proxies=proxies, **kwargs)
+    except OSError as e:
+        logger.error('Connection with remote server: {} failed: {}'.format(
+            davai_server_post_url,
+            str(e)))
+        if fatal:
+            raise
+    else:
+        # success
+        if rc:
+            logger.info('HTTP Post suceeded: status=%d. data:\n%s',
+                        status, rdata)
+        # fail
+        else:
+            logger.error('HTTP post failed: status=%d. header:\n%s data:\n%s.',
+                         status, headers, rdata)
+            if fatal:
+                raise DavaiException('HTTP post failed')
 
 
 def set_env4git():

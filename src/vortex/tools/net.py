@@ -80,35 +80,55 @@ def uriunparse(uridesc):
     return urlparse.urlunparse(uridesc)
 
 
-def http_post_data(url, data, ok_statuses=(), proxies=None, headers={}):
-    """DEPRECATED (use requests.post) - Make a http POST request, encoding **data**."""
-    if not isinstance(data, bytes if six.PY3 else str):
-        data = urlparse.urlencode(data).encode('utf-8')
-    handlers = []
-    if isinstance(proxies, dict):
-        handlers.append(urlrequest.ProxyHandler(proxies))
+def http_post_data(url, data, ok_statuses=(), proxies=None, headers=None, verify=None):
+    """Make a http/https POST request, encoding **data**."""
     if isinstance(proxies, (list, tuple)):
-        handlers.append(urlrequest.ProxyHandler({'http': proxies}))
-    opener = urlrequest.build_opener(* handlers)
-    req = urlrequest.Request(url=url, data=data, headers=headers)
+        proxies = {scheme: proxies for scheme in ('http', 'https')}
+    # Try to use the requests package
     try:
-        req_f = opener.open(req)
-    except Exception as e:
-        try:  # ignore UnboundLocalError if req_f has not been created yet
-            req_f.close()
-        finally:
-            raise e
+        import requests
+        use_requests = True
+    except ImportError:
+        use_requests = False
+    # The modern way
+    if use_requests:
+        resp = requests.post(url=url, data=data, headers=headers,
+                             proxies=proxies, verify=verify)
+        if ok_statuses:
+            is_ok = resp.status_code in ok_statuses
+        else:
+            is_ok = resp.ok
+        return is_ok, resp.status_code, resp.headers, resp.text
     else:
+        if not isinstance(data, bytes if six.PY3 else str):
+            data = urlparse.urlencode(data).encode('utf-8')
+        if uriparse(url)['scheme'] == 'https':
+            raise RuntimeError('HTTPS is not properly supported by urllib.request ({}).'
+                               .format(url))
+        handlers = []
+        if isinstance(proxies, dict):
+            handlers.append(urlrequest.ProxyHandler(proxies))
+        opener = urlrequest.build_opener(* handlers)
+        req = urlrequest.Request(url=url, data=data,
+                                 headers={} if headers is None else headers)
         try:
-            req_rc = req_f.getcode()
-            req_info = req_f.info()
-            req_data = req_f.read().decode('utf-8')
-            if ok_statuses:
-                return req_rc in ok_statuses, req_rc, req_info, req_data
-            else:
-                return 200 <= req_rc < 400, req_rc, req_info, req_data
-        finally:
-            req_f.close()
+            req_f = opener.open(req)
+        except Exception as e:
+            try:  # ignore UnboundLocalError if req_f has not been created yet
+                req_f.close()
+            finally:
+                raise e
+        else:
+            try:
+                req_rc = req_f.getcode()
+                req_info = req_f.info()
+                req_data = req_f.read().decode('utf-8')
+                if ok_statuses:
+                    return req_rc in ok_statuses, req_rc, req_info, req_data
+                else:
+                    return 200 <= req_rc < 400, req_rc, req_info, req_data
+            finally:
+                req_f.close()
 
 
 def netrc_lookup(logname, hostname, nrcfile=None):
@@ -1323,14 +1343,16 @@ class Ssh(object):
                [myremote, remote_cmd])
         return self.sh.spawn(cmd, output=stream, fatal=False)
 
-    def tunnel(self, finaldestination, finalport, entranceport=None,
+    def tunnel(self, finaldestination, finalport=0, entranceport=None,
                maxwait=3., checkdelay=0.25):
         """Create an SSH tunnel and check that it actually starts.
 
-        :param str finaldestination: the destination hostname (i.e the machine
-                                     at the far end of the tunnel)
-        :param int finalport: the destination port
-        :param int entranceport: the port number of the tunnel entrance (if None,
+        :param str finaldestination: The destination hostname (i.e the machine
+                                     at the far end of the tunnel). If the
+                                     "socks" special value is provided, the SSH
+                                     tunnel will behave as a SOCKS4/SOCKS5 proxy.
+        :param int finalport: The destination port
+        :param int entranceport: The port number of the tunnel entrance (if None,
                                  which is the default, it is automatically
                                  assigned)
         :param float maxwait: The maximum time to wait for the entrance port to
@@ -1355,13 +1377,19 @@ class Ssh(object):
                              entranceport, finaldestination, finalport, myremote)
                 logger.error('The entrance port is already in use.')
                 return False
-
-        p = self.sh.popen([self._sshcmd, ] + self._sshopts +
-                          ['-N', '-L',
-                           '{:d}:{:s}:{:d}'.format(entranceport,
-                                                   finaldestination, finalport),
-                           myremote],
-                          stdin=False, output=False)
+        if finaldestination == 'socks':
+            p = self.sh.popen([self._sshcmd, ] + self._sshopts +
+                              ['-N', '-D', '{:d}'.format(entranceport), myremote],
+                              stdin=False, output=False)
+        else:
+            if finalport <= 0:
+                raise ValueError('Erroneous finalport value: {!s}'.format(finalport))
+            p = self.sh.popen([self._sshcmd, ] + self._sshopts +
+                              ['-N', '-L',
+                               '{:d}:{:s}:{:d}'.format(entranceport,
+                                                       finaldestination, finalport),
+                               myremote],
+                              stdin=False, output=False)
         tunnel = ActiveSshTunnel(self.sh, p, entranceport, finaldestination, finalport)
         elapsed = 0.
         while (not self.sh.check_localport(entranceport)) and elapsed < maxwait:

@@ -4,12 +4,11 @@ Hooks for special DAVAI processings.
 """
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import contextlib
 import json
 
 from bronx.fancies import loggers
 
-from vortex.tools.net import uriparse
-from vortex.tools.systems import istruedef
 from .util import SummariesStack, DavaiException, send_task_to_DAVAI_server
 
 #: No automatic export
@@ -46,13 +45,27 @@ def throw_summary_on_stack(t, rh):
     stack.throw_on_stack(rh)
 
 
+@contextlib.contextmanager
+def _send_to_davai_server_build_proxy(sh):
+    """Open a SSH tunnel as a SOCKS proxy (if needed)."""
+    if not sh.default_target.isnetworknode:
+        # Compute node: open tunnel for send to target
+        ssh_obj = sh.ssh('network', virtualnode=True, maxtries=1, mandatory_hostcheck=False)
+        with ssh_obj.tunnel('socks') as tunnel:
+            proxy = 'socks5://127.0.0.1:{}'.format(tunnel.entranceport)
+            yield {scheme: proxy for scheme in ('http', 'https')}
+    else:
+        yield None
+
+
 def send_to_DAVAI_server(t, rh, fatal=True):  # @UnusedVariables
     """
     Send a JSON summary to DAVAI server.
 
-    :param fatal: if False, catch errors, log but do not raise
+    :param t: The Ticket object representing the current session.
+    :param rh: The resource's Handler on which the hook is called.
+    :param fatal: If False, catch errors, log but do not raise.
     """
-    scheme2port = {'http': 80, 'https': 443}
     server_syntax = 'http[s]://<host>[:<port>]/<url> (port is optional)'
     try:
         # get data from file
@@ -66,40 +79,18 @@ def send_to_DAVAI_server(t, rh, fatal=True):  # @UnusedVariables
         # get URL to post to
         davai_server_url = t.env.get('DAVAI_SERVER')
         if davai_server_url == '':
-            raise DavaiException("DAVAI_SERVER must be defined ! Expected syntax: " + server_syntax)
+            raise DavaiException("DAVAI_SERVER must be defined ! Expected syntax: " +
+                                 server_syntax)
         else:
             if not davai_server_url.endswith('/api/'):
                 davai_server_url = '/'.join([davai_server_url, 'api', ''])
-        davai_server = uriparse(davai_server_url)
-        if not t.sh.default_target.isnetworknode:
-            # Verify certificate ?
-            target = t.sh.target()
-            verify = bool(istruedef.match(t.sh.default_target.get('davai:ciboulai_verify_ssl_certificate', 'True')))
-            # Compute node: open tunnel for send to target
-            if davai_server['port'] is None:
-                davai_server['port'] = scheme2port[davai_server['scheme']]
-            # open tunnel
-            sshobj = t.sh.ssh('network', virtualnode=True, maxtries=1,
-                              mandatory_hostcheck=False)
-            with sshobj.tunnel(davai_server['netloc'], int(davai_server['port'])) as tunnel:
-                # 127.0.0.1 == localhost == tunnel entrance
-                davai_server_url = '{}://127.0.0.1:{}{}'.format(davai_server['scheme'],
-                                                                tunnel.entranceport,
-                                                                davai_server['path'])
-                send_task_to_DAVAI_server(davai_server_url,
-                                          rh.provider.experiment,
-                                          json.dumps(jsonData),
-                                          kind=rh.resource.kind,
-                                          fatal=fatal,
-                                          verify=verify,
-                                          headers={'Host': davai_server['netloc']})
-        else:
-            # login/transfer node: send directly
+        with _send_to_davai_server_build_proxy(t.sh) as proxies:
             send_task_to_DAVAI_server(davai_server_url,
                                       rh.provider.experiment,
                                       json.dumps(jsonData),
                                       kind=rh.resource.kind,
-                                      fatal=fatal)
+                                      fatal=fatal,
+                                      proxies=proxies)
     except Exception as e:
         if fatal:
             raise
