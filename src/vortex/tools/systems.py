@@ -2447,7 +2447,8 @@ class OSExtended(System):
                                            link_threshold=smartcp_threshold, securecopy=False)
                     except OSError as e:
                         rc = self._smartcp_cross_users_links_fallback(
-                            source, destination, silent, e, tmp_destination=tmp_destination
+                            source, destination,
+                            smartcp_threshold, silent, e, tmp_destination=tmp_destination
                         )
                     else:
                         if rc:
@@ -2467,7 +2468,8 @@ class OSExtended(System):
                         rc = self.hardlink(source, tmp_destination,
                                            link_threshold=smartcp_threshold, securecopy=False)
                     except OSError as e:
-                        rc = self._smartcp_cross_users_links_fallback(source, destination, silent, e)
+                        rc = self._smartcp_cross_users_links_fallback(source, destination,
+                                                                      smartcp_threshold, silent, e)
                     else:
                         rc = rc and self.move(tmp_destination, destination)  # Move is atomic for a file
                         # On some systems, the temporary file may remain (if the
