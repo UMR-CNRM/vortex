@@ -134,6 +134,10 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
                 experiment = dict(
                     alias = ('xpid', )
                 ),
+                mkjob_jobname = dict(
+                    info = "Job name in mkjob context",
+                    optional=True,
+                ),
             )
         )
     ]
@@ -161,7 +165,7 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
             consistency_resources = self._prepare_ref_resources(consistency_resources, 'Consistency')
             continuity_resources = self._prepare_ref_resources(continuity_resources, 'Continuity')
         if hasattr(self._inner, 'remember_context'):
-            self._inner.remember_context(context_info_for_task_summary(self.context))
+            self._inner.remember_context(context_info_for_task_summary(self.context, jobname=self.mkjob_jobname))
         self._inner.remember_listings(self.promises, continuity_resources)
         self._inner.process(consistency_resources, continuity_resources)
 

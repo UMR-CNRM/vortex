@@ -976,7 +976,7 @@ class _DiagPIDecoMixin(AlgoComponentDecoMixin):
 
             # Standard execution
             opts['loop'] = r.resource.term
-            super(self.__class__, self).execute(rh, opts)
+            super(self.mixin_execute_companion(), self).execute(rh, opts)
 
             actualname = r'GRIB[-_A-Z]+{0:s}\+{1:s}(?:_member\d+)?$'.format(r.resource.geometry.area,
                                                                             r.resource.term.fmthm)

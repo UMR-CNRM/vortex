@@ -7,7 +7,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import footprints
 from bronx.stdtypes import date
 
-from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError, BlindRun
+from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError
 from common.algo.oopstests import (OOPSObsOpTest, OOPSecma2ccma,
                                    OOPSTestEnsBuild, OOPSTest)
 from common.algo.oopsroot import OOPSAnalysis
@@ -16,15 +16,14 @@ from common.algo.odbtools import (Raw2ODBparallel)
 from common.algo.forecasts import (Forecast, LAMForecast, DFIForecast,
                                    FullPosBDAP, FullPosGeo)
 from common.algo.clim import (BuildPGD, BuildPGD_MPI)
-from common.algo.coupling import (CouplingBaseDateNamMixin, Coupling, PrepMixin)
-from common.tools.drhook import DrHookDecoMixin
+from common.algo.coupling import Coupling, Prep
 from common.algo.fpserver import FullPosServer
 
 #: No automatic export
 __all__ = []
 
 
-def context_info_for_task_summary(context):
+def context_info_for_task_summary(context, jobname=None):
     """Get some infos from context for task summary."""
     info = {'rundir': context.rundir}
     for k in ('MTOOL_STEP_ABORT', 'MTOOL_STEP_DEPOT', 'MTOOL_STEP_SPOOL'):
@@ -35,6 +34,8 @@ def context_info_for_task_summary(context):
         abort_dir = context.system.path.join(info['MTOOL_STEP_ABORT'],
                                              context.rundir[len(info['MTOOL_STEP_SPOOL']) + 1:])
         info['(if aborted)'] = abort_dir
+    if jobname is not None:
+        info['jobname'] = jobname
     return info
 
 
@@ -53,13 +54,17 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
                     optional=False,
                     values=[True, ]
                 ),
+                mkjob_jobname=dict(
+                    info="Job name in mkjob context",
+                    optional=True,
+                ),
             )
         ),
     )
 
     @property
     def context_info_for_task_summary(self):
-        return context_info_for_task_summary(self.context)
+        return context_info_for_task_summary(self.context, jobname=self.mkjob_jobname)
 
     def crash_witness_fail_execute(self, e, rh, kw):  # @UnusedVariables
         from ial_expertise.task import task_status  # @UnresolvedImport
@@ -160,8 +165,7 @@ class BuildPGD_MPI_CrashWitness(BuildPGD_MPI, _CrashWitnessDecoMixin):
     pass
 
 
-class Prep_CrashWitness(BlindRun, _CrashWitnessDecoMixin,
-                        PrepMixin, CouplingBaseDateNamMixin, DrHookDecoMixin):
+class Prep_CrashWitness(Prep, _CrashWitnessDecoMixin):
     pass
 
 
