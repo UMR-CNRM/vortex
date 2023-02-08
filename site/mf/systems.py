@@ -81,8 +81,9 @@ class MeteoBullX3(Target):
             # Read Lustre related configuration
             lfs_mapping = collections.defaultdict(list)
             for m_def in self.get('fs:lustre_fs', '').split(' '):
-                k, values = m_def.split(':', 1)
-                lfs_mapping[k].extend(values.split(','))
+                if ':' in m_def:
+                    k, values = m_def.split(':', 1)
+                    lfs_mapping[k].extend(values.split(','))
             fs_tag = None
             for tag, fss in lfs_mapping.items():
                 if any([real_rundir.startswith(fs) for fs in fss]):
