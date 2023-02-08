@@ -399,10 +399,8 @@ class FolderShell(addons.FtrawEnableAddon):
         source, target = self._folder_preftget(source, target)
         with self._folder_postftget_context(target):
             with self._folder_ftget_file_extract(source) as tmp_target:
-                rc, dict_args = self.sh.ecfsget(source=source,
-                                                target=tmp_target,
-                                                options=options)
-        return rc, dict_args
+                rc = self.sh.ecfsget(source=source, target=tmp_target, options=options)
+        return rc
 
     @addons.require_external_addon('ecfs')
     def _folder_ecfsput(self, source, target, cpipeline=None, options=None):
@@ -418,10 +416,8 @@ class FolderShell(addons.FtrawEnableAddon):
             raise OSError("It's not allowed to compress folder like data.")
         source = self.sh.path.abspath(source)
         with self._folder_ftput_file_compress(source) as c_source:
-            rc, dict_args = self.sh.ecfsput(source=c_source,
-                                            target=target,
-                                            options=options)
-        return rc, dict_args
+            rc = self.sh.ecfsput(source=c_source, target=target, options=options)
+        return rc
 
     @addons.require_external_addon('ectrans')
     def _folder_ectransget(self, source, target, gateway=None, remote=None, cpipeline=None):
@@ -440,11 +436,11 @@ class FolderShell(addons.FtrawEnableAddon):
         source, target = self._folder_preftget(source, target)
         with self._folder_postftget_context(target):
             with self._folder_ftget_file_extract(source) as tmp_target:
-                rc, dict_args = self.sh.raw_ectransget(source=source,
-                                                       target=tmp_target,
-                                                       gateway=gateway,
-                                                       remote=remote)
-        return rc, dict_args
+                rc = self.sh.raw_ectransget(source=source,
+                                            target=tmp_target,
+                                            gateway=gateway,
+                                            remote=remote)
+        return rc
 
     @addons.require_external_addon('ectrans')
     def _folder_ectransput(self, source, target, gateway=None, remote=None,
@@ -463,12 +459,12 @@ class FolderShell(addons.FtrawEnableAddon):
             raise OSError("It's not allowed to compress folder like data.")
         source = self.sh.path.abspath(source)
         with self._folder_ftput_file_compress(source) as c_source:
-            rc, dict_args = self.sh.raw_ectransput(source=c_source,
-                                                   target=target,
-                                                   gateway=gateway,
-                                                   remote=remote,
-                                                   sync=sync)
-        return rc, dict_args
+            rc = self.sh.raw_ectransput(source=c_source,
+                                        target=target,
+                                        gateway=gateway,
+                                        remote=remote,
+                                        sync=sync)
+        return rc
 
     @property
     def _folder_tarfix_extension(self):

@@ -162,7 +162,7 @@ class MeteoSopranoDevRH6(MeteoSoprano):
         attr = dict(
             hostname = dict(
                 values = (['alose', 'pagre', 'rason', 'orphie', 'guppy'] +
-                          ['sotrtm{:d}-sidev'.format(n) for n in range(31, 41)])
+                          ['sotrtm{:d}-sidev'.format(n) for n in range(31, 34)])
             ),
             inifile = dict(
                 optional=True,
@@ -174,6 +174,27 @@ class MeteoSopranoDevRH6(MeteoSoprano):
     def generic(self):
         """Generic name to be used in acess paths"""
         return 'soprano_dev_rh6'
+
+
+class MeteoSopranoDevCTOS8(MeteoSoprano):
+    """A Soprano Development Server running CentOS 8."""
+
+    _footprint = dict(
+        info = 'A Soprano Development Server running CentOS 8',
+        attr = dict(
+            hostname = dict(
+                values = (['sotrtm{:d}-sidev'.format(n) for n in range(35, 41)])
+            ),
+            inifile = dict(
+                optional=True,
+                default='@target-soprano_dev_ctos8.ini',
+            ),
+        ),
+    )
+
+    def generic(self):
+        """Generic name to be used in acess paths"""
+        return 'soprano_dev_ctos8'
 
 
 # Any kind of CNRM server or workstation

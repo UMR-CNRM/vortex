@@ -314,6 +314,9 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
         """Update default options when fetching hash files."""
         if (self.storehash is None) or (remote['path'].endswith('.' + self.storehash)):
             return True
+        if isinstance(local, str) and not self.system.path.isfile(local):
+            logger.info("< %s > is not a plain file. The control sum can't be checked.", local)
+            return True
         options = self._hash_store_defaults(options)
         remote = remote.copy()
         remote['path'] = remote['path'] + '.' + self.storehash  # Name of the hash file
