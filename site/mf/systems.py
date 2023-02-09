@@ -164,7 +164,7 @@ class MeteoSopranoDevRH6(MeteoSoprano):
         attr = dict(
             hostname = dict(
                 values = (['alose', 'pagre', 'rason', 'orphie', 'guppy'] +
-                          ['sotrtm{:d}-sidev'.format(n) for n in range(31, 34)])
+                          ['sotrtm{:d}-sidev'.format(n) for n in range(31, 35)])
             ),
             inifile = dict(
                 optional=True,
