@@ -77,7 +77,7 @@ def build_suite(testlist):
             mod = importlib.import_module(t)
             suitefn = getattr(mod, 'get_test_class')
             for x in suitefn():
-                outsuite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(x, 'test'))
+                outsuite.addTest(unittest.defaultTestLoader.loadTestsFromTestCase(x))
         except (ImportError, AttributeError):
             # else, just load all the test cases from the module.
             outsuite.addTest(unittest.defaultTestLoader.loadTestsFromName(t))

@@ -65,10 +65,6 @@ AUTO_HTML_DOC = _static/auto_html_docs
 # automatic documentation in classes derived from FootprintBase.
 FOOTPRINT_DOCSTRINGS	:= 2
 export FOOTPRINT_DOCSTRINGS
-# Tweak the behavior of bronx.fancies.wrapcmd.* decorators to generate an
-# ReST-compatible documentation.
-BRONX_FANCIES_RSTDOC    := 1
-export BRONX_FANCIES_RSTDOC
 
 
 # -------------
@@ -137,7 +133,7 @@ auto_html_docs:
 	make -C $(AUTO_HTML_DOC) docs
 
 # Build the sphinx-html documentation
-html: $(NOTEBOOKS) $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES) $(XMLEXPORTDIR)
+html: $(NOTEBOOKS) $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 # Clean the notebooks

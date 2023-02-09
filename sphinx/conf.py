@@ -235,7 +235,13 @@ man_pages = [
 ]
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/3/': None}
+intersphinx_mapping = {
+    "arpifs_listings": ("https://arpifs-listings.readthedocs.io/en/latest", None),
+    "bronx": ("https://bronx.readthedocs.io/en/latest", None),
+    "footprints": ("https://footprints.readthedocs.io/en/latest", None),
+    "taylorism": ("https://taylorism.readthedocs.io/en/latest", None),
+    "thenamelisttool": ("https://thenamelisttool.readthedocs.io/en/latest", None),
+}
 
 # Because of Meteo-France's proxy we need this :-(
 import os
