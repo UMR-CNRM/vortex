@@ -38,7 +38,7 @@ def config(entry, value=None):
     if value is None:
         return p.get(_DATASTORE_CONFIG_KIND, dict(option=entry), default_payload='')
     else:
-        p.insert(_DATASTORE_CONFIG_KIND, dict(option=entry), value)
+        p.insert(_DATASTORE_CONFIG_KIND, dict(option=entry), value, readonly=False)
         return value
 
 
