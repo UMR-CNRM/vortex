@@ -284,11 +284,11 @@ class AbstractUnitTestChecker(AbstractChecker):
     _CRITCALTESTS = set()
 
     #: A list of tests that last a while (they should be run first)
-    _LONGTESTS = {'test_names',
+    _LONGTESTS = {'tests_taylorism',
+                  'test_names',
                   'test_twistednet',
                   'test_net_ssh.py',
                   'test_algo_server.py',
-                  'test_taylorism.py',
                   'test_job_examples.py',
                   'test_uget.py'}
 
