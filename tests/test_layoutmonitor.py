@@ -148,8 +148,8 @@ class TestMonitor(unittest.TestCase):
         self.assertFalse(bm.all_done)
         with bm:
             self.assertFalse(bm.is_timedout(timeout=5))
-            time.sleep(0.1)
-            self.assertTrue(bm.is_timedout(timeout=0.09))
+            time.sleep(0.2)
+            self.assertTrue(bm.is_timedout(timeout=0.05))
 
     def test_monitor_simple(self):
         for it in self._TERMS:
