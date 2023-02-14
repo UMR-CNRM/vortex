@@ -54,7 +54,6 @@ def contents(cycle, scheme=None, netloc=None):
     if p.check(_DATASTORE_KIND, dict(cycle=cycle)):
         regcycle = p.get(_DATASTORE_KIND, dict(cycle=cycle))
         regcycle = regcycle.clone()
-        return regcycle
     else:
         if scheme is None or netloc is None:
             raise UenvError("scheme and/or netloc were not provided. Cannot retrieve the cycle.")
@@ -95,16 +94,17 @@ def contents(cycle, scheme=None, netloc=None):
                 raise UenvError('Malformed environment file (line {:d}, "{:s}")'
                                 .format(i + 1, item.rstrip("\n")))
         tmplocal.clear()
-        gget_detour = config('gdata_detour')
-        if gget_detour:
-            newregcycle = dict()
-            for k, v in regcycle.items():
-                if isinstance(v, GgetId):
-                    v = AbstractUgetId('uget:{:s}@{:s}'.format(v, gget_detour))
-                newregcycle[k] = v
-            return newregcycle
-        else:
-            return regcycle
+
+    gget_detour = config('gdata_detour')
+    if gget_detour:
+        newregcycle = dict()
+        for k, v in regcycle.items():
+            if isinstance(v, GgetId):
+                v = AbstractUgetId('uget:{:s}@{:s}'.format(v, gget_detour))
+            newregcycle[k] = v
+        return newregcycle
+    else:
+        return regcycle
 
 
 def nicedump(cycle, scheme=None, netloc=None):
