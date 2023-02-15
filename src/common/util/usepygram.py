@@ -23,7 +23,10 @@ epygram_checker = ExternalCodeImportChecker('epygram')
 with epygram_checker as ec_register:
     import epygram  # @UnusedImport
 
-    ec_register.update(version=epygram.__version__)
+    try:
+        ec_register.update(version=epygram.__version__)
+    except AttributeError:
+        raise ImportError('Improper eypgram module.')
     try:
         u_unused = epygram.formats.FA
         hasFA = True
