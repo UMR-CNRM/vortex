@@ -168,7 +168,7 @@ class TLTest:
             else:
                 s = max(0., -math.log(abs(1. - float(x)), 10))
             return s
-        self.scores_per_id = {i: {la: score(self.ratios_per_id[i][l])
+        self.scores_per_id = {i: {la: score(self.ratios_per_id[i][la])
                                   for la in lambdas}
                               for i in ids}
 
@@ -184,7 +184,6 @@ class TLTest:
         # colors and linestyles
         colors = ['red', 'blue', 'green', 'orange', 'magenta', 'darkolivegreen',
                   'yellow', 'salmon', 'black']
-        linestyles = ['-', '--', '-.', ':']
         variables = sorted({i[0] for i in self.scores_per_id.keys()})
         cmap = {v: colors[i] for i, v in enumerate(variables)}
         gridpoints = {v: [i[1] for i in self.scores_per_id.keys() if i[0] == v]
