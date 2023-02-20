@@ -13,3 +13,8 @@ as an independent Python package.
 The documentation is available on ReadTheDocs: [https://taylorism.readthedocs.io/](https://taylorism.readthedocs.io/)
 
 A few examples are provided in: [src/taylorism/examples.py](https://github.com/UMR-CNRM/taylorism/blob/master/src/taylorism/examples.py)
+
+## Contributing
+
+Please review [CONTRIBUTING.md](CONTRIBUTING.md) for details on our
+development process.
