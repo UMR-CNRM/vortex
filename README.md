@@ -8,5 +8,10 @@ The main objectives of this package is to provide command line tools useful to
 work with namelists or pack of namelists (update them, compare them, ...).
 
 Originally, it has been developed as part of the *Vortex* project. Recently
-the  code has been extracted from the *Vortex* code base. It is now presented
+the code has been extracted from the *Vortex* code base. It is now presented
 as an independent Python package.
+
+## Contributing
+
+Please review [CONTRIBUTING.md](CONTRIBUTING.md) for details on our
+development process.

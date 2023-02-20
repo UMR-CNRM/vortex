@@ -68,6 +68,7 @@ def checklib_yaml():
     rc = True
     try:
         import yaml  # @UnusedImport
+        assert yaml
     except ImportError:
         rc = False
     return rc
