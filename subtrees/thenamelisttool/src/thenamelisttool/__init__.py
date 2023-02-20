@@ -20,3 +20,7 @@ files are thoroughly documented and should be regarded as documentation.
 from . import config
 from . import namadapter
 from . import util
+
+assert config
+assert namadapter
+assert util
