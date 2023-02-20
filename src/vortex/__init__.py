@@ -20,10 +20,10 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '1.8.4'
+__version__ = '1.9.0'
 __prompt__ = 'Vortex v-' + __version__ + ':'
 
-__nextversion__ = '1.9.0'
+__nextversion__ = '1.9.1'
 __tocinfoline__ = 'VORTEX core package'
 
 __all__ = []
