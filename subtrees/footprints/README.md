@@ -11,3 +11,8 @@ optional) could cover.
 Originally, it has been developed as part of the *Vortex* project. Recently
 the  code has been extracted from the *Vortex* code base. It is now presented
 as an independent Python package.
+
+## Contributing
+
+Please review [CONTRIBUTING.md](CONTRIBUTING.md) for details on our
+development process.

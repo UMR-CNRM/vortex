@@ -10,10 +10,12 @@ be used now and on.
 
 import sys
 
-# For bacward compatibility
+# For backward compatibility
 import logging  # @UnusedImport
 
 from bronx.fancies import loggers as _b_loggers
+
+assert logging
 
 _ALIASES = dict()
 _ALIASES.update(dict(roots=_b_loggers.roots,
