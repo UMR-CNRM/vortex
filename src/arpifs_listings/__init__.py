@@ -6,6 +6,9 @@ import sys
 
 from . import util, norms, jo_tables, listings
 
+assert util
+assert norms
+
 
 def compare_files(file_test, file_ref,
                   out=sys.stdout,

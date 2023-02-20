@@ -12,3 +12,8 @@ the  code has been extracted from the *Vortex* code base. It is now presented
 as an independent Python package.
 
 The documentation is available on ReadTheDocs: [https://arpifs_listings.readthedocs.io/](https://arpifs_listings.readthedocs.io/)
+
+## Contributing
+
+Please review [CONTRIBUTING.md](CONTRIBUTING.md) for details on our
+development process.

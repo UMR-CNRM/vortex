@@ -18,7 +18,7 @@ from .util import (read_listing,
                    get_worst)
 
 #: Automatic export
-__all__ = ['Norms', 'Norm', 'NormsComparison', 'compare_norms']
+__all__ = ['Norms', 'NormsComparison', 'compare_norms']
 
 patterns = {'spectral norms': 'SPECTRAL NORMS -',
             'gpnorms partA': 'GPNORM',
