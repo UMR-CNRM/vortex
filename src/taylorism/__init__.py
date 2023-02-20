@@ -18,6 +18,9 @@ from bronx.system import interrupt, cpus  # because subprocesses must be killabl
 from .schedulers import BaseScheduler
 from .schedulers import MaxThreadsScheduler, binding_setup  # For compatibility
 
+assert BaseScheduler
+assert MaxThreadsScheduler
+
 taylorism_log = loggers.getLogger(__name__)
 
 # : timeout when polling for a Queue/Pipe communication
