@@ -401,10 +401,8 @@ is used to create Resource, Provider, Container and AlgoComponent objects.
 
 .. seealso::
 
-   * A "generic" *footprints* documents: :ref:`footprints_doc`
+   * The "generic" *footprints* documentation: `https://footprints.readthedocs.io <https://footprints.readthedocs.io>`_
    * An "NWP oriented" *footprints* tutorial: :ref:`nbook-01b_ResourceHandlingFootprints`
-   * In Vortex, the footprint's catalogue of available *resources*, *providers*, *containers*
-     and *algo-components* is browsable with `Vortex-Help <_static/vortex-help/index.html#http://>`_
 
 .. _getting-started-example:
 
@@ -467,9 +465,10 @@ For major versions, Tar files are available on the `project's Redmine page
 
 Prerequisites:
 
-* Python 2.7 or Python >= 3.5
-* The six package
-* The nose package (optional, needed to run unit-tests)
+* Python >= 3.7
+* The Jinja2 package (optional)
+* The pytest package (optional, needed to run unit-tests)
+* The pycodestyle, pydocstyle and astroid packages (optional, neede for syntax checks)
 * The sphinx-build utility >= 1.4  (optional, needed to build the documentation)
 * IPython + nbconvert >= 5.0 (optional, needed to build the documentation)
 * GNU make (optional, needed to build the documentation and run the unit-tests)
