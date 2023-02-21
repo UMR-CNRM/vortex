@@ -2116,11 +2116,13 @@ class OSExtended(System):
         # Is it relative ?
         if re.match('^([^{0:s}]|..{0:s}|.{0:s})'.format(re.escape(os.path.sep)),
                     link_to):
-            symlink_dir = self.path.abspath(self.path.dirname(symlink))
-            abspath_to = self.path.realpath(
-                self.path.normpath(
-                    self.path.join(symlink_dir, link_to)
+            symlink_dir = self.path.realpath(
+                self.path.abspath(
+                    self.path.dirname(symlink)
                 )
+            )
+            abspath_to = self.path.normpath(
+                self.path.join(symlink_dir, link_to)
             )
             # Valid ?
             valid = self.path.commonprefix([valid_below, abspath_to]) == valid_below
