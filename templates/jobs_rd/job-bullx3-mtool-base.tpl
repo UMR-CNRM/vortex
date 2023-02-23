@@ -2,16 +2,17 @@
 
 {% block mtool_prof %}
 #MTOOL profile target={{target}}cn
-#SBATCH --cpus-per-task={{openmp}}
 #SBATCH --export=NONE
 #SBATCH --job-name=[this:jobname]
 #SBATCH --mem={{mem}}
 #SBATCH --nodes={{nnodes}}
-#SBATCH --ntasks-per-node={{ntasks}}
 #SBATCH --partition={{partition}}
 #SBATCH --time={{time}}
 {% if exclusive is defined and exclusive -%}
 #SBATCH --{{exclusive}}
+{% else -%}
+#SBATCH --ntasks-per-node={{ntasks}}
+#SBATCH --cpus-per-task={{openmp}}
 {% endif -%}
 #SBATCH --{{verbose}}
 {% if billing_account is defined and billing_account -%}

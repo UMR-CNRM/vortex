@@ -473,8 +473,6 @@ class MpiTool(footprints.FootprintBase):
         """When group are defined, associate each MPI rank with a "real" slot."""
         if self._ranks_map_cache is None:
             self._complex_ranks_map = False
-            if not self.envelope:
-                raise RuntimeError('Ranks mapping shoudl always be used within an envelope.')
             # First deal with bingroups
             ranks_map = dict()
             has_bin_groups = not all([b.group is None for b in self.binaries])
@@ -527,6 +525,9 @@ class MpiTool(footprints.FootprintBase):
             # Then deal with distribution
             do_bin_distribution = not all([b.distribution in (None, "continuous")
                                            for b in self.binaries])
+            if self._complex_ranks_map or do_bin_distribution:
+                if not self.envelope:
+                    raise RuntimeError('Ranks mapping shoudl always be used within an envelope.')
             if do_bin_distribution:
                 if not self._supports_manual_ranks_mapping:
                     raise RuntimeError('This MpiTool class does not supports ranks mapping.')
@@ -1290,8 +1291,7 @@ class SRun(ConfigurableMpiTool):
                 default = '--',
             ),
             optmap = dict(
-                default  = footprints.FPDict(nn='nodes', nnp='ntasks-per-node',
-                                             openmp='cpus-per-task', np='ntasks')
+                default  = footprints.FPDict(nn='nodes', nnp='ntasks-per-node', np='ntasks')
             ),
             slurmversion = dict(
                 type = int,
@@ -1324,7 +1324,7 @@ class SRun(ConfigurableMpiTool):
 
     def _set_binaries_hack(self, binaries):
         """Set the list of :class:`MpiBinaryDescription` objects associated with this instance."""
-        if not self.envelope and len(binaries) > 1:
+        if not self.envelope and len([binary for binary in binaries if binary.expanded_options()]) > 1:
             self._set_envelope_from_binaries()
 
     def _valid_envelope(self, value):
@@ -1381,8 +1381,8 @@ class SRun(ConfigurableMpiTool):
 
         :param list[str] args: the command line as a list
         """
-        self._build_cpumask(cmdl, self.binaries,
-                            self.binaries[0].options.get('openmp', 1))
+        target_bins = [binary for binary in self.binaries if len(binary.expanded_options())]
+        self._build_cpumask(cmdl, target_bins, target_bins[0].options.get('openmp', 1))
         super()._simple_mkcmdline(cmdl)
 
     def _envelope_mkcmdline(self, cmdl):

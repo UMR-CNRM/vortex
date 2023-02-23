@@ -278,33 +278,33 @@ class TestParallel(unittest.TestCase):
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --cpu-bind none ' +
-                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiname='srun-ddt',
                                                      mpiopts=dict(nn=2, nnp=4, openmp=10)))
         self.assertCmdl('/opt/softs/arm/20.0.2/forge/bin/ddt --connect ' +
                         'srun --export=ALL --kill-on-bad-exit=1 --cpu-bind none ' +
-                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10),
                                                      srun_opt_bindingmethod='native',))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
                         '--cpu-bind mask_cpu:0x3ff,0xffc00,0x3ff00000,0xffc0000000 ' +
-                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10),
                                                      srun_opt_bindingmethod='native',))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
                         '--cpu-bind mask_cpu:0x3ff,0xffc00,0x3ff00000,0xffc0000000 ' +
-                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10, allowbind=False),
                                                      srun_opt_bindingmethod='native',))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
                         '--cpu-bind none ' +
-                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10),
                                                      srun_opt_bindingmethod='vortex',))
@@ -511,7 +511,7 @@ class TestParallel(unittest.TestCase):
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
         _, args = algo._bootstrap_mpitool(bin0, dict())
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --cpu-bind none ' +
-                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
         _, args = algo._bootstrap_mpitool(bin0, dict())
