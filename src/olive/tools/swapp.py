@@ -41,6 +41,8 @@ def olive_label(sh, env, target=None):
             label = label + '.' + target
         label = ':'.join(reversed(label.split('.')))
         label = '--'.join((label, 'mtool:' + num))
+        if env.MTOOL_STEP_ID:
+            label = '--'.join((label, env.MTOOL_STEP_ID))
     return label
 
 
