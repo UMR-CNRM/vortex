@@ -102,9 +102,8 @@ class FolderShell(addons.FtrawEnableAddon):
         """Returned a path to a packed data."""
         if not self.sh.is_tarname(source):
             destination = (destination if destination else
-                           '{:s}{:s}.{:s}'.format(source,
-                                                  self.sh.safe_filesuffix(),
-                                                  self._folder_tarfix_extension))
+                           "{:s}.{:s}".format(self.sh.safe_fileaddsuffix(source),
+                                              self._folder_tarfix_extension))
             if not self.sh.path.exists(destination):
                 absdestination = self.sh.path.abspath(destination)
                 with self.sh.cdcontext(self.sh.path.dirname(source)):
@@ -115,9 +114,8 @@ class FolderShell(addons.FtrawEnableAddon):
 
     def _folder_forceunpack(self, source):
         """Unpack the data "inplace"."""
-        fakesource = '{:s}{:s}.{:s}'.format(source,
-                                            self.sh.safe_filesuffix(),
-                                            self._folder_tarfix_extension)
+        fakesource = '{:s}.{:s}'.format(self.sh.safe_fileaddsuffix(source),
+                                        self._folder_tarfix_extension)
         rc, _, _ = self._folder_tarfix_in(fakesource, source)
         return rc
 
@@ -211,7 +209,7 @@ class FolderShell(addons.FtrawEnableAddon):
 
     @contextlib.contextmanager
     def _folder_ftput_file_compress(self, source):
-        c_source = (source + self.sh.safe_filesuffix() +
+        c_source = (self.sh.safe_fileaddsuffix(source) +
                     '.' + self._folder_tarfix_extension)
         try:
             self.sh.tar(c_source, source)

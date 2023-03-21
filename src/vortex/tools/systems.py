@@ -50,6 +50,7 @@ import tarfile
 import tempfile
 import threading
 import time
+import uuid
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
@@ -2099,10 +2100,18 @@ class OSExtended(System):
         """Normalises path name of ``destination`` and creates **destination**'s directory."""
         return self.mkdir(self.path.dirname(self.path.expanduser(destination)))
 
+    _SAFE_SUFFIX_RE = re.compile('_[a-f0-9]{32}$')
+
     def safe_filesuffix(self):
         """Returns a file suffix that should be unique across the system."""
-        return '.'.join((date.now().strftime('_%Y%m%d_%H%M%S_%f'),
-                         self.hostname, 'p{:06d}'.format(self._os.getpid()),))
+        return '_' + uuid.uuid1().hex
+
+    def safe_fileaddsuffix(self, name):
+        """Returns a file path that will look like name + a unique suffix."""
+        d_name = self.path.dirname(name)
+        b_name = self.path.basename(name)
+        b_name = self._SAFE_SUFFIX_RE.sub('', b_name)
+        return self.path.join(d_name, b_name + self.safe_filesuffix())
 
     def _validate_symlink_below(self, symlink, valid_below):
         """
@@ -2181,7 +2190,7 @@ class OSExtended(System):
         source = self.path.expanduser(source)
         destination = self.path.expanduser(destination)
         self.stderr('rawcp', source, destination)
-        tmp = destination + self.safe_filesuffix()
+        tmp = self.safe_fileaddsuffix(destination)
         if self.path.isdir(source):
             self._copydatatree(source, tmp)
             # Move fails if a directory already exists ; so be careful...
@@ -2225,7 +2234,7 @@ class OSExtended(System):
             if self.filecocoon(destination):
                 # Write to a temp file
                 original_dest = self.path.expanduser(destination)
-                tmp_dest = self.path.expanduser(destination) + self.safe_filesuffix()
+                tmp_dest = self.safe_fileaddsuffix(self.path.expanduser(destination))
                 destination = open(tmp_dest, 'wb')
                 xdestination = True
             else:
@@ -2419,7 +2428,7 @@ class OSExtended(System):
                 source = self.path.realpath(source)
             if (self.is_samefs(source, destination) and
                     (self.allow_cross_users_links or self.usr_file(source))):
-                tmp_destination = destination + self.safe_filesuffix()
+                tmp_destination = self.safe_fileaddsuffix(destination)
                 if self.path.isdir(source):
                     try:
                         rc = self.hardlink(source, tmp_destination,
@@ -2641,7 +2650,7 @@ class OSExtended(System):
                           self.path.exists(destination))
             if do_cleanup:
                 # Warning: Not an atomic portion of code (sorry)
-                tmp_destination = destination + '.olddir' + self.safe_filesuffix()
+                tmp_destination = self.safe_fileaddsuffix(destination)
                 self.move(destination, tmp_destination)
                 yield do_cleanup
                 # End of none atomic part

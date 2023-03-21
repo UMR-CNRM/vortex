@@ -27,7 +27,7 @@ aspects. Using the :mod:`footprints` package, for a given execution target, it
 allows to customise the way data are accessed leaving the :class:`Store` objects
 unchanged.
 """
-
+import contextlib
 import ftplib
 import re
 import time
@@ -919,17 +919,28 @@ class AbstractLocalArchive(AbstractArchive):
         rc = rc and self.sh.forceunpack(local, fmt=fmt)
         return rc, dict(fmt=fmt, cpipeline=cpipeline)
 
+    @contextlib.contextmanager
+    def _inplaceinsert_pack(self, local, fmt):
+        local_packed = self.sh.forcepack(local, fmt=fmt)
+        if local_packed != local:
+            try:
+                yield local_packed
+            finally:
+                self.sh.rm(local_packed, fmt=fmt)
+        else:
+            yield local
+
     def _inplaceinsert(self, item, local, **kwargs):
         """Actual _insert using ftp."""
         logger.info('inplaceput to file:///%s (from: %s)', item, local)
         cpipeline = kwargs.get('compressionpipeline', None)
         fmt = kwargs.get('fmt', 'foo')
-        local_packed = self.sh.forcepack(local, fmt=fmt)
-        if cpipeline:
-            rc = cpipeline.compress2file(local_packed, item)
-        else:
-            # Do not use fmt=... on purpose (otherwise "forcepack" may be called twice)
-            rc = self.sh.cp(local_packed, item, intent='in')
+        with self._inplaceinsert_pack(local, fmt) as local_packed:
+            if cpipeline:
+                rc = cpipeline.compress2file(local_packed, item)
+            else:
+                # Do not use fmt=... on purpose (otherwise "forcepack" may be called twice)
+                rc = self.sh.cp(local_packed, item, intent='in')
         return rc, dict(fmt=fmt, cpipeline=cpipeline)
 
     def _inplacedelete(self, item, **kwargs):

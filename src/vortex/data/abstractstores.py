@@ -78,7 +78,7 @@ class _SetAsideStoreMixin:
         options_bis = options.copy()
         intent = options_bis.pop('intent', CACHE_GET_INTENT_DEFAULT)
         if intent != 'in':
-            local_bis = local + self.system.safe_filesuffix()
+            local_bis = self.system.safe_fileaddsuffix(local)
             fmt = options_bis.get('fmt', None)
             self.system.cp(local, local_bis, intent='inout', fmt=fmt)
             try:
