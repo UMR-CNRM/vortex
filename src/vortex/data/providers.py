@@ -380,7 +380,7 @@ class Vortex(Provider):
             else:
                 t = sessions.current()
                 if t.env.VORTEX_PROVIDER_SET_ASIDE:
-                    input_set_aside = StringDecoder()(t.env.VORTEX_PROVIDER_SET_ASIDE)
+                    input_set_aside = StringDecoder(substitution_cb=t.env.get)(t.env.VORTEX_PROVIDER_SET_ASIDE)
                 else:
                     input_set_aside = dict()
             if not isinstance(input_set_aside, dict):
