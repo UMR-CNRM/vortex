@@ -68,6 +68,16 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: IauAnalysisName
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IauBackgroundName
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: LAMBoundaryConditionsName
    :show-inheritance:
    :members:

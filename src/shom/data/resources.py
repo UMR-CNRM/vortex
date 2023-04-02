@@ -2,10 +2,11 @@
 Hycom3d files.
 """
 
+from bronx.stdtypes.date import Time
 from vortex.data.flow import FlowResource, GeoFlowResource
 from vortex.syntax.stddeco import namebuilding_append
 from vortex.syntax.stdattrs import term_deco
-from common.data.modelstates import InitialCondition, Analysis3D
+from common.data.modelstates import InitialCondition, AbstractAnalysis
 
 __all__ = []
 
@@ -167,7 +168,7 @@ class Hycom3dInitialCondition(InitialCondition):
 @namebuilding_append('src', lambda self: [self.field, self.filtering])
 @namebuilding_append('src', lambda self: [self.source, self.interp],
                      none_discard=True)
-class Hycom3dModelOutput(Analysis3D):
+class Hycom3dModelOutput(AbstractAnalysis):
     """Model output."""
 
     _footprint = dict(
@@ -209,6 +210,11 @@ class Hycom3dModelOutput(Analysis3D):
     @property
     def realkind(self):
         return "hycom3d_model_output"
+
+    @property
+    def term(self):
+        """Fake term for duck typing."""
+        return Time(0)
 
 
 class Hycom3dPostprodOutput(Hycom3dModelOutput):
