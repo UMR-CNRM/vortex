@@ -36,7 +36,7 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
                 ),
                 model = dict(
                     values  = ['arpege', 'arp', 'arp_court', 'aladin', 'ald',
-                               'arome', 'aro', 'aearp', 'pearp', 'ifs']
+                               'arome', 'aro', 'aearp', 'pearp', 'ifs', 'alaro', 'harmoniearome']
                 ),
                 ioname = dict(
                     default = 'nwpioserv',
