@@ -107,6 +107,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MODESList
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: MatFilter
    :show-inheritance:
    :members:
