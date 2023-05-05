@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Actions specific to CEN needs.
 """
