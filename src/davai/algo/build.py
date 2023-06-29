@@ -46,11 +46,15 @@ class GmkpackDecoMixin(AlgoComponentDecoMixin):
     ),)
 
     def _set_gmkpack(self, rh, opts):  # @UnusedVariable
-        gmk_installdir = self.target.config.get('gmkpack', 'gmkpack_installdir')
+        # util
+        gmk_installdir = self.env.get('GMKROOT', self.target.config.get('gmkpack', 'gmkpack_installdir'))
         self.env.setbinpath(self.system.path.join(gmk_installdir, 'util'), 0)
         self.env['GMKROOT'] = gmk_installdir
-        prefix = self.system.glove.user + '.gmktmp.'
-        self.env['GMKTMP'] = tempfile.mkdtemp(prefix=prefix, dir='/tmp')  # would be much slower on Lustre
+        # tmpdir
+        tmpdir = self.target.config.get('gmkpack', 'tmpdir')
+        prefix = '.'.join([self.system.glove.user, 'gmktmp', ''])
+        self.env['GMKTMP'] = tempfile.mkdtemp(prefix=prefix, dir=tmpdir)
+        # homebin
         if not self.system.path.exists(self.env.get('HOMEBIN', '')):
             del self.env['HOMEBIN']  # may cause broken links
 

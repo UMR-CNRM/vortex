@@ -143,7 +143,7 @@ class ECfsTools(addons.Addon):
                 if intent == 'in':
                     logger.debug("Temporary remapping of %s to %s (because of ECFS filename restrictions)",
                                  path, target)
-                    self.sh.softlink(path, target)
+                    self.sh.softlink(self.sh.path.abspath(path), target)
                 else:
                     logger.debug("Temporary file cocooned: %s (because of ECFS filename restrictions)",
                                  target)
