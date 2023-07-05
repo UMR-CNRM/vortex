@@ -840,8 +840,11 @@ class Handler:
                             self.container.updfill(True)
                             self._updstage('get', insitu=True)
                     elif alternate:
-                        # Alternate is on and the local file exists: ignoring the error.
-                        rst = True
+                        # Alternate is on and the local file exists: check if
+                        # the file has already been fetch previously in the sequence
+                        if iotarget in [s.rh.container.iotarget()
+                                        for s in cur_seq.effective_inputs()]:
+                            rst = True
             else:
                 logger.error('This method should not be called with insitu=False (rh %s)', self)
         return rst
