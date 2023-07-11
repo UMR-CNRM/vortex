@@ -659,6 +659,8 @@ class UtSimpleWorkflow(TestCase):
             desc.update(kind='utest1', local='utest1_get{:d}'.format(i), model='arome')
             rhs0 = toolbox.input(role=therole, now=True, fatal=False, verbose=False, batch=batch, **desc)
             self.assertFalse(rhs0)
+            rhs0_bis = toolbox.input(alternate=therole, now=True, fatal=False, verbose=False, batch=batch, **desc)
+            self.assertFalse(rhs0_bis)
             desc.update(kind='utest1', local='utest1_get{:d}'.format(i), model='arpege')
             rhs1 = toolbox.input(alternate=therole, now=True, fatal=False, verbose=False, batch=batch, **desc)
             self.assertIntegrity(rhs1[0])
@@ -671,7 +673,7 @@ class UtSimpleWorkflow(TestCase):
             nominaltoto = list(self.sequence.filtered_inputs(role=therole, no_alternates=True))
             self.assertEqual(len(nominaltoto), 2)
             alltoto = list(self.sequence.filtered_inputs(role=therole))
-            self.assertEqual(len(alltoto), 5)
+            self.assertEqual(len(alltoto), 6)
             for s in alltoto:
                 if s.role is not None:
                     if s.rh.container.localpath() == 'utest1_get{:d}'.format(i):
@@ -711,6 +713,9 @@ class UtSimpleWorkflow(TestCase):
             desc.update(kind='utest1', local='utest1_get{:d}'.format(i), model='arome')
             rhs0 = toolbox.input(role=therole, now=True, insitu=True, fatal=False, verbose=False, batch=batch, **desc)
             self.assertFalse(rhs0)
+            rhs0_bis = toolbox.input(alternate=therole, now=True, insitu=True, fatal=False, verbose=False, batch=batch,
+                                     **desc)
+            self.assertFalse(rhs0_bis)
             desc.update(kind='utest1', local='utest1_get{:d}'.format(i), model='arpege')
             rhs1 = toolbox.input(alternate=therole, now=True, insitu=True, fatal=False, verbose=False, batch=batch, **desc)
             self.assertIntegrity(rhs1[0])
