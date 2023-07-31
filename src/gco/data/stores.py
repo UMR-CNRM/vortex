@@ -15,7 +15,7 @@ import tempfile
 
 from bronx.fancies import loggers
 
-from vortex.data.abstractstores import Store, ArchiveStore, MultiStore, CacheStore,\
+from vortex.data.abstractstores import Store, ArchiveStore, MultiStore, CacheStore, \
     ConfigurableArchiveStore, CACHE_GET_INTENT_DEFAULT, ARCHIVE_GET_INTENT_DEFAULT
 from vortex.tools.env import vartrue
 from vortex.util.config import GenericConfigParser

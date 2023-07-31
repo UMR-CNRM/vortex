@@ -1140,7 +1140,7 @@ class ConfigurableArchiveStore:
         2. Given ``self.storage``, the proper section of the global configuration
            file is read: it may contain localconf or remoteconfXXX options that
            describe additional configuration files
-        3. Fist, the local configuration file is read
+        3. First, the local configuration file is read
         4. Then, the remote configuration files are read
 
         The relevant content of the configuration file is stored in the ``conf``

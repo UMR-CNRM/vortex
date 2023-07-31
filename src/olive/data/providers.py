@@ -9,8 +9,7 @@ from bronx.stdtypes import date
 import footprints
 
 from vortex.data.providers import Provider, Remote
-from vortex.syntax.stdattrs import namespacefp, member, block, Namespace, a_suite,\
-    FmtInt
+from vortex.syntax.stdattrs import namespacefp, member, block, Namespace, a_suite, FmtInt
 from vortex.util.config import GenericConfigParser
 
 from common.tools.igastuff import archive_suffix, fuzzyname, arpcourt_vconf, IgakeyFactoryArchive

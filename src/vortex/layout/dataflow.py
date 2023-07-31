@@ -385,7 +385,7 @@ class Sequence(observer.Observer):
     def section(self, **kw):
         """Section factory wrapping a given ``rh`` (Resource Handler)."""
         rhset = kw.get('rh', list())
-        if type(rhset) != list:
+        if not isinstance(rhset, list):
             rhset = [rhset, ]
         ralter = kw.get('alternate', kw.get('role', 'anonymous'))
         newsections = list()
@@ -555,7 +555,7 @@ class Sequence(observer.Observer):
                 'oldhash' in info):
             logger.debug('Notified %s upd item %s', self, item)
             oldhash = info['oldhash']
-            # Fist remove the oldhash
+            # First remove the oldhash
             if oldhash in self._sections_hash:
                 for section in [s for s in self._sections_hash[oldhash] if s.rh is item]:
                     self._sections_hash[oldhash].discard(section)

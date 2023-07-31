@@ -72,14 +72,14 @@ class DelayedAlgoComponentError(AlgoComponentError):
     """Triggered when exceptions occured during the execution but were delayed."""
 
     def __init__(self, excs):
-        super().__init__("One or several errors occurs during the run.")
+        super().__init__("One or several errors occurred during the run.")
         self._excs = excs
 
     def __iter__(self):
         yield from self._excs
 
     def __str__(self):
-        outstr = "One or several errors occur during the run. In order of appearance:\n"
+        outstr = "One or several errors occurred during the run. In order of appearance:\n"
         outstr += "\n".join(['{:3d}. {!s} (type: {!s})'.format(i + 1, exc, type(exc))
                              for i, exc in enumerate(self)])
         return outstr
