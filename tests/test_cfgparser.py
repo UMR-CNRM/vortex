@@ -30,7 +30,7 @@ class UtGenericConfigParser(TestCase):
 
     def test_void_init(self):
         gcp = GenericConfigParser()
-        self.assertTrue(type(gcp) == GenericConfigParser)
+        self.assertIsInstance(gcp, GenericConfigParser)
         self.assertTrue(gcp.file is None)
 
     def test_init_1(self):
@@ -162,7 +162,7 @@ class UtIgaCfgParser(TestCase):
 
     def test_void_init(self):
         icp = IgaCfgParser()
-        self.assertTrue(type(icp) == IgaCfgParser)
+        self.assertIsInstance(icp, IgaCfgParser)
         self.assertTrue(icp.file is None)
 
     def test_init_1(self):

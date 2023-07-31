@@ -2,8 +2,7 @@ import re
 from unittest import TestCase, main
 
 from bronx.fancies import dump
-from bronx.fancies.dump import TxtDumper, JsonableDumper, XmlDomDumper,\
-    OneLineTxtDumper
+from bronx.fancies.dump import TxtDumper, JsonableDumper, XmlDomDumper, OneLineTxtDumper
 
 
 class Foo:

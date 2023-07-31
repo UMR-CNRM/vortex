@@ -27,7 +27,7 @@ class Sherlock:
 
     def rstfile(self, modpath):
         """Return the sphinx documentation associated to module reference or module path given."""
-        if type(modpath) != str:
+        if not isinstance(modpath, str):
             modpath = modpath.__file__
         subpath = modpath
         for installpath in self.glove.sitesrc:

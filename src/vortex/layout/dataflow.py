@@ -385,7 +385,7 @@ class Sequence(observer.Observer):
     def section(self, **kw):
         """Section factory wrapping a given ``rh`` (Resource Handler)."""
         rhset = kw.get('rh', list())
-        if type(rhset) != list:
+        if not isinstance(rhset, list):
             rhset = [rhset, ]
         ralter = kw.get('alternate', kw.get('role', 'anonymous'))
         newsections = list()
