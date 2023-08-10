@@ -57,6 +57,32 @@ class BlkdatNamFiles(ModelResource):
         return "blkdat_nam_file"
 
 
+class WavesConfigFiles(AsciiConfig):
+    """Namelists for wave model with necessary modification of the contents."""
+
+    _footprint = [
+        model_deco,
+        dict(
+            info = " namelists to tweak",
+            attr = dict(
+                kind = dict(
+                    values = ["wavesconfig"]
+                ),
+                model = dict(
+                    values   = ['mfwam', 'ww3', ],
+                ),
+                clscontents = dict(
+                    default = DataTemplate
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return "waves_config_file"
+
+
 class WW3ConfigFiles(AsciiConfig):
     """WW3 namelists with necessary modification of the contents."""
 

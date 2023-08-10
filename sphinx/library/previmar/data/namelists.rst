@@ -25,6 +25,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: WavesConfigFiles
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. hints
 .. .. autodata:: XXX
 .. .. autofunction:: XXX

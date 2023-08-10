@@ -6,10 +6,11 @@ Algo for MFWAM production.
 __all__ = []
 
 import time
+import footprints
 
 from bronx.datagrip import namelist as bnamelist
 from bronx.fancies import loggers
-from bronx.stdtypes.date import Time, Period
+from bronx.stdtypes.date import Time, Period, Date
 from footprints.stdtypes import FPList
 
 from vortex.algo.components import Parallel, ParaBlindRun
@@ -485,3 +486,95 @@ class _CompressionGribAlgoWorker(VortexWorkerBlindRun):
                         x.rh.container.localpath() in output_files)]
         for thispromise in expected:
             thispromise.put(incache=True)
+
+
+class InterpolationBCMfwam(ParaBlindRun):
+    """Algocomponent for temporal interpolation of mfwam bounding conditions."""
+    _footprint = dict(
+        info='Algo for mfwam BC interpolation',
+        attr = dict(
+            kind = dict(
+                values = ['interpbcmfwamalgo'],
+            ),
+            idelt = dict(
+                type = str,
+                optional = 'False',
+            ),
+            daterun = dict(
+                type    = Date,
+            ),
+        )
+    )
+
+    def execute(self, rh, opts):
+        """Setup the namelist."""
+        super()._default_pre_execute(rh, opts)
+
+        common_i = self._default_common_instructions(rh, opts)
+        common_i.update(dict(idelt=self.idelt, daterun=self.daterun))
+
+        bccandidate = [x.rh
+                       for x in self.context.sequence.effective_inputs(role=('Boundaries',),
+                                                                       kind='boundary')]
+
+        for bc in bccandidate:
+            file_in = bc.container.localpath()
+            dateval = bc.resource.date + bc.resource.term
+            self._add_instructions(common_i, dict(file_in=[file_in, ],
+                                                  dateval=[dateval, ]))
+
+        self._default_post_execute(rh, opts)
+        time.sleep(1)
+
+
+class _InterpolationBCMfwamWorker(VortexWorkerBlindRun):
+    """Worker of BC interpolation for MFWAM."""
+
+    _footprint = dict(
+        info = "Worker of the BC interpolation for MFWAM",
+        attr = dict(
+            kind = dict(
+                values  = ['interpbcmfwamalgo'],
+            ),
+            idelt = dict(
+                type = str,
+                optional = 'False',
+            ),
+            file_in = dict(),
+            daterun = dict(
+                type    = Date,
+            ),
+            dateval = dict(
+                type    = Date,
+            ),
+        )
+    )
+
+    def vortex_task(self, **kwargs):  # @UnusedVariable
+        """Interpolation of a single BC file."""
+        logger.info("Starting the interpolation")
+
+        sh = self.system
+        logger.info("Post-processing of %s", self.file_in)
+
+        namcandidate = self.context.sequence.effective_inputs(role=('NamelistInterBC'),)
+        if len(namcandidate) != 1:
+            raise OSError("No or too much namelists for interpolation of BC")
+        namfile = namcandidate[0].rh.container.localpath()
+        namcontents = namcandidate[0].rh.contents
+
+        # Prepare the working directory
+        cwd = sh.pwd()
+        with sh.cdcontext(sh.path.join(cwd, self.file_in + '.process.d'), create=True):
+            sh.mv(sh.path.join(cwd, self.file_in), self.file_in)
+            # setup the namelist
+            datebefore = self.dateval - 'PT3H'
+            namcontents.setmacro('DATERUN', int(self.daterun.ymdh + '0000'))
+            namcontents.setmacro('DATEVAL', int(self.dateval.ymdh + self.idelt))
+            namcontents.setmacro('DATEBEFORE', int(datebefore.ymdh + self.idelt))
+            new_nam = footprints.proxy.container(filename=namfile, format='ascii')
+            namcontents.rewrite(new_nam)
+            new_nam.close()
+            # execution
+            self.local_spawn("output.log")
+            sh.mv('INT' + self.file_in[3:], sh.path.join(cwd, self.file_in))

@@ -28,3 +28,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: InterpolationBCMfwam
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
