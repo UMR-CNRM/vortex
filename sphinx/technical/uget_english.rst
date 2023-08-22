@@ -59,7 +59,7 @@ Before first use
 
 .. highlight:: none
 
-.. _uget-clone-existant:
+.. _uget-clone-existant-en:
 
 Clone an existing env (catalog)
 -------------------------------
@@ -89,7 +89,7 @@ Modification of the cloned env
 ------------------------------
 
 For each element in the cloned catalog (obtained at step
-:ref:`uget-clone-existant`), we can modify the the resource (i.e. to the right of the ``=``),
+:ref:`uget-clone-existant-en`), we can modify the the resource (i.e. to the right of the ``=``),
 by pointing at an element in the "GCO official store",
 or at a colleague's or one of your own's (under ``$HOME/.vortexrc/hack/uget/$USER/data/``).
 
@@ -224,7 +224,7 @@ Remarks and good habits
 * clim files (and other monthly resources) are expanded:
   the key ``CLIM_BLABLA=uget:my_clims@mary`` aim at all files syntaxed
   ``my_clims.m??`` located in the directory ``data`` ;
-* even if it is technically feasable, it is strongly advised to forbid yourself 
+* even if it is technically feasable, it is strongly advised to forbid yourself
   to modify an element once pushed. With the cache system, you may face weird fetches
   in experiments...
 * as a corollary, it is a good habit to number each uenv and each resource, and increment them push after push
