@@ -6,18 +6,16 @@ Algo for MFWAM production.
 __all__ = []
 
 import time
-import footprints
 
+import footprints
 from bronx.datagrip import namelist as bnamelist
 from bronx.fancies import loggers
-from bronx.stdtypes.date import Time, Period, Date
+from bronx.stdtypes.date import Date, Period, Time
 from footprints.stdtypes import FPList
-
-from vortex.algo.components import Parallel, ParaBlindRun
-from vortex.tools import grib
-
-from vortex.tools.parallelism import VortexWorkerBlindRun
+from vortex.algo.components import ParaBlindRun, Parallel
 from vortex.layout.monitor import BasicInputMonitor
+from vortex.tools import grib
+from vortex.tools.parallelism import VortexWorkerBlindRun
 
 logger = loggers.getLogger(__name__)
 
@@ -28,7 +26,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         info='Algo for MFWAM',
         attr = dict(
             kind = dict(
-                values = ['MFWAM'],
+                values   = ['MFWAM'],
             ),
             list_guess = dict(
                 type     = FPList,
@@ -47,26 +45,26 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             ),
             current_coupling = dict(
                 optional = True,
-                default = False,
+                default  = False,
             ),
             numod = dict(
-                type = int,
+                type     = int,
                 optional = True,
-                default = 24,
+                default  = 24,
             ),
             soce = dict(
-                type = int,
+                type     = int,
                 optional = True,
-                default = 40,
+                default  = 40,
             ),
             fcterm = dict(
-                type = Time,
+                type     = Time,
                 optional = True,
             ),
             isana = dict(
                 type = bool,
                 optional = True,
-                default = True,
+                default  = True,
             ),
             deltabegin = dict(
                 type     = Period,
@@ -74,10 +72,12 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                 default  = Period('PT0H'),
             ),
             flyargs = dict(
-                default = ('MPP', 'APP',),
+                optional = True,
+                default  = ('MPP', 'APP',),
             ),
             flypoll = dict(
-                default = 'iopoll_waves',
+                optional = True,
+                default  = 'iopoll_waves',
             ),
         )
     )
@@ -93,7 +93,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         """Set some variables according to target definition."""
         super().prepare(rh, opts)
 
-        # setup MPI compatibilite
+        # setup MPI compatibility
         self.env.update(
             I_MPI_COMPATIBILITY=4,
         )
@@ -101,7 +101,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         fcterm = self.fcterm
 
         windcandidate = [x.rh
-                         for x in self.context.sequence.effective_inputs(role=('Wind',),
+                         for x in self.context.sequence.effective_inputs(role='Wind',
                                                                          kind='forcing')]
 
         # Is there a analysis wind forcing ?
@@ -117,8 +117,9 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                 self.system.rm(tmpout)
 
             with open(tmpout, 'wb') as outfile:
-                for fname in [x.container.localpath() for x in sorted(windcandidate,
-                                                                      key=lambda rh: rh.resource.begintime)]:
+                for fname in [x.container.localpath()
+                              for x in sorted(windcandidate,
+                                              key=lambda rh: rh.resource.begintime)]:
                     with open(fname, 'rb') as infile:
                         outfile.write(infile.read())
 
@@ -154,8 +155,8 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             raise ValueError("No winds or too many")
 
         # Tweak Namelist parameters
-        namcandidate = self.context.sequence.effective_inputs(role=('Namelist'),
-                                                              kind=('namelist'))
+        namcandidate = self.context.sequence.effective_inputs(role='Namelist',
+                                                              kind='namelist')
 
         if len(namcandidate) != 1:
             raise OSError("No or too much namelists for MFWAM")
@@ -163,7 +164,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
 
         namcontents.setmacro('CBPLTDT', datedebana.compact())  # debut analyse
         namcontents.setmacro('CDATEF', datefinana.compact())   # fin echeance analyse ici T0
-        namcontents.setmacro('CEPLTDT', datefin)  # fin echeance prevision
+        namcontents.setmacro('CEPLTDT', datefin)               # fin echeance prevision
 
         if self.current_coupling:
             namcontents.setmacro('CDATECURA', (datedebana - self.currentbegin).compact())
@@ -176,7 +177,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         namcontents.setmacro('NUMOD', self.numod)
 
         # Untar SAR data if exists
-        sarcandidate = self.context.sequence.effective_inputs(role=('ObservationSpec'))
+        sarcandidate = self.context.sequence.effective_inputs(role='ObservationSpec')
         if len(sarcandidate) > 0:
             rhsar = sarcandidate[0].rh
             self.system.untar(rhsar.container.localpath())
@@ -185,7 +186,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             namcontents.setmacro('LSARAS', False)
 
         # Flag of assimilation of alti data if exists
-        altcandidate = self.context.sequence.effective_inputs(role=('Observation'))
+        altcandidate = self.context.sequence.effective_inputs(role='Observation')
         if len(altcandidate) > 0:
             namcontents.setmacro('LALTAS', True)
         else:
@@ -233,33 +234,34 @@ class MfwamGauss2Grib(ParaBlindRun):
         info ="Post-processing of MFWAM output gribs",
         attr = dict(
             kind = dict(
-                values  = ['mfwamgauss2grib'],
+                values   = ['mfwamgauss2grib'],
             ),
             fortinput = dict(
                 optional = True,
-                default = 'input',
+                default  = 'input',
             ),
             fortoutput = dict(
                 optional = True,
-                default = 'output',
+                default  = 'output',
             ),
             grid = dict(
                 type = FPList,
-                default = FPList(["glob02", ])
+                optional = True,
+                default  = FPList(["glob02", ])
             ),
             member = dict(
-                type = int,
+                type     = int,
                 optional = True,
             ),
             refreshtime = dict(
-                type = int,
+                type     = int,
                 optional = True,
-                default = 20,
+                default  = 20,
             ),
             timeout = dict(
-                type = int,
+                type     = int,
                 optional = True,
-                default = 1200,
+                default  = 1200,
             ),
         )
     )
@@ -273,7 +275,7 @@ class MfwamGauss2Grib(ParaBlindRun):
         tmout = False
 
         # verification of the namelists
-        namcandidate = self.context.sequence.effective_inputs(role=('Namelist'),)
+        namcandidate = self.context.sequence.effective_inputs(role='Namelist')
         # case of PE
         if len(namcandidate) > 0:
             namcontents = namcandidate[0].rh.contents
@@ -336,7 +338,7 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
             # Input/Output data
             file_in = dict(),
             grid = dict(
-                type = FPList,
+                type    = FPList,
             ),
             file_out = dict(),
         )
@@ -350,7 +352,7 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
         logger.info("Post-processing of %s", self.file_in)
 
         # verification of the namelists
-        namcandidate = self.context.sequence.effective_inputs(role=('Namelist'),)
+        namcandidate = self.context.sequence.effective_inputs(role='Namelist')
         if len(namcandidate) > 0:
             isnam = True
         else:
@@ -391,17 +393,17 @@ class CompressionGribAlgo(ParaBlindRun):
         info='Algo for compression of wave output grib',
         attr = dict(
             kind = dict(
-                values = ['grib_compression_algo'],
+                values   = ['grib_compression_algo'],
             ),
             refreshtime = dict(
-                type = int,
+                type     = int,
                 optional = True,
-                default = 20,
+                default  = 20,
             ),
             timeout = dict(
-                type = int,
+                type     = int,
                 optional = True,
-                default = 1200,
+                default  = 1200,
             ),
         )
     )
@@ -424,8 +426,6 @@ class CompressionGribAlgo(ParaBlindRun):
                     file_in = gpsec.rh.container.localpath()
                     self._add_instructions(common_i,
                                            dict(file_in=[file_in, ],))
-                    #                            grid=[self.grid, ],
-                    #                            file_out=[file_in, ]))
 
                 if not (bm.all_done or len(bm.available) > 0):
                     # Timeout ?
@@ -497,11 +497,10 @@ class InterpolationBCMfwam(ParaBlindRun):
                 values = ['interpbcmfwamalgo'],
             ),
             idelt = dict(
-                type = str,
-                optional = 'False',
+                type   = str,
             ),
             daterun = dict(
-                type    = Date,
+                type   = Date,
             ),
         )
     )
@@ -524,7 +523,6 @@ class InterpolationBCMfwam(ParaBlindRun):
                                                   dateval=[dateval, ]))
 
         self._default_post_execute(rh, opts)
-        time.sleep(1)
 
 
 class _InterpolationBCMfwamWorker(VortexWorkerBlindRun):
@@ -537,8 +535,7 @@ class _InterpolationBCMfwamWorker(VortexWorkerBlindRun):
                 values  = ['interpbcmfwamalgo'],
             ),
             idelt = dict(
-                type = str,
-                optional = 'False',
+                type    = str,
             ),
             file_in = dict(),
             daterun = dict(
@@ -557,9 +554,12 @@ class _InterpolationBCMfwamWorker(VortexWorkerBlindRun):
         sh = self.system
         logger.info("Post-processing of %s", self.file_in)
 
-        namcandidate = self.context.sequence.effective_inputs(role=('NamelistInterBC'),)
+        namcandidate = self.context.sequence.effective_inputs(role='NamelistInterBC')
         if len(namcandidate) != 1:
-            raise OSError("No or too much namelists for interpolation of BC")
+            raise ValueError(
+                "Should have one namelist for BC interpolation, not "
+                + str(len(namcandidate))
+            )
         namfile = namcandidate[0].rh.container.localpath()
         namcontents = namcandidate[0].rh.contents
 
