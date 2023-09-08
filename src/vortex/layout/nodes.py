@@ -584,7 +584,7 @@ class Node(getbytag.GetByTag, NiceLayout):
         if thisgeo in self.conf:
             self.conf.geometry = self.conf.get(thisgeo)
         if 'geometry' not in self.conf:
-            logger.error('No default geometry defined -- Probably a big mistake !')
+            logger.warning('No default geometry defined !')
 
     def defaults(self, extras):
         """Set toolbox defaults, extended with actual arguments ``extras``."""

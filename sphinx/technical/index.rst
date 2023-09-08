@@ -15,6 +15,7 @@ Some user oriented documentation:
 
    vortex_data
    uget
+   uget_english
    actions
 
 Detailed documentation on some technical aspects:
