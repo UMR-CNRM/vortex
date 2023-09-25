@@ -31,6 +31,7 @@ class Mocage(ChemistryModel):
         )
     ]
 
+
 class WrapperMocageFcst(BlackBox):
     """MOCAGE Fcst wrapper"""
 
@@ -48,6 +49,7 @@ class WrapperMocageFcst(BlackBox):
             )
         )
     ]
+
 
 class WrapperMocageAssim(BlackBox):
     """MOCAGE assim wrapper"""
@@ -67,6 +69,7 @@ class WrapperMocageAssim(BlackBox):
         )
     ]
 
+
 class ConfigMpiMocageAssim(BlackBox):
     """MOCAGE assim mpi enveloppe"""
 
@@ -84,7 +87,6 @@ class ConfigMpiMocageAssim(BlackBox):
             )
         )
     ]
-
 
 
 @namebuilding_append('src', lambda s: s.subkind)
