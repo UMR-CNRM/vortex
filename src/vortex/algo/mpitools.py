@@ -1554,6 +1554,10 @@ class OmpiMpiRun(ConfigurableMpiTool):
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
                 doc_zorder      = -90,
             ),
+            preexistingenv=dict(
+                optional        = True,
+                default         = 'False',
+            ),
         )
     )
 
@@ -1626,9 +1630,18 @@ class OmpiMpiRun(ConfigurableMpiTool):
                                                   node,
                                                   ','.join(slot_strings))
             )
-        logger.debug('Here is the rankfile content:\n%s', '\n'.join(rf_strings))
-        with open(self._envelope_rankfile_name, mode='w') as tmp_rf:
-            tmp_rf.write('\n'.join(rf_strings))
+        logger.info('self.preexistingenv')
+        logger.info(self.preexistingenv)
+        if self.preexistingenv.lower() == 'true':
+            if self.system.path.exists(self._envelope_rankfile_name):
+                logger.info('envelope file found in the directory')
+            else:
+                raise RuntimeError('envelope file not found, provide one,' +
+                                   'or change preexistingenv option value')
+        else:
+            logger.debug('Here is the rankfile content:\n%s', '\n'.join(rf_strings))
+            with open(self._envelope_rankfile_name, mode='w') as tmp_rf:
+                tmp_rf.write('\n'.join(rf_strings))
         return self._envelope_rankfile_name
 
     def _envelope_nodelist(self):

@@ -19,6 +19,21 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: WrapperMocageFcst
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: WrapperMocageAssim
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ConfigMpiMocageAssim
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: MocageAssim
    :show-inheritance:
    :members:
