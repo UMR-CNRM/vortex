@@ -602,6 +602,12 @@ class System(footprints.FootprintBase):
             print()
         self.flush_stdall()
 
+    @property
+    def executable(self):
+        """Return the actual ``sys.executable``."""
+        self.stderr('executable')
+        return sys.executable
+
     def pythonpath(self, output=None):
         """Return or print actual ``sys.path``."""
         if output is None:

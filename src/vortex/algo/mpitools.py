@@ -74,7 +74,6 @@ import itertools
 import locale
 import re
 import shlex
-import sys
 
 import footprints
 from bronx.fancies import loggers
@@ -589,7 +588,7 @@ class MpiTool(footprints.FootprintBase):
         with open(self._wrapstd_wrapper_name, 'w', encoding='utf-8') as fhw:
             fhw.write(
                 wtpl.substitute(
-                    python=sys.executable,
+                    python=self.system.executable,
                     mpirankvariable=self._envelope_rank_var,
                 )
             )
@@ -699,7 +698,7 @@ class MpiTool(footprints.FootprintBase):
         return binding_stack, binding_node
 
     def _envelope_mkwrapper_tplsubs(self, todostack, bindingstack):
-        return dict(python=sys.executable,
+        return dict(python=self.system.executable,
                     sitepath=self.system.path.join(self.ticket.glove.siteroot, 'site'),
                     mpirankvariable=self._envelope_rank_var,
                     todolist=("\n".join(["  {:d}: ('{:s}', [{:s}], {:s}),".format(
