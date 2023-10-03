@@ -1632,13 +1632,12 @@ class OmpiMpiRun(ConfigurableMpiTool):
             )
         logger.info('self.preexistingenv')
         logger.info(self.preexistingenv)
-        if self.preexistingenv.lower() == 'true':
-            if self.system.path.exists(self._envelope_rankfile_name):
-                logger.info('envelope file found in the directory')
-            else:
-                raise RuntimeError('envelope file not found, provide one,' +
-                                   'or change preexistingenv option value')
+        if self.preexistingenv.lower() == 'true' and self.system.path.exists(self._envelope_rankfile_name):
+            logger.info('envelope file found in the directory')
         else:
+            if self.preexistingenv.lower() == 'true':
+                logger.info('preexistingenv set to true, but no envelope file found')
+                logger.info('Using vortex computed one')
             logger.debug('Here is the rankfile content:\n%s', '\n'.join(rf_strings))
             with open(self._envelope_rankfile_name, mode='w') as tmp_rf:
                 tmp_rf.write('\n'.join(rf_strings))
