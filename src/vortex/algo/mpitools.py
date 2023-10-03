@@ -1553,9 +1553,10 @@ class OmpiMpiRun(ConfigurableMpiTool):
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
                 doc_zorder      = -90,
             ),
-            preexistingenv=dict(
-                optional        = True,
-                default         = 'False',
+            preexistingenv = dict(
+                optional       = True,
+                type           = bool,
+                default        = False,
             ),
         )
     )
@@ -1629,12 +1630,11 @@ class OmpiMpiRun(ConfigurableMpiTool):
                                                   node,
                                                   ','.join(slot_strings))
             )
-        logger.info('self.preexistingenv')
-        logger.info(self.preexistingenv)
-        if self.preexistingenv.lower() == 'true' and self.system.path.exists(self._envelope_rankfile_name):
+        logger.info('self.preexistingenv = {}'.format(self.preexistingenv))
+        if self.preexistingenv and self.system.path.exists(self._envelope_rankfile_name):
             logger.info('envelope file found in the directory')
         else:
-            if self.preexistingenv.lower() == 'true':
+            if self.preexistingenv:
                 logger.info('preexistingenv set to true, but no envelope file found')
                 logger.info('Using vortex computed one')
             logger.debug('Here is the rankfile content:\n%s', '\n'.join(rf_strings))
