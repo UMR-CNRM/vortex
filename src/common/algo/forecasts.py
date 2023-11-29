@@ -19,6 +19,10 @@ from .ifsroot import IFSParallel
 from common.tools.drhook import DrHookDecoMixin
 from common.syntax.stdattrs import outputid_deco
 
+from typing import Any, Callable, Iterable
+from vortex.data.handlers import Handler
+from vortex.layout.dataflow import Section
+
 
 #: No automatic export
 __all__ = []
@@ -150,6 +154,42 @@ class Forecast(IFSParallel):
                     prefixes_set.add('{:s}PF'.format('GRIB' if pr_res.nativefmt == 'grib' else ''))
             self.io_poll_args = tuple(prefixes_set)
             self.flyput = len(self.io_poll_args) > 0
+
+    def _create_ordered_links(
+            self,
+            bin_handler: Handler,
+            sections: Iterable[Section],
+            sort_key: Callable[[Section], Any],
+            nameconv_kind: str,
+    ):
+        """Create links to local files, with ordered names
+
+        For an iterable of sections objects, this function creates
+        symlinks to the corresponding local files (described by the
+        assocatied "container" object".
+
+        Link names are suffixed by a number string based on their
+        order after sorting sections by the sort key. Example:
+        ICIAUFCSTBK01,
+        ICIAUFCSTBK02,
+        ICIAUFCSTBK03...
+        """
+        for i, sec in enumerate(sorted(sections, key=sort_key)):
+            nameconv = self.naming_convention(
+                nameconv_kind, bin_handler,
+                actualfmt=sec.rh.container.actualfmt,
+            )
+            target = nameconv(number=(i + 1))
+            link_name = sec.rh.container.localpath()
+            if self.system.path.exists(target):
+                logger.warning(
+                    "%s should be linked to %s but %s already exists.",
+                    link_name, target, target
+                )
+                continue
+            logger.info("Linking %s to %s.", link_name, target)
+            self.grab(sec, comment=nameconv_kind)
+            self.system.softlink(link_name, target)
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
