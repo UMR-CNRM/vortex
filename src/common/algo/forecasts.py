@@ -2,7 +2,6 @@
 AlgoComponents dedicated to NWP direct forecasts.
 """
 
-import itertools
 import math
 import re
 from collections import defaultdict
@@ -113,36 +112,38 @@ class Forecast(IFSParallel):
             # Possibly fix post-processing clim files
             self.all_localclim_fixer(rh, thismonth)
 
-            # IAU files numbering
-            iau_bks = {s.rh.resource.date + s.rh.resource.term: s
-                       for s in self.context.sequence.effective_inputs(role=re.compile(r'IAU_(Background|Guess)',
-                                                                                       flags=re.IGNORECASE))}
-            iau_ans = {s.rh.resource.date + s.rh.resource.term: s
-                       for s in self.context.sequence.effective_inputs(role=re.compile(r'IAU_(Analysis|Ic)',
-                                                                                       flags=re.IGNORECASE))}
-            if set(iau_bks.keys()) == set(iau_ans.keys()):
-                for iau_idx, iau_eff in enumerate(sorted(iau_ans.keys()), start=1):
-                    for iau_sec, iau_kind in ((iau_ans[iau_eff], 'iau_analysis'),
-                                              (iau_bks[iau_eff], 'iau_background')):
-                        self.grab(iau_sec, comment='IAU files')
-                        iau_nc = self.naming_convention(iau_kind, rh,
-                                                        actualfmt=iau_sec.rh.container.actualfmt)
-                        iau_loc = iau_sec.rh.container.localpath()
-                        iau_target = iau_nc(number=iau_idx)
-                        if self.system.path.exists(iau_target):
-                            logger.warning("%s should be linked to %s but %s already exists.",
-                                           iau_loc, iau_target, iau_target)
-                        else:
-                            logger.info("Linking %s to %s.", iau_loc, iau_target)
-                            self.system.softlink(iau_loc, iau_target)
-            else:
-                logger.warning("Inconsistent effective terms between IAU Analyses and Backgrounds. " +
-                               "This is very odd & probably a bad idea!")
-                for s in itertools.chain(iau_bks.values(), iau_ans.values()):
-                    self.grab(s, comment='IAU files')
+            # File linking for IAU increments
+            #
+            # In the case of a forecast with IAU, the IFS executable
+            # expects to find input increment files (both analysis and
+            # background counterpart) names suffixed according to the
+            # order by which they are to be applied.  In practice
+            # input files are not renamed but links with correct names
+            # are created pointing to them instead.
+            #
+            # TODO: Clarify where both regexp keys are coming from
+            guesses = self.context.sequence.effective_inputs(
+                role=re.compile(r'IAU_(Background|Guess)', flags=re.IGNORECASE)
+            )
+            analyses = self.context.sequence.effective_inputs(
+                role=re.compile(r'IAU_(Analysis|Ic)', flags=re.IGNORECASE)
+            )
 
-            # At least, expect the analysis to be there...
-            self.grab(analysis, comment='analysis')
+            def key(s: Section):
+                # Increment files are sorted according to date, then
+                # effective term.
+                return (
+                    s.rh.resource.date,
+                    s.rh.resource.date + s.rh.resource.term,
+                )
+            self._create_ordered_links(
+                bin_handler=rh, sections=analyses,
+                sort_key=key, nameconv_kind="iau_analysis",
+            )
+            self._create_ordered_links(
+                bin_handler=rh, sections=guesses,
+                sort_key=key, nameconv_kind="iau_background",
+            )
 
         # Promises should be nicely managed by a co-proccess
         if self.promises:
