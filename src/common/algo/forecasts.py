@@ -2,7 +2,6 @@
 AlgoComponents dedicated to NWP direct forecasts.
 """
 
-import itertools
 import math
 import re
 from collections import defaultdict
@@ -18,6 +17,10 @@ from vortex.util.structs import ShellEncoder
 from .ifsroot import IFSParallel
 from common.tools.drhook import DrHookDecoMixin
 from common.syntax.stdattrs import outputid_deco
+
+from typing import Any, Callable, Iterable
+from vortex.data.handlers import Handler
+from vortex.layout.dataflow import Section
 
 
 #: No automatic export
@@ -109,36 +112,42 @@ class Forecast(IFSParallel):
             # Possibly fix post-processing clim files
             self.all_localclim_fixer(rh, thismonth)
 
-            # IAU files numbering
-            iau_bks = {s.rh.resource.date + s.rh.resource.term: s
-                       for s in self.context.sequence.effective_inputs(role=re.compile(r'IAU_(Background|Guess)',
-                                                                                       flags=re.IGNORECASE))}
-            iau_ans = {s.rh.resource.date + s.rh.resource.term: s
-                       for s in self.context.sequence.effective_inputs(role=re.compile(r'IAU_(Analysis|Ic)',
-                                                                                       flags=re.IGNORECASE))}
-            if set(iau_bks.keys()) == set(iau_ans.keys()):
-                for iau_idx, iau_eff in enumerate(sorted(iau_ans.keys()), start=1):
-                    for iau_sec, iau_kind in ((iau_ans[iau_eff], 'iau_analysis'),
-                                              (iau_bks[iau_eff], 'iau_background')):
-                        self.grab(iau_sec, comment='IAU files')
-                        iau_nc = self.naming_convention(iau_kind, rh,
-                                                        actualfmt=iau_sec.rh.container.actualfmt)
-                        iau_loc = iau_sec.rh.container.localpath()
-                        iau_target = iau_nc(number=iau_idx)
-                        if self.system.path.exists(iau_target):
-                            logger.warning("%s should be linked to %s but %s already exists.",
-                                           iau_loc, iau_target, iau_target)
-                        else:
-                            logger.info("Linking %s to %s.", iau_loc, iau_target)
-                            self.system.softlink(iau_loc, iau_target)
-            else:
-                logger.warning("Inconsistent effective terms between IAU Analyses and Backgrounds. " +
-                               "This is very odd & probably a bad idea!")
-                for s in itertools.chain(iau_bks.values(), iau_ans.values()):
-                    self.grab(s, comment='IAU files')
+            # File linking for IAU increments
+            #
+            # In the case of a forecast with IAU, the IFS executable
+            # expects to find input increment files (both analysis and
+            # background counterpart) names suffixed according to the
+            # order by which they are to be applied.  In practice
+            # input files are not renamed but links with correct names
+            # are created pointing to them instead.  Both analysed and
+            # background states are required: to inject analysis
+            # increments over multiple timesteps, the IAU algorithm
+            # must be able to compute a difference between analysis
+            # and background states.
+            #
+            # TODO: Clarify where both regexp keys are coming from
+            guesses = self.context.sequence.effective_inputs(
+                role=re.compile(r'IAU_(Background|Guess)', flags=re.IGNORECASE)
+            )
+            analyses = self.context.sequence.effective_inputs(
+                role=re.compile(r'IAU_(Analysis|Ic)', flags=re.IGNORECASE)
+            )
 
-            # At least, expect the analysis to be there...
-            self.grab(analysis, comment='analysis')
+            def key(s: Section):
+                # Increment files are sorted according to date, then
+                # effective term.
+                return (
+                    s.rh.resource.date,
+                    s.rh.resource.date + s.rh.resource.term,
+                )
+            self._create_ordered_links(
+                bin_handler=rh, sections=analyses,
+                sort_key=key, nameconv_kind="iau_analysis",
+            )
+            self._create_ordered_links(
+                bin_handler=rh, sections=guesses,
+                sort_key=key, nameconv_kind="iau_background",
+            )
 
         # Promises should be nicely managed by a co-proccess
         if self.promises:
@@ -150,6 +159,42 @@ class Forecast(IFSParallel):
                     prefixes_set.add('{:s}PF'.format('GRIB' if pr_res.nativefmt == 'grib' else ''))
             self.io_poll_args = tuple(prefixes_set)
             self.flyput = len(self.io_poll_args) > 0
+
+    def _create_ordered_links(
+            self,
+            bin_handler: Handler,
+            sections: Iterable[Section],
+            sort_key: Callable[[Section], Any],
+            nameconv_kind: str,
+    ):
+        """Create links to local files, with ordered names
+
+        For an iterable of sections objects, this function creates
+        symlinks to the corresponding local files (described by the
+        assocatied "container" object".
+
+        Link names are suffixed by a number string based on their
+        order after sorting sections by the sort key. Example:
+        ICIAUFCSTBK01,
+        ICIAUFCSTBK02,
+        ICIAUFCSTBK03...
+        """
+        for i, sec in enumerate(sorted(sections, key=sort_key)):
+            nameconv = self.naming_convention(
+                nameconv_kind, bin_handler,
+                actualfmt=sec.rh.container.actualfmt,
+            )
+            target = nameconv(number=(i + 1))
+            link_name = sec.rh.container.localpath()
+            if self.system.path.exists(target):
+                logger.warning(
+                    "%s should be linked to %s but %s already exists.",
+                    link_name, target, target
+                )
+                continue
+            logger.info("Linking %s to %s.", link_name, target)
+            self.grab(sec, comment=nameconv_kind)
+            self.system.softlink(link_name, target)
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
