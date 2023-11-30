@@ -119,7 +119,11 @@ class Forecast(IFSParallel):
             # background counterpart) names suffixed according to the
             # order by which they are to be applied.  In practice
             # input files are not renamed but links with correct names
-            # are created pointing to them instead.
+            # are created pointing to them instead.  Both analysed and
+            # background states are required: to inject analysis
+            # increments over multiple timesteps, the IAU algorithm
+            # must be able to compute a difference between analysis
+            # and background states.
             #
             # TODO: Clarify where both regexp keys are coming from
             guesses = self.context.sequence.effective_inputs(
