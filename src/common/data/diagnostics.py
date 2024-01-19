@@ -150,3 +150,32 @@ class SurfexPeriodDiagnostics(GeoPeriodFlowResource):
     """Diagnostic files outputed by surfex during a model run (period version)."""
 
     _footprint = [_surfex_diag_decofp, ]
+
+
+class ObjTrack(GeoFlowResource):
+    """Class for Object Tracks."""
+
+    _footprint = dict(
+        info = 'Object Tracks json file',
+        attr = dict(
+            kind = dict(
+                values = ['objtrack']
+            ),
+            nativefmt = dict(
+                values = ['json', 'hdf5', 'foo', ],
+                default = 'foo',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'objtrack'
+
+    def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
+        return 'track{:s}{:s}+{:s}'.format(self.scope[:2].lower(), self.model[:4].lower(), self.term.fmth)
+
+    def olive_basename(self):
+        """OLIVE specific naming convention."""
+        return 'track{:s}{:s}+{:s}'.format(self.scope[:2].upper(), self.model[:4].upper(), self.term.fmth)
