@@ -136,6 +136,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Hycom3dPostprodPreprocInterp
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: PostprodWorker
    :show-inheritance:
    :members:

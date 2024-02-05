@@ -110,3 +110,10 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: Hycom3dPostprodPreprocInterpScript
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+

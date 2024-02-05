@@ -113,7 +113,7 @@ class LAMBoundary(_AbstractLAMBoundary):
     _footprint = dict(
         attr = dict(
             source = dict(
-                values  = ['arpege', 'aladin', 'arome', 'ifs', 'ecmwf', 'psy4', 'mfwam']
+                values  = ['arpege', 'aladin', 'arome', 'ifs', 'ecmwf', 'psy4', 'mfwam', 'glo12']
             ),
         )
     )

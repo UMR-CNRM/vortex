@@ -1,23 +1,24 @@
 """
-Hycom3d files
+Various resources for executables used by SLOOP.
 """
 
 from gco.syntax.stdattrs import gdomain, gvar
 from vortex.data.executables import Script, Binary, OceanographicModel
 
+#: No automatic export
 __all__ = []
 
 
 # %% Binaries
 
 class Hycom3dIBCRegridcdfBinary(Binary):
-    """Binary that regrids initial conditions netcdf files."""
+    """Tool to horizontaly regrid initial and boundary conditions."""
 
     _footprint = [
         gvar,
         gdomain,
         dict(
-            info="Binary that regrids initial conditions netcdf files",
+            info="Binary regridding netcdf files",
             attr=dict(
                 gvar=dict(default="master_hycom3d_ibc_regridcdf_[gdomain]"),
                 kind=dict(values=["horizontal_regridder"]),
@@ -35,13 +36,13 @@ class Hycom3dIBCRegridcdfBinary(Binary):
 
 
 class Hycom3dIBCIniconBinary(Binary):
-    """Binary that computes initial condictions for HYCOM."""
+    """Tool to verticaly project initial and boundary condictions."""
 
     _footprint = [
         gvar,
         gdomain,
         dict(
-            info="Binary that computes initial conditions for HYCOM",
+            info="Binary that computes initial conditions for hycom3d",
             attr=dict(
                 gvar=dict(default="master_hycom3d_ibc_inicon_[gdomain]"),
                 kind=dict(values=["vertical_regridder"]),
@@ -61,12 +62,15 @@ class Hycom3dIBCIniconBinary(Binary):
 
 
 class Hycom3dSpNudgeDemerliacBinary(Binary):
-    """Binary that apply Demerliac filter HYCOM Spectral Nugding."""
+    """Tool to apply a Demerliac filter on hycom3d model outputs in
+    the spectral nudging perspective.
+
+    """
 
     _footprint = [
         gvar,
         dict(
-            info="Binary that apply Demerliac filter HYCOM Spectral Nugding",
+            info="Binary that apply Demerliac filter.",
             attr=dict(
                 gvar=dict(
                     default="master_hycom3d_spnudge_demerliac"
@@ -90,12 +94,15 @@ class Hycom3dSpNudgeDemerliacBinary(Binary):
 
 
 class Hycom3dSpNudgeSpectralBinary(Binary):
-    """Binary that apply spectral filter HYCOM Spectral Nugding."""
+    """Tool to apply a spectral filter on hycom3d model outputs in the
+    spectral nudging perspective.
+
+    """
 
     _footprint = [
         gvar,
         dict(
-            info="Binary that apply spectral filter HYCOM Spectral Nugding",
+            info="Binary that apply spectral filter.",
             attr=dict(
                 gvar=dict(
                     default="master_hycom3d_spnudge_spectral"
@@ -119,13 +126,13 @@ class Hycom3dSpNudgeSpectralBinary(Binary):
 
 
 class Hycom3dModelBinary(OceanographicModel):
-    """Binary of the 3d model."""
+    """Hycom3d model."""
 
     _footprint = [
         gvar,
         gdomain,
         dict(
-            info="Binary of the model",
+            info="Binary of the model.",
             attr= dict(
                 gvar = dict(
                     default='master_hycom3d_oceanmodel_[gdomain]'
@@ -142,12 +149,12 @@ class Hycom3dModelBinary(OceanographicModel):
 
 
 class Hycom3dPostProdFilterBinary(Binary):
-    """Binary that applies filtering in time over Hycom outputs."""
+    """Tool to apply a time filtering over the hycom3d outputs."""
 
     _footprint = [
         gvar,
         dict(
-            info="Binary that applies filtering in time over Hycom outputs",
+            info="Binary that applies a time filtering over the hycom3d outputs.",
             attr=dict(
                 gvar=dict(
                     default="master_hycom3d_postprod_timefilter"
@@ -176,15 +183,14 @@ class Hycom3dPostProdFilterBinary(Binary):
 
 
 class Hycom3dPostProdVertInterpolationBinary(Binary):
-    """
-    Binary that verticaly interpolates and converts HYCOM output in SOAP and
-    dataShom formats.
+    """Tool to verticaly interpolate and convert hycom3d outputs
+    in the SOAP and dataSHOM formats.
     """
 
     _footprint = [
         gvar,
         dict(
-            info="Binary that verticaly interpolates",
+            info="Binary that verticaly interpolates.",
             attr=dict(
                 gvar=dict(
                     default="master_hycom3d_postprod_vertinterpolation"
@@ -213,12 +219,12 @@ class Hycom3dPostProdVertInterpolationBinary(Binary):
 
 
 class Hycom3dPostProdTempConversionBinary(Binary):
-    """Binary that converts potential to insitu temperature for dataSHOM production."""
+    """Tool to convert potential to insitu temperature."""
 
     _footprint = [
         gvar,
         dict(
-            info="Binary that converts potential to insitu temperature for dataSHOM production",
+            info="Binary that converts potential to insitu temperature.",
             attr=dict(
                 gvar=dict(
                     default="master_hycom3d_postprod_tempconversion"
@@ -243,8 +249,11 @@ class Hycom3dPostProdTempConversionBinary(Binary):
 
 # %% Task-specific executable scripts
 
+
 class Hycom3dIBCTimeScript(Script):
-    """TODO Class Documentation."""
+    """Sloop task executable to timely interpolate
+    initial and boundary conditions.
+    """
 
     _footprint = dict(
         info="Python script ",
@@ -256,7 +265,9 @@ class Hycom3dIBCTimeScript(Script):
 
 
 class Hycom3dAtmfrcTimeScript(Script):
-    """TODO Class Documentation."""
+    """Sloop task executable to timely interpolate
+    atmospheric parameters.
+    """
 
     _footprint = dict(
         info="Python script ",
@@ -268,7 +279,10 @@ class Hycom3dAtmfrcTimeScript(Script):
 
 
 class Hycom3dRiversFlowrateScript(Script):
-    """TODO Class Documentation."""
+    """Sloop task executable to timely interpolate flow rate of rivers
+    or compute it from climatological data.
+
+    """
 
     _footprint = dict(
         info="Python script ",
@@ -280,7 +294,7 @@ class Hycom3dRiversFlowrateScript(Script):
 
 
 class Hycom3dModelPreprocScript(Script):
-    """TODO Class Documentation."""
+    """Sloop task executable to prepare namelist used by hycom3d."""
 
     _footprint = dict(
         info="Python script ",
@@ -292,7 +306,9 @@ class Hycom3dModelPreprocScript(Script):
 
 
 class Hycom3dModelPostprocScript(Script):
-    """TODO Class Documentation."""
+    """Sloop task executable to check whether
+    a hycom3d run is ok at the end.
+    """
 
     _footprint = dict(
         info="Python script ",
@@ -304,7 +320,9 @@ class Hycom3dModelPostprocScript(Script):
 
 
 class Hycom3dSpnudgePrepostScript(Script):
-    """TODO Class Documentation."""
+    """Sloop task executables to pre- or post-process
+    data for spectral nudging.
+    """
 
     _footprint = dict(
         info="Python script ",
@@ -316,7 +334,9 @@ class Hycom3dSpnudgePrepostScript(Script):
 
 
 class Hycom3dSpnudgeSpectralPreprocScript(Script):
-    """TODO Class Documentation."""
+    """Sloop task executables to pre-process data before spectral filter
+    for spectral nudging.
+    """
 
     _footprint = dict(
         info="Python script ",
@@ -328,7 +348,7 @@ class Hycom3dSpnudgeSpectralPreprocScript(Script):
 
 
 class Hycom3dPostprodPreprocScript(Script):
-    """TODO Class Documentation."""
+    """Sloop task executables to pre-process data for the post-production."""
 
     _footprint = dict(
         info="Python script ",
@@ -339,8 +359,23 @@ class Hycom3dPostprodPreprocScript(Script):
         return "{ncins} --rank {rank} --postprod {postprod} --rundate {rundate}".format(**opts)
 
 
+class Hycom3dPostprodPreprocInterpScript(Script):
+    """Sloop task executables to pre-process data for the post-production."""
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_postprod_preproc_interp_script"]))
+    )
+
+    def command_line(self, **opts):
+        return (
+            "{ncins} --rank {rank} --postprod {postprod} "
+            "--rundate {rundate} --offset {cmoy}"
+        ).format(**opts)
+
+
 class Hycom3dPostprodConcatScript(Script):
-    """TODO Class Documentation."""
+    """Sloop task executables to concatenate data for the post-production."""
 
     _footprint = dict(
         info="Python script ",
@@ -348,5 +383,7 @@ class Hycom3dPostprodConcatScript(Script):
     )
 
     def command_line(self, **opts):
-        return ("{ncins} --rank {rank} --postprod {postprod} " +
-                "--rundate {rundate} --vapp {vapp} --vconf {vconf}").format(**opts)
+        return (
+            "{ncins} --rank {rank} --postprod {postprod} "
+            "--rundate {rundate} --vapp {vapp} --vconf {vconf}"
+        ).format(**opts)

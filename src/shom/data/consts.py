@@ -1,17 +1,22 @@
 """
-Hycom3d files
+Specific SHOM "genv" resources
 """
+
+from bronx.fancies import loggers
 
 from gco.syntax.stdattrs import gdomain
 from common.data.consts import GenvModelGeoResource, GenvModelResource
 
+#: No automatic export
 __all__ = []
 
+logger = loggers.getLogger(__name__)
 
 # %% Constants
 
+
 class Hycom3dConsts(GenvModelResource):
-    """TODO Class Documentation."""
+    """Class for the hycom3d non geographic constants tar file"""
 
     _footprint = [
         dict(
@@ -31,7 +36,7 @@ class Hycom3dConsts(GenvModelResource):
 
 
 class Hycom3dGeoConsts(GenvModelGeoResource):
-    """TODO Class Documentation."""
+    """Class for the hycom3d geographic constants tar file"""
 
     _footprint = [
         gdomain,

@@ -44,7 +44,7 @@ class Hycom3dSpecsFileDecoMixin(AlgoComponentDecoMixin):
 # %% Compilation
 
 class Hycom3dCompilator(Expresso):
-    """TODO Class Documentation."""
+    """Compile Fortran code used in sloop-hycom3d."""
 
     _footprint = dict(
         info="Compile inicon",
@@ -72,7 +72,7 @@ class Hycom3dCompilator(Expresso):
 # %% Initial and boundary condition
 
 class Hycom3dIBCRunTime(Expresso):
-    """Algo component for the temporal interpolation of IBC netcdf files."""
+    """Interpolate in time ibc netcdf files."""
 
     _footprint = [
         date,
@@ -105,7 +105,7 @@ class Hycom3dIBCRunTime(Expresso):
 
 
 class Hycom3dIBCRunHorizRegridcdf(BlindRun, Hycom3dSpecsFileDecoMixin):
-    """TODO Class Documentation."""
+    """Regrid ibc netcdf files to hycom3d grid."""
 
     _footprint = [
         dict(
@@ -147,7 +147,7 @@ class Hycom3dIBCRunHorizRegridcdf(BlindRun, Hycom3dSpecsFileDecoMixin):
 
 
 class Hycom3dIBCRunVerticalInicon(BlindRun, Hycom3dSpecsFileDecoMixin):
-    """TODO Class Documentation.
+    """Project verticaly ibc regridded files.
 
     :note: Inputs::
         ${repmod}/regional.depth.a
@@ -202,7 +202,7 @@ class Hycom3dIBCRunVerticalInicon(BlindRun, Hycom3dSpecsFileDecoMixin):
 # %% River preprocessing steps
 
 class Hycom3dRiversFlowRate(Expresso):
-    """TODO Class Documentation."""
+    """Compute the flow rate of rivers."""
 
     _footprint = [
         date,
@@ -251,7 +251,7 @@ class Hycom3dRiversFlowRate(Expresso):
 # %% Atmospheric forcing preprocessing steps
 
 class Hycom3dAtmFrcTime(Expresso):
-    """TODO Class Documentation."""
+    """Run the atmospheric parameters time interpolator."""
 
     _footprint = [
         date,
@@ -310,10 +310,10 @@ class Hycom3dAtmFrcTime(Expresso):
 # %% Spectral nudging
 
 class Hycom3dSpectralNudgingRunPrepost(Expresso):
-    """Algo component for preparing files before the demerliac filter."""
+    """Pre- and post-process data in the spectral nudging context."""
 
     _footprint = dict(
-        info="Run the spectral nudging demerliac preprocessing",
+        info="Run the spectral nudging pre- et post-processing",
         attr=dict(
             kind=dict(
                 values=["hycom3d_spnudge_prepost"],
@@ -336,11 +336,13 @@ class Hycom3dSpectralNudgingRunPrepost(Expresso):
 
 
 class Hycom3dSpectralNudgingRunDemerliac(BlindRun, Hycom3dSpecsFileDecoMixin):
-    """Demerliac filtering over Hycom3d outputs."""
+    """Run the Demerliac filter over hycom3d outputs
+    in the spectral nudging context.
+    """
 
     _footprint = [
         dict(
-            info="Run the demerliac filtering over Hycom3d outputs",
+            info="Run the demerliac filtering over hycom3d outputs",
             attr=dict(
                 kind=dict(
                     values=["hycom3d_spnudge_demerliac"],
@@ -378,7 +380,9 @@ class Hycom3dSpectralNudgingRunDemerliac(BlindRun, Hycom3dSpecsFileDecoMixin):
 
 
 class Hycom3dSpectralNudgingRunSpectralPreproc(Expresso):
-    """Algo component for preparing files before the spectral filter"""
+    """Prepare data before running spectral filter
+    in the spectral nudging context.
+    """
 
     _footprint = dict(
         info="Run the spectral nudging spectral filter preprocessing",
@@ -550,7 +554,7 @@ class SpnudgeWorker(VortexWorkerBlindRun):
     )
 
     def vortex_task(self, **kwargs):
-        """TODO: documentation."""
+        """Run a spectral nudging program in a dedicated folder and manage outputs."""
         logger.info("self.subdir %s", self.subdir)
         logger.info("files_out %s", self.files_out)
 
@@ -569,9 +573,9 @@ class SpnudgeWorker(VortexWorkerBlindRun):
 # %% Model run AlgoComponents
 
 class Hycom3dModelRunPrepost(Expresso):
-
+    """Run pre- and post-processings of hycom3d run."""
     _footprint = dict(
-        info="Pre- and post-processings of Hycom run",
+        info="Run pre- and post-processings of hycom3d run.",
         attr=dict(
             kind=dict(
                 values=["hycom3d_model_prepost"],
@@ -587,7 +591,7 @@ class Hycom3dModelRunPrepost(Expresso):
 
 
 class Hycom3dModelRun(Parallel, Hycom3dSpecsFileDecoMixin):
-
+    """Run a forecast with hycom3d."""
     _footprint = dict(
         info="Run the model",
         attr=dict(
@@ -641,7 +645,7 @@ class Hycom3dModelRun(Parallel, Hycom3dSpecsFileDecoMixin):
 # %% Post-production run algo component
 
 class Hycom3dPostprodPreproc(Expresso):
-    """TODO Class Documentation."""
+    """Pre-process data with sloop executables for post-production."""
 
     _footprint = dict(
         info="Prepare Hycom output for postproduction",
@@ -684,11 +688,38 @@ class Hycom3dPostprodPreproc(Expresso):
         )
 
 
-class Hycom3dPostprodConcat(Hycom3dPostprodPreproc):
-    """TODO Class Documentation."""
+class Hycom3dPostprodPreprocInterp(Hycom3dPostprodPreproc):
+    """Pre-process data with sloop executables for post-production."""
 
     _footprint = dict(
         info="Prepare Hycom output for postproduction",
+        attr=dict(
+            kind=dict(
+                values=["hycom3d_postprod_preproc_interp"],
+            ),
+            cmoy=dict(
+                type=float,
+                default=6.4454,
+                optional=False,
+            ),
+        ),
+    )
+
+    def spawn_command_options(self):
+        return dict(
+            ncins=','.join(self._files),
+            rank=self.rank,
+            postprod=self.postprod,
+            rundate=self.rundate,
+            cmoy=self.cmoy
+        )
+
+
+class Hycom3dPostprodConcat(Hycom3dPostprodPreproc):
+    """Concatenate netcdf files for post-production."""
+
+    _footprint = dict(
+        info="Concatenate netcdf files for post-production.",
         attr=dict(
             kind=dict(
                 values=["hycom3d_postprod_concat"],
@@ -722,7 +753,7 @@ class Hycom3dPostprodMixin(AlgoComponentDecoMixin):
     def _postprod_cli_opts_extend(self, prev):
         """Prepare options for the resource's command line."""
         prev.clear()
-        for kopt, vopt in self._clargs.items():
+        for kopt, vopt in self._clarg.items():
             if isinstance(vopt, dict):
                 prev.update(vopt)
             else:
@@ -736,7 +767,7 @@ class Hycom3dPostprod(BlindRun, Hycom3dPostprodMixin, Hycom3dSpecsFileDecoMixin)
     """Post-production filter over hycom3d outputs."""
 
     _footprint = dict(
-        info="Run the postprod filtering over Hycom3d outputs",
+        info="Run several fortran executables sequentially.",
         attr=dict(
             kind=dict(
                 values=[
@@ -763,7 +794,7 @@ class Hycom3dParaPostprod(ParaBlindRun, Hycom3dPostprodMixin, Hycom3dSpecsFileDe
     """
 
     _footprint = dict(
-        info="Run the postprod Fortran executable over Hycom3d outputs",
+        info="Run fortran executables in parallel.",
         attr=dict(
             kind=dict(
                 values=["hycom3d_postprod_para", ]
@@ -852,7 +883,7 @@ class PostprodWorker(VortexWorkerBlindRun):
     )
 
     def vortex_task(self, **kwargs):
-        """TODO: documentation."""
+        """Run a spectral nudging program in a dedicated folder and manage outputs."""
         logger.info("self.subdir %s", self.subdir)
         logger.info("file_out %s", self.file_out)
 
@@ -865,11 +896,10 @@ class PostprodWorker(VortexWorkerBlindRun):
 
 
 class Hycom3dPostprodInterpolation(Hycom3dPostprodPreproc):
-    """
-    Post-production interpolation over hycom3d outputs
+    """Run the vertical interpolation for post-production.
     """
     _footprint = dict(
-        info="Run the postprod interpolation over Hycom3d outputs",
+        info="Run the postprod interpolation for post-production.",
         attr=dict(
             kind=dict(
                 values=["hycom3d_postprod_interpolation"],
@@ -894,10 +924,10 @@ class Hycom3dPostprodInterpolation(Hycom3dPostprodPreproc):
 
 
 class Hycom3dPostprodExtract(Hycom3dPostprodPreproc):
-    """TODO Class Documentation."""
+    """Run the geometry extraction for post-production."""
 
     _footprint = dict(
-        info="Prepare Hycom output for postproduction",
+        info="Run the geometry extraction for post-production.",
         attr=dict(
             kind=dict(
                 values=["hycom3d_postprod_extract"]

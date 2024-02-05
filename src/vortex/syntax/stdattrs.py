@@ -27,7 +27,7 @@ models = {
     'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro', 'aearp', 'pearp', 'mocage',
     'mesonh', 'surfex', 'hycom', 'psy4', 'safran', 'ifs', 'aroifs', 'cifs', 'mfwam', 'pg1',
     'alpha', 'eps', 'postproc', 'ww3', 'sympo', 'psym', 'petaroute', 'promethee', 'hycom3d',
-    'croco', 'alaro', 'harmoniearome', 'nemo', 'oasis',
+    'croco', 'alaro', 'harmoniearome', 'nemo', 'oasis', 'glo12'
 }
 
 #: Possible values for the most common binaries.
