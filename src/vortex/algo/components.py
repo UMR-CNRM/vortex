@@ -33,6 +33,7 @@ Mixins are a powerful tool to mutualise some pieces of code. See the
 import collections.abc
 import contextlib
 import copy
+import importlib
 import locale
 import logging
 import multiprocessing
@@ -526,6 +527,12 @@ class AlgoComponent(footprints.FootprintBase, metaclass=AlgoComponentMeta):
                 info            = 'The medium that is used to synchronise with the server.',
                 optional        = True,
                 doc_visibility  = footprints.doc.visibility.GURU,
+            ),
+            extendpypath = dict(
+                info     = "The list of things to be prepended in the python's path.",
+                type     = footprints.FPList,
+                default  = footprints.FPList([]),
+                optional = True
             ),
         )
     )
@@ -1141,6 +1148,85 @@ class AlgoComponent(footprints.FootprintBase, metaclass=AlgoComponentMeta):
         return initsec
 
 
+class PythonFunction(AlgoComponent):
+    """Execute a function defined in Python module.  The function is passed the
+    current :class:`sequence <vortex.layout.dataflow.Sequence>`, as well as a
+    keyword arguments described by attribute ``func_kwargs``.  Example:
+
+    .. code-block:: python
+
+        >>> exe = toolbox.executable(
+        ...     role           = 'Script',
+        ...     format         = 'ascii',
+        ...     hostname       = 'localhost',
+        ...     kind           = 'script',
+        ...     language       = 'python',
+        ...     local          = 'module.py',
+        ...     remote         = '/path/to/module.py',
+        ...     tube           = 'file',
+        ... )
+        >>> tbalgo = toolbox.algo(
+        ...     engine="function",
+        ...     func_name="my_plugin_entry_point_function",
+        ...     func_kwargs={ntasks: 35, subnproc: 4},
+        ... )
+        >>> tbalgo.run(exe[0])
+
+    .. code-block:: python
+
+        # /path/to/module.py
+        # ...
+        def my_plugin_entry_point_function(
+            sequence, ntasks, subnproc,
+        ):
+            for input in sequence.effective_inputs(role=gridpoint):
+                # ...
+    """
+
+    _footprint = dict(
+        info = "Execute a Python function in a given module",
+
+        attr = dict(
+            engine = dict(
+                values = ["function"]
+            ),
+            func_name = dict(
+                info="The function's name"
+            ),
+            func_kwargs = dict(
+                info=(
+                    "A dictionary containing the function's "
+                    "keyword arguments"
+                ),
+                type=footprints.FPDict,
+                default=footprints.FPDict({}),
+                optional=True,
+            ),
+        )
+    )
+
+    def prepare(self, rh, opts):
+        spec = importlib.util.spec_from_file_location(
+            name="module", location=rh.container.localpath()
+        )
+        mod = importlib.util.module_from_spec(spec)
+        sys.path.extend(self.extendpypath)
+        try:
+            spec.loader.exec_module(mod)
+        except AttributeError:
+            raise AttributeError
+        self.func = getattr(mod, self.func_name)
+
+    def execute(self, rh, opts):
+        self.func(
+            self.context.sequence, **self.func_kwargs,
+        )
+
+    def execute_finalise(self, opts):
+        for p in self.extendpypath:
+            sys.path.remove(p)
+
+
 class ExecutableAlgoComponent(AlgoComponent):
     """Component in charge of running executable resources."""
 
@@ -1283,12 +1369,6 @@ class Expresso(ExecutableAlgoComponent):
             ),
             engine = dict(
                 values = ['exec', 'launch']
-            ),
-            extendpypath = dict(
-                info     = "The list of things to be prepended in the python's path.",
-                type     = footprints.FPList,
-                default  = footprints.FPList([]),
-                optional = True
             ),
         )
     )

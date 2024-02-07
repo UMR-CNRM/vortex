@@ -99,6 +99,11 @@ Ready to use AlgoComponents (for basic needs)
    :members:
    :member-order: alphabetical
 
+.. autoclass:: PythonFunction
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Base classes for AlgoComponents implementing task parallelism (using taylorism)
 -------------------------------------------------------------------------------
 
