@@ -527,6 +527,12 @@ class AlgoComponent(footprints.FootprintBase, metaclass=AlgoComponentMeta):
                 optional        = True,
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
+            extendpypath = dict(
+                info     = "The list of things to be prepended in the python's path.",
+                type     = footprints.FPList,
+                default  = footprints.FPList([]),
+                optional = True
+            ),
         )
     )
 
@@ -1283,12 +1289,6 @@ class Expresso(ExecutableAlgoComponent):
             ),
             engine = dict(
                 values = ['exec', 'launch']
-            ),
-            extendpypath = dict(
-                info     = "The list of things to be prepended in the python's path.",
-                type     = footprints.FPList,
-                default  = footprints.FPList([]),
-                optional = True
             ),
         )
     )
