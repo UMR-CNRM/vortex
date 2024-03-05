@@ -19,7 +19,7 @@ import subprocess
 import sys
 import time
 from ast import literal_eval
-from configparser import SafeConfigParser
+from configparser import ConfigParser
 from datetime import datetime
 from random import randint
 from signal import SIGTERM
@@ -631,7 +631,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         if os.path.exists(filename):
             absfile = os.path.abspath(filename)
             self.logger.info('Configuration', path=absfile)
-            cfg = SafeConfigParser()
+            cfg = ConfigParser()
             cfg.read(absfile)
 
             self.logger.info('Configuration', sections=','.join(cfg.sections()))
