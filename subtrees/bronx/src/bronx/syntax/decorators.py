@@ -3,7 +3,6 @@ Useful decorators.
 """
 import time
 
-
 #: No automatic export
 __all__ = []
 
@@ -13,12 +12,14 @@ def nicedeco(decorator):
     A decorator of decorator, this decorator enforces that the resulting
     decorated functions looks like the original one.
     """
+
     def new_decorator(f):
         g = decorator(f)
         g.__name__ = f.__name__
         g.__doc__ = f.__doc__
         g.__dict__.update(f.__dict__)
         return g
+
     return new_decorator
 
 
@@ -28,6 +29,7 @@ def nicedeco_plusdoc(doc_bonus):
     decorated functions looks like the original one but an extra bit of
     documentation is added.
     """
+
     def nicedeco_doc(decorator):
         def new_decorator(f):
             g = decorator(f)
@@ -36,15 +38,19 @@ def nicedeco_plusdoc(doc_bonus):
                          doc_bonus.format(name=f.__name__))
             g.__dict__.update(f.__dict__)
             return g
+
         return new_decorator
+
     return nicedeco_doc
 
 
 @nicedeco
 def disabled(func):  # @UnusedVariable
     """This decorator disables the provided function, and does nothing."""
+
     def empty_func(*args, **kw):
         pass
+
     return empty_func
 
 
@@ -59,22 +65,13 @@ def printargs(func):
             '%s=%r' % entry
             for entry in zip(argnames, args) + kw.items()), ')')
         return func(*args, **kw)
+
     return echo_func_args
-
-
-@nicedeco
-def unicode_filter(func):
-    """This decorator forces unicode when a string is returned."""
-    def unicode_func(*args, **kw):
-        out = func(*args, **kw)
-        if isinstance(out, str):
-            out = str(out)
-        return out
-    return unicode_func
 
 
 def timelimit(logger, nbsec):
     """This decorator warns if the function is more than ``nbsec`` seconds long."""
+
     @nicedeco
     def internal_decorator(func):
         def timed_func(*args, **kw):
@@ -84,7 +81,9 @@ def timelimit(logger, nbsec):
             if tt >= nbsec:
                 logger.warn('Function %s took %f seconds', func.__name__, tt)
             return results
+
         return timed_func
+
     return internal_decorator
 
 
@@ -94,6 +93,7 @@ def secure_getattr(func):
     This decorator is to be used on __getattr__ methods to ensure that essential
     method such as __getstate__/__setstate__ are not looked for.
     """
+
     def secured_getattr(self, key):
         # Avoid nasty interactions when copying/pickling
         if key in ('__bases__',
@@ -104,4 +104,5 @@ def secure_getattr(func):
             raise AttributeError(key)
         else:
             return func(self, key)
+
     return secured_getattr
