@@ -1,6 +1,8 @@
 """
 Useful decorators.
 """
+
+import itertools
 import time
 
 #: No automatic export
@@ -57,16 +59,38 @@ def disabled(func):  # @UnusedVariable
 @nicedeco
 def printargs(func):
     """This decorator prints out the arguments passed to a function before calling it."""
-    argnames = func.func_code.co_varnames[:func.func_code.co_argcount]
+    argnames = func.__code__.co_varnames[:func.__code__.co_argcount]
     fname = func.__name__
 
     def echo_func_args(*args, **kw):
-        print('> > >', fname, '(', ', '.join(
+        print('> > >', fname + '(' + ', '.join(
             '%s=%r' % entry
-            for entry in zip(argnames, args) + kw.items()), ')')
+            for entry in itertools.chain(zip(argnames, args), kw.items())) + ')')
         return func(*args, **kw)
 
     return echo_func_args
+
+
+@printargs
+def printargs_pytest(a, b=4, c="blah-blah", *args, **kwargs):
+    """Documentation for the function.
+
+    >>> printargs_pytest(1)
+    > > > printargs_pytest(a=1)
+    >>> printargs_pytest(1, 2)
+    > > > printargs_pytest(a=1, b=2)
+    >>> printargs_pytest(1, d=4)
+    > > > printargs_pytest(a=1, d=4)
+    >>> printargs_pytest(1, 2, 3, 7, d=4, e=5)
+    > > > printargs_pytest(a=1, b=2, c=3, d=4, e=5)
+    >>> printargs_pytest.__doc__.startswith('Documentation for the function.')
+    True
+    >>> print(printargs_pytest.__name__)
+    printargs_pytest
+    >>> list(printargs_pytest.__dict__.keys())
+    []
+    """
+    pass
 
 
 def timelimit(logger, nbsec):
