@@ -2,8 +2,9 @@
 Useful decorators.
 """
 
-import itertools
+import inspect
 import time
+from functools import wraps
 
 #: No automatic export
 __all__ = []
@@ -56,17 +57,17 @@ def disabled(func):  # @UnusedVariable
     return empty_func
 
 
-@nicedeco
 def printargs(func):
-    """This decorator prints out the arguments passed to a function before calling it."""
-    argnames = func.__code__.co_varnames[:func.__code__.co_argcount]
-    fname = func.__name__
+    """This decorator prints out the arguments passed to a function
+    before calling it, including parameters names and effective values.
+    """
 
-    def echo_func_args(*args, **kw):
-        print('> > >', fname + '(' + ', '.join(
-            '%s=%r' % entry
-            for entry in itertools.chain(zip(argnames, args), kw.items())) + ')')
-        return func(*args, **kw)
+    @wraps(func)
+    def echo_func_args(*args, **kwargs):
+        func_args = inspect.signature(func).bind(*args, **kwargs).arguments
+        args_str = ", ".join(['{}={}'.format(k, v) for k, v in func_args.items()])
+        print("> > > {}::{}({})".format(func.__module__, func.__qualname__, args_str))
+        return func(*args, **kwargs)
 
     return echo_func_args
 
@@ -76,19 +77,19 @@ def printargs_pytest(a, b=4, c="blah-blah", *args, **kwargs):
     """Documentation for the function.
 
     >>> printargs_pytest(1)
-    > > > printargs_pytest(a=1)
+    > > > decorators::printargs_pytest(a=1)
     >>> printargs_pytest(1, 2)
-    > > > printargs_pytest(a=1, b=2)
+    > > > decorators::printargs_pytest(a=1, b=2)
     >>> printargs_pytest(1, d=4)
-    > > > printargs_pytest(a=1, d=4)
+    > > > decorators::printargs_pytest(a=1, kwargs={'d': 4})
     >>> printargs_pytest(1, 2, 3, 7, d=4, e=5)
-    > > > printargs_pytest(a=1, b=2, c=3, d=4, e=5)
+    > > > decorators::printargs_pytest(a=1, b=2, c=3, args=(7,), kwargs={'d': 4, 'e': 5})
     >>> printargs_pytest.__doc__.startswith('Documentation for the function.')
     True
     >>> print(printargs_pytest.__name__)
     printargs_pytest
     >>> list(printargs_pytest.__dict__.keys())
-    []
+    ['__wrapped__']
     """
     pass
 
