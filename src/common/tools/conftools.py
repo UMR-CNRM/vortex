@@ -272,7 +272,7 @@ class CouplingOffsetConfTool(ConfTool):
 
     @property
     def target_hhs(self):
-        return self. _target_hhs
+        return self._target_hhs
 
     def _reshape_inputs(self, input_dict, class_default=None, value_reclass=lambda x: x):
         """Deal with default values, check dictionaries and convert keys to Time objects."""
@@ -568,8 +568,15 @@ class AggregatedCouplingOffsetConfTool(ConfTool):
         if not len(self._toolslist):
             raise CouplingOffsetConfError("At least one sub-object is needed")
         # Check consistency
-        for toolobj in self._toolslist[1:]:
+        for num, toolobj in enumerate(self._toolslist[1:]):
             if not self._toolslist[0].compatible_with(toolobj):
+                print('\n', '*' * 50)
+                print('self._toolslist[0] =', self._toolslist[0], '\n',
+                      ' target_hhs    =', self._toolslist[0].target_hhs,
+                      ' refill_cutoff =', self._toolslist[0].refill_cutoff)
+                print('is not consistent with object num', num, ':', toolobj, '\n',
+                      ' target_hhs    =', toolobj.target_hhs,
+                      ' refill_cutoff =', toolobj.refill_cutoff)
                 raise CouplingOffsetConfError("Inconsistent sub-objects")
 
         if self.verbose:

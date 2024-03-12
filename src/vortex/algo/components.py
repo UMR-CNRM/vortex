@@ -70,7 +70,7 @@ class AlgoComponentAssertionError(AlgoComponentError):
 
 
 class DelayedAlgoComponentError(AlgoComponentError):
-    """Triggered when exceptions occured during the execution but were delayed."""
+    """Triggered when exceptions occurred during the execution but were delayed."""
 
     def __init__(self, excs):
         super().__init__("One or several errors occurred during the run.")
@@ -97,7 +97,7 @@ class ParallelInconsistencyAlgoComponentError(Exception):
 @nicedeco
 def _clsmtd_mixin_locked(f):
     """
-    This is a utility decorator (for class methods) : it ensure that the method can only
+    This is a utility decorator (for class methods) : it ensures that the method can only
     be called on a bare :class:`AlgoComponentDecoMixin` class.
     """
     def wrapped_clsmethod(cls, *kargs, **kwargs):
@@ -165,9 +165,9 @@ class AlgoComponentDecoMixin:
     Like any Mixin class, this Mixin class primary use is to define methods that
     will be available to the child class.
 
-    However, this classes will also interact with the :class:`AlgoComponentMeta`
+    However, this class will also interact with the :class:`AlgoComponentMeta`
     metaclass to alter the behaviour of the :class:`AlgoComponent` class it is
-    used with. Several "alteration" will be made to the resulting
+    used with. Several "alterations" will be made to the resulting
     :class:`AlgoComponent` class.
 
         * A bunch of footprints' attribute can be added to the resulting class.
@@ -1061,7 +1061,7 @@ class AlgoComponent(footprints.FootprintBase, metaclass=AlgoComponentMeta):
         """A shortcut to avoid next steps of the run."""
 
         def fastexit(self, *args, **kw):
-            logger.warning('Run <%s> skipped because abort occured [%s]', step, msg)
+            logger.warning('Run <%s> skipped because abort occurred [%s]', step, msg)
 
         return fastexit
 
@@ -1910,7 +1910,7 @@ class Parallel(xExecutableAlgoComponent):
         """Run the specified resource handler through the `mpitool` launcher
 
         An argument named `mpiopts` could be provided as a dictionary: it may
-        contains indications on the number of nodes, tasks, ...
+        contain indications on the number of nodes, tasks, ...
         """
 
         self.system.subtitle('{:s} : parallel engine'.format(self.realkind))
@@ -2025,7 +2025,7 @@ class ParallelIoServerMixin(AlgoComponentMpiDecoMixin):
 class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
     """Class mixin to be used with OpenPALM programs.
 
-    It will automatically adds the OpenPALM driver binary to the list of
+    It will automatically add the OpenPALM driver binary to the list of
     binaries. The location of the OpenPALM driver should be automatically
     detected provided that a section with ``role=OpenPALM Driver`` lies in the
     input's sequence. Alternatively, the path to the OpenPALM driver can be
