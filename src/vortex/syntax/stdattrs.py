@@ -25,9 +25,9 @@ __all__ = [
 #: Possible values for the *model* attribute.
 models = {
     'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro', 'aearp', 'pearp', 'mocage',
-    'mesonh', 'surfex', 'hycom', 'psy4', 'safran', 'ifs', 'aroifs', 'cifs', 'mfwam', 'pg1',
-    'alpha', 'eps', 'postproc', 'ww3', 'sympo', 'psym', 'petaroute', 'promethee', 'hycom3d',
-    'croco', 'alaro', 'harmoniearome', 'nemo', 'oasis',
+    'mesonh', 'surfex', 'hycom', 'psy4', 'mercator_global', 'safran', 'ifs', 'aroifs', 'cifs',
+    'mfwam', 'pg1', 'alpha', 'eps', 'postproc', 'ww3', 'sympo', 'psym', 'petaroute', 'promethee',
+    'hycom3d', 'croco', 'alaro', 'harmoniearome', 'nemo', 'oasis',
 }
 
 #: Possible values for the most common binaries.
