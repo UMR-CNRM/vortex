@@ -312,12 +312,12 @@
       format: netcdf
       kind: rawfields
       namespace: olive.multi.fr
-      origin: psy4
+      origin: mercator_global
     results: !test_names.core.TestResults
     - default: *id001
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ocean.psy4
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ocean.mercator_global
     - default: *id002
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ocean.psy4
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ocean.mercator_global
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: observations
@@ -326,12 +326,12 @@
       format: netcdf
       kind: rawfields
       namespace: vortex.multi.fr
-      origin: psy4
+      origin: mercator_global
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/ocean.psy4
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/ocean.mercator_global
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/ocean.psy4
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/ocean.mercator_global
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: observations
@@ -452,12 +452,12 @@
       format: netcdf
       kind: rawfields
       namespace: olive.multi.fr
-      origin: psy4
+      origin: mercator_global
     results: !test_names.core.TestResults
     - default: *id001
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/seaice_thick.psy4
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/seaice_thick.mercator_global
     - default: *id002
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/seaice_thick.psy4
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/seaice_thick.mercator_global
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: observations
@@ -466,12 +466,12 @@
       format: netcdf
       kind: rawfields
       namespace: vortex.multi.fr
-      origin: psy4
+      origin: mercator_global
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/seaice_thick.psy4
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/seaice_thick.mercator_global
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/seaice_thick.psy4
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/seaice_thick.mercator_global
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: observations
@@ -534,13 +534,13 @@
       format: netcdf
       kind: rawfields
       namespace: '[suite].multi.fr'
-      origin: psy4
+      origin: mercator_global
       suite: oper
     results: !test_names.core.TestResults
     - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ocean.psy4
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ocean.mercator_global
     - default: *id002
-      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/ocean.psy4
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/ocean.mercator_global
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       fields: seaice
@@ -599,13 +599,13 @@
       format: netcdf
       kind: rawfields
       namespace: '[suite].multi.fr'
-      origin: psy4
+      origin: mercator_global
       suite: oper
     results: !test_names.core.TestResults
     - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/seaice_thick.psy4
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/seaice_thick.mercator_global
     - default: *id002
-      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/seaice_thick.psy4
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/seaice_thick.mercator_global
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       fields: sst
