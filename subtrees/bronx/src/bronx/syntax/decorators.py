@@ -1,8 +1,10 @@
 """
 Useful decorators.
 """
-import time
 
+import inspect
+import time
+from functools import wraps
 
 #: No automatic export
 __all__ = []
@@ -13,12 +15,14 @@ def nicedeco(decorator):
     A decorator of decorator, this decorator enforces that the resulting
     decorated functions looks like the original one.
     """
+
     def new_decorator(f):
         g = decorator(f)
         g.__name__ = f.__name__
         g.__doc__ = f.__doc__
         g.__dict__.update(f.__dict__)
         return g
+
     return new_decorator
 
 
@@ -28,6 +32,7 @@ def nicedeco_plusdoc(doc_bonus):
     decorated functions looks like the original one but an extra bit of
     documentation is added.
     """
+
     def nicedeco_doc(decorator):
         def new_decorator(f):
             g = decorator(f)
@@ -36,45 +41,63 @@ def nicedeco_plusdoc(doc_bonus):
                          doc_bonus.format(name=f.__name__))
             g.__dict__.update(f.__dict__)
             return g
+
         return new_decorator
+
     return nicedeco_doc
 
 
 @nicedeco
 def disabled(func):  # @UnusedVariable
     """This decorator disables the provided function, and does nothing."""
+
     def empty_func(*args, **kw):
         pass
+
     return empty_func
 
 
-@nicedeco
 def printargs(func):
-    """This decorator prints out the arguments passed to a function before calling it."""
-    argnames = func.func_code.co_varnames[:func.func_code.co_argcount]
-    fname = func.__name__
+    """This decorator prints out the arguments passed to a function
+    before calling it, including parameters names and effective values.
+    """
 
-    def echo_func_args(*args, **kw):
-        print('> > >', fname, '(', ', '.join(
-            '%s=%r' % entry
-            for entry in zip(argnames, args) + kw.items()), ')')
-        return func(*args, **kw)
+    @wraps(func)
+    def echo_func_args(*args, **kwargs):
+        func_args = inspect.signature(func).bind(*args, **kwargs).arguments
+        args_str = ", ".join(['{}={}'.format(k, v) for k, v in func_args.items()])
+        print("> > > {}::{}({})".format(func.__module__, func.__qualname__, args_str))
+        return func(*args, **kwargs)
+
     return echo_func_args
 
 
-@nicedeco
-def unicode_filter(func):
-    """This decorator forces unicode when a string is returned."""
-    def unicode_func(*args, **kw):
-        out = func(*args, **kw)
-        if isinstance(out, str):
-            out = str(out)
-        return out
-    return unicode_func
+@printargs
+def printargs_doctest(a, b=4, c="blah-blah", *args, **kwargs):
+    """This function is just a placeholder for the doctests below.
+
+    >>> printargs_doctest(1)
+    > > > decorators::printargs_doctest(a=1)
+    >>> printargs_doctest(1, 2)
+    > > > decorators::printargs_doctest(a=1, b=2)
+    >>> printargs_doctest(1, d=4)
+    > > > decorators::printargs_doctest(a=1, kwargs={'d': 4})
+    >>> printargs_doctest(1, 2, 3, 7, d=4, e=5)
+    > > > decorators::printargs_doctest(a=1, b=2, c=3, args=(7,), kwargs={'d': 4, 'e': 5})
+    >>> printargs_doctest.__doc__.startswith('Documentation for the function.')
+    True
+    >>> print(printargs_doctest.__name__)
+    printargs_doctest
+    >>> list(printargs_doctest.__dict__.keys())
+    ['__wrapped__']
+
+    """
+    pass
 
 
 def timelimit(logger, nbsec):
     """This decorator warns if the function is more than ``nbsec`` seconds long."""
+
     @nicedeco
     def internal_decorator(func):
         def timed_func(*args, **kw):
@@ -84,7 +107,9 @@ def timelimit(logger, nbsec):
             if tt >= nbsec:
                 logger.warn('Function %s took %f seconds', func.__name__, tt)
             return results
+
         return timed_func
+
     return internal_decorator
 
 
@@ -94,6 +119,7 @@ def secure_getattr(func):
     This decorator is to be used on __getattr__ methods to ensure that essential
     method such as __getstate__/__setstate__ are not looked for.
     """
+
     def secured_getattr(self, key):
         # Avoid nasty interactions when copying/pickling
         if key in ('__bases__',
@@ -104,4 +130,5 @@ def secure_getattr(func):
             raise AttributeError(key)
         else:
             return func(self, key)
+
     return secured_getattr
