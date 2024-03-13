@@ -73,23 +73,24 @@ def printargs(func):
 
 
 @printargs
-def printargs_pytest(a, b=4, c="blah-blah", *args, **kwargs):
-    """Documentation for the function.
+def printargs_doctest(a, b=4, c="blah-blah", *args, **kwargs):
+    """This function is just a placeholder for the doctests below.
 
-    >>> printargs_pytest(1)
-    > > > decorators::printargs_pytest(a=1)
-    >>> printargs_pytest(1, 2)
-    > > > decorators::printargs_pytest(a=1, b=2)
-    >>> printargs_pytest(1, d=4)
-    > > > decorators::printargs_pytest(a=1, kwargs={'d': 4})
-    >>> printargs_pytest(1, 2, 3, 7, d=4, e=5)
-    > > > decorators::printargs_pytest(a=1, b=2, c=3, args=(7,), kwargs={'d': 4, 'e': 5})
-    >>> printargs_pytest.__doc__.startswith('Documentation for the function.')
+    >>> printargs_doctest(1)
+    > > > decorators::printargs_doctest(a=1)
+    >>> printargs_doctest(1, 2)
+    > > > decorators::printargs_doctest(a=1, b=2)
+    >>> printargs_doctest(1, d=4)
+    > > > decorators::printargs_doctest(a=1, kwargs={'d': 4})
+    >>> printargs_doctest(1, 2, 3, 7, d=4, e=5)
+    > > > decorators::printargs_doctest(a=1, b=2, c=3, args=(7,), kwargs={'d': 4, 'e': 5})
+    >>> printargs_doctest.__doc__.startswith('Documentation for the function.')
     True
-    >>> print(printargs_pytest.__name__)
-    printargs_pytest
-    >>> list(printargs_pytest.__dict__.keys())
+    >>> print(printargs_doctest.__name__)
+    printargs_doctest
+    >>> list(printargs_doctest.__dict__.keys())
     ['__wrapped__']
+
     """
     pass
 
