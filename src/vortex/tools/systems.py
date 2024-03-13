@@ -1,4 +1,3 @@
-
 """
 This package handles system interfaces objects that are in charge of
 system interaction. Systems objects use the :mod:`footprints` mechanism.
@@ -20,7 +19,6 @@ When working with System objects, preferentialy use high-level methods such as
 
 """
 
-from collections import namedtuple
 import contextlib
 import errno
 import filecmp
@@ -51,23 +49,24 @@ import tempfile
 import threading
 import time
 import uuid
+from collections import namedtuple
 
+import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes import date
 from bronx.stdtypes.history import History
-from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
-from bronx.system.cpus import LinuxCpusInfo
-from bronx.system.memory import LinuxMemInfo
-from bronx.system.numa import LibNumaNodesInfo
 from bronx.syntax.decorators import nicedeco_plusdoc, secure_getattr
 from bronx.syntax.externalcode import ExternalCodeImportChecker
-import footprints
+from bronx.system.cpus import LinuxCpusInfo
+from bronx.system.interrupt import SignalInterruptError, SignalInterruptHandler
+from bronx.system.memory import LinuxMemInfo
+from bronx.system.numa import LibNumaNodesInfo
 from vortex.gloves import Glove
-from vortex.tools.env import Environment
-from vortex.tools.net import StdFtp, AutoRetriesFtp, FtpConnectionPool, DEFAULT_FTP_PORT
-from vortex.tools.net import AssistedSsh, LinuxNetstats
-from vortex.tools.compression import CompressionPipeline
 from vortex.syntax.stdattrs import DelayedInit
+from vortex.tools.compression import CompressionPipeline
+from vortex.tools.env import Environment
+from vortex.tools.net import AssistedSsh, AutoRetriesFtp, DEFAULT_FTP_PORT
+from vortex.tools.net import FtpConnectionPool, LinuxNetstats, StdFtp
 
 #: No automatic export
 __all__ = []
@@ -100,7 +99,6 @@ _fmtshcmd_docbonus = """
         present one).
 """
 
-
 # Constant items
 
 #: Definition of a named tuple ftpflavour
@@ -119,6 +117,7 @@ def fmtshcmd(func):
     a method called ``toto_decomethod`` : if it exists, it will be used (otherwise,
     the original method is used).
     """
+
     def formatted_method(self, *args, **kw):
         fmt = kw.pop('fmt', None)
         shtarget = self if isinstance(self, System) else self.sh
@@ -127,6 +126,7 @@ def fmtshcmd(func):
             return fmtcall(*args, **kw)
         else:
             return fmtcall(self, *args, **kw)
+
     return formatted_method
 
 
@@ -380,7 +380,7 @@ class System(footprints.FootprintBase):
         self.__dict__['prompt'] = str(kw.pop('prompt', ''))
         for flag in ('trace', 'timer'):
             self.__dict__[flag] = kw.pop(flag, False)
-        for flag in ('output', ):
+        for flag in ('output',):
             self.__dict__[flag] = kw.pop(flag, True)
         super().__init__(*args, **kw)
 
@@ -464,7 +464,7 @@ class System(footprints.FootprintBase):
                     self._xtrack[key] = shxobj
                 else:
                     # Do not warn for a restricted list of keys
-                    if key not in ('stat', ):
+                    if key not in ('stat',):
                         logger.warning('System: duplicate entry while looking for key="%s". ' +
                                        'First result in %s but also available in %s.',
                                        key, self._xtrack[key], shxobj)
@@ -601,6 +601,12 @@ class System(footprints.FootprintBase):
         if bline:
             print()
         self.flush_stdall()
+
+    @property
+    def executable(self):
+        """Return the actual ``sys.executable``."""
+        self.stderr('executable')
+        return sys.executable
 
     def pythonpath(self, output=None):
         """Return or print actual ``sys.path``."""
@@ -1183,7 +1189,8 @@ class OSExtended(System):
         if self._os.path.exists(filename):
             is_x = bool(self._os.stat(filename).st_mode & 1)
             if not is_x and force:
-                self.chmod(filename, self._os.stat(filename).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+                self.chmod(filename,
+                           self._os.stat(filename).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
                 is_x = True
             return is_x
         else:
