@@ -25,8 +25,11 @@ class RawFields(StaticResource):
                     values = ['rawfields']
                 ),
                 origin = dict(
-                    values = ['bdm', 'nesdis', 'ostia', 'psy4', 'bdpe',
-                              'safosi', 'safosi_hn', 'safosi_hs']
+                    values = [
+                        'bdm', 'nesdis', 'ostia', 'psy4',
+                        'mercator_global', 'bdpe', 'safosi',
+                        'safosi_hn', 'safosi_hs',
+                    ]
                 ),
                 fields = dict(
                     values = ['sst', 'seaice', 'ocean', 'seaice_conc', 'seaice_thick']

@@ -1071,9 +1071,9 @@ class JobAssistantFlowSchedPlugin(JobAssistantPlugin):
             self._printfmt('Flow scheduler client path: {:s}', ad.flow_path())
 
             # Initialise the flow scheduler
-            mstep_fist = getattr(self.masterja, 'mstep_is_first', True)
+            mstep_first = getattr(self.masterja, 'mstep_is_first', True)
             mtplug = self._flow_sched_mtool_plugin
-            if mstep_fist:
+            if mstep_first:
                 ad.flow_init(rid)
             if mtplug is not None:
                 label = "{:s} (mtoolid={!s})".format(label, mtplug.mtoolid)

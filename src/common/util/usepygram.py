@@ -565,8 +565,9 @@ def split_errgrib_on_shortname(t, rh):
         grb = gribs.iter_messages(headers_only=False)
         while grb is not None:
             # Find the ShortName
-            for grib_v in ('GRIB1', 'GRIB2'):
-                sn = grb.genfid()[grib_v].get('shortName', None)
+            fid = grb.genfid()
+            for k in sorted(fid.keys()):
+                sn = fid[k].get('shortName', None)
                 if sn is not None:
                     break
             if sn is None:

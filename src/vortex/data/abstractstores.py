@@ -78,7 +78,7 @@ class _SetAsideStoreMixin:
         options_bis = options.copy()
         intent = options_bis.pop('intent', CACHE_GET_INTENT_DEFAULT)
         if intent != 'in':
-            local_bis = local + self.system.safe_filesuffix()
+            local_bis = self.system.safe_fileaddsuffix(local)
             fmt = options_bis.get('fmt', None)
             self.system.cp(local, local_bis, intent='inout', fmt=fmt)
             try:
@@ -98,7 +98,7 @@ class _SetAsideStoreMixin:
         with self._do_set_aside_cocoon(local, options) as (local_bis, options_bis):
             rc = st_bis.put(local_bis, remote_bis, options=options_bis)
             if not rc:
-                logger.warning("An error occured because of the 'set_aside'")
+                logger.warning("An error occurred because of the 'set_aside'")
             return rc
 
 
@@ -1140,7 +1140,7 @@ class ConfigurableArchiveStore:
         2. Given ``self.storage``, the proper section of the global configuration
            file is read: it may contain localconf or remoteconfXXX options that
            describe additional configuration files
-        3. Fist, the local configuration file is read
+        3. First, the local configuration file is read
         4. Then, the remote configuration files are read
 
         The relevant content of the configuration file is stored in the ``conf``
@@ -1572,7 +1572,7 @@ class PromiseStore(footprints.FootprintBase):
             # If something goes wrong, assume that the promise file had been
             # deleted during the execution of self.promise.check (which can cause
             # IOError or OSError to be raised).
-            logger.info('An error occured while fetching the promise file: %s', str(e))
+            logger.info('An error occurred while fetching the promise file: %s', str(e))
             logger.info('Assuming this is a negative result...')
             rc = False
         if rc:

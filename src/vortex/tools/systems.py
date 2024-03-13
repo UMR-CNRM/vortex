@@ -50,6 +50,7 @@ import tarfile
 import tempfile
 import threading
 import time
+import uuid
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
@@ -321,7 +322,7 @@ class System(footprints.FootprintBase):
 
     def __init__(self, *args, **kw):
         """
-        In addition to footprint's attributes,  the following attribute may be added:
+        In addition to footprint's attributes, the following attributes may be added:
 
             * **prompt** - as a starting comment line in :meth:`title` like methods.
             * **trace** - if *True* or *"log"* mimic ``set -x`` behaviour (default: *False*).
@@ -340,7 +341,7 @@ class System(footprints.FootprintBase):
 
         The :class:`System` class acts as a proxy for the :mod:`os`, :mod:`resource`
         and :mod:`shutil` modules. *i.e.* if a method or attribute
-        is not defined in the :class:`System` class, the   :mod:`os`, :mod:`resource`
+        is not defined in the :class:`System` class, the :mod:`os`, :mod:`resource`
         and :mod:`shutil` modules are looked-up (in turn): if one of them has
         the desired attribute/method, it is returned.
 
@@ -351,7 +352,7 @@ class System(footprints.FootprintBase):
         In vortex, it is mandatory to use the :class:`System` class (and not the
         official Python modules) even for attributes/methods that are not
         redefined. This is not pointless since, in the future, we may decide to
-        to redefine a given attribute/method either globally or for a specific
+        redefine a given attribute/method either globally or for a specific
         architecture.
 
         **Addons:**
@@ -445,7 +446,7 @@ class System(footprints.FootprintBase):
 
     @secure_getattr
     def __getattr__(self, key):
-        """Gateway to undefined method or attributes.
+        """Gateway to undefined methods or attributes.
 
         This is the place where the ``self.search`` list is looked for...
         """
@@ -540,7 +541,7 @@ class System(footprints.FootprintBase):
         self.flush_stdall()
 
     def subtitle(self, text='', tchar='-', autolen=96):
-        """Formated subtitle output.
+        """Formatted subtitle output.
 
         :param str text: The subtitle's text
         :param str tchar: The character used to frame the title text
@@ -558,7 +559,7 @@ class System(footprints.FootprintBase):
         self.flush_stdall()
 
     def header(self, text='', tchar='-', autolen=False, xline=True, prompt=None):
-        """Formated header output.
+        """Formatted header output.
 
         :param str text: The subtitle's text
         :param str tchar: The character used to frame the title text
@@ -749,7 +750,7 @@ class OSExtended(System):
     def __init__(self, *args, **kw):
         """
         Before going through parent initialisation (see :class:`System`),
-        pickle this attributes:
+        pickle these attributes:
 
             * **rmtreemin** - as the minimal depth needed for a :meth:`rmsafe`.
             * **cmpaftercp** - as a boolean for activating full comparison after plain cp (default: *True*).
@@ -2099,10 +2100,18 @@ class OSExtended(System):
         """Normalises path name of ``destination`` and creates **destination**'s directory."""
         return self.mkdir(self.path.dirname(self.path.expanduser(destination)))
 
+    _SAFE_SUFFIX_RE = re.compile('_[a-f0-9]{32}$')
+
     def safe_filesuffix(self):
         """Returns a file suffix that should be unique across the system."""
-        return '.'.join((date.now().strftime('_%Y%m%d_%H%M%S_%f'),
-                         self.hostname, 'p{:06d}'.format(self._os.getpid()),))
+        return '_' + uuid.uuid1().hex
+
+    def safe_fileaddsuffix(self, name):
+        """Returns a file path that will look like name + a unique suffix."""
+        d_name = self.path.dirname(name)
+        b_name = self.path.basename(name)
+        b_name = self._SAFE_SUFFIX_RE.sub('', b_name)
+        return self.path.join(d_name, b_name + self.safe_filesuffix())
 
     def _validate_symlink_below(self, symlink, valid_below):
         """
@@ -2116,11 +2125,13 @@ class OSExtended(System):
         # Is it relative ?
         if re.match('^([^{0:s}]|..{0:s}|.{0:s})'.format(re.escape(os.path.sep)),
                     link_to):
-            symlink_dir = self.path.abspath(self.path.dirname(symlink))
-            abspath_to = self.path.realpath(
-                self.path.normpath(
-                    self.path.join(symlink_dir, link_to)
+            symlink_dir = self.path.realpath(
+                self.path.abspath(
+                    self.path.dirname(symlink)
                 )
+            )
+            abspath_to = self.path.normpath(
+                self.path.join(symlink_dir, link_to)
             )
             # Valid ?
             valid = self.path.commonprefix([valid_below, abspath_to]) == valid_below
@@ -2179,7 +2190,7 @@ class OSExtended(System):
         source = self.path.expanduser(source)
         destination = self.path.expanduser(destination)
         self.stderr('rawcp', source, destination)
-        tmp = destination + self.safe_filesuffix()
+        tmp = self.safe_fileaddsuffix(destination)
         if self.path.isdir(source):
             self._copydatatree(source, tmp)
             # Move fails if a directory already exists ; so be careful...
@@ -2223,7 +2234,7 @@ class OSExtended(System):
             if self.filecocoon(destination):
                 # Write to a temp file
                 original_dest = self.path.expanduser(destination)
-                tmp_dest = self.path.expanduser(destination) + self.safe_filesuffix()
+                tmp_dest = self.safe_fileaddsuffix(self.path.expanduser(destination))
                 destination = open(tmp_dest, 'wb')
                 xdestination = True
             else:
@@ -2417,7 +2428,7 @@ class OSExtended(System):
                 source = self.path.realpath(source)
             if (self.is_samefs(source, destination) and
                     (self.allow_cross_users_links or self.usr_file(source))):
-                tmp_destination = destination + self.safe_filesuffix()
+                tmp_destination = self.safe_fileaddsuffix(destination)
                 if self.path.isdir(source):
                     try:
                         rc = self.hardlink(source, tmp_destination,
@@ -2639,7 +2650,7 @@ class OSExtended(System):
                           self.path.exists(destination))
             if do_cleanup:
                 # Warning: Not an atomic portion of code (sorry)
-                tmp_destination = destination + '.olddir' + self.safe_filesuffix()
+                tmp_destination = self.safe_fileaddsuffix(destination)
                 self.move(destination, tmp_destination)
                 yield do_cleanup
                 # End of none atomic part

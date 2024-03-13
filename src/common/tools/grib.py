@@ -255,7 +255,7 @@ def grib_inplace_cat(t, rh):
             rh.reset_contents()
             rh.container.close()
             # Move the index file prior to the concatenation
-            tmpfile = rh.container.localpath() + '_concattmp' + t.sh.safe_filesuffix()
+            tmpfile = rh.container.localpath() + '_concat' + t.sh.safe_filesuffix()
             t.sh.move(rh.container.localpath(), tmpfile)
             # Concatenate
             t.sh.xgrib_pack(tmpfile, rh.container.localpath())

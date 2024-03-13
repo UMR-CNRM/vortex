@@ -255,6 +255,40 @@ class SurfexInitialContionsName(IFSNamingConvention):
         return 'ICMSH{xpname:s}INIT.sfx'
 
 
+class IauAnalysisName(IFSNamingConvention):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['iau_analysis', ],
+            ),
+            model = dict(
+                outcast = ['surfex', ]
+            )
+        )
+    )
+
+    def _naming_format_string(self, **kwargs):
+        return 'ICIAU{xpname:s}IN{number:02d}'
+
+
+class IauBackgroundName(IFSNamingConvention):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['iau_background', ],
+            ),
+            model = dict(
+                outcast = ['surfex', ]
+            )
+        )
+    )
+
+    def _naming_format_string(self, **kwargs):
+        return 'ICIAU{xpname:s}BK{number:02d}'
+
+
 # Lateral Boundary Conditions Files
 # ##############################################################################
 

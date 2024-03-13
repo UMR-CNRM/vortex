@@ -244,7 +244,7 @@ def parallel_grib_filter(context, inputs, outputs, intents=(),
     prp = ParallelResultParser(context)
     for r in report['workers_report']:
         if isinstance(prp(r), Exception):
-            raise AlgoComponentError("An error occured in GRIBfilter.")
+            raise AlgoComponentError("An error occurred in GRIBfilter.")
 
 
 class Fa2Grib(ParaBlindRun):

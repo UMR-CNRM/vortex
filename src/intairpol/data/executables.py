@@ -32,6 +32,63 @@ class Mocage(ChemistryModel):
     ]
 
 
+class WrapperMocageFcst(BlackBox):
+    """MOCAGE Fcst wrapper"""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Executable used in macc/mocage for forecast',
+            attr = dict(
+                kind = dict(
+                    values = ['wrapper_fcst'],
+                ),
+                gvar = dict(
+                    default = 'wrapper_fcst',
+                )
+            )
+        )
+    ]
+
+
+class WrapperMocageAssim(BlackBox):
+    """MOCAGE assim wrapper"""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Executable used in macc/mocage for forecast',
+            attr = dict(
+                kind = dict(
+                    values = ['wrapper_assim'],
+                ),
+                gvar = dict(
+                    default = 'wrapper_assim',
+                )
+            )
+        )
+    ]
+
+
+class ConfigMpiMocageAssim(BlackBox):
+    """MOCAGE assim mpi enveloppe"""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Executable used in macc/mocage for forecast',
+            attr = dict(
+                kind = dict(
+                    values = ['config_mpi'],
+                ),
+                gvar = dict(
+                    default = 'config_mpi',
+                )
+            )
+        )
+    ]
+
+
 @namebuilding_append('src', lambda s: s.subkind)
 class MocageAssim(ChemistryModel):
     """Mocage Palm Component (assim version)."""

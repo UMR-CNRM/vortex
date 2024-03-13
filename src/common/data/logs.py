@@ -59,7 +59,7 @@ def use_flow_logs_stack(cls):
 
 
 @use_flow_logs_stack
-@namebuilding_insert('src', lambda s: [s.binary, s.task.split('/').pop()])
+@namebuilding_insert('src', lambda s: [s.binary, '-'.join(s.task.split('/')[s.task_start:s.task_stop])])
 @namebuilding_insert('compute', lambda s: s.part)
 @namebuilding_delete('fmt')
 class Listing(FlowResource):
@@ -71,6 +71,16 @@ class Listing(FlowResource):
                 task = dict(
                     optional = True,
                     default  = 'anonymous'
+                ),
+                task_start = dict(
+                    optional = True,
+                    type     = int,
+                    default  = -1,
+                ),
+                task_stop = dict(
+                    optional = True,
+                    type     = int,
+                    default  = None,
                 ),
                 kind = dict(
                     values   = ['listing']

@@ -102,9 +102,8 @@ class FolderShell(addons.FtrawEnableAddon):
         """Returned a path to a packed data."""
         if not self.sh.is_tarname(source):
             destination = (destination if destination else
-                           '{:s}{:s}.{:s}'.format(source,
-                                                  self.sh.safe_filesuffix(),
-                                                  self._folder_tarfix_extension))
+                           "{:s}.{:s}".format(self.sh.safe_fileaddsuffix(source),
+                                              self._folder_tarfix_extension))
             if not self.sh.path.exists(destination):
                 absdestination = self.sh.path.abspath(destination)
                 with self.sh.cdcontext(self.sh.path.dirname(source)):
@@ -115,9 +114,8 @@ class FolderShell(addons.FtrawEnableAddon):
 
     def _folder_forceunpack(self, source):
         """Unpack the data "inplace"."""
-        fakesource = '{:s}{:s}.{:s}'.format(source,
-                                            self.sh.safe_filesuffix(),
-                                            self._folder_tarfix_extension)
+        fakesource = '{:s}.{:s}'.format(self.sh.safe_fileaddsuffix(source),
+                                        self._folder_tarfix_extension)
         rc, _, _ = self._folder_tarfix_in(fakesource, source)
         return rc
 
@@ -211,7 +209,7 @@ class FolderShell(addons.FtrawEnableAddon):
 
     @contextlib.contextmanager
     def _folder_ftput_file_compress(self, source):
-        c_source = (source + self.sh.safe_filesuffix() +
+        c_source = (self.sh.safe_fileaddsuffix(source) +
                     '.' + self._folder_tarfix_extension)
         try:
             self.sh.tar(c_source, source)
@@ -250,7 +248,7 @@ class FolderShell(addons.FtrawEnableAddon):
                             with self._folder_ftget_file_extract(source) as tmp_target:
                                 rc = ftp.get(source, tmp_target)
                     except ftplib.all_errors as e:
-                        logger.warning('An FTP error occured: %s', str(e))
+                        logger.warning('An FTP error occurred: %s', str(e))
                         rc = False
                 return rc
             else:
@@ -276,7 +274,7 @@ class FolderShell(addons.FtrawEnableAddon):
 
     def _folder_batchrawftget(self, source, destination, hostname=None, logname=None,
                               port=None, cpipeline=None):
-        """Use ftserv to fetch several folder-like resources"""
+        """Use ftserv to fetch several folder-like resources."""
         if cpipeline is not None:
             raise OSError("It's not allowed to compress folder like data.")
         if self.sh.ftraw:
@@ -330,7 +328,7 @@ class FolderShell(addons.FtrawEnableAddon):
                     try:
                         rc = ftp.put(sponge, destination, size=sponge.size, exact=False)
                     except ftplib.all_errors as e:
-                        logger.warning('An FTP error occured: %s', str(e))
+                        logger.warning('An FTP error occurred: %s', str(e))
                         rc = False
                 return rc
             else:

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Algo Components for S2M post processing.
 """

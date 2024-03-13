@@ -277,38 +277,38 @@ class TestParallel(unittest.TestCase):
         # SRUN
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --cpu-bind none ' +
-                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --cpu-bind none ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiname='srun-ddt',
                                                      mpiopts=dict(nn=2, nnp=4, openmp=10)))
         self.assertCmdl('/opt/softs/arm/20.0.2/forge/bin/ddt --connect ' +
-                        'srun --export=ALL --kill-on-bad-exit=1 --cpu-bind none ' +
-                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+                        'srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --cpu-bind none ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10),
                                                      srun_opt_bindingmethod='native',))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t ' +
                         '--cpu-bind mask_cpu:0x3ff,0xffc00,0x3ff00000,0xffc0000000 ' +
-                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10),
                                                      srun_opt_bindingmethod='native',))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t ' +
                         '--cpu-bind mask_cpu:0x3ff,0xffc00,0x3ff00000,0xffc0000000 ' +
-                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10, allowbind=False),
                                                      srun_opt_bindingmethod='native',))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t ' +
                         '--cpu-bind none ' +
-                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10),
                                                      srun_opt_bindingmethod='vortex',))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --cpu-bind none ' +
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --cpu-bind none ' +
                         '--nodes 2 --ntasks-per-node 4 --ntasks 8 ' +
                         './global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
         binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 8
@@ -318,7 +318,7 @@ class TestParallel(unittest.TestCase):
         # Surbooking: 3 tasks per physical core
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=12, openmp=10),
                                                      srun_opt_bindingmethod='vortex', ))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --cpu-bind none ' +
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --cpu-bind none ' +
                         '--nodes 2 --ntasks-per-node 12 --ntasks 24 ' +
                         './global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
         binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 24
@@ -327,7 +327,7 @@ class TestParallel(unittest.TestCase):
         self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10,
                                                                   distribution='roundrobin')))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t ' +
                         '--nodelist ./global_envelope_nodelist --ntasks 8 ' +
                         '--distribution arbitrary --cpu-bind none ' +
                         './global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
@@ -340,7 +340,7 @@ class TestParallel(unittest.TestCase):
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10,
                                                                   distribution='roundrobin'),
                                                      srun_opt_bindingmethod='vortex',))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t ' +
                         '--nodelist ./global_envelope_nodelist --ntasks 8 ' +
                         '--distribution arbitrary --cpu-bind none ' +
                         './global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
@@ -510,8 +510,8 @@ class TestParallel(unittest.TestCase):
         self.assertCmdl('mpirun -npernode 4 -np 8 {pwd:s}/fake -joke yes', args)
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
         _, args = algo._bootstrap_mpitool(bin0, dict())
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --cpu-bind none ' +
-                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --cpu-bind none ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
         _, args = algo._bootstrap_mpitool(bin0, dict())
@@ -569,7 +569,7 @@ class TestParallel(unittest.TestCase):
         self.locenv.VORTEX_IOSERVER_COMPANION_TASKS = 1
         algo = self._fix_algo(fp.proxy.component(engine='test_parallel_ioengine', mpiname='srun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(srun_opt_bindingmethod='vortex'))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist ' +
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --nodelist ./global_envelope_nodelist ' +
                         '--ntasks 10 --distribution arbitrary --cpu-bind none ' +
                         './global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
         binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 10
@@ -744,7 +744,7 @@ class TestParallel(unittest.TestCase):
                                           dict(mpiopts=dict(nn=[2, 2, 1],
                                                             openmp=[10, 5, 5],
                                                             nnp=[4, 8, 8])))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist ' +
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --nodelist ./global_envelope_nodelist ' +
                         '--ntasks 32 --distribution arbitrary --cpu-bind none ' +
                         './global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
         binpaths = ['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 8
@@ -759,7 +759,7 @@ class TestParallel(unittest.TestCase):
                                                                 nn=[2, 2, 1],
                                                                 openmp=[10, 5, 5],
                                                                 nnp=[4, 8, 8])))
-            self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
+            self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t ' +
                             '--nodelist ./global_envelope_nodelist --ntasks 32 ' +
                             '--distribution arbitrary --cpu-bind none ' +
                             './global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
@@ -776,7 +776,7 @@ class TestParallel(unittest.TestCase):
                                                             nn=[4, 3, 1],
                                                             openmp=[10, 5, 5],
                                                             nnp=[2, 4, 8])))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t ' +
                         '--nodelist ./global_envelope_nodelist --ntasks 28 ' +
                         '--distribution arbitrary --cpu-bind none ' +
                         './global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
@@ -864,7 +864,7 @@ class TestParallel(unittest.TestCase):
         algo = self._fix_algo(fp.proxy.component(engine='test_parallel_palmed_engine', mpiname='srun',))
         _, args = algo._bootstrap_mpitool([bin0, bin1],
                                           dict(mpiopts=dict(np=[8, 4], envelope='auto')))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 13 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --nodelist ./global_envelope_nodelist --ntasks 13 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
         with open('./global_envelope_nodelist') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 4 + ['fake2'] * 4)
@@ -876,7 +876,7 @@ class TestParallel(unittest.TestCase):
         _, args = algo._bootstrap_mpitool([bin0, ],
                                           dict(mpiopts=dict(envelope=[dict(nn=2, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 25 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --nodelist ./global_envelope_nodelist --ntasks 25 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
         with open('./global_envelope_nodelist') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 4 + ['fake2'] * 8 + ['fake3'] * 8)
@@ -888,7 +888,7 @@ class TestParallel(unittest.TestCase):
         _, args = algo._bootstrap_mpitool([bin0, ],
                                           dict(mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
         with open('./global_envelope_nodelist') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 8 + ['fake2'] * 8)
@@ -903,7 +903,7 @@ class TestParallel(unittest.TestCase):
                                                palmdrv_bind=True,
                                                mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
         with open('./global_envelope_nodelist') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 8 + ['fake2'] * 8)
@@ -919,7 +919,7 @@ class TestParallel(unittest.TestCase):
                                           dict(srun_opt_bindingmethod='vortex',
                                                mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
-        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
         with open('./global_envelope_nodelist') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 8 + ['fake2'] * 8)
@@ -937,7 +937,7 @@ class TestParallel(unittest.TestCase):
             _, args = algo._bootstrap_mpitool([bin0, ],
                                               dict(mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                           dict(nn=2, nnp=8)])))
-            self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+            self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
             with open('./global_envelope_nodelist') as fhnl:
                 hosts = [l.strip('\n') for l in fhnl.readlines()]
             self.assertListEqual(hosts, ['fake0'] + ['fake0', 'fake1', 'fake2'] * 4 + ['fake1', 'fake2'] * 4)

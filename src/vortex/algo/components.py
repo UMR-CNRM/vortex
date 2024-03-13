@@ -33,6 +33,7 @@ Mixins are a powerful tool to mutualise some pieces of code. See the
 import collections.abc
 import contextlib
 import copy
+import importlib
 import locale
 import logging
 import multiprocessing
@@ -69,17 +70,17 @@ class AlgoComponentAssertionError(AlgoComponentError):
 
 
 class DelayedAlgoComponentError(AlgoComponentError):
-    """Triggered when exceptions occured during the execution but were delayed."""
+    """Triggered when exceptions occurred during the execution but were delayed."""
 
     def __init__(self, excs):
-        super().__init__("One or several errors occurs during the run.")
+        super().__init__("One or several errors occurred during the run.")
         self._excs = excs
 
     def __iter__(self):
         yield from self._excs
 
     def __str__(self):
-        outstr = "One or several errors occur during the run. In order of appearance:\n"
+        outstr = "One or several errors occurred during the run. In order of appearance:\n"
         outstr += "\n".join(['{:3d}. {!s} (type: {!s})'.format(i + 1, exc, type(exc))
                              for i, exc in enumerate(self)])
         return outstr
@@ -96,7 +97,7 @@ class ParallelInconsistencyAlgoComponentError(Exception):
 @nicedeco
 def _clsmtd_mixin_locked(f):
     """
-    This is a utility decorator (for class methods) : it ensure that the method can only
+    This is a utility decorator (for class methods) : it ensures that the method can only
     be called on a bare :class:`AlgoComponentDecoMixin` class.
     """
     def wrapped_clsmethod(cls, *kargs, **kwargs):
@@ -164,9 +165,9 @@ class AlgoComponentDecoMixin:
     Like any Mixin class, this Mixin class primary use is to define methods that
     will be available to the child class.
 
-    However, this classes will also interact with the :class:`AlgoComponentMeta`
+    However, this class will also interact with the :class:`AlgoComponentMeta`
     metaclass to alter the behaviour of the :class:`AlgoComponent` class it is
-    used with. Several "alteration" will be made to the resulting
+    used with. Several "alterations" will be made to the resulting
     :class:`AlgoComponent` class.
 
         * A bunch of footprints' attribute can be added to the resulting class.
@@ -526,6 +527,12 @@ class AlgoComponent(footprints.FootprintBase, metaclass=AlgoComponentMeta):
                 info            = 'The medium that is used to synchronise with the server.',
                 optional        = True,
                 doc_visibility  = footprints.doc.visibility.GURU,
+            ),
+            extendpypath = dict(
+                info     = "The list of things to be prepended in the python's path.",
+                type     = footprints.FPList,
+                default  = footprints.FPList([]),
+                optional = True
             ),
         )
     )
@@ -1054,7 +1061,7 @@ class AlgoComponent(footprints.FootprintBase, metaclass=AlgoComponentMeta):
         """A shortcut to avoid next steps of the run."""
 
         def fastexit(self, *args, **kw):
-            logger.warning('Run <%s> skipped because abort occured [%s]', step, msg)
+            logger.warning('Run <%s> skipped because abort occurred [%s]', step, msg)
 
         return fastexit
 
@@ -1139,6 +1146,85 @@ class AlgoComponent(footprints.FootprintBase, metaclass=AlgoComponentMeta):
                     break
 
         return initsec
+
+
+class PythonFunction(AlgoComponent):
+    """Execute a function defined in Python module.  The function is passed the
+    current :class:`sequence <vortex.layout.dataflow.Sequence>`, as well as a
+    keyword arguments described by attribute ``func_kwargs``.  Example:
+
+    .. code-block:: python
+
+        >>> exe = toolbox.executable(
+        ...     role           = 'Script',
+        ...     format         = 'ascii',
+        ...     hostname       = 'localhost',
+        ...     kind           = 'script',
+        ...     language       = 'python',
+        ...     local          = 'module.py',
+        ...     remote         = '/path/to/module.py',
+        ...     tube           = 'file',
+        ... )
+        >>> tbalgo = toolbox.algo(
+        ...     engine="function",
+        ...     func_name="my_plugin_entry_point_function",
+        ...     func_kwargs={ntasks: 35, subnproc: 4},
+        ... )
+        >>> tbalgo.run(exe[0])
+
+    .. code-block:: python
+
+        # /path/to/module.py
+        # ...
+        def my_plugin_entry_point_function(
+            sequence, ntasks, subnproc,
+        ):
+            for input in sequence.effective_inputs(role=gridpoint):
+                # ...
+    """
+
+    _footprint = dict(
+        info = "Execute a Python function in a given module",
+
+        attr = dict(
+            engine = dict(
+                values = ["function"]
+            ),
+            func_name = dict(
+                info="The function's name"
+            ),
+            func_kwargs = dict(
+                info=(
+                    "A dictionary containing the function's "
+                    "keyword arguments"
+                ),
+                type=footprints.FPDict,
+                default=footprints.FPDict({}),
+                optional=True,
+            ),
+        )
+    )
+
+    def prepare(self, rh, opts):
+        spec = importlib.util.spec_from_file_location(
+            name="module", location=rh.container.localpath()
+        )
+        mod = importlib.util.module_from_spec(spec)
+        sys.path.extend(self.extendpypath)
+        try:
+            spec.loader.exec_module(mod)
+        except AttributeError:
+            raise AttributeError
+        self.func = getattr(mod, self.func_name)
+
+    def execute(self, rh, opts):
+        self.func(
+            self.context.sequence, **self.func_kwargs,
+        )
+
+    def execute_finalise(self, opts):
+        for p in self.extendpypath:
+            sys.path.remove(p)
 
 
 class ExecutableAlgoComponent(AlgoComponent):
@@ -1283,12 +1369,6 @@ class Expresso(ExecutableAlgoComponent):
             ),
             engine = dict(
                 values = ['exec', 'launch']
-            ),
-            extendpypath = dict(
-                info     = "The list of things to be prepended in the python's path.",
-                type     = footprints.FPList,
-                default  = footprints.FPList([]),
-                optional = True
             ),
         )
     )
@@ -1830,7 +1910,7 @@ class Parallel(xExecutableAlgoComponent):
         """Run the specified resource handler through the `mpitool` launcher
 
         An argument named `mpiopts` could be provided as a dictionary: it may
-        contains indications on the number of nodes, tasks, ...
+        contain indications on the number of nodes, tasks, ...
         """
 
         self.system.subtitle('{:s} : parallel engine'.format(self.realkind))
@@ -1945,7 +2025,7 @@ class ParallelIoServerMixin(AlgoComponentMpiDecoMixin):
 class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
     """Class mixin to be used with OpenPALM programs.
 
-    It will automatically adds the OpenPALM driver binary to the list of
+    It will automatically add the OpenPALM driver binary to the list of
     binaries. The location of the OpenPALM driver should be automatically
     detected provided that a section with ``role=OpenPALM Driver`` lies in the
     input's sequence. Alternatively, the path to the OpenPALM driver can be

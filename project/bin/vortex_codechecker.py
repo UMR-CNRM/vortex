@@ -223,9 +223,9 @@ class PycodestyleChecker:
             if (message[2] in ['E221', 'E251'] and
                     message[0] in vpycode.expanded_fplines):
                 continue
-            # PyCodeStyle detects false positive in slices.
+            # PyCodeStyle detects false positives in slices.
             # See: https://github.com/psf/black/blob/master/README.md#line-breaks--binary-operators
-            # This is anoying... try to prevent this issue
+            # This is annoying... try to prevent this issue
             if (message[2] in ['E203'] and
                     (any([message[0] in set(range(lines[0], lines[1] + 1))
                           for lines in vpycode.slices_locations])) and
@@ -600,7 +600,7 @@ class CheckerConfig:
             try:
                 self._confdata = yaml.load(fhconf, yaml.SafeLoader)
             except yaml.YAMLError:
-                logger.info('An error occured while parsing: %s', self._file)
+                logger.info('An error occurred while parsing: %s', self._file)
                 raise
         # Basic checks
         if not isinstance(self._confdata, dict):

@@ -73,7 +73,7 @@ def more_debug(names=None, level=logging.DEBUG):
 
 def check_address(address, smtpuser, smtppass):
     """
-    Most of his is not needed, it only simplifies this script maintenance.
+    Most of this is not needed, it only simplifies this script maintenance.
     """
 
     me = None

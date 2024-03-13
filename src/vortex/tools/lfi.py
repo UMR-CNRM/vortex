@@ -110,6 +110,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
     LFI_HNDL_SPEC = ':1'
     DR_HOOK_SILENT = 1
     DR_HOOK_NOT_MPI = 1
+    DR_HOOK_ASSERT_MPI_INITIALIZED = 0
     OMP_STACKSIZE = '32M'
     KMP_STACKSIZE = '32M'
     KMP_MONITOR_STACKSIZE = '32M'
@@ -273,7 +274,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         """Returned a path to a packed data."""
         if self.is_xlfi(source):
             destination = (destination if destination else
-                           '{:s}{:s}'.format(source, self.sh.safe_filesuffix()))
+                           self.sh.safe_fileaddsuffix(source))
             if not self.sh.path.exists(destination):
                 st = self._std_copy(source=source, destination=destination, pack=True)
                 if st:
@@ -455,7 +456,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         if self.is_xlfi(source):
             if cpipeline is not None:
                 raise OSError("It's not allowed to compress xlfi files.")
-            psource = source + self.sh.safe_filesuffix()
+            psource = self.sh.safe_fileaddsuffix(source)
             rc = LFI_Status()
             try:
                 st = self._std_copy(source=source,
@@ -493,7 +494,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         if self.is_xlfi(source):
             if cpipeline is not None:
                 raise OSError("It's not allowed to compress xlfi files.")
-            psource = source + self.sh.safe_filesuffix()
+            psource = self.sh.safe_fileaddsuffix(source)
             rc = LFI_Status()
             try:
                 st = self._std_copy(source=source,
@@ -664,6 +665,7 @@ class IO_Poll(addons.Addon):
     LFI_HNDL_SPEC = ':1'
     DR_HOOK_SILENT = 1
     DR_HOOK_NOT_MPI = 1
+    DR_HOOK_ASSERT_MPI_INITIALIZED = 0
     OMP_STACKSIZE = '32M'
     KMP_STACKSIZE = '32M'
     KMP_MONITOR_STACKSIZE = '32M'

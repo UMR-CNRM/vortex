@@ -20,8 +20,8 @@ with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
     from snowtools.tools.update_namelist import update_surfex_namelist_object
-    from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask, forcinput_extract,\
-        forcinput_changedates
+    from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask, \
+        forcinput_extract, forcinput_changedates
     from snowtools.utils.infomassifs import infomassifs
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles

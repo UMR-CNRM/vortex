@@ -7,7 +7,7 @@ import re
 from bronx.fancies import loggers
 
 from vortex.data.flow import GeoFlowResource
-from vortex.syntax.stdattrs import term_deco
+from vortex.syntax.stdattrs import term_deco, term
 from vortex.syntax.stddeco import namebuilding_insert
 from bronx.stdtypes.date import Time
 
@@ -67,10 +67,18 @@ class Analysis3D(AbstractAnalysis):
     The data is assumed to be valid for **date** (i.e. term = 0).
     """
 
-    @property
-    def term(self):
-        """Fake term for duck typing."""
-        return Time(0)
+    _footprint = [
+        term,
+        dict(
+            attr = dict(
+                term = dict(
+                    values = [Time(0), ],
+                    optional = True,
+                    default = Time(0)
+                )
+            )
+        )
+    ]
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
@@ -149,7 +157,7 @@ class Analysis4D(AbstractAnalysis):
     ]
 
 
-class InitialCondition(Analysis3D):
+class InitialCondition(AbstractAnalysis):
     """
     Class for initial condition resources : anything from which a model run can be performed.
     """
@@ -162,6 +170,11 @@ class InitialCondition(Analysis3D):
             ),
         )
     )
+
+    @property
+    def term(self):
+        """Fake term for duck typing."""
+        return Time(0)
 
     @property
     def realkind(self):

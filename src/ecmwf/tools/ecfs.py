@@ -143,7 +143,7 @@ class ECfsTools(addons.Addon):
                 if intent == 'in':
                     logger.debug("Temporary remapping of %s to %s (because of ECFS filename restrictions)",
                                  path, target)
-                    self.sh.softlink(path, target)
+                    self.sh.softlink(self.sh.path.abspath(path), target)
                 else:
                     logger.debug("Temporary file cocooned: %s (because of ECFS filename restrictions)",
                                  target)
@@ -217,7 +217,7 @@ class ECfsTools(addons.Addon):
                                target=target,
                                options=options)
         else:
-            ctarget = target + self.sh.safe_filesuffix()
+            ctarget = self.sh.safe_fileaddsuffix(target)
             try:
                 rc, dict_args = self.ecfscp(source=source,
                                             target=ctarget,
@@ -243,7 +243,7 @@ class ECfsTools(addons.Addon):
                                target=target,
                                options=options)
         else:
-            csource = source + self.sh.safe_filesuffix()
+            csource = self.sh.safe_fileaddsuffix(source)
             try:
                 rc1 = cpipeline.compress2file(source=source,
                                               target=csource)

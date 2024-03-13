@@ -191,7 +191,7 @@ class ECtransTools(addons.Addon):
                                          remote=remote,
                                          sync=sync)
             else:
-                csource = source + self.sh.safe_filesuffix()
+                csource = self.sh.safe_fileaddsuffix(source)
                 try:
                     cpipeline.compress2file(source=source,
                                             destination=csource)
@@ -250,7 +250,7 @@ class ECtransTools(addons.Addon):
                                      gateway=gateway,
                                      remote=remote)
         else:
-            ctarget = target + self.sh.safe_filesuffix()
+            ctarget = self.sh.safe_fileaddsuffix(target)
             try:
                 rc = self.raw_ectransget(source=source,
                                          target=ctarget,

@@ -4,7 +4,7 @@ Various Resources for constant files used in NWP.
 
 import footprints
 from gco.syntax.stdattrs import gvar
-from vortex.data.contents import JsonDictContent, TextContent, DataRaw
+from vortex.data.contents import DataRaw, JsonDictContent, TextContent
 from vortex.data.geometries import GaussGeometry, LonlatGeometry
 from vortex.data.outflow import ModelGeoResource, ModelResource, StaticResource
 from vortex.syntax.stdattrs import month_deco
@@ -51,6 +51,31 @@ class GPSList(GenvModelResource):
     @property
     def realkind(self):
         return 'gpslist'
+
+
+class MODESList(GenvModelResource):
+    """
+    Class of a MODE-S satellite white list for Bator.
+    """
+    _footprint = dict(
+        info = 'Set of MODE-S coefficients',
+        attr = dict(
+            kind = dict(
+                values  = ['modeslist', 'listmodes'],
+                remap   = dict(listmodes = 'modeslist'),
+            ),
+            clscontents = dict(
+                default = TextContent,
+            ),
+            gvar = dict(
+                default = 'list_modes',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'modeslist'
 
 
 class BatodbConf(GenvModelResource):

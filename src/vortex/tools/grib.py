@@ -56,7 +56,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     def _std_grib_index_write(self, destination, gribpaths):
         gribparts = [str(urlparse.urlunparse(('file', '', path, '', '', '')))
                      for path in gribpaths]
-        tmpfile = destination + self.sh.safe_filesuffix()
+        tmpfile = self.sh.safe_fileaddsuffix(destination)
         with open(tmpfile, 'w') as fd:
             fd.write('\n'.join(gribparts))
         return self.sh.move(tmpfile, destination)
@@ -161,7 +161,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     def xgrib_pack(self, source, destination, intent='in'):
         """Manually pack a multi GRIB."""
         if isinstance(destination, str):
-            tmpfile = destination + self.sh.safe_filesuffix()
+            tmpfile = self.sh.safe_fileaddsuffix(destination)
             with open(tmpfile, 'wb') as fd:
                 p = self._pack_stream(source, stdout=fd)
             self.sh.pclose(p)
@@ -177,7 +177,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         """Returned a path to a packed data."""
         if self.is_xgrib(source):
             destination = (destination if destination else
-                           '{:s}{:s}'.format(source, self.sh.safe_filesuffix()))
+                           self.sh.safe_fileaddsuffix(source))
             if not self.sh.path.exists(destination):
                 if self.xgrib_pack(source, destination):
                     return destination
@@ -279,7 +279,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         if self.is_xgrib(source):
             if cpipeline is not None:
                 raise OSError("It's not allowed to compress xgrib files.")
-            psource = source + self.sh.safe_filesuffix()
+            psource = self.sh.safe_fileaddsuffix(source)
             try:
                 rc = self.xgrib_pack(source=source,
                                      destination=psource)
@@ -313,7 +313,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         if self.is_xgrib(source):
             if cpipeline is not None:
                 raise OSError("It's not allowed to compress xgrib files.")
-            psource = source + self.sh.safe_filesuffix()
+            psource = self.sh.safe_fileaddsuffix(source)
             try:
                 rc = self.xgrib_pack(source=source,
                                      destination=psource)
@@ -539,10 +539,10 @@ class GRIBAPI_Tool(addons.Addon):
         grib2_ori = grib2
         if xgrib_support:
             if self.sh.is_xgrib(grib1):
-                grib1 = grib1_ori + '_diffcat' + self.sh.safe_filesuffix()
+                grib1 = self.sh.safe_fileaddsuffix(grib1_ori) + '_diffcat'
                 self.sh.xgrib_pack(grib1_ori, grib1)
             if self.sh.is_xgrib(grib2):
-                grib2 = grib2_ori + '_diffcat' + self.sh.safe_filesuffix()
+                grib2 = self.sh.safe_fileaddsuffix(grib2_ori) + '_diffcat'
                 self.sh.xgrib_pack(grib2_ori, grib2)
 
         rc = self._actual_diff(grib1, grib2, skipkeys, **kw)

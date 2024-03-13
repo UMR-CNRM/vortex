@@ -262,7 +262,7 @@ def load_template(t, tplfile, encoding=None, version=None, default_templating='l
         with open(tplfile, errors='replace') as tpfld_tmp:
             if encoding is None:
                 actual_encoding = tpfld_tmp.encoding
-            # Only inspect the fist 10 lines
+            # Only inspect the first 10 lines
             for iline, line in enumerate(itertools.islice(tpfld_tmp, 10)):
                 # Encoding
                 if encoding == 'script':

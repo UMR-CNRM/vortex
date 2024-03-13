@@ -55,7 +55,7 @@ NODE_ON_ERROR = _NodeOnErrorTuple(FAIL='fail',
 
 
 class PreviousFailureError(RuntimeError):
-    """This exception is raised in multistep jobs (when a failure already occured)."""
+    """This exception is raised in multistep jobs (when a failure already occurred)."""
     pass
 
 
@@ -481,7 +481,7 @@ class Node(getbytag.GetByTag, NiceLayout):
             self.status = NODE_STATUS.FAILED
             if extra_verbose or self.on_error != NODE_ON_ERROR.FAIL:
                 # Mask the exception
-                self.subtitle('An exception occured (on_error={:s})'.format(self.on_error))
+                self.subtitle('An exception occurred (on_error={:s})'.format(self.on_error))
                 self._print_traceback()
             if self.on_error == NODE_ON_ERROR.FAIL:
                 raise
@@ -584,7 +584,7 @@ class Node(getbytag.GetByTag, NiceLayout):
         if thisgeo in self.conf:
             self.conf.geometry = self.conf.get(thisgeo)
         if 'geometry' not in self.conf:
-            logger.error('No default geometry defined -- Probably a big mistake !')
+            logger.warning('No default geometry defined !')
 
     def defaults(self, extras):
         """Set toolbox defaults, extended with actual arguments ``extras``."""
@@ -654,7 +654,7 @@ class Node(getbytag.GetByTag, NiceLayout):
             else:
                 if self.fail_at_the_end:
                     raise RequestedFailureError(
-                        'An error occured in {:s}. '.format(self.tag) +
+                        'An error occurred in {:s}. '.format(self.tag) +
                         'Please dive into the present log to understand why.'
                     )
 
@@ -775,7 +775,9 @@ class Node(getbytag.GetByTag, NiceLayout):
                             logger.error("Un-filtered execution error:\n%s", str(f_infos))
                             self.report_execution_error(e, **f_infos)
                             if isinstance(e, Exception) and self.delay_execution_error(e, **f_infos):
-                                self.subtitle('An exception occured but the crash is delayed until the end of the Node')
+                                self.subtitle(
+                                    'An exception occurred but the crash is delayed until the end of the Node'
+                                )
                                 self._print_traceback()
                                 # Actually delay the crash
                                 self.fail_at_the_end = True
@@ -1413,10 +1415,10 @@ class Driver(getbytag.GetByTag, NiceLayout):
         else:
             if self.delayed_error_flag and self._subjob_tag is None and self._mstep_job_last:
                 # Test on _subjob_tag because we do not want to crash in subjobs
-                raise RuntimeError("One or several error occured during the Driver execution. " +
+                raise RuntimeError("One or several error occurred during the Driver execution. " +
                                    "The exceptions were delayed but now that the Driver ended let's crash !")
         finally:
             if self.any_failure:
-                self.sh.title('An error occured during job...')
+                self.sh.title('An error occurred during job...')
                 print('Here is the tree-view of the present Driver:')
                 print(self)

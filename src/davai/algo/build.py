@@ -46,11 +46,15 @@ class GmkpackDecoMixin(AlgoComponentDecoMixin):
     ),)
 
     def _set_gmkpack(self, rh, opts):  # @UnusedVariable
-        gmk_installdir = self.target.config.get('gmkpack', 'gmkpack_installdir')
+        # util
+        gmk_installdir = self.env.get('GMKROOT', self.target.config.get('gmkpack', 'gmkpack_installdir'))
         self.env.setbinpath(self.system.path.join(gmk_installdir, 'util'), 0)
         self.env['GMKROOT'] = gmk_installdir
-        prefix = self.system.glove.user + '.gmktmp.'
-        self.env['GMKTMP'] = tempfile.mkdtemp(prefix=prefix, dir='/tmp')  # would be much slower on Lustre
+        # tmpdir
+        tmpdir = self.target.config.get('gmkpack', 'tmpdir')
+        prefix = '.'.join([self.system.glove.user, 'gmktmp', ''])
+        self.env['GMKTMP'] = tempfile.mkdtemp(prefix=prefix, dir=tmpdir)
+        # homebin
         if not self.system.path.exists(self.env.get('HOMEBIN', '')):
             del self.env['HOMEBIN']  # may cause broken links
 
@@ -375,8 +379,8 @@ class Bundle2Pack(AlgoComponent, GmkpackDecoMixin,
                     optional = True,
                     default = None,
                 ),
-                bundle_cache_dir = dict(
-                    info = ("Cache directory in which to download/update repositories. " +
+                bundle_src_dir = dict(
+                    info = ("Directory in which to download/update repositories. " +
                             "Defaults to the temporary directory of execution, which may not be optimal."),
                     optional = True,
                     default = None,
@@ -402,7 +406,7 @@ class Bundle2Pack(AlgoComponent, GmkpackDecoMixin,
     ]
 
     def execute(self, rh, kw):  # @UnusedVariable
-        from ial_build.algos import bundle2pack  # @UnresolvedImport
+        from ial_build.algos import bundle_file2pack  # @UnresolvedImport
         if self.bundle_file is None:
             bundle_r = [s for s in self.context.sequence.effective_inputs(role=('Bundle',))]
             if len(bundle_r) > 1:
@@ -412,16 +416,16 @@ class Bundle2Pack(AlgoComponent, GmkpackDecoMixin,
             bundle_file = bundle_r[0].rh.container.localpath()
         else:
             bundle_file = self.bundle_file
-        bundle2pack(bundle_file,
-                    pack_type=self.pack_type,
-                    update=self.update_git_repositories,
-                    preexisting_pack=self.preexisting_pack,
-                    clean_if_preexisting=self.cleanpack,
-                    cache_dir=self.bundle_cache_dir,
-                    compiler_label=self.compiler_label,
-                    compiler_flag=self.compiler_flag,
-                    homepack=self.homepack,
-                    rootpack=self.rootpack)
+        bundle_file2pack(bundle_file,
+                         pack_type=self.pack_type,
+                         update=self.update_git_repositories,
+                         preexisting_pack=self.preexisting_pack,
+                         clean_if_preexisting=self.cleanpack,
+                         src_dir=self.bundle_src_dir,
+                         compiler_label=self.compiler_label,
+                         compiler_flag=self.compiler_flag,
+                         homepack=self.homepack,
+                         rootpack=self.rootpack)
 
 
 class PackBuildExecutables(AlgoComponent, GmkpackDecoMixin,

@@ -2,12 +2,14 @@
 
 {% block mtool_prof %}
 #MTOOL profile target={{target}}cn
-#SBATCH --cpus-per-task={{openmp}}
 #SBATCH --export=NONE
 #SBATCH --job-name={{name}}
 #SBATCH --mem={{mem}}
 #SBATCH --nodes={{nnodes}}
+{% if qos != 'np' -%}
 #SBATCH --ntasks-per-node={{ntasks}}
+#SBATCH --cpus-per-task={{openmp}}
+{% endif -%}
 #SBATCH --qos={{qos}}
 #SBATCH --time={{time}}
 #SBATCH --{{verbose}}

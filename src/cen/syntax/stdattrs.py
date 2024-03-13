@@ -33,5 +33,6 @@ cendateperiod_deco = footprints.DecorativeFootprint(
 def show():
     """Returns available items and their type."""
     dmod = globals()
-    for stda in sorted(filter(lambda x: x.startswith('a_') or type(dmod[x]) == footprints.Footprint, dmod.keys())):
+    for stda in sorted(filter(lambda x: x.startswith('a_') or isinstance(dmod[x], footprints.Footprint),
+                              dmod.keys())):
         print('{} ( {} ) :\n  {}\n'.format(stda, type(dmod[stda]).__name__, dmod[stda]))

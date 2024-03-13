@@ -25,17 +25,18 @@ __all__ = [
 #: Possible values for the *model* attribute.
 models = {
     'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro', 'aearp', 'pearp', 'mocage',
-    'mesonh', 'surfex', 'hycom', 'psy4', 'safran', 'ifs', 'aroifs', 'cifs', 'mfwam', 'pg1',
-    'alpha', 'eps', 'postproc', 'ww3', 'sympo', 'psym', 'petaroute', 'promethee', 'hycom3d',
-    'croco', 'alaro', 'harmoniearome', 'nemo', 'oasis', 'glo12'
+    'mesonh', 'surfex', 'hycom', 'psy4', 'mercator_global', 'glo12', 'safran', 'ifs', 'aroifs', 'cifs',
+    'mfwam', 'pg1', 'alpha', 'eps', 'postproc', 'ww3', 'sympo', 'psym', 'petaroute', 'promethee',
+    'hycom3d', 'croco', 'alaro', 'harmoniearome', 'nemo', 'oasis',
 }
 
 #: Possible values for the most common binaries.
 binaries = {
     'arpege', 'aladin', 'arome', 'aromeom_common', 'batodb', 'peace', 'mocage', 'sumo',
     'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd', 'ifs', 'oops',
-    'assistance', 'arpifs', 'mfwam', 'mfwam_interp', 'ww3', 'ww3_prnc', 'ww3_bound',
-    'ww3_ncgrb', 'ial', 'alaro', 'harmoniearome', 'nemo', 'oasis', 'arobase', 'xios',
+    'assistance', 'arpifs', 'mfwam', 'mfwam_interp', 'mfwam_interpbc', 'ww3', 'ww3_prnc',
+    'ww3_bound', 'ww3_ncgrb', 'ial', 'alaro', 'harmoniearome', 'nemo', 'oasis', 'arobase',
+    'xios',
 }
 
 #: Possible values for the most common utility programs.
@@ -622,8 +623,6 @@ compressionpipeline = footprints.Footprint(info='Abstract Compression Pipeline',
 def show():
     """Returns available items and their type."""
     dmod = globals()
-    for stda in sorted(filter(
-        lambda x: x.startswith('a_') or type(dmod[x]) == footprints.Footprint,
-        dmod.keys()
-    )):
+    for stda in sorted(filter(lambda x: x.startswith('a_') or isinstance(dmod[x], footprints.Footprint),
+                              dmod.keys())):
         print('{} ( {} ) :\n  {}\n'.format(stda, type(dmod[stda]).__name__, dmod[stda]))
