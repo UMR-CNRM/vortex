@@ -102,8 +102,8 @@ todo:
                     seaice_conc:
                         - safosi_hn
                         - safosi_hs
-                    seaice_thick: psy4
-                    ocean: psy4
+                    seaice_thick: mercator_global
+                    ocean: mercator_global
             format: netcdf
         tests:
             -   suite: oper
