@@ -74,7 +74,6 @@ import itertools
 import locale
 import re
 import shlex
-import sys
 
 import footprints
 from bronx.fancies import loggers
@@ -473,6 +472,8 @@ class MpiTool(footprints.FootprintBase):
         """When group are defined, associate each MPI rank with a "real" slot."""
         if self._ranks_map_cache is None:
             self._complex_ranks_map = False
+            if not self.envelope:
+                raise RuntimeError('Ranks mapping should always be used within an envelope.')
             # First deal with bingroups
             ranks_map = dict()
             has_bin_groups = not all([b.group is None for b in self.binaries])
@@ -589,7 +590,7 @@ class MpiTool(footprints.FootprintBase):
         with open(self._wrapstd_wrapper_name, 'w', encoding='utf-8') as fhw:
             fhw.write(
                 wtpl.substitute(
-                    python=sys.executable,
+                    python=self.system.executable,
                     mpirankvariable=self._envelope_rank_var,
                 )
             )
@@ -599,7 +600,7 @@ class MpiTool(footprints.FootprintBase):
     def _simple_mkcmdline(self, cmdl):
         """Builds the MPI command line when no envelope is used.
 
-        :param list[str] args: the command line as a list
+        :param list[str] cmdl: the command line as a list
         """
         effective = 0
         wrapstd = self._wrapstd_mkwrapper()
@@ -699,7 +700,7 @@ class MpiTool(footprints.FootprintBase):
         return binding_stack, binding_node
 
     def _envelope_mkwrapper_tplsubs(self, todostack, bindingstack):
-        return dict(python=sys.executable,
+        return dict(python=self.system.executable,
                     sitepath=self.system.path.join(self.ticket.glove.siteroot, 'site'),
                     mpirankvariable=self._envelope_rank_var,
                     todolist=("\n".join(["  {:d}: ('{:s}', [{:s}], {:s}),".format(
@@ -753,7 +754,7 @@ class MpiTool(footprints.FootprintBase):
     def _envelope_mkcmdline(self, cmdl):
         """Builds the MPI command line when an envelope is used.
 
-        :param list[str] args: the command line as a list
+        :param list[str] cmdl: the command line as a list
         """
         self._envelope_mkwrapper(cmdl)
         wrapstd = self._wrapstd_mkwrapper()
@@ -1379,7 +1380,7 @@ class SRun(ConfigurableMpiTool):
     def _simple_mkcmdline(self, cmdl):
         """Builds the MPI command line when no envelope is used.
 
-        :param list[str] args: the command line as a list
+        :param list[str] cmdl: the command line as a list
         """
         target_bins = [binary for binary in self.binaries if len(binary.expanded_options())]
         self._build_cpumask(cmdl, target_bins, target_bins[0].options.get('openmp', 1))
@@ -1388,7 +1389,7 @@ class SRun(ConfigurableMpiTool):
     def _envelope_mkcmdline(self, cmdl):
         """Builds the MPI command line when an envelope is used.
 
-        :param list[str] args: the command line as a list
+        :param list[str] cmdl: the command line as a list
         """
         # Simple case, only one envelope description
         has_bin_groups = not all([b.group is None for b in self.binaries])
@@ -1527,36 +1528,37 @@ class OmpiMpiRun(ConfigurableMpiTool):
     _footprint = dict(
         attr = dict(
             sysname = dict(
-                values  = ['Linux', 'UnitTestLinux']
+                values         = ['Linux', 'UnitTestLinux']
             ),
             mpiname = dict(
-                values  = ['openmpi', ],
+                values         = ['openmpi', ],
             ),
-            optsep=dict(
-                default = '',
+            optsep = dict(
+                default        = '',
             ),
-            optprefix=dict(
-                default = '-',
+            optprefix = dict(
+                default        = '-',
             ),
-            optmap=dict(
-                default = footprints.FPDict(np='np', nnp='npernode', xopenmp='x')
+            optmap = dict(
+                default        = footprints.FPDict(np='np', nnp='npernode', xopenmp='x')
             ),
-            binsep=dict(
-                default = ':',
+            binsep = dict(
+                default        = ':',
             ),
-            mpiwrapstd=dict(
-                default = True,
+            mpiwrapstd = dict(
+                default        = True,
             ),
             bindingmethod = dict(
-                info            = 'How to bind the MPI processes',
-                values          = ['native', 'vortex', ],
-                optional        = True,
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
-                doc_zorder      = -90,
+                info           = 'How to bind the MPI processes',
+                values         = ['native', 'vortex', ],
+                optional       = True,
+                doc_visibility = footprints.doc.visibility.ADVANCED,
+                doc_zorder     = -90,
             ),
-            preexistingenv=dict(
-                optional        = True,
-                default         = 'False',
+            preexistingenv = dict(
+                optional       = True,
+                type           = bool,
+                default        = False,
             ),
         )
     )
@@ -1598,7 +1600,7 @@ class OmpiMpiRun(ConfigurableMpiTool):
     def _simple_mkcmdline(self, cmdl):
         """Builds the MPI command line when no envelope is used.
 
-        :param list[str] args: the command line as a list
+        :param list[str] cmdl: the command line as a list
         """
         if self.bindingmethod is not None:
             raise RuntimeError('If bindingmethod is set, an enveloppe should allways be used.')
@@ -1630,15 +1632,13 @@ class OmpiMpiRun(ConfigurableMpiTool):
                                                   node,
                                                   ','.join(slot_strings))
             )
-        logger.info('self.preexistingenv')
-        logger.info(self.preexistingenv)
-        if self.preexistingenv.lower() == 'true':
-            if self.system.path.exists(self._envelope_rankfile_name):
-                logger.info('envelope file found in the directory')
-            else:
-                raise RuntimeError('envelope file not found, provide one,' +
-                                   'or change preexistingenv option value')
+        logger.info('self.preexistingenv = {}'.format(self.preexistingenv))
+        if self.preexistingenv and self.system.path.exists(self._envelope_rankfile_name):
+            logger.info('envelope file found in the directory')
         else:
+            if self.preexistingenv:
+                logger.info('preexistingenv set to true, but no envelope file found')
+                logger.info('Using vortex computed one')
             logger.debug('Here is the rankfile content:\n%s', '\n'.join(rf_strings))
             with open(self._envelope_rankfile_name, mode='w') as tmp_rf:
                 tmp_rf.write('\n'.join(rf_strings))
