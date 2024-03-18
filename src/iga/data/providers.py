@@ -250,22 +250,25 @@ class SopranoProvider(Provider):
             return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
 
         elif self.vapp in ('mfwam', 'ww3'):
-            info['level_one'] = 'previ'
-            info['level_two'] = 'mar'
+            sopranomaptag = 'soprano'
             if resource.realkind in ('AltidataWave', 'SARdataWave'):
+                info['level_one'] = 'previ'
+                info['level_two'] = 'mar' 
                 if self.vconf == 'globalcep01':
                     info['level_three'] = 'alti_mfwam'
                 elif self.vconf in ('globalarp02', 'globalarpc02'):
-                    info['level_three'] = 'alti_mfwamarp'
-                sopranomaptag = 'soprano'
-            elif resource.realkind == 'forcing':
-                sopranomaptag = 'soprano@mfwam_forcing'
+                    info['level_three'] = 'alti_mfwamarp'                
+            elif resource.realkind == 'forcing':               
                 if resource.filling == 'wind':
-                    info['level_three'] = self.vapp
-                    info['level_four'] = self.vconf
+                    info['level_one'] = 'vagues_oper'
+                    info['level_two'] = self.vapp
+                    info['level_three'] = self.vconf                    
                 elif resource.filling == 'currents':
+                    info['level_one'] = 'previ'
+                    info['level_two'] = 'mar' 
                     info['level_three'] = 'servbdap'
                     info['level_four'] = 'courantpps4_mfwamglocep01'
+                    sopranomaptag = 'soprano@mfwam_currents' 
 
             self.config.setall(info)
             return self.config.resolvedpath(resource, self.vapp, self.vconf, sopranomaptag)

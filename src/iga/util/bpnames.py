@@ -40,8 +40,8 @@ def _reseau_suffix(cutoff, reseau, vconf=None, vapp=None, suffix_r=False):
         reseau_suff = reseau_prod[_reseau]
     elif vconf in ('angola0025', 'assmp1', 'assms1', 'assms2', 'atourxarp01', 'caledaro01',
                    'euratarpc01', 'frangparo0025', 'frangparoifs0025', 'globalarp02',
-                   'globalarpc02', 'globalcep01', 'polyaro01',
-                   'reuaro01', 'ctbto', 'chimique', 'volcan', 'indonesie', 'medaroifs') or vapp == 'promethee':
+                   'globalarpc02', 'globalcep01', 'polyaro01','polyaro0025','polyaro',
+                   'reuaro01', 'ctbto', 'chimique', 'volcan', 'indonesie', 'medaroifs', 'anguyaro', 'indo0025') or vapp == 'promethee':
         reseau_suff = _reseau
     else:
         logger.warning(
@@ -698,6 +698,8 @@ def global_snames(resource, provider):
             bname = 'wind_{:s}'.format(resource.date.hh)
         if resource.filling == 'bathy':
             bname = 'bathy_' + resource.geometry.area + '_{:s}' . format(resource.date.hh)
+        if resource.filling == 'level':
+            bname = 'level_{:s}'.format(resource.date.hh)
 
     elif resource.realkind == 'observations':
         if resource.nativefmt == 'grib':
