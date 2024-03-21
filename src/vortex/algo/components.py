@@ -951,11 +951,12 @@ class AlgoComponent(footprints.FootprintBase, metaclass=AlgoComponentMeta):
         self.target.spawn_hook(sh)
         self.spawn_pre_dirlisting()
         sh.subtitle('{:s} : start execution'.format(self.realkind))
-        sh.spawn(args, output=False, stdin=stdin, fatal=opts.get('fatal', True))
-
-        # On-the-fly coprocessing cleaning
-        if p_io:
-            self.flyput_end(p_io, e_complete, e_free, q_ctx)
+        try:
+            sh.spawn(args, output=False, stdin=stdin, fatal=opts.get('fatal', True))
+        finally:
+            # On-the-fly coprocessing cleaning
+            if p_io:
+                self.flyput_end(p_io, e_complete, e_free, q_ctx)
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
