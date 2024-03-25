@@ -23,7 +23,7 @@
         namespace: vortex.multi.fr
         vapp: mfwam
         vconf: globalcep01
-      location: ftp://prod.soprano.fr/previ/mar/mfwam/globalcep01/RW/vent_ana00
+      location: ftp://prod.soprano.fr/vagues_oper/mfwam/globalcep01/RW/vent_ana00
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       begintime: 0
@@ -40,7 +40,7 @@
       suite: oper
     results: !test_names.core.TestResults
     - default: *id001
-      location: ftp://prod.soprano.fr/previ/mar/mfwam/globalcep01/RW/vent_prv00
+      location: ftp://prod.soprano.fr/vagues_oper/mfwam/globalcep01/RW/vent_prv00
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: coupling
@@ -72,7 +72,7 @@
       term: 0
     results: !test_names.core.TestResults
     - default: *id001
-      location: ftp://prod.soprano.fr/previ/mar/mfwam/globalcep01/RW/wind_ana00
+      location: ftp://prod.soprano.fr/vagues_oper/mfwam/globalcep01/RW/wind_ana00
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: coupling
@@ -88,4 +88,4 @@
       term: 24
     results: !test_names.core.TestResults
     - default: *id001
-      location: ftp://prod.soprano.fr/previ/mar/mfwam/globalcep01/RW/wind_fcst00
+      location: ftp://prod.soprano.fr/vagues_oper/mfwam/globalcep01/RW/wind_fcst00
