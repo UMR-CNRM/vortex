@@ -38,10 +38,15 @@ def _reseau_suffix(cutoff, reseau, vconf=None, vapp=None, suffix_r=False):
                        '15': '15', '16': '16', '17': '17', '18': '18', '19': '19',
                        '20': '20', '21': '21', '22': '22', '23': '23'}
         reseau_suff = reseau_prod[_reseau]
-    elif vconf in ('angola0025', 'assmp1', 'assms1', 'assms2', 'atourxarp01', 'caledaro01',
-                   'euratarpc01', 'frangparo0025', 'frangparoifs0025', 'globalarp02',
-                   'globalarpc02', 'globalcep01', 'polyaro01','polyaro0025','polyaro',
-                   'reuaro01', 'ctbto', 'chimique', 'volcan', 'indonesie', 'medaroifs', 'anguyaro', 'indo0025') or vapp == 'promethee':
+    elif vconf in (
+            'angola0025', 'assmp1', 'assms1', 'assms2',
+            'atourxarp01', 'caledaro01', 'euratarpc01',
+            'frangparo0025', 'frangparoifs0025', 'globalarp02',
+            'globalarpc02', 'globalcep01', 'polyaro01',
+            'polyaro0025', 'polyaro', 'reuaro01', 'ctbto',
+            'chimique', 'volcan', 'indonesie', 'medaroifs',
+            'anguyaro', 'indo0025'
+    ) or vapp == 'promethee':
         reseau_suff = _reseau
     else:
         logger.warning(
