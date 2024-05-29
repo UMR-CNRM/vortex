@@ -16,6 +16,11 @@ Package
 Classes
 -------
 
+.. autoclass:: ObjTrack
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: DDH
    :show-inheritance:
    :members:
