@@ -39,6 +39,13 @@ codechecker:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
   script: python project/bin/vortex_codechecker.py
 
+check-docs:
+  stage: check
+  image: "python:$VERSION"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script: python project/bin/checkdoc.py --light --fail
+
 test:
   image: "python:$VERSION"
   stage: test
