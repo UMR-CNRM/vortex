@@ -52,6 +52,7 @@ class CorrOmegaSurf(Parallel):
         super().prepare(rh, opts)
 
         sh = self.system
+        self.env.DR_HOOK_NOT_MPI = 1
 
         gridrh = self.context.sequence.effective_inputs(
             role='AltitudeFields',
@@ -211,6 +212,7 @@ class Surface(AbstractSumoForcingWithMeteo):
         namcontent, refblock = self._sumo_nam_refblock
 
         # Grib files from IFS MET*
+        self.env.DR_HOOK_NOT_MPI = 1
         gribrh = self._surface_fields_rh
         # Sm files
         smsec = self.context.sequence.effective_inputs(
@@ -255,6 +257,7 @@ class SurfaceArp(AbstractSumoForcingWithMeteo):
         sh = self.system
         namcontent, refblock = self._sumo_nam_refblock
 
+        self.env.DR_HOOK_NOT_MPI = 1
         # Grib files from Arpege AMECH*:
         # retrieve the domains, put the associated ressource handlers in lists
         domains = defaultdict(partial(defaultdict, list))
@@ -313,6 +316,7 @@ class Fire(AbstractSumoForcing):
     def execute(self, rh, opts):
         """Standard execution."""
         sh = self.system
+        self.env.DR_HOOK_NOT_MPI = 1
         namcontent, refblock = self._sumo_nam_refblock
 
         # Loop on domains

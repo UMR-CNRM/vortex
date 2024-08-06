@@ -218,6 +218,7 @@ class Forecast(AbstractMocageRoot):
     def execute(self, rh, opts):
         """Standard execution."""
         self._prepare_mocage_fc_namelist()
+        self.env.DR_HOOK_NOT_MPI = 1
         super().execute(rh, opts)
 
 
