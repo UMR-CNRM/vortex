@@ -218,6 +218,7 @@ class Forecast(AbstractMocageRoot):
     def execute(self, rh, opts):
         """Standard execution."""
         self._prepare_mocage_fc_namelist()
+        self.env.DR_HOOK_NOT_MPI = 1
         super().execute(rh, opts)
 
 
@@ -398,6 +399,7 @@ class ControlGuess(Parallel):
     def execute(self, rh, opts):
         """Standard execution."""
         sh = self.system
+        self.env.DR_HOOK_NOT_MPI = 1
         sh.title('Dans tstrestar')
 
         # Fa HM files
