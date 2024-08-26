@@ -44,7 +44,7 @@ def _reseau_suffix(cutoff, reseau, vconf=None, vapp=None, suffix_r=False):
             'frangparo0025', 'frangparoifs0025', 'globalarp02',
             'globalarpc02', 'globalcep01', 'polyaro01',
             'polyaro0025', 'polyaro', 'reuaro01', 'ctbto',
-            'chimique', 'volcan', 'indonesie', 'medaroifs',
+            'chimique', 'volcan', 'qva', 'indonesie', 'medaroifs',
             'anguyaro', 'indo0025'
     ) or vapp == 'promethee':
         reseau_suff = _reseau
@@ -763,6 +763,9 @@ def global_snames(resource, provider):
 
     elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'volcan':
         bname = '7961.tar'
+
+    elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'qva':
+        bname = '15812.tar'
 
     elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'indonesie':
         bname = '12204.tar'
