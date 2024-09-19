@@ -111,10 +111,6 @@ class Resource(footprints.FootprintBase):
         """Proxy to :meth:`gget_basename`."""
         return self.gget_basename()
 
-    def genv_basename(self):
-        """Just retrieve a potential gvar attribute."""
-        return getattr(self, 'gvar', '')
-
     def uenv_basename(self):
         """Proxy to :meth:`genv_basename`."""
         return self.genv_basename()
