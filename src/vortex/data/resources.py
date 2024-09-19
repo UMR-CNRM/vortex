@@ -154,7 +154,6 @@ class Resource(footprints.FootprintBase):
 class Unknown(Resource):
 
     _footprint = [
-        gvar,
         dict(
             info = 'Unknown assumed NWP Resource (development only !)',
             attr = dict(
