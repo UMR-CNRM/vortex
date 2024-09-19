@@ -13,7 +13,6 @@ from bronx.stdtypes.dictionaries import LowerCaseDict
 import footprints
 
 from vortex.syntax.stdattrs import nativefmt_deco, notinrepr, term_deco
-from gco.syntax.stdattrs import gvar
 from .contents import DataContent, UnknownContent, FormatAdapter
 
 #: Export Resource and associated Catalog classes.
