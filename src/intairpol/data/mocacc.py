@@ -291,7 +291,6 @@ class ExtraConfMocaccContent(JsonDictContent):
     These infos can change between runs, but not within a single run.
     """
 
-
     @property
     def launched_at(self):
         """When the simulation was lauunched by forecaster."""

@@ -38,3 +38,23 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: CplMocaccDecumulateAndClip
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: EnsembleDiagMocacc
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: EnsemblePlotMocacc
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: EnsemblePostMocacc
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
