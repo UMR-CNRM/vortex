@@ -839,25 +839,17 @@ class ArchiveStore(Store):
                 raise ValueError('Unable to find the archive network name.')
         return self._actual_storage
 
+
     def _actual_from_genericconf(self, what):
-        """Read an entry in the generic configuration file"""
-        result = None
-        # Host specific rules (e.g. special things for ECMWF computers)
-        inetsource = self.system.default_target.inetname
-        k_inet = '{:s}@{:s}'.format(self.actual_storage, inetsource)
-        candidates = {s for s in self.genericconfig.sections() if k_inet.endswith(s)}
-        candidates = sorted(candidates, key=lambda c: c.count('.'))
-        if candidates and self.genericconfig.has_option(candidates[-1], what):
-            result = self.genericconfig.get(candidates[-1], what)
-        # Generic rules
-        candidates = {s for s in self.genericconfig.sections() if self.actual_storage.endswith(s)}
-        candidates = sorted(candidates, key=lambda c: c.count('.'))
-        if result is None and candidates and self.genericconfig.has_option(candidates[-1], what):
-            result = self.genericconfig.get(candidates[-1], what)
-        # Default (probably a bad idea)
-        if result is None and what in self.genericconfig.defaults():
-            result = self.genericconfig.defaults()[what]
-        return result
+        d = {
+            "storage": "hendrix.meteo.fr",
+            "storetube": "ftp",
+            "vortex_legacy_mappingroot": "/home/m/marp/marp999",
+            "olive_legacy_mappingroot": "/home/m/marp/marp999",
+            "vsop_storeroot": "/home/m/mxpt/mxpt001"
+        }
+        return d[what]
+
 
     @property
     def actual_storetube(self):
