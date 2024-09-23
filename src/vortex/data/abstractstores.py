@@ -788,11 +788,6 @@ class ArchiveStore(Store):
                     optional = True,
                     default  = True,
                 ),
-                genericconfig = dict(
-                    type     = config.GenericReadOnlyConfigParser,
-                    optional = True,
-                    default  = config.GenericReadOnlyConfigParser('@store-archive-mapping.ini'),
-                ),
             )
         ),
     ]
