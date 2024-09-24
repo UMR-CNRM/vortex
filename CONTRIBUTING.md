@@ -16,7 +16,7 @@ This contribution guide was adapted from _The Turing Way_'s contribution guide. 
   - Join a discussion, collaborate on an ongoing task and exchange your thoughts with others.
   - Can't find your idea being discussed anywhere?
     [Open a new issue](https://git.meteo.fr/cnrm-gmap/vortex/-/issues/new)! (See our [Where to start: issues](#where-to-start-issues) section below.)
-- [rocket.chat channel](https://chat.meteo.fr/channel/vortex)
+- [rocket.chat channel](https://chat.meteo.fr/channel/vortex-dev)
   - For structured discussion and sustained engagement with the community members.
   - We will also provide notifications on upcoming events and share useful resources on the chat.
 - Support mailing list
