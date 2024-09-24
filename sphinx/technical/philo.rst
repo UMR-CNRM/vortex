@@ -4,7 +4,7 @@
 Quelques principes
 ******************
 
-Cette section s'efforce de donner une vue d'ensemble de quelques notions simples,
+Hello hello Cette section s'efforce de donner une vue d'ensemble de quelques notions simples,
 mais... qui furent parfois longuement discutées ! La capacité à nommer les choses de façon claire
 (on espère) et homogène (entre équipes) est un pas en avant important... indépendamment de la moindre ligne de code !
 

@@ -1,0 +1,26 @@
+buildbot==3.7.0
+buildbot-www==3.7.0
+buildbot-worker==3.7.0
+buildbot-waterfall-view==3.7.0
+buildbot-console-view==3.7.0
+buildbot-badges==3.7.0
+# Dependencies for the import test...
+pyyaml
+numpy
+matplotlib
+Pillow
+netCDF4
+# Testing stuff
+pytest
+pytest-cov
+coverage
+astroid
+pycodestyle
+pydocstyle
+twisted
+scipy
+# Documentation building
+sphinx
+nbconvert
+ipython
+jupyter
