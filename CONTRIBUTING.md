@@ -1,3 +1,5 @@
+This contribution guide was adapted from _The Turing Way_'s contribution guide. See [Contributing to _The Turing Way_](https://github.com/the-turing-way/the-turing-way/blob/main/CONTRIBUTING.md).
+
 ## Table of contents
 
 - [Get in touch](#get-in-touch)
@@ -5,7 +7,7 @@
 - [Contributing through GitLab](#contributing-through-gitlab)
   - [Writing in Markdown](#writing-in-markdown)
   - [Where to start: issues](#where-to-start-issues)
-  - [Making a change with a pull request](#making-a-change-with-a-pull-request)
+  - [Making a change with a merge request](#making-a-change-with-a-merge-request)
 - [Continuous integration checks](#continuous-integration-checks)
 
 ## Get in touch
@@ -54,8 +56,10 @@ You can use the `deactivate` command to deactivate the virtual environment.
 
 ## Contributing through GitLab
 
-[Git][git] is a really useful tool for version control.
-[GitLab][github] sits on top of Git and facilitates collaborative and distributed working.
+[Git](git-scm.com) is a really useful tool for version control.
+[GitLab](https://about.gitlab.com) sits on top of Git and facilitates collaborative and distributed working.
+GitLab is web-browser based software that can be either used from GitLab's (the company) servers or deployed independently by institutions. 
+At Météo-France, the DSI/MOD team administrates the [git.meteo.fr](git.meteo.fr) GitLab instance. See [GitLab - Gestionnaire de code source](http://confluence.meteo.fr/display/MOT/GitLab+-+Gestionnaire+de+code+source) for more information about GitLab at Météo-France.
 
 We know that it can be daunting to start using Git and GitLab if you haven't worked with them in the past, but VORTEX maintainers are here to help you figure out any of th jargon or confusing instructions you encounter! :heart:
 
@@ -64,7 +68,7 @@ Your GitLab account will automatically created upon your first login.
 
 ### Writing in Markdown
 
-Most of the writing that you'll do will be in [Markdown][markdown].
+Most of the writing that you'll do will be in [Markdown](https://en.wikipedia.org/wiki/Markdown).
 You can think of Markdown as a few little symbols around your text that will allow GitHub to render the text with a little bit of formatting.
 For example, you could write words as **bold** (`**bold**`), or in _italics_ (`_italics_`), or as a [link][rick-roll] (`[link](https://youtu.be/dQw4w9WgXcQ)`) to another webpage.
 
@@ -79,7 +83,7 @@ Before you open a new issue, please check if any of our [open issues](https://gi
 
 Issues don't have to be technical: they could be about documentation you find unclear or simply missing, ideas for new features or suggestions on how to make a part of VORTEX better.
 
-### Making a change with a pull request
+### Making a change with a merge request
 
 We appreciate all contributions to VORTEX, whether as changes to code or documentation.
 
@@ -176,24 +180,25 @@ The sequence of checks is commonly referred to as a _merge request pipeline_.
 A contribution will be merged _only_ if the associated merge request pipeline passed.
 If it fails, you will be asked to make and push the necessary change for the pipeline to pass, before your changes are merged in the target branch.
 
-
-
 What happens if the continuous integration (CI) fails (for example, if the merge request notifies you that "Some checks were not successful")?
 The CI could fail for a number of reasons.
 At the bottom of the merge request, where it says whether your build passed or failed, you can click “Details” next to the test, which takes you to a CI run log site.
 If you have the write access to the repo, you can view the log or rerun the checks by clicking the “Restart build” button in the top right.
-You can learn more about CI in the [Continuous Integration chapter](https://book.the-turing-way.org/reproducible-research/ci.html)!
+You can learn more about CI in the [Continuous Integration chapter](https://book.the-turing-way.org/reproducible-research/ci.html) of _The Turing Way_.
 
-GitHub has a [nice introduction][github-flow] to the merge request workflow, but please [get in touch](#get-in-touch) if you have any questions :balloon:.
+## Contributing from a fork
 
+This is an alternative to creating and pushing your own branch to the VORTEX repository.
 
-You can update your [fork][github-fork] of _The Turing Way_ [repository][turing-way-repo] and the merge request will automatically update with those changes.
-You don't need to submit a new merge request when you make a change in response to a review.
+The VORTEX repository GitLab page offers a fork button that can be used to create a persnal copy of the project, under your personal GitLab account.
+This copy, commonly known as _fork_ is a completely separate repository from the original one.
 
-### 2. [Fork][github-fork] [_The Turing Way_ repository][turing-way-repo]
+You can contribute changes made in a fork back to the upstream repository, see [Merge changes back upstream](https://docs.gitlab.com/ee/user/project/repository/forking_workflow.html#merge-changes-back-upstream).
 
-This is now your own unique copy of _The Turing Way_.
-Changes here won't affect anyone else's work, so it's a safe space to explore edits to the code!
+You can choose to work with a fork instead of pushing commits straight to the VORTEX repository, if you so wish.
 
-Make sure to [keep your fork up to date][github-syncfork] with the main repository, otherwise, you can end up with lots of dreaded [merge conflicts][github-mergeconflicts].
-If you prefer working in the browser, [these instructions](https://github.com/KirstieJane/STEMMRoleModels/wiki/Syncing-your-fork-to-the-original-repository-via-the-browser) describe how to sync your fork to the original repository via GitHub.
+However, two pieces of advice:
+
+- Make sure to [keep your fork up to date](https://docs.gitlab.com/ee/user/project/repository/forking_workflow.html#update-your-fork) with the main repository, otherwise, you can end up with lots of dreaded [merge conflicts](https://docs.gitlab.com/ee/user/project/merge_requests/conflicts.html).
+- Read [https://hynek.me/articles/pull-requests-branch/](https://hynek.me/articles/pull-requests-branch/).
+
