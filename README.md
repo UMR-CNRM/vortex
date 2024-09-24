@@ -8,8 +8,7 @@ Documentation is available at
 
 http://intra.cnrm.meteo.fr/algopy/sphinx/vortex/current/
 
-currently unreachable from outside of from Météo-France's internal
-network.
+currently unreachable from outside of Météo-France's internal network.
 
 ### Installation
 
@@ -19,8 +18,8 @@ probably no reason for you to install VORTEX manually.
 
 - belenos/taranis: `/home/mf/dp/marp/verolive/vortex/vortex-olive`
 - CNRM laptops: `/home/common/sync/vortex/vortex-olive`
-- Serveurs DSI: (`soprano`): `/soprano/home/marp999/vortex/vortex-olive`
-- Team servers: `/d0/verolive/vortex/vortex-olive`
+- CNRM team servers: `/d0/verolive/vortex/vortex-olive`
+- DSI dev servers (`soprano`): `/home/marp/marp999/vortex/vortex-olive`
 
 To use VORTEX, the installation path must be added to PYTHONPATH, for instance
 
@@ -29,8 +28,14 @@ VORTEX_BASE_DIR=/home/mf/dp/marp/verolive/vortex/vortex-olive
 export PYTHONPATH=$PYTHONPATH:$VORTEX_BASE_DIR/src:$VORTEX_BASE_DIR/site
 ```
 
+To use VORTEX comand line tools, the PATH variable should also be adjusted:
+
+```
+export PATH=$PATH:VORTEX_BASE_DIR/bin
+```
+
 You could execute the above lines each time you want to use VORTEX, or
-add them to you `.bashrc` bash configuration file.
+add them to your `.bashrc` bash configuration file.
 
 ### Contributing
 
