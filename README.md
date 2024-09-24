@@ -1,53 +1,44 @@
-VORTEX
-======
+## VORTEX
 
 Versatile Objects Rounded-Up in a Toolbox for Environmental eXperiments
 
-Disclaimer
-----------
+### Documentation
 
-This is a preliminary version of a python toolbox for buidling and
-setting up numerical experiment. This source code repository is made
-available in order to facilitate code development.
+Documentation is available at
 
-Copyright : © Meteo-France (2012, 2013)
+http://intra.cnrm.meteo.fr/algopy/sphinx/vortex/current/
 
-Contact : eric.sevault [at] meteo.fr
+currently unreachable from outside of from Météo-France's internal
+network.
+
+### Installation
+
+VORTEX is available on most machines you'll come to use at
+Météo-France.  Unless you want to contribute to the project, there is
+probably no reason for you to install VORTEX manually.
+
+- belenos/taranis: `/home/mf/dp/marp/verolive/vortex/vortex-olive`
+- CNRM laptops: `/home/common/sync/vortex/vortex-olive`
+- Serveurs DSI: (`soprano`): `/soprano/home/marp999/vortex/vortex-olive`
+- Team servers: `/d0/verolive/vortex/vortex-olive`
+
+To use VORTEX, the installation path must be added to PYTHONPATH, for instance
+
+```
+VORTEX_BASE_DIR=/home/mf/dp/marp/verolive/vortex/vortex-olive
+export PYTHONPATH=$PYTHONPATH:$VORTEX_BASE_DIR/src:$VORTEX_BASE_DIR/site
+```
+
+You could execute the above lines each time you want to use VORTEX, or
+add them to you `.bashrc` bash configuration file.
+
+### Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 
-This software is governed by the CeCILL-C license under French law and
-abiding by the rules of distribution of free software.  You can  use,
-modify and/ or redistribute the software under the terms of the CeCILL-C
-license as circulated by CEA, CNRS and INRIA at the following URL
-"http://www.cecill.info".
 
-As a counterpart to the access to the source code and  rights to copy,
-modify and redistribute granted by the license, users are provided only
-with a limited warranty  and the software's author,  the holder of the
-economic rights,  and the successive licensors  have only  limited
-liability.
 
-In this respect, the user's attention is drawn to the risks associated
-with loading,  using,  modifying and/or developing or reproducing the
-software by the user in light of its specific status of free software,
-that may mean  that it is complicated to manipulate,  and  that  also
-therefore means  that it is reserved for developers  and  experienced
-professionals having in-depth computer knowledge. Users are therefore
-encouraged to load and test the software's suitability as regards their
-requirements in conditions enabling the security of their systems and/or
-data to be ensured and,  more generally, to use and operate it in the
-same conditions as regards security.
 
-The fact that you are presently reading this means that you have had
-knowledge of the CeCILL-C license and that you accept its terms.
 
-License
--------
-
-The current directory contains both the french and english version
-of the CeCILL-C license :
-
-* LICENSE-fr.txt
-
-* LICENSE-en.txt
 
