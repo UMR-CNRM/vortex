@@ -790,7 +790,7 @@ class CplMocaccDecumulateAndClip(AlgoComponent):
         geometries_fullpos = rh_extra_conf.contents.geometries_fullpos
         geometries_moc_customs = rh_extra_conf.contents.set_mocage_geometries()
 
-        # WARNING : within the toolbox fetching FA files, local name must be 
+        # WARNING : within the toolbox fetching FA files, local name must be
         # defined with [geometry:area]
         logger.info(geometries_moc_customs)
         logger.info(geometries_fullpos)
@@ -861,8 +861,7 @@ class EnsemblePostMocacc(AlgoComponent):
             True if ncrh[-1].rh.resource.term < ncrh[0].rh.resource.term else False
         )
 
-
-        # WARNING : within the toolbox fetching FA files, local name must be 
+        # WARNING : within the toolbox fetching FA files, local name must be
         # defined with [geometry:area]
         myfunc(
             [sec.rh.container.filename for sec in ncrh],
