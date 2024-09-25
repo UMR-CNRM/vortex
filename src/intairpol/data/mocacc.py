@@ -411,7 +411,7 @@ class ExtraConfMocaccContent(JsonDictContent):
 
     @property
     def geometries_moc(self):
-        """Get dict stored in meometries_moc key."""
+        """Get dict stored in geometries_moc key."""
         return self._data["geometries_moc"]
 
     @property
