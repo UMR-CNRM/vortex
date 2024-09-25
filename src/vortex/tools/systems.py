@@ -2875,8 +2875,7 @@ class OSExtended(System):
         """
         return self.blind_dump(json, obj, destination, **opts)
 
-
-    def blind_load(self, source, gateway=None, bytesload=False):
+    def blind_load(self, source, gateway, bytesload=False):
         """
         Use **gateway** for a blind load the representation stored in file **source**,
         (either a file descriptor or a filename).
@@ -2884,8 +2883,6 @@ class OSExtended(System):
         if hasattr(source, 'read'):
             obj = gateway.load(source)
         else:
-            if gateway is None:
-                gateway = sys.modules.get(source.split('.')[-1].lower(), yaml)
             with open(self.path.expanduser(source),
                       'r' + ('b' if bytesload else '')) as fd:
                 obj = gateway.load(fd)
