@@ -130,7 +130,7 @@ class CtbtoOuputs(FlowResource):
 
 @namebuilding_append("src", lambda s: s.field)
 class MocaccContours(GeoFlowResource):
-    """Fichier texte contenant des contours pour des champs MOCAGE."""
+    """Contours files for MOCAGE Accident fields."""
 
     # fmt: off
     _footprint = [
@@ -323,28 +323,23 @@ class ExtraConfMocaccContent(JsonDictContent):
 
     @property
     def fullpos_previous_runs(self):
-        """Runs utilisés pour le fullpos (sauf le dernier run).
+        """Runs used for FULLPOS (except last run).
 
-        Les échéances à récupérer sont différentes par rapport au run
-        de prévision.
+        Terms are differents from those of forecast run.
         """
         return self._data.get("basetime_previous_runs_fullpos", [])
 
     @property
     def fullpos_previous_runs_terms(self):
-        """Echéances utilisés pour le fullpos (sauf le dernier run).
+        """Terms used for FULLPOS (except last run).
 
-        Les échéances à récupérer sont différentes par rapport au run
-        de prévision.
+        Terms are differents from those of forecast run.
         """
         return self._data.get("basetime_previous_runs_terms_fullpos", [])
 
     @property
     def fullpos_previous_runs_terms_but_last(self):
-        """Echéances utilisés pour la prévision (sauf le dernier run).
-
-        Les échéances à récupérer sont différentes par rapport au run
-        de prévision.
+        """Terms used for FULLPOS (except last run).
         """
         if self.fullpos_previous_runs_terms:
             return self.fullpos_previous_runs_terms[0:-1]
@@ -352,16 +347,13 @@ class ExtraConfMocaccContent(JsonDictContent):
 
     @property
     def fullpos_last_run(self):
-        """Dernier run utilisé pour les fullpos.
-
-        Les échéances à récupérer sont différentes par rapport au run
-        de prévision.
+        """Last run used for FULLPOS.
         """
         return self._data.get("basetime_last_run_fullpos", None)
 
     @property
     def fullpos_last_run_terms(self):
-        """Echéances utilisés pour le fullpos avec le dernier run."""
+        """Terms used for FULLPOS with last run."""
         return self._data.get("basetime_last_run_terms_fullpos", [])
 
     @property
@@ -416,7 +408,7 @@ class ExtraConfMocaccContent(JsonDictContent):
 
     @property
     def geometries_fullpos(self):
-        """Géometries à utiliser pour les fullpos."""
+        """Geometries for FULLPOS."""
         return list([geometries.get(tag=geom["name"]) for geom in self.geometries_moc])
 
     def get_hm_term_from_valid_at(self, valid_at):

@@ -790,8 +790,8 @@ class CplMocaccDecumulateAndClip(AlgoComponent):
         geometries_fullpos = rh_extra_conf.contents.geometries_fullpos
         geometries_moc_customs = rh_extra_conf.contents.set_mocage_geometries()
 
-        # ATTENTION, dans la toolbox récupérant les fichiers les FA, le nom local
-        # doit être défini avec [geometry:area]
+        # WARNING : within the toolbox fetching FA files, local name must be 
+        # defined with [geometry:area]
         logger.info(geometries_moc_customs)
         logger.info(geometries_fullpos)
         myfunc(
@@ -861,8 +861,9 @@ class EnsemblePostMocacc(AlgoComponent):
             True if ncrh[-1].rh.resource.term < ncrh[0].rh.resource.term else False
         )
 
-        # ATTENTION, dans la toolbox récupérant les fichiers netcdf, le nom local
-        # doit être défini avec [geometry:area]
+
+        # WARNING : within the toolbox fetching FA files, local name must be 
+        # defined with [geometry:area]
         myfunc(
             [sec.rh.container.filename for sec in ncrh],
             list({nc.rh.resource.geometry.area for nc in ncrh}),
@@ -1141,9 +1142,6 @@ class PostCtbto(AlgoComponent):
 
     def execute(self, rh, opts):
         """Standard execution."""
-        sh = self.system
-        seq = self.context.sequence
-
         mymodule = importlib.import_module(self.extern_module)
         myfunc = getattr(mymodule, self.extern_func)
 
