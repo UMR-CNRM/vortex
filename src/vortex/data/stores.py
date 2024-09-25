@@ -14,6 +14,7 @@ from bronx.fancies import loggers
 import footprints
 
 from vortex import sessions
+from vortex.config import from_config
 from vortex.data.abstractstores import Store, ArchiveStore, ConfigurableArchiveStore, CacheStore
 from vortex.data.abstractstores import MultiStore, PromiseStore
 from vortex.data.abstractstores import ARCHIVE_GET_INTENT_DEFAULT
@@ -665,7 +666,7 @@ class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
     @property
     def _actual_mappingroot(self):
         """Read the get entry point form configuration."""
-        return self._actual_from_genericconf('vortex_legacy_mappingroot')
+        return from_config('storage:rootdir')
 
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
@@ -778,7 +779,7 @@ class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
     @property
     def _actual_storeroot(self):
         return (self.storeroot or
-                self._actual_from_genericconf('vsop_storeroot'))
+                self._actual_from_genericconf('storage:op_rootdir'))
 
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""

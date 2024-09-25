@@ -52,6 +52,7 @@ proxy.objects = footprints.proxy.objects
 
 from . import tools
 from . import sessions
+from . import config
 
 rootenv = tools.env.Environment(active=True)
 
@@ -86,6 +87,8 @@ class VortexForceComplete(Exception):
     """Exception for handling fast exit mecanisms."""
     pass
 
+# If a config file can be found in current dir, load it
+config.load_config()
 
 # Load some superstars sub-packages
 

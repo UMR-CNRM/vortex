@@ -18,6 +18,7 @@ from bronx.system import hash as hashutils
 import footprints
 
 from vortex import sessions
+from vortex.config import from_config
 from vortex.util import config
 from vortex.syntax.stdattrs import hashalgo, hashalgo_avail_list, compressionpipeline
 from vortex.tools import storage
@@ -800,7 +801,6 @@ class ArchiveStore(Store):
         super().__init__(*args, **kw)
         self._actual_storage = self.storage
         self._actual_storetube = self.storetube
-        self._actual_export_mapping = None
 
     @property
     def realkind(self):
@@ -827,43 +827,20 @@ class ArchiveStore(Store):
             self._actual_storage = (
                 self.system.env.VORTEX_DEFAULT_STORAGE or
                 self.system.glove.default_fthost or
-                self._actual_from_genericconf("storage"),
+                from_config("storage:address"),
             )
             if self._actual_storage is None:
                 raise ValueError('Unable to find the archive network name.')
         return self._actual_storage
 
-
-    def _actual_from_genericconf(self, what):
-        d = {
-            "storage": "hendrix.meteo.fr",
-            "storetube": "ftp",
-            "vortex_legacy_mappingroot": "/home/m/marp/marp999",
-            "olive_legacy_mappingroot": "/home/m/marp/marp999",
-            "vsop_storeroot": "/home/m/mxpt/mxpt001"
-        }
-        return d[what]
-
-
     @property
     def actual_storetube(self):
         """This archive network name (potentially read form the configuration file)."""
         if self._actual_storetube is None:
-            self._actual_storetube = self._actual_from_genericconf('storetube')
+            self._actual_storetube = from_config('storage:storetube')
             if self._actual_storetube is None:
                 raise ValueError('Unable to find the archive access method.')
         return self._actual_storetube
-
-    @property
-    def actual_export_mapping(self):
-        """Deactivate any kind of processing between the URI and the target path."""
-        if self._actual_export_mapping is None:
-            self._actual_export_mapping = self._actual_from_genericconf('export_mapping')
-            if self._actual_export_mapping is None:
-                self._actual_export_mapping = False
-            else:
-                self._actual_export_mapping = bool(vartrue.match(self._actual_export_mapping))
-        return self._actual_export_mapping
 
     def _get_archive(self):
         """Create a new Archive object only if needed."""
@@ -895,7 +872,7 @@ class ArchiveStore(Store):
         if self.storehead:
             formatted = self.system.path.join(self.storehead, formatted)
         # Export specials...
-        if self.actual_export_mapping:
+        if from_config("storage:export_mapping"):
             formatted = self.system.path.join(self.scheme, self.netloc, formatted)
         # Store root (if specified)
         pathroot = remote.get('root', self.storeroot)
