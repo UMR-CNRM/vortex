@@ -1,1 +1,0 @@
-../subtrees/thenamelisttool/tools/tntcompose.py

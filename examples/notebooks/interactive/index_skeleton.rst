@@ -1,3 +1,0 @@
-Interactive use of Vortex
-=========================
-
