@@ -73,11 +73,6 @@ __all__ = []
 
 logger = loggers.getLogger(__name__)
 
-# Optional, non-standard packages
-yaml_checker = ExternalCodeImportChecker('yaml')
-with yaml_checker as ec_register:
-    import yaml
-
 #: Pre-compiled regex to check a none str value
 isnonedef = re.compile(r'\s*none\s*$', re.IGNORECASE)
 
@@ -2880,13 +2875,6 @@ class OSExtended(System):
         """
         return self.blind_dump(json, obj, destination, **opts)
 
-    @yaml_checker.disabled_if_unavailable
-    def yaml_dump(self, obj, destination, **opts):
-        """
-        Dump a YAML representation of specified **obj** in file **destination**,
-        (either a file descriptor or a filename).
-        """
-        return self.blind_dump(yaml, obj, destination, **opts)
 
     def blind_load(self, source, gateway=None, bytesload=False):
         """
@@ -2916,14 +2904,6 @@ class OSExtended(System):
         (either a file descriptor or a filename).
         """
         return self.blind_load(source, gateway=json)
-
-    @yaml_checker.disabled_if_unavailable
-    def yaml_load(self, source):
-        """
-        Load from a YAML representation stored in file **source**,
-        (either a file descriptor or a filename).
-        """
-        return self.blind_load(source, gateway=yaml)
 
     def pickle_clone(self, obj):
         """Clone an object (**obj**) through pickling / unpickling."""
