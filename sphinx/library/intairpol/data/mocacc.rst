@@ -58,3 +58,27 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: DeterministicMocaccRunGeojson
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: DeterministicMocaccRunNetcdf
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: EnsembleMocaccDiagNetcdf
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: EnsembleMocaccPlots
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MocaccContours
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

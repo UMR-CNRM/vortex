@@ -26,7 +26,7 @@ ATM_LIST_ONE = {'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie', 'aromeaefr
                 'polynesie', 'restart_cep', 'reunion', 'ssmice', 'varpack', 'mfwam'}
 
 # TODO: move in config file
-ATM_LIST_TWO = {'perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim', 'mocvolc', 'mocindo'}
+ATM_LIST_TWO = {'perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim', 'mocvolc', 'mocindo', 'mocaqva'}
 
 ATM_LIST_THREE = {'macc'}
 
@@ -234,7 +234,7 @@ class SopranoProvider(Provider):
             info['level_three'] = 'ctbto'
             self.config.setall(info)
             return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
-        elif self.vapp == 'mocage' and self.vconf in ('chimique', 'volcan', 'indonesie'):
+        elif self.vapp == 'mocage' and self.vconf in ('chimique', 'volcan', 'indonesie', 'qva'):
             info['level_one'] = 'serv'
             info['level_two'] = 'env'
             info['level_three'] = 'extract_mocacc'

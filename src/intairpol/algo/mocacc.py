@@ -1,6 +1,7 @@
 """Algo components for MOCAGE Accident."""
 
 from collections import defaultdict
+import importlib
 
 import footprints as fp
 
@@ -367,9 +368,7 @@ class MocaccForecast(AbstractMocaccRoot):
     def _sorted_inputs_validities(self):
         """Build a sorted list of validities."""
         return sorted(
-            {
-                sec.rh.resource.date + sec.rh.resource.term for sec in self._fm_inputs
-            },
+            {sec.rh.resource.date + sec.rh.resource.term for sec in self._fm_inputs},
             reverse=self.transinv,
         )
 
@@ -622,8 +621,6 @@ class PostMocacc(AlgoComponent):
         sh = self.system
         seq = self.context.sequence
 
-        import importlib
-
         mymodule = importlib.import_module(self.extern_module)
         myfunc = getattr(mymodule, self.extern_func)
 
@@ -706,12 +703,11 @@ class PostMocacc(AlgoComponent):
                 r.resource.term in routed_outputs
                 and not todo_netcdf_by_term[r.resource.term]
             ):
-
                 promised_sec = routed_outputs[r.resource.term]
                 tarname = promised_sec.rh.container.localpath()
                 gribs = []
 
-                for (term, gribs_by_term) in done_grib_by_term.items():
+                for term, gribs_by_term in done_grib_by_term.items():
                     if term <= r.resource.term and not transinv:
                         gribs += gribs_by_term
                     elif term >= r.resource.term and transinv:
@@ -744,6 +740,363 @@ class PostMocacc(AlgoComponent):
 
                 # To allow flying routing via hook on promise
                 promised_sec.put(incache=True)
+
+
+class CplMocaccDecumulateAndClip(AlgoComponent):
+    """
+    Decumulate and clip FA issued from fullpos on a too large area.
+
+    This post-processing is done with an external python module.
+    """
+
+    # fmt: off
+    _footprint = [
+        model,
+        dict(
+            info = "End step of coupling FA for mocage accident",
+            attr = dict(
+                kind = dict(
+                    values   = ["cpl_mocacc_decumulate_and_clip"]
+                ),
+                engine = dict(
+                    values   = ["custom"]
+                ),
+                model = dict(
+                    values   = ["mocage"]
+                ),
+                extern_module = dict(
+                    info     = "External module to be used"
+                ),
+                extern_func = dict(
+                    info     = "Function within external module to call"
+                ),
+            ),
+        ),
+    ]
+    # fmt: on
+
+    @property
+    def realkind(self):
+        return "cpl_mocacc_clip"
+
+    def execute(self, rh, opts):
+        """Standard execution."""
+
+        mymodule = importlib.import_module(self.extern_module)
+        myfunc = getattr(mymodule, self.extern_func)
+        full_grid_fas = self.context.sequence.effective_inputs(role="FullGridCoupling")
+        rh_extra_conf = self.context.sequence.effective_inputs(role="ExtraConf")[0].rh
+
+        geometries_fullpos = rh_extra_conf.contents.geometries_fullpos
+        geometries_moc_customs = rh_extra_conf.contents.set_mocage_geometries()
+
+        # WARNING : within the toolbox fetching FA files, local name must be
+        # defined with [geometry:area]
+        logger.info(geometries_moc_customs)
+        logger.info(geometries_fullpos)
+        myfunc(
+            [geom.area for geom in geometries_fullpos],
+            rh_extra_conf.contents.geometries_moc,
+            [geom.area for geom in geometries_moc_customs],
+        )
+
+        return
+
+
+class EnsemblePostMocacc(AlgoComponent):
+    """
+    Post-processing of Ensemble Mocage accident member.
+
+    Netcdf files produced by Forecast are converted into grib2 with :
+    - interpolation from model levels to height and pressure levels
+    - aggregation of pollutants
+    - temporal integration
+
+    This post-processing is done with an external python module.
+    """
+
+    # fmt: off
+    _footprint = [
+        model,
+        dict(
+            info = "Post-processing of ensemble mocage accident member",
+            attr = dict(
+                kind = dict(
+                    values   = ["post_pemocacc"]
+                ),
+                engine = dict(
+                    values   = ["custom"]
+                ),
+                model = dict(
+                    values   = ["mocage"]
+                ),
+                extern_module = dict(
+                    info     = "External module to be used"
+                ),
+                extern_func = dict(
+                    info     = "Function within external module to call"
+                ),
+                kwargs = dict(
+                    info = "kwargs passés à la fonction",
+                    type=dict,
+                    default=dict()
+                )
+            ),
+        ),
+    ]
+    # fmt: on
+
+    @property
+    def realkind(self):
+        return "post_pemocacc"
+
+    def execute(self, rh, opts):
+        """Standard execution."""
+
+        mymodule = importlib.import_module(self.extern_module)
+        myfunc = getattr(mymodule, self.extern_func)
+        # netcdf files from forecast
+        ncrh = self.context.sequence.effective_inputs(role="NetcdfForecast")
+        transinv = (
+            True if ncrh[-1].rh.resource.term < ncrh[0].rh.resource.term else False
+        )
+
+        # WARNING : within the toolbox fetching FA files, local name must be
+        # defined with [geometry:area]
+        myfunc(
+            [sec.rh.container.filename for sec in ncrh],
+            list({nc.rh.resource.geometry.area for nc in ncrh}),
+            **self.kwargs,
+        )
+
+        return
+
+
+class EnsemblePlotMocacc(AlgoComponent):
+    """Various plots for ensemble.
+
+    This post-processing is done with an external python module.
+    """
+
+    # fmt: off
+    _footprint = [
+        model,
+        dict(
+            info = "Ensemble mocage accident plots",
+            attr = dict(
+                kind = dict(
+                    values   = ["plot_pemocacc"]
+                ),
+                engine = dict(
+                    values   = ["custom"]
+                ),
+                model = dict(
+                    values   = ["mocage"]
+                ),
+                extern_module = dict(
+                    info     = "External module to be used"
+                ),
+                extern_func = dict(
+                    info     = "Function within external module to call"
+                ),
+                area = dict(
+                    info     = "Chaîne représentant le domaine de tracés (W/E/S/N)"
+                ),
+                kwargs = dict(
+                    info = "kwargs passés à la fonction",
+                    type=dict,
+                    default=dict()
+                )
+            ),
+        ),
+    ]
+    # fmt: on
+
+    @property
+    def realkind(self):
+        return "plot_pemocacc"
+
+    @property
+    def _member_grib2_ins(self):
+        """Return the raw list of .grib2 input sections."""
+        return self.context.sequence.effective_inputs(role="MemberGrib2In")
+
+    @property
+    def _diag_grib2_ins(self):
+        """Return the raw list of contours input sections."""
+        return self.context.sequence.effective_inputs(role="EnsembleDiagGrib2")
+
+    @property
+    def _member_grib2(self):
+        """Return the raw list of .grib2 input sections."""
+        return list(
+            sec.rh.container.localpath()
+            for sec in self.context.sequence.effective_inputs(role="MemberGrib2In")
+        )
+
+    @property
+    def _diag_grib2(self):
+        """Return the raw list of contours input sections."""
+        return list(
+            sec.rh.container.localpath()
+            for sec in self.context.sequence.effective_inputs(role="EnsembleDiagGrib2")
+        )
+
+    @property
+    def _sorted_member_grib2_by_geom(self):
+        """
+        Build a dictionary that contains a list of basename inputs for each
+        geometry.
+        """
+        out = defaultdict(list)
+
+        for sec in self._member_grib2_ins:
+            geom = sec.rh.resource.geometry
+            out[f"{geom.area}-{geom.rnice}"].append(sec.rh.container.localpath())
+        return out
+
+    @property
+    def _sorted_diag_grib2_by_geom(self):
+        """
+        Build a dictionary that contains a list of inputs for each
+        geometry.
+        """
+        out = defaultdict(list)
+
+        for sec in self._diag_grib2_ins:
+            geom = sec.rh.resource.geometry
+            out[f"{geom.area}-{geom.rnice}"].append(sec.rh.container.localpath())
+
+        return out
+
+    def execute(self, rh, opts):
+        """Standard execution."""
+
+        mymodule = importlib.import_module(self.extern_module)
+        myfunc = getattr(mymodule, self.extern_func)
+
+        myfunc(
+            self._diag_grib2,
+            self._member_grib2,
+            self.area,
+            **self.kwargs,
+        )
+
+
+class EnsembleDiagMocacc(AlgoComponent):
+    """Diagnostics for ensemble.
+
+    From .grib2 members outputs, various stats are computed :
+        - probability of exceeding threshold
+        - surface and success index
+
+    This post-processing is done with an external python module.
+    """
+
+    # fmt: off
+    _footprint = [
+        model,
+        dict(
+            info = "Ensemble mocage accident diagnostics",
+            attr = dict(
+                kind = dict(
+                    values   = ["diag_pemocacc"]
+                ),
+                engine = dict(
+                    values   = ["custom"]
+                ),
+                model = dict(
+                    values   = ["mocage"]
+                ),
+                extern_module = dict(
+                    info     = "External module to be used"
+                ),
+                extern_func = dict(
+                    info     = "Function within external module to call"
+                ),
+                kwargs = dict(
+                    info = "kwargs passés à la fonction",
+                    type=dict,
+                    default=dict()
+                )
+            ),
+        ),
+    ]
+    # fmt: on
+
+    @property
+    def realkind(self):
+        return "diag_pemocacc"
+
+    @property
+    def _member_grib2_ins(self):
+        """Return the raw list of .gri2 input sections."""
+        return list(
+            sec.rh.container.localpath()
+            for sec in self.context.sequence.effective_inputs(role="MemberGrib2In")
+        )
+
+    @property
+    def _member_contour_ins(self):
+        """Return the raw list of contours input sections."""
+        return list(
+            sec.rh.container.localpath()
+            for sec in self.context.sequence.effective_inputs(role="MemberContourIn")
+        )
+
+    @property
+    def _sorted_member_grib2_in_basename_by_geom(self):
+        """
+        Build a dictionary that contains a list of basename inputs for each
+        geometry.
+        """
+        out = defaultdict(set)
+
+        for sec in self._member_grib2_ins:
+            geom = sec.rh.resource.geometry
+            out[f"{geom.area}-{geom.rnice}"].add(sec.rh.container.basename)
+        return out
+
+    @property
+    def _sorted_member_contour_in_by_geom(self):
+        """
+        Build a dictionary that contains a list of inputs for each
+        geometry.
+        """
+        out = defaultdict(list)
+
+        for sec in self._member_contour_ins:
+            geom = sec.rh.resource.geometry
+            out[f"{geom.area}-{geom.rnice}"].append(sec.rh.container.localpath())
+
+        return out
+
+    @property
+    def _member_grib2(self):
+        """Return the raw list of .grib2 input sections."""
+        return list(
+            sec.rh.container.localpath()
+            for sec in self.context.sequence.effective_inputs(role="MemberGrib2In")
+        )
+
+    @property
+    def _diag_grib2(self):
+        """Return the raw list of contours input sections."""
+        return list(
+            sec.rh.container.localpath()
+            for sec in self.context.sequence.effective_inputs(role="EnsembleDiagGrib2")
+        )
+
+    def execute(self, rh, opts):
+        """Standard execution."""
+
+        mymodule = importlib.import_module(self.extern_module)
+        myfunc = getattr(mymodule, self.extern_func)
+        myfunc(
+            self._member_contour_ins,
+            self._member_grib2_ins,
+            **self.kwargs,
+        )
 
 
 class PostCtbto(AlgoComponent):
@@ -788,11 +1141,6 @@ class PostCtbto(AlgoComponent):
 
     def execute(self, rh, opts):
         """Standard execution."""
-        sh = self.system
-        seq = self.context.sequence
-
-        import importlib
-
         mymodule = importlib.import_module(self.extern_module)
         myfunc = getattr(mymodule, self.extern_func)
 
