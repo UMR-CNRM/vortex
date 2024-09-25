@@ -293,7 +293,7 @@ class ExtraConfMocaccContent(JsonDictContent):
 
     @property
     def launched_at(self):
-        """When the simulation was lauunched by forecaster."""
+        """When the simulation was launched by forecaster."""
         return self._data["launched_at"]
 
     @property
