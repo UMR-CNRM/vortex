@@ -52,6 +52,8 @@ Each geometry has its own attributes: please refers to each of the concrete
 class documentation for more details.
 """
 
+import configparser
+import importlib.resources
 import re
 
 from bronx.fancies import loggers
@@ -674,7 +676,11 @@ def load(inifile='@geometries.ini', refresh=False, verbose=True):
 
     The class that will be instantiated depends on the "kind" keyword..
     """
-    iniconf = GenericConfigParser(inifile)
+    iniconf = configparser.ConfigParser()
+    with importlib.resources.open_text(
+            "vortex.data", "geometries.ini",
+    ) as fh:
+        iniconf.read_file(fh)
     for item in iniconf.sections():
         gdesc = dict(iniconf.items(item))
         gkind = gdesc.get('kind')
