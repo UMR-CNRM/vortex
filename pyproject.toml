@@ -1,8 +1,28 @@
-[tool.pytest.ini_options]
-pythonpath = [
-    "src",
-    "site",
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vortex-core"
+version = "1.10.1"
+description = ""
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = []
+license = {text = "CECILL-C"}
+authors = [
+    {name = "The Vortex Team", email = "vortex.support@meteo.fr"},
 ]
-testpaths = [
-    "tests",
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: CeCILL-C Free Software License Agreement (CECILL-C)",
 ]
+dependencies = [
+    "bronx", "footprints", "taylorism",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"vortex.data" = ["geometries.ini"]
