@@ -78,6 +78,7 @@ import shlex
 import footprints
 from bronx.fancies import loggers
 from bronx.syntax.parsing import xlist_strings
+from vortex.config import from_config
 from vortex.tools import env
 from vortex.tools.arm import ArmForgeTool
 from vortex.tools.systems import ExecutionError
@@ -865,47 +866,9 @@ class MpiTool(footprints.FootprintBase):
             sdict.update(mpilib=mpilib_data[0], mpibindir=mpilib_data[1])
         return sdict
 
-    def _environment_confdata(self, conflabel):
-        """Read relevant environment variable from the target config file"""
-        if self._needs_mpilib_specific_mpienv:
-            mpi_infos = self._mpilib_identification()
-        else:
-            mpi_infos = None
-        # Find out what are the relevant configuration sections
-        sections_stack = list()
-        all_sections = self.target.sections()
-        for main_entry in ('mpienv',
-                           'mpienv:{:s}'.format(self.generic_mpiname),
-                           'mpienv-{!s}'.format(conflabel),
-                           'mpienv-{!s}:{:s}'.format(conflabel, self.generic_mpiname),):
-            if main_entry in all_sections:
-                sections_stack.append(main_entry)
-            if mpi_infos:
-                lib_entry = '{:s}:{:s}'.format(main_entry, mpi_infos[3])
-                if not lib_entry.endswith('unknown') and lib_entry in all_sections:
-                    sections_stack.append(lib_entry)
-                v_tuples = {tuple([int(d) for d in e[len(lib_entry) + 1:].split('.')]): e
-                            for e in [s for s in all_sections
-                                      if s.startswith(lib_entry + ':')]}
-                my_version = tuple(mpi_infos[4:])
-                v_candidates = [v for v in v_tuples if v <= my_version]
-                if v_candidates:
-                    sections_stack.append(v_tuples[max(v_candidates)])
-        if sections_stack:
-            logger.info('Environment variables taken from the following conf sections: %s',
-                        ','.join(sections_stack))
-        # Read all the relevant sections
-        conf_data = dict()
-        for section in sections_stack:
-            conf_data.update(self.target.items(section))
-        # Removed void values
-        conf_data = {k: v for k, v in conf_data.items()
-                     if v != 'vortex_void_value'}
-        return conf_data
-
     def setup_environment(self, opts, conflabel):
         """MPI environment setup."""
-        confdata = self._environment_confdata(conflabel)
+        confdata = from_config(section="mpienv")
         envsub = self._environment_substitution_dict(opts, conflabel)
         for k, v in confdata.items():
             if k not in self.env:
