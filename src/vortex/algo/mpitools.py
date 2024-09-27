@@ -882,73 +882,6 @@ class MpiTool(footprints.FootprintBase):
             self.setup_environment(opts, conflabel)
 
 
-class ConfigurableMpiTool(MpiTool):
-    _abstract = True
-    _footprint = dict(
-        attr = dict(
-            mpiopts = dict(
-                default = None
-            ),
-        )
-    )
-
-    _conf_suffix = ''
-
-    @property
-    def mpitool_conf(self):
-        """Return the mpiauto configuration."""
-        if self.target.config.has_section(self.generic_mpiname):
-            return dict(self.target.config.items(self.generic_mpiname))
-        else:
-            return dict()
-
-    def _actual_mpiopts(self):
-        """Possibly read the mpiopts in the config file."""
-        if self.mpiopts is None:
-            return self.mpitool_conf.get('mpiopts' + self._conf_suffix,
-                                         self.mpitool_conf.get('mpiopts', ''))
-        else:
-            return self.mpiopts
-
-    def _actual_mpiextraenv(self):
-        """Possibly read the mpi extra environment variables in the config file."""
-        new_envvar = dict()
-        for kv in self.mpitool_conf.get('mpiextraenv' + self._conf_suffix,
-                                        self.mpitool_conf.get('mpiextraenv', '')).split(','):
-            if kv:
-                skv = kv.split('%', 1)
-                if len(skv) == 2:
-                    new_envvar[skv[0]] = skv[1]
-        return new_envvar
-
-    def _actual_mpidelenv(self):
-        """Possibly read the mpi extra environment variables in the config file."""
-        return [v
-                for v in self.mpitool_conf.get('mpidelenv' + self._conf_suffix,
-                                               self.mpitool_conf.get('mpidelenv', '')).split(',')
-                if v]
-
-    @property
-    def _actual_mpibind_topology(self):
-        """The topology to be used with the Vortex' binding method."""
-        if self.mpibind_topology is None:
-            return self.mpitool_conf.get('mpibind_topology' + self._conf_suffix,
-                                         self.mpitool_conf.get('mpibind_topology',
-                                                               self._default_mpibind_topology))
-        else:
-            return self.mpibind_topology
-
-    def setup_environment(self, opts, conflabel):
-        """Last minute fixups."""
-        for k, v in self._actual_mpiextraenv().items():
-            if k not in self.env:
-                # If already present, do not overwrite
-                self._logged_env_set(k, v)
-        super().setup_environment(opts, conflabel)
-        for k in self._actual_mpidelenv():
-            self._logged_env_del(k)
-
-
 class MpiBinaryDescription(footprints.FootprintBase):
     """Root class for any :class:`MpiBinaryDescription` subclass."""
 
@@ -1229,7 +1162,7 @@ class MpiRun(MpiTool):
     )
 
 
-class SRun(ConfigurableMpiTool):
+class SRun(MpiTool):
     """SLURM's srun launcher."""
 
     _footprint = dict(
@@ -1274,9 +1207,13 @@ class SRun(ConfigurableMpiTool):
     @property
     def _actual_slurmversion(self):
         """Return the slurm major version number."""
-        return (self.slurmversion or
-                int(self.mpitool_conf.get('slurmversion', 0)) or
-                18)
+        slurmversion = (
+            self.slurmversion or
+            from_config(section="mpitool", key="slurmversion")
+        )
+        if not slurmversion:
+            raise ValueError("No slurm version specified")
+        return slurmversion
 
     def _set_binaries_hack(self, binaries):
         """Set the list of :class:`MpiBinaryDescription` objects associated with this instance."""
@@ -1319,11 +1256,11 @@ class SRun(ConfigurableMpiTool):
             assert len(what) == 1, "Only one item is allowed."
             if what[0].allowbind:
                 ids = self.system.cpus_ids_per_blocks(blocksize=bsize,
-                                                      topology=self._actual_mpibind_topology,
+                                                      topology=self.mpibind_topology,
                                                       hexmask=True)
                 if not ids:
                     raise MpiException('Unable to detect the CPU layout with topology: {:s}'
-                                       .format(self._actual_mpibind_topology, ))
+                                       .format(self.mpibind_topology, ))
                 masklist = [m for _, m in zip(range(what[0].options['nnp']),
                                               itertools.cycle(ids))]
                 cmdl.append('mask_cpu:' + ','.join(masklist))
@@ -1477,7 +1414,7 @@ class SRunDDT(SRun):
         return cmdl
 
 
-class OmpiMpiRun(ConfigurableMpiTool):
+class OmpiMpiRun(MpiTool):
     """OpenMPI's mpirun launcher."""
 
     _footprint = dict(
@@ -1533,7 +1470,7 @@ class OmpiMpiRun(ConfigurableMpiTool):
             else:
                 return self._launcher
 
-    launcher = property(_get_launcher, ConfigurableMpiTool._set_launcher)
+    launcher = property(_get_launcher, MpiTool._set_launcher)
 
     def _set_binaries_hack(self, binaries):
         if not self.envelope and self.bindingmethod == 'native':

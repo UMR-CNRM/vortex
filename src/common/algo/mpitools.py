@@ -21,7 +21,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class MpiAuto(mpitools.ConfigurableMpiTool):
+class MpiAuto(mpitools.MpiTool):
     """MpiTools that uses mpiauto as a proxy to several MPI implementations"""
 
     _footprint = dict(
