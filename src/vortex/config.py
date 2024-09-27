@@ -26,13 +26,16 @@ def print_config():
             print(k.upper(), v)
 
 
-def from_config(query):
-    section, key = query.split(":")
+def from_config(section, key=None):
     try:
         subconfig = VORTEX_CONFIG[section]
     except KeyError as e:
         print(f"Could not find section {section} in configuration")
         raise(e)
+
+    if not key:
+        return subconfig
+
     try:
         value = subconfig[key]
     except KeyError as e :

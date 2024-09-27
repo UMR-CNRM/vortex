@@ -33,6 +33,7 @@ Mixins are a powerful tool to mutualise some pieces of code. See the
 import collections.abc
 import contextlib
 import copy
+import functools
 import importlib
 import locale
 import logging
@@ -49,6 +50,7 @@ from bronx.syntax.decorators import nicedeco
 import footprints
 from taylorism import Boss
 import vortex
+from vortex.config import from_config
 from vortex.algo import mpitools
 from vortex.syntax.stdattrs import DelayedEnvValue
 from vortex.tools.parallelism import ParallelResultParser
@@ -1638,50 +1640,23 @@ class Parallel(xExecutableAlgoComponent):
     def _mpitool_attributes(self, opts):
         """Return the dictionary of attributes needed to create the mpitool object."""
         # Read the appropriate configuration in the target file
-        conf_dict = self.target.items('mpitool')
-        if self.mpiconflabel:
-            conf_dict.update(self.target.items('mpitool-{!s}'.format(self.mpiconflabel)))
-        # Find the mpiname
-        act_mpiname = (opts.get('mpiname', None) or self.mpiname or
-                       self.env.VORTEX_MPI_NAME or conf_dict.get('mpiname', None))
-        if not act_mpiname:
-            raise ValueError('Unabled to find an appropriate mpiname.')
-        options = dict(mpiname=act_mpiname)
-        config_mpiname = act_mpiname.split('-')[0]
-        # Find ither generic options
-        generic_options = {'mpilauncher',
-                           'mpiopts',
-                           'mpiwrapstd',
-                           'mpibind_topology'}
+        conf_dict = from_config(section="mpitool")
+        possible_attrs = functools.reduce(
+            lambda s, t: s | t,
+            [
+                set(cls._footprint.attr.keys())
+                for cls in footprints.proxy.mpitools
+            ],
+        )
+        nonkeys = set(conf_dict.keys()) - possible_attrs
+        if nonkeys:
+            msg = (
+                "The following keywords are unknown configuration"
+                "keys for section \"mpitool\":\n"
+            )
 
-        def _generic_options_from_mapping(mapping, options, checkvalue=False):
-            optprefix = '{:s}_'.format(config_mpiname)
-            for k, v in mapping.items():
-                if k.startswith(optprefix) and k[len(optprefix):] in generic_options:
-                    if not checkvalue or v:
-                        options[k[len(optprefix):]] = v
-
-        _generic_options_from_mapping(conf_dict, options, checkvalue=True)
-        _generic_options_from_mapping({'{:s}_mpi{:s}'.format(config_mpiname, k[11:].lower()): v
-                                       for k, v in self.env.items()
-                                       if k.startswith('VORTEX_MPI_')}, options)
-        _generic_options_from_mapping(opts, options)
-        # Find other specific options (not listed in generic_options)
-
-        def _specific_options_from_mapping(mapping, options, checkvalue=False):
-            optprefix = '{:s}_opt_'.format(config_mpiname)
-            for k, v in mapping.items():
-                if (k.startswith(optprefix) and
-                        k[len(optprefix):] not in generic_options and
-                        k[len(optprefix):] != 'mpiname'):
-                    if not checkvalue or v:
-                        options[k[len(optprefix):]] = v
-
-        _specific_options_from_mapping(conf_dict, options, checkvalue=True)
-        _specific_options_from_mapping(opts, options)
-
-        logger.info('Attributes to create the mpitool: %s', options)
-        return options
+            raise ValueError(msg + "\n".join(nonkeys))
+        return conf_dict
 
     def spawn_command_line(self, rh):
         """Split the shell command line of the resource to be run."""
