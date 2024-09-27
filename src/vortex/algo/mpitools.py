@@ -128,6 +128,7 @@ class MpiTool(footprints.FootprintBase):
             ),
             mpibind_topology = dict(
                 optional        = True,
+                default         = "numapacked",
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
                 doc_zorder      = -90,
             ),
@@ -175,7 +176,6 @@ class MpiTool(footprints.FootprintBase):
     _envelope_wrapper_name = './global_envelope_wrapper.py'
     _wrapstd_wrapper_name = './global_wrapstd_wrapper.py'
     _envelope_rank_var = 'MPIRANK'
-    _default_mpibind_topology = 'numapacked'
     _supports_manual_ranks_mapping = False
     _needs_mpilib_specific_mpienv = True
 
@@ -201,14 +201,6 @@ class MpiTool(footprints.FootprintBase):
     @property
     def generic_mpiname(self):
         return self.mpiname.split('-')[0]
-
-    @property
-    def _actual_mpibind_topology(self):
-        """The topology to be used with the Vortex' binding method."""
-        if self.mpibind_topology is None:
-            return self._default_mpibind_topology
-        else:
-            return self.mpibind_topology
 
     def __getattr__(self, key):
         """Have a look to basics values provided by some proxy."""
@@ -661,10 +653,10 @@ class MpiTool(footprints.FootprintBase):
         for e_bit in self.envelope:
             if 'nn' in e_bit.options and 'nnp' in e_bit.options:
                 for _ in range(e_bit.options['nn']):
-                    cpu_disp = self.system.cpus_ids_dispenser(topology=self._actual_mpibind_topology)
+                    cpu_disp = self.system.cpus_ids_dispenser(topology=self.mpibind_topology)
                     if not cpu_disp:
                         raise MpiException('Unable to detect the CPU layout with topology: {:s}'
-                                           .format(self._actual_mpibind_topology, ))
+                                           .format(self.mpibind_topology, ))
                     for _ in range(e_bit.options['nnp']):
                         dispensers_map[ranks_idx] = (cpu_disp, totalnodes)
                         ranks_idx += 1
