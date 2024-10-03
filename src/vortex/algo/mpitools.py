@@ -850,7 +850,7 @@ class MpiTool(footprints.FootprintBase):
         logger.info('Deleting the "%s" environment variable', k.upper())
         del self.env[k]
 
-    def _environment_substitution_dict(self, opts, conflabel):  # @UnusedVariable
+    def _environment_substitution_dict(self):
         """Things that may be substituted in environment variables."""
         sdict = dict()
         mpilib_data = self._mpilib_data()
@@ -858,10 +858,10 @@ class MpiTool(footprints.FootprintBase):
             sdict.update(mpilib=mpilib_data[0], mpibindir=mpilib_data[1])
         return sdict
 
-    def setup_environment(self, opts, conflabel):
+    def setup_environment(self, opts):
         """MPI environment setup."""
         confdata = from_config(section="mpienv")
-        envsub = self._environment_substitution_dict(opts, conflabel)
+        envsub = self._environment_substitution_dict()
         for k, v in confdata.items():
             if k not in self.env:
                 try:
@@ -875,11 +875,11 @@ class MpiTool(footprints.FootprintBase):
         for bin_obj in self.binaries:
             bin_obj.setup_environment(opts)
 
-    def setup(self, opts=None, conflabel=None):
+    def setup(self, opts=None):
         """Specific MPI settings to be applied before run."""
         self.setup_namelists(opts)
         if self.target is not None:
-            self.setup_environment(opts, conflabel)
+            self.setup_environment(opts)
 
 
 class MpiBinaryDescription(footprints.FootprintBase):
@@ -1337,9 +1337,9 @@ class SRun(MpiTool):
         if self.envelope and len(self.envelope) > 1:
             self.system.remove(self._envelope_nodelist_name)
 
-    def _environment_substitution_dict(self, opts, conflabel):  # @UnusedVariable
+    def _environment_substitution_dict(self):  # @UnusedVariable
         """Things that may be substituted in environment variables."""
-        sdict = super()._environment_substitution_dict(opts, conflabel)
+        sdict = super()._environment_substitution_dict()
         shp = self.system.path
         # Detect the path to the srun command
         actlauncher = self.launcher
@@ -1361,9 +1361,9 @@ class SRun(MpiTool):
         sdict['pmilib'] = pmilib
         return sdict
 
-    def setup_environment(self, opts, conflabel):
+    def setup_environment(self, opts):
         """Tweak the environment with some srun specific settings."""
-        super().setup_environment(opts, conflabel)
+        super().setup_environment(opts)
         if (self._complex_ranks_mapping and
                 self._mpilib_identification() and
                 self._mpilib_identification()[3] == 'intelmpi'):
