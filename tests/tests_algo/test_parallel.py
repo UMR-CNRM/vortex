@@ -271,14 +271,30 @@ class TestParallel(unittest.TestCase):
         self.locenv.SLURM_JOB_NODELIST = 'fake[0-4]'
         # MPI partitioning from explicit mpiopts
         # MPIRUN
+        vortex.config.VORTEX_CONFIG = {
+            "mpitool": {"mpilauncher": "mpirun"},
+        }
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpirun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
         self.assertCmdl('mpirun -npernode 4 -np 8 {pwd:s}/fake -joke yes', args)
+
+        vortex.config.VORTEX_CONFIG["mpitool"] = {
+            "mpiopts": "--mca truc 1 --mca truc 2",
+        }
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpirun'))
-        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10),
-                                                     mpirun_mpiopts='--mca truc 1 --mca truc 2'))
+        _, args = algo._bootstrap_mpitool(
+            bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)),
+        )
         self.assertCmdl('mpirun -mca truc 1 -mca truc 2 -npernode 4 -np 8 {pwd:s}/fake -joke yes', args)
-        # SRUN
+        # # SRUN
+
+        vortex.config.VORTEX_CONFIG = {
+            "mpitool": {
+                "mpilauncher": "srun",
+                "mpiopts": "--kill-on-bad-exit=1 --export=ALL --output=stdeo.%t",
+                "slurmversion": 18,
+            }
+        }
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --output=stdeo.%t --cpu-bind none ' +
