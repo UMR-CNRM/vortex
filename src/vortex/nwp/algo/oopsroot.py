@@ -1,5 +1,5 @@
 """
-Common AlgoComponents for OOPS.
+AlgoComponents for OOPS.
 """
 
 import itertools
@@ -16,8 +16,8 @@ from vortex.algo.components import algo_component_deco_mixin_autodoc
 from vortex.data import geometries
 from vortex.tools import grib
 from gco.syntax.stdattrs import ArpIfsSimplifiedCycle as IfsCycle
-from common.syntax.stdattrs import algo_member, oops_members_terms_lists
-from common.tools import drhook, odb, satrad
+from ..syntax.stdattrs import algo_member, oops_members_terms_lists
+from ..tools import drhook, odb, satrad
 
 #: No automatic export
 __all__ = []
@@ -436,7 +436,7 @@ class OOPSParallel(Parallel,
                    drhook.DrHookDecoMixin,
                    grib.EcGribDecoMixin,
                    satrad.SatRadDecoMixin):
-    """Common abstract AlgoComponent for any OOPS run."""
+    """Abstract AlgoComponent for any OOPS run."""
 
     _abstract = True
     _footprint = dict(
@@ -624,7 +624,7 @@ class OOPSParallel(Parallel,
 
 
 class OOPSODB(OOPSParallel, odb.OdbComponentDecoMixin):
-    """Common abstract AlgoComponent for any OOPS run requiring ODB databases."""
+    """Abstract AlgoComponent for any OOPS run requiring ODB databases."""
 
     _abstract = True
     _footprint = dict(

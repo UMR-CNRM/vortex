@@ -6,7 +6,7 @@ from bronx.fancies import loggers
 
 from vortex.data.flow import FlowResource
 from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert
-from common.data.consts import GenvModelResource
+from .consts import GenvModelResource
 
 #: Automatic export of Observations class
 __all__ = []

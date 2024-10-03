@@ -8,7 +8,7 @@ from vortex.data.outflow import StaticResource
 from vortex.data.flow import GeoFlowResource
 from gco.syntax.stdattrs import gvar
 from vortex.data.contents import DataTemplate
-from common.data.gridfiles import GridPoint
+from .gridfiles import GridPoint
 
 #: No automatic export
 __all__ = []

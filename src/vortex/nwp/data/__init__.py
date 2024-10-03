@@ -1,5 +1,5 @@
 """
-Common data resources (mostly NWP).
+Data resources (mostly NWP).
 """
 
 # Recursive inclusion of packages with potential FootprintBase classes

@@ -10,7 +10,7 @@ import footprints
 from bronx.compat.itertools import pairwise
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Time
-from common.tools.drhook import DrHookDecoMixin
+from ..tools.drhook import DrHookDecoMixin
 from vortex.algo.components import BlindRun
 from vortex.layout.dataflow import intent
 from vortex.tools.grib import EcGribDecoMixin

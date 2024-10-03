@@ -11,7 +11,7 @@ from vortex.syntax.stdattrs import term_deco, term
 from vortex.syntax.stddeco import namebuilding_insert
 from bronx.stdtypes.date import Time
 
-from common.tools.igastuff import archive_suffix
+from ..tools.igastuff import archive_suffix
 from vortex.data.geometries import CurvlinearGeometry
 
 #: No automatic export

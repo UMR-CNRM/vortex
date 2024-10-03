@@ -4,7 +4,7 @@ Various Resources for executables used by the OOPS software.
 
 from vortex.data.executables import NWPModel
 from gco.syntax.stdattrs import gvar, arpifs_cycle, executable_flavour_deco
-from common.syntax.stdattrs import oops_run, known_oops_testcomponent_runs
+from ..syntax.stdattrs import oops_run, known_oops_testcomponent_runs
 from vortex.syntax.stddeco import namebuilding_append
 
 #: No automatic export

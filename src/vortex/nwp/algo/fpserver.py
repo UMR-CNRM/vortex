@@ -21,7 +21,7 @@ from vortex.algo.components import AlgoComponentError
 import vortex.layout.monitor as _lmonitor
 
 from .ifsroot import IFSParallel
-from common.syntax.stdattrs import outputid_deco
+from ..syntax.stdattrs import outputid_deco
 
 #: No automatic export
 __all__ = []

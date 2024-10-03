@@ -39,7 +39,7 @@ def drawingfunction(options):
     :param dict options: All the options passed to the store plus anything from
         the query part of the URI.
 
-    :return: Content of a :obj:`common.data.ens.Sample` resource
+    :return: Content of a :obj:`nwp.data.ens.Sample` resource
 
     :rtype: A file like object
     """
@@ -159,7 +159,7 @@ def checkingfunction(options):
     :param dict options: All the options passed to the store plus anything from
         the query part of the URI.
 
-    :return: Content of a :obj:`common.data.ens.PopulationList` resource
+    :return: Content of a :obj:`nwp.data.ens.PopulationList` resource
 
     :rtype: A file like object
     """

@@ -5,7 +5,7 @@ Resources needed to build the Ensemble Data Assimilation system.
 from bronx.fancies import loggers
 
 from vortex.data.flow import GeoFlowResource
-from common.data.assim import _BackgroundErrorInfo
+from .assim import _BackgroundErrorInfo
 from vortex.syntax.stdattrs import term_deco
 from vortex.syntax.stddeco import namebuilding_insert
 from gco.syntax.stdattrs import gvar

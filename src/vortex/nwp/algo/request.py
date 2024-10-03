@@ -12,12 +12,12 @@ from vortex.algo.components import AlgoComponent, AlgoComponentDecoMixin, Expres
 from vortex.algo.components import algo_component_deco_mixin_autodoc
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.systems import ExecutionError
-from common.tools.bdap import BDAPrequest_actual_command, BDAPGetError, BDAPRequestConfigurationError
-from common.tools.bdmp import BDMPrequest_actual_command, BDMPGetError
-from common.tools.bdcp import BDCPrequest_actual_command, BDCPGetError
-from common.tools.bdm import BDMGetError, BDMRequestConfigurationError, BDMError
-from common.tools.mars import MarsGetError, callMarsExtract, findMarsExtractCommand
-from common.data.obs import ObsMapContent
+from ..tools.bdap import BDAPrequest_actual_command, BDAPGetError, BDAPRequestConfigurationError
+from ..tools.bdmp import BDMPrequest_actual_command, BDMPGetError
+from ..tools.bdcp import BDCPrequest_actual_command, BDCPGetError
+from ..tools.bdm import BDMGetError, BDMRequestConfigurationError, BDMError
+from ..tools.mars import MarsGetError, callMarsExtract, findMarsExtractCommand
+from ..data.obs import ObsMapContent
 
 #: No automatic export
 __all__ = []

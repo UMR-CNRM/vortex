@@ -15,8 +15,8 @@ from vortex.layout.dataflow import intent
 from vortex.syntax.stdattrs import model
 from vortex.util.structs import ShellEncoder
 from .ifsroot import IFSParallel
-from common.tools.drhook import DrHookDecoMixin
-from common.syntax.stdattrs import outputid_deco
+from ..tools.drhook import DrHookDecoMixin
+from ..syntax.stdattrs import outputid_deco
 
 from typing import Any, Callable, Iterable
 from vortex.data.handlers import Handler

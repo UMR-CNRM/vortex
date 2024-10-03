@@ -1,5 +1,5 @@
 """
-Common standalone tools (mostly for NWP).
+Standalone tools for NWP
 """
 
 # Recursive inclusion of packages with potential FootprintBase classes

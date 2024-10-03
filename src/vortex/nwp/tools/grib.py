@@ -183,7 +183,7 @@ class GRIBFilter(_GenericFilter):
                 raise ValueError("Set concatenate=True or provide a filter.")
 
         # Open the input file using Epygram
-        from common.util import usepygram
+        from ..util import usepygram
         if not usepygram.epygram_checker.is_available(version='1.0.0'):
             raise AlgoComponentError("Epygram (v1.0.0) needs to be available")
 

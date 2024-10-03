@@ -21,8 +21,8 @@ from vortex.tools.parallelism import VortexWorkerBlindRun
 
 from gco.syntax.stdattrs import arpifs_cycle
 
-from common.data.obs import ObsMapContent, ObsMapItem, ObsRefContent, ObsRefItem
-from common.tools import odb, drhook
+from ..data.obs import ObsMapContent, ObsMapItem, ObsRefContent, ObsRefItem
+from ..tools import odb, drhook
 
 
 #: No automatic export

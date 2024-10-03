@@ -1,5 +1,5 @@
 """
-Common AlgoComponent to build model's climatology files.
+AlgoComponents to build model's climatology files.
 """
 
 import copy
@@ -12,8 +12,8 @@ from vortex.algo.components import BlindRun, AlgoComponent, Parallel, TaylorRun
 from vortex.data.geometries import HorizontalGeometry
 from vortex.tools.grib import EcGribDecoMixin
 from vortex.tools.parallelism import TaylorVortexWorker
-from common.algo.ifsroot import IFSParallel
-from common.tools.drhook import DrHookDecoMixin
+from .ifsroot import IFSParallel
+from ..tools.drhook import DrHookDecoMixin
 
 
 #: No automatic export
@@ -136,7 +136,7 @@ class FinalizePGD(AlgoComponent):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from common.util.usepygram import epygram_checker
+        from ..util.usepygram import epygram_checker
         ev = '1.2.14'
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
@@ -144,7 +144,7 @@ class FinalizePGD(AlgoComponent):
     def execute(self, rh, opts):  # @UnusedVariable
         """Convert SURFGEOPOTENTIEL from clim to SFX.ZS in pgd."""
         import numpy
-        from common.util.usepygram import epygram, epy_env_prepare
+        from ..util.usepygram import epygram, epy_env_prepare
         from bronx.meteo.constants import g0
         # Handle resources
         clim = self.context.sequence.effective_inputs(role=('Clim',))
@@ -198,14 +198,14 @@ class SetFilteredOrogInPGD(AlgoComponent):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from common.util.usepygram import epygram_checker
+        from ..util.usepygram import epygram_checker
         ev = '1.3.2'
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
 
     def execute(self, rh, opts):  # @UnusedVariable
         """Convert SURFGEOPOTENTIEL from clim to SFX.ZS in pgd."""
-        from common.util.usepygram import epygram_checker, epy_env_prepare
+        from ..util.usepygram import epygram_checker, epy_env_prepare
         from bronx.meteo.constants import g0
         # Handle resources
         clim = self.context.sequence.effective_inputs(role=('Clim',))
@@ -310,7 +310,7 @@ class MakeLAMDomain(AlgoComponent):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from common.util.usepygram import epygram_checker
+        from ..util.usepygram import epygram_checker
         ev = '1.2.14'
         if self.e_zone_in_pgd:
             ev = '1.3.2'
@@ -338,7 +338,7 @@ class MakeLAMDomain(AlgoComponent):
                         format(self.mode, params))
 
     def execute(self, rh, opts):  # @UnusedVariable
-        from common.util.usepygram import epygram
+        from ..util.usepygram import epygram
         dm = epygram.geometries.domain_making
         if self.mode == 'center_dims':
             build_func = dm.build.build_geometry
@@ -471,7 +471,7 @@ class MakeGaussGeometry(Parallel):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from common.util.usepygram import epygram_checker
+        from ..util.usepygram import epygram_checker
         ev = '1.2.14'
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
@@ -479,7 +479,7 @@ class MakeGaussGeometry(Parallel):
         self._unit = 4
 
     def _complete_dimensions(self):
-        from common.util.usepygram import epygram_checker
+        from ..util.usepygram import epygram_checker
         if epygram_checker.is_available(version='1.4.4'):
             from epygram.geometries.SpectralGeometry import complete_gridpoint_dimensions
             longitudes, latitudes = complete_gridpoint_dimensions(self.longitudes,
@@ -524,7 +524,7 @@ class MakeGaussGeometry(Parallel):
 
     def postfix(self, rh, opts):
         """Complete and write namelists."""
-        from common.util.usepygram import epygram_checker
+        from ..util.usepygram import epygram_checker
         if epygram_checker.is_available(version='1.4.4'):
             from epygram.geometries.domain_making.output import gauss_rgrid2namelists
             gauss_rgrid2namelists('fort.{!s}'.format(self._unit),
@@ -580,7 +580,7 @@ class MakeGaussGeometry(Parallel):
                   'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         # subtruncated grid for orography
-        from common.util.usepygram import epygram_checker
+        from ..util.usepygram import epygram_checker
         ev = '1.4.4'
         if epygram_checker.is_available(version=ev):
             trunc_nsmax = truncation_from_gridpoint_dims({'lat_number': self.latitudes,
@@ -696,7 +696,7 @@ class MakeBDAPDomain(AlgoComponent):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from common.util.usepygram import epygram_checker
+        from ..util.usepygram import epygram_checker
         ev = '1.2.14'
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
@@ -722,7 +722,7 @@ class MakeBDAPDomain(AlgoComponent):
                             "Must provide *resolution* OR *resolution_x/resolution_y*")
 
     def execute(self, rh, opts):  # @UnusedVariable
-        from common.util.usepygram import epygram
+        from ..util.usepygram import epygram
         dm = epygram.geometries.domain_making
         if self.mode == 'inside_model':
             r = epygram.formats.resource(self.model_clim, 'r')
@@ -775,7 +775,7 @@ class AddPolesToGLOB(TaylorRun):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from common.util.usepygram import epygram_checker
+        from ..util.usepygram import epygram_checker
         ev = '1.3.4'
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
@@ -802,7 +802,7 @@ class _AddPolesWorker(TaylorVortexWorker):
     )
 
     def vortex_task(self, **_):
-        from common.util.usepygram import add_poles_to_reglonlat_file, epy_env_prepare
+        from ..util.usepygram import add_poles_to_reglonlat_file, epy_env_prepare
         with epy_env_prepare(self.ticket):
             add_poles_to_reglonlat_file(self.filename)
 

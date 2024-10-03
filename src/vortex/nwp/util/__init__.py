@@ -1,5 +1,5 @@
 """
-Miscellaneous common utilities (mostly for NWP).
+Utilities mostly for NWP.
 """
 
 #: No automatic export

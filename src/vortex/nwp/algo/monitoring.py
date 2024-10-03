@@ -6,7 +6,7 @@ from bronx.fancies import loggers
 
 from vortex.algo.components import Parallel
 from vortex.syntax.stdattrs import a_date, a_model, a_cutoff
-from common.tools import odb, drhook
+from ..tools import odb, drhook
 
 #: Automatic export of Monitoring class
 __all__ = []

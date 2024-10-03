@@ -8,7 +8,7 @@ import functools
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period, Time
 
-from common.data.query import StaticCutoffDispenser
+from ..data.query import StaticCutoffDispenser
 
 #: No automatic export
 __all__ = []

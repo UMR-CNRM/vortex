@@ -34,7 +34,7 @@ def compose_nam(options):
     be overriden using the `nampack` attribute of the URI query.
 
     The recipe file should be named `[source].yaml` where `[source]` stands
-    for the `source` attribute of the obj:`~common.data.namelists.Namelist`
+    for the `source` attribute of the obj:`~nwp.data.namelists.Namelist`
     resource object.
 
     By defaut, the recipe file is looked for in the namelist pack mentioned
@@ -44,7 +44,7 @@ def compose_nam(options):
     :param dict options: All the options passed to the store plus anything from
                          the query part of the URI.
 
-    :return: Content of a :obj:`common.data.namelists.Namelist` resource
+    :return: Content of a :obj:`nwp.data.namelists.Namelist` resource
 
     :rtype: A file like object
     """

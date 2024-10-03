@@ -13,8 +13,8 @@ from vortex.data.flow import FlowResource
 from vortex.data.contents import JsonDictContent, TextContent
 from vortex.syntax.stdattrs import number_deco
 from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
-from common.data.logs import use_flow_logs_stack
-from common.data.modelstates import Historic
+from .logs import use_flow_logs_stack
+from .modelstates import Historic
 
 #: No automatic export
 __all__ = []

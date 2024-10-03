@@ -12,7 +12,7 @@ from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert, over
 from vortex.syntax.stdattrs import term_deco, timeperiod_deco, a_cutoff
 from vortex.data.geometries import LonlatGeometry
 
-from common.tools.igastuff import archive_suffix
+from ..tools.igastuff import archive_suffix
 
 #: No automatic export
 __all__ = []

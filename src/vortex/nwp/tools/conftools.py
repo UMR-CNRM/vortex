@@ -19,7 +19,7 @@ from footprints.stdtypes import FPDict, FPList
 from footprints.util import rangex
 import footprints
 
-from common.tools.odb import TimeSlots
+from ..tools.odb import TimeSlots
 
 #: No automatic export
 __all__ = []

@@ -11,7 +11,7 @@ from bronx.stdtypes.date import Month, Time
 import footprints
 
 from vortex.algo.components import AlgoComponentError
-from common.algo.ifsroot import IFSParallel
+from .ifsroot import IFSParallel
 
 #: Automatic export off
 __all__ = []

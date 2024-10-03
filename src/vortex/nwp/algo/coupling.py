@@ -9,8 +9,8 @@ from bronx.compat.functools import cached_property
 from bronx.fancies import loggers
 from bronx.stdtypes import date
 
-from common.algo.ifsroot import IFSParallel
-from common.tools.drhook import DrHookDecoMixin
+from .ifsroot import IFSParallel
+from ..tools.drhook import DrHookDecoMixin
 from vortex.algo.components import AlgoComponentError, BlindRun, Parallel
 from vortex.algo.components import AlgoComponentDecoMixin, algo_component_deco_mixin_autodoc
 from vortex.layout.dataflow import intent

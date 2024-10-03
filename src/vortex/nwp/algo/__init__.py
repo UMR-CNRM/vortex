@@ -1,5 +1,5 @@
 """
-Common AlgoComponents (mostly for NWP).
+AlgoComponents for NWP
 """
 
 # Recursive inclusion of packages with potential FootprintBase classes

@@ -21,8 +21,8 @@ from vortex.tools.grib import EcGribDecoMixin
 from vortex.tools.parallelism import TaylorVortexWorker, VortexWorkerBlindRun, ParallelResultParser
 from vortex.tools.systems import ExecutionError
 
-from common.tools.grib import GRIBFilter
-from common.tools.drhook import DrHookDecoMixin
+from ..tools.grib import GRIBFilter
+from ..tools.drhook import DrHookDecoMixin
 
 #: No automatic export
 __all__ = []

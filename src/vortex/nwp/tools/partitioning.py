@@ -177,7 +177,7 @@ def setup_partitioning_in_namelist(namcontents,
                                    namlocal=None):
     """Look in a namelist Content object and replace the macros related to partitioning.
 
-    :param common.data.namelists.NamelistContent namcontents: The namelist's Content
+    :param nwp.data.namelists.NamelistContent namcontents: The namelist's Content
                                                               object to work with
     :param int effective_tasks: The number of tasks that will be used when computing
                                 the partitioning

@@ -13,7 +13,7 @@ import footprints
 from vortex.algo import mpitools
 from vortex.syntax.stdattrs import DelayedEnvValue
 from vortex.tools.arm import ArmForgeTool
-from common.tools.partitioning import setup_partitioning_in_namelist
+from ..tools.partitioning import setup_partitioning_in_namelist
 
 #: No automatic export
 __all__ = []

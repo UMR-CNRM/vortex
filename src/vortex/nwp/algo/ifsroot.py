@@ -9,9 +9,9 @@ from vortex.algo.components import Parallel, ParallelIoServerMixin, AlgoComponen
 from vortex.syntax.stdattrs import model
 from vortex.tools import grib
 
-from common.algo import ifsnaming  # @UnusedImport
-from common.syntax.stdattrs import algo_member
-from common.tools import satrad, drhook
+from . import ifsnaming  # @UnusedImport
+from ..syntax.stdattrs import algo_member
+from ..tools import satrad, drhook
 
 #: No automatic export
 __all__ = []

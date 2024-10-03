@@ -8,7 +8,7 @@ from bronx.stdtypes.date import Date
 from vortex.algo.components import BlindRun, Parallel
 from vortex.syntax.stdattrs import a_date
 from .ifsroot import IFSParallel
-from common.tools import odb, drhook
+from ..tools import odb, drhook
 
 #: No automatic export
 __all__ = []

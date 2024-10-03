@@ -7,7 +7,7 @@ import json
 import footprints
 
 from vortex.algo.components import AlgoComponentDecoMixin, algo_component_deco_mixin_autodoc
-from common.syntax.stdattrs import oops_test_type, oops_expected_target
+from ..syntax.stdattrs import oops_test_type, oops_expected_target
 from .oopsroot import OOPSParallel, OOPSODB, OOPSMembersTermsDecoMixin, OOPSMembersTermsDetectDecoMixin
 
 #: No automatic export
