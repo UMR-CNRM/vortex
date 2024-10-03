@@ -1641,6 +1641,8 @@ class Parallel(xExecutableAlgoComponent):
         """Return the dictionary of attributes needed to create the mpitool object."""
         # Read the appropriate configuration in the target file
         conf_dict = from_config(section="mpitool")
+        if self.mpiname:
+            conf_dict["mpiname"] = self.mpiname
         possible_attrs = functools.reduce(
             lambda s, t: s | t,
             [
