@@ -91,13 +91,22 @@ class VortexForceComplete(Exception):
 config.load_config()
 
 # Load some superstars sub-packages
-
-import bronx.stdtypes.date
-from . import toolbox, algo, data
+from .toolbox import (
+    show_toolbox_settings,
+    quickview,
+    input,
+    output,
+    executable,
+    algo,
+    promise,
+    diff,
+    rescue,
+)
+from . import nwp
 
 # Register proper vortex exit before the end of interpreter session
 
-
+import bronx.stdtypes.date
 def complete():
     sessions.exit()
     import multiprocessing
