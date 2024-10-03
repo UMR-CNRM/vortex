@@ -5,8 +5,8 @@ Various Resources for executables used in NWP.
 import vortex
 
 from vortex.data.executables import Script, GnuScript, BlackBox, NWPModel, SurfaceModel, OceanographicModel
-from gco.syntax.stdattrs import gvar, arpifs_cycle, gmkpack_compiler_identification_deco, executable_flavour_deco
-from gco.syntax.stdattrs import ArpIfsSimplifiedCycle
+from ..syntax.stdattrs import gvar, arpifs_cycle, gmkpack_compiler_identification_deco, executable_flavour_deco
+from ..syntax.stdattrs import ArpIfsSimplifiedCycle
 
 #: No automatic export
 __all__ = []

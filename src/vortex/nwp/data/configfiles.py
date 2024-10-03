@@ -3,7 +3,7 @@ Various configuration files (Namelists excepted).
 """
 
 from vortex.data.outflow import StaticResource
-from gco.syntax.stdattrs import gvar
+from ..syntax.stdattrs import gvar
 from vortex.data.contents import JsonDictContent, DataRaw
 from vortex.syntax.stddeco import namebuilding_append
 

@@ -10,7 +10,7 @@ from bronx.stdtypes.date import Time
 import footprints
 
 from vortex.syntax.stdattrs import model
-from gco.syntax.stdattrs import arpifs_cycle
+from ..syntax.stdattrs import arpifs_cycle
 
 logger = loggers.getLogger(__name__)
 

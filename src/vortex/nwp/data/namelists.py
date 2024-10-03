@@ -15,7 +15,7 @@ from vortex.data.contents import AlmostDictContent, IndexedTable
 from vortex.syntax.stdattrs import binaries, term, cutoff
 from vortex.syntax.stddeco import namebuilding_insert
 from vortex.tools import env
-from gco.syntax.stdattrs import gvar
+from ..syntax.stdattrs import gvar
 
 #: No automatic export
 __all__ = []

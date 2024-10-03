@@ -4,7 +4,7 @@ Various resources to handle climatology files used in the Surfex model.
 
 from vortex.data.outflow import ModelGeoResource
 from vortex.syntax.stddeco import namebuilding_delete
-from gco.syntax.stdattrs import gvar
+from ..syntax.stdattrs import gvar
 
 #: No automatic export
 __all__ = []

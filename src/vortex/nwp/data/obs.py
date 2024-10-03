@@ -15,7 +15,7 @@ from vortex.data.flow import GeoFlowResource, FlowResource
 from vortex.data.contents import TextContent, AlmostListContent
 from vortex.syntax import stdattrs, stddeco
 
-from gco.syntax.stdattrs import gvar, GenvKey
+from ..syntax.stdattrs import gvar, GenvKey
 
 #: Automatic export of Observations class
 __all__ = ['Observations', ]

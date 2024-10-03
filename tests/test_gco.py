@@ -10,7 +10,7 @@ from vortex.tools.net import uriparse
 import iga.data.stores
 from gco.data.stores import UgetArchiveStore
 from gco.tools import genv, uenv
-from gco.syntax.stdattrs import AbstractUgetId, GgetId, ArpIfsSimplifiedCycle
+from ..syntax.stdattrs import AbstractUgetId, GgetId, ArpIfsSimplifiedCycle
 
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 

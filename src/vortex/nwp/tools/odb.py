@@ -11,7 +11,7 @@ import footprints
 from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError, algo_component_deco_mixin_autodoc
 from vortex.layout.dataflow import intent
 
-from gco.syntax.stdattrs import ArpIfsSimplifiedCycle
+from ..syntax.stdattrs import ArpIfsSimplifiedCycle
 
 #: No automatic export
 __all__ = []

@@ -6,7 +6,7 @@ from bronx.fancies import loggers
 
 from vortex.data.outflow import StaticResource
 from vortex.data.flow import GeoFlowResource
-from gco.syntax.stdattrs import gvar
+from ..syntax.stdattrs import gvar
 from vortex.data.contents import DataTemplate
 from .gridfiles import GridPoint
 

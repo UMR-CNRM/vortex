@@ -29,7 +29,7 @@ import math
 import footprints
 
 from vortex.syntax.stdattrs import model, actualfmt
-from gco.syntax.stdattrs import arpifs_cycle
+from ..syntax.stdattrs import arpifs_cycle
 
 #: No automatic export
 __all__ = []

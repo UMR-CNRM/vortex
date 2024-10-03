@@ -6,7 +6,7 @@ from vortex.data.geometries import LonlatGeometry
 from vortex.data.outflow import StaticGeoResource, ModelGeoResource
 from vortex.syntax.stdattrs import month_deco
 from vortex.syntax.stddeco import namebuilding_insert, namebuilding_append
-from gco.syntax.stdattrs import gvar, gdomain
+from ..syntax.stdattrs import gvar, gdomain
 
 #: No automatic export
 __all__ = []

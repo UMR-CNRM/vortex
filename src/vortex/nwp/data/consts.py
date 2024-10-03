@@ -3,7 +3,7 @@ Various Resources for constant files used in NWP.
 """
 
 import footprints
-from gco.syntax.stdattrs import gvar
+from ..syntax.stdattrs import gvar
 from vortex.data.contents import DataRaw, JsonDictContent, TextContent
 from vortex.data.geometries import GaussGeometry, LonlatGeometry
 from vortex.data.outflow import ModelGeoResource, ModelResource, StaticResource

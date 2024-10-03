@@ -7,7 +7,7 @@ import re
 from bronx.fancies import loggers
 
 from vortex.data.outflow import StaticResource
-from gco.syntax.stdattrs import gvar
+from ..syntax.stdattrs import gvar
 from vortex.data.contents import AlmostListContent, DataTemplate
 
 #: No automatic export

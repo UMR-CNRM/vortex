@@ -721,7 +721,7 @@ class JobAssistant(footprints.FootprintBase):
     @_extendable
     def register_cycle(self, cycle):
         """A callback to register GCO cycles."""
-        from gco.syntax.stdattrs import GgetId
+        from vortex.nwp.syntax.stdattrs import GgetId
         try:
             cycle = GgetId(cycle)
         except ValueError:

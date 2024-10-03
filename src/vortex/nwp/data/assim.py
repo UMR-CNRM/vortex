@@ -10,7 +10,7 @@ from vortex.data.contents import JsonDictContent
 from vortex.data.executables import Script
 from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert
 from vortex.syntax.stdattrs import FmtInt, term_deco
-from gco.syntax.stdattrs import gvar
+from ..syntax.stdattrs import gvar
 
 #: Automatic export off
 __all__ = []

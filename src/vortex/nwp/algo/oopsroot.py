@@ -15,7 +15,7 @@ from vortex.algo.components import AlgoComponentError, AlgoComponentDecoMixin, P
 from vortex.algo.components import algo_component_deco_mixin_autodoc
 from vortex.data import geometries
 from vortex.tools import grib
-from gco.syntax.stdattrs import ArpIfsSimplifiedCycle as IfsCycle
+from ..syntax.stdattrs import ArpIfsSimplifiedCycle as IfsCycle
 from ..syntax.stdattrs import algo_member, oops_members_terms_lists
 from ..tools import drhook, odb, satrad
 

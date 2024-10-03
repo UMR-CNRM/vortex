@@ -8,7 +8,7 @@ from vortex.data.flow import GeoFlowResource
 from .assim import _BackgroundErrorInfo
 from vortex.syntax.stdattrs import term_deco
 from vortex.syntax.stddeco import namebuilding_insert
-from gco.syntax.stdattrs import gvar
+from ..syntax.stdattrs import gvar
 
 #: Automatic export off
 __all__ = []

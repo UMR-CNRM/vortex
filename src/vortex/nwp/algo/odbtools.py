@@ -19,7 +19,7 @@ from vortex.tools.systems import ExecutionError
 from vortex.algo.components import Parallel, ParaBlindRun
 from vortex.tools.parallelism import VortexWorkerBlindRun
 
-from gco.syntax.stdattrs import arpifs_cycle
+from ..syntax.stdattrs import arpifs_cycle
 
 from ..data.obs import ObsMapContent, ObsMapItem, ObsRefContent, ObsRefItem
 from ..tools import odb, drhook
