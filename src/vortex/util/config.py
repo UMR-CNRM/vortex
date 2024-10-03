@@ -10,6 +10,7 @@ import abc
 from configparser import NoOptionError, NoSectionError, InterpolationDepthError
 from configparser import ConfigParser
 import contextlib
+import importlib
 import itertools
 import re
 import string
@@ -209,6 +210,10 @@ def load_template(t, tplfile, encoding=None, version=None, default_templating='l
     """
     persodir = t.sh.path.join(t.glove.configrc, 'templates')
     sitedir = t.sh.path.join(t.glove.siteroot, 'templates')
+    with importlib.resources.as_file(
+        importlib.resources.files("vortex.algo")
+    ) as path:
+        pkgdir = path / "mpitools_templates"
     searchdirs = list()
     autofile = _RE_AUTO_TPL.match(tplfile)
     if autofile is None:
@@ -217,17 +222,15 @@ def load_template(t, tplfile, encoding=None, version=None, default_templating='l
         else:
             raise ValueError('Template file not found: <{}>'.format(tplfile))
     else:
-        searchdirs = (persodir, sitedir)
+        searchdirs = (persodir, pkgdir, sitedir)
         new_tplfile = None
         if version is None:
             autofile = autofile.group(1)
-            persofile = t.sh.path.join(persodir, autofile)
-            if t.sh.path.exists(persofile):
-                new_tplfile = persofile
-            else:
-                sitefile = t.sh.path.join(sitedir, autofile)
-                if t.sh.path.exists(sitefile):
-                    new_tplfile = sitefile
+            for dirname in searchdirs:
+                filename = t.sh.path.join(dirname, autofile)
+                if t.sh.path.exists(filename):
+                    new_tplfile = filename
+                    break
         else:
             autofile = autofile.group(2)
             autodir = t.sh.path.dirname(autofile)

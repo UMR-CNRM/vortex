@@ -171,8 +171,8 @@ class MpiTool(footprints.FootprintBase):
     )
 
     _envelope_bit_kind = 'basicenvelopebit'
-    _envelope_wrapper_tpl = '@mpitools/envelope_wrapper_default.tpl'
-    _wrapstd_wrapper_tpl = '@mpitools/wrapstd_wrapper_default.tpl'
+    _envelope_wrapper_tpl = '@envelope_wrapper_default.tpl'
+    _wrapstd_wrapper_tpl = '@wrapstd_wrapper_default.tpl'
     _envelope_wrapper_name = './global_envelope_wrapper.py'
     _wrapstd_wrapper_name = './global_wrapstd_wrapper.py'
     _envelope_rank_var = 'MPIRANK'
