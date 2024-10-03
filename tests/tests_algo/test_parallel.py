@@ -124,7 +124,6 @@ class TestParallel(unittest.TestCase):
         self.t.system(sysname='UnitTestLinux', refill=True)
         # Tweak the target object
         self.testconf = os.path.join(DATAPATHTEST, 'target-test.ini')
-        self.t.sh.target(inifile=self.testconf, sysname='Linux')
         # Local environment
         self.locenv = self.t.env.clone()
         # Clean things up
