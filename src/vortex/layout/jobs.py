@@ -727,7 +727,7 @@ class JobAssistant(footprints.FootprintBase):
         except ValueError:
             self._printfmt('** Cycle << {!s} >> will auto-register whenever necessary **', cycle)
             return
-        from gco.tools import genv
+        from vortex_gco.tools import genv
         if cycle in genv.cycles():
             self._printfmt('** Cycle << {!s} >> already registered **', cycle)
         else:
@@ -1268,7 +1268,7 @@ class JobAssistantUenvGdataDetourPlugin(JobAssistantPlugin):
         """Acquire the lock on job startup."""
         detour = self.masterja.conf.get('uenv_gdata_detour', None)
         if detour:
-            from gco.tools.uenv import config as u_config
+            from vortex_gco.tools.uenv import config as u_config
             u_config('gdata_detour', value=detour)
             logger.info('gdata referenced in uenvs will be taken in the "@%s" uget location.',
                         detour)

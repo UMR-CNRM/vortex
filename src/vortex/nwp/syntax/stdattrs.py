@@ -136,7 +136,7 @@ class GenvKey(str):
     """
     Attribute for a GEnv cycle name.
     Implicit attributes inside brackets are translated to lower case.
-    See also :mod:`gco.tools.genv`.
+    See also :mod:`vortex_gco.tools.genv`.
     """
 
     def __new__(cls, value):
@@ -158,7 +158,7 @@ gvar = footprints.Footprint(info='A GENV access key',
 class GenvDomain(str):
     """
     Remap plain area names to specific Genv short domain names.
-    See also :mod:`gco.tools.genv`.
+    See also :mod:`vortex_gco.tools.genv`.
     """
 
     def __new__(cls, value):
