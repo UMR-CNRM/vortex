@@ -104,6 +104,16 @@ from .toolbox import (
 )
 from . import nwp
 
+# Now load plugins that have been installed with the
+# 'vtx' entry point.  Order matters: since plugins
+# will typically depend on objects defined in 'vortex'
+# and 'vortex.nwp', these must be imported /before/
+# loading plugins.
+from importlib.metadata import entry_points
+for plugin in entry_points(group='vtx'):
+    plugin.load()
+    print(f"Loaded plugin {plugin.name}")
+
 # Register proper vortex exit before the end of interpreter session
 
 import bronx.stdtypes.date
