@@ -666,7 +666,7 @@ class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
     @property
     def _actual_mappingroot(self):
         """Read the get entry point form configuration."""
-        return from_config('storage:rootdir')
+        return from_config(section="storage", key="rootdir")
 
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
@@ -778,8 +778,12 @@ class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
 
     @property
     def _actual_storeroot(self):
-        return (self.storeroot or
-                self._actual_from_genericconf('storage:op_rootdir'))
+        return (
+            self.storeroot or
+            self._actual_from_genericconf(
+                section="storage", key="op_rootdir",
+            )
+        )
 
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""

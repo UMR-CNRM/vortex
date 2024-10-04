@@ -827,7 +827,7 @@ class ArchiveStore(Store):
             self._actual_storage = (
                 self.system.env.VORTEX_DEFAULT_STORAGE or
                 self.system.glove.default_fthost or
-                from_config("storage:address"),
+                from_config(section="storage", key="address"),
             )
             if self._actual_storage is None:
                 raise ValueError('Unable to find the archive network name.')
@@ -837,7 +837,9 @@ class ArchiveStore(Store):
     def actual_storetube(self):
         """This archive network name (potentially read form the configuration file)."""
         if self._actual_storetube is None:
-            self._actual_storetube = from_config('storage:storetube')
+            self._actual_storetube = from_config(
+                section="storage", key="protocol",
+            )
             if self._actual_storetube is None:
                 raise ValueError('Unable to find the archive access method.')
         return self._actual_storetube
@@ -872,7 +874,7 @@ class ArchiveStore(Store):
         if self.storehead:
             formatted = self.system.path.join(self.storehead, formatted)
         # Export specials...
-        if from_config("storage:export_mapping"):
+        if from_config(section="storage", key="export_mapping"):
             formatted = self.system.path.join(self.scheme, self.netloc, formatted)
         # Store root (if specified)
         pathroot = remote.get('root', self.storeroot)
