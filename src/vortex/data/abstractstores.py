@@ -1289,16 +1289,6 @@ class CacheStore(Store):
     def realkind(self):
         return 'cachestore'
 
-    @property
-    def hostname(self):
-        """Returns the current :attr:`storage`."""
-        return self.system.default_target.inetname
-
-    @property
-    def config_name(self):
-        """Returns the current :attr:`storage`."""
-        return '@cache-{!s}.ini'.format(self.system.default_target.cache_storage_alias())
-
     def use_cache(self):
         """Boolean value to insure that this store is using a cache."""
         return True
@@ -1316,8 +1306,6 @@ class CacheStore(Store):
         if not self._cache:
             self._cache = footprints.proxy.caches.default(
                 kind=self.underlying_cache_kind,
-                storage=self.hostname,
-                inifile=self.config_name,
                 rootdir=self.rootdir,
                 headdir=self.headdir,
                 rtouch=self.rtouch,
