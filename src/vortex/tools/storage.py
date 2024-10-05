@@ -49,6 +49,10 @@ __all__ = []
 
 logger = loggers.getLogger(__name__)
 
+# If the source file size exceed this threshold, a hard link will be
+# used (as much as possible). Otherwise a simple copy will be used.
+HARDLINK_THRESHOLD = 1048576
+
 
 # Decorators: for internal use in the Storage class
 # -------------------------------------------------
@@ -411,18 +415,6 @@ class Cache(Storage):
         return self.actual('headdir')
 
     @property
-    def actual_hardlink_threshold(self):
-        """Read the threshold for hardlink creation (form the configuration file).
-
-        If the source file size exceed this threshold, hardlink will be used
-        (as much as possible). Otherwise a simple copy will be used.
-        """
-        t = self.actual('hardlink_threshold', fatal=False)
-        if t is not None:
-            t = int(t)
-        return t
-
-    @property
     def tag(self):
         """The identifier of this cache place."""
         return '{:s}_{:s}_{:s}'.format(self.realkind, self.kind, self.actual_headdir)
@@ -505,7 +497,7 @@ class Cache(Storage):
         tpath = self._formatted_path(item)
         if tpath is not None:
             rc = self.sh.cp(local, tpath, intent=intent, fmt=fmt,
-                            smartcp_threshold=self.actual_hardlink_threshold)
+                            smartcp_threshold=HARDLINK_THRESHOLD)
         else:
             logger.warning('No target location for < %s >', item)
             rc = False
@@ -532,13 +524,13 @@ class Cache(Storage):
                     rc = rc and self.sh.cp(subpath,
                                            self.sh.path.join(destdir, self.sh.path.basename(subpath)),
                                            intent=intent, fmt=fmt,
-                                           smartcp_threshold=self.actual_hardlink_threshold)
+                                           smartcp_threshold=HARDLINK_THRESHOLD)
                     # For the insitu feature to work...
                     rc = rc and self.sh.touch(local)
             # The usual case: just copy source
             else:
                 rc = self.sh.cp(source, local, intent=intent, fmt=fmt, silent=silent,
-                                smartcp_threshold=self.actual_hardlink_threshold)
+                                smartcp_threshold=HARDLINK_THRESHOLD)
                 # If auto_tarextract, a potential tar file is extracted
                 if (rc and tarextract and not self.sh.path.isdir(local) and
                         self.sh.is_tarname(local) and self.sh.is_tarfile(local)):
