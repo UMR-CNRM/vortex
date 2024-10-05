@@ -43,6 +43,7 @@ from vortex.tools.actions import actiond as ad
 from vortex.tools.delayedactions import d_action_status
 from vortex.tools.systems import istruedef
 from vortex.util.config import GenericConfigParser
+from vortex.config import from_config
 
 #: No automatic export
 __all__ = []
@@ -638,8 +639,6 @@ class AbstractArchive(Storage):
 class Archive(AbstractArchive):
     """The default class to handle storage to a remote location."""
 
-    _default_usejeeves = False
-
     _footprint = dict(
         info = 'Default archive description',
         attr = dict(
@@ -649,14 +648,11 @@ class Archive(AbstractArchive):
         )
     )
 
-    @property
-    def default_usejeeves(self):
-        """This archive sync_insert default value."""
-        if self._actual_config.has_option(self.kind, 'usejeeves'):
-            conf_value = self._actual_config.get(self.kind, 'usejeeves')
-        else:
-            conf_value = self.sh.default_target.get('stores:archive_usejeeves', None)
-        return self._default_usejeeves if conf_value is None else bool(istruedef.match(conf_value))
+    def __init__(self, *kargs, **kwargs):
+        super().__init__(*kargs, **kwargs)
+        self.default_usejeeves = from_config(
+            section="storage", key="usejeeves",
+        )
 
     @property
     def _ftp_hostinfos(self):
