@@ -42,6 +42,7 @@ from vortex import sessions
 from vortex.tools.actions import actiond as ad
 from vortex.tools.delayedactions import d_action_status
 from vortex.tools.systems import istruedef
+# TODO clean instances of GenericConfigParser
 from vortex.util.config import GenericConfigParser
 from vortex.config import from_config
 
@@ -113,24 +114,6 @@ class Storage(footprints.FootprintBase):
     _footprint = dict(
         info = 'Default/Abstract storage place description.',
         attr = dict(
-            config=dict(
-                info='A ready to use configuration file object for this storage place.',
-                type=GenericConfigParser,
-                optional=True,
-                default=None,
-            ),
-            inifile=dict(
-                info=('The name of the configuration file that will be used (if ' +
-                      '**config** is not provided.'),
-                optional=True,
-                default='@storage-[storage].ini',
-            ),
-            iniauto=dict(
-                info='If needed, use **inifile** to create a configuration file object.',
-                type=bool,
-                optional=True,
-                default=True,
-            ),
             kind=dict(
                 info="The storage place's kind.",
                 values=['std'],
@@ -157,9 +140,6 @@ class Storage(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         logger.debug('Abstract storage init %s', self.__class__)
         super().__init__(*args, **kw)
-        self._actual_config = self.config
-        if self._actual_config is None:
-            self._actual_config = GenericConfigParser(inifile=self.inifile, mkforce=self.iniauto)
         self._history = History(tag=self.tag)
 
     @property
@@ -198,34 +178,9 @@ class Storage(footprints.FootprintBase):
         """
         return self._history
 
-    def _actual_config_lookup(self, attr, fatal=True, default=None):
-        """Look for *attr* in the configuration."""
-        k_glove = '@' + self.session.glove.realkind
-        if self._actual_config.has_option(self.kind + k_glove, attr):
-            return self._actual_config.get(self.kind + k_glove, attr)
-        elif self._actual_config.has_option(self.kind, attr):
-            return self._actual_config.get(self.kind, attr)
-        else:
-            if fatal:
-                raise AttributeError('Could not find default ' + attr + ' in config.')
-            else:
-                return default
-
-    def actual(self, attr, fatal=True, default=None):
-        """Return the actual attribute, either defined in config or plain attribute."""
-        this_attr = getattr(self, attr, 'conf')
-        if this_attr == 'conf':
-            this_attr = self._actual_config_lookup(attr, fatal, default)
-        return this_attr
-
-    @property
-    def actual_record(self):
-        """Do we record things in the History object ?"""
-        return self.actual('record')
-
     def addrecord(self, action, item, **infos):
         """Push a new record to the storage place log/history."""
-        if self.actual_record:
+        if self.record:
             self.history.append(action, item, infos)
 
     def flush(self, dumpfile=None):
@@ -344,14 +299,12 @@ class Cache(Storage):
     _footprint = dict(
         info = 'Default cache description',
         attr = dict(
-            inifile = dict(
-                default  = '@cache-[storage].ini',
-            ),
             headdir = dict(
                 info     = "The cache's subdirectory (within **rootdir**).",
                 optional = True,
                 default  = 'cache',
             ),
+            # TODO is 'storage' used in any way?
             storage = dict(
                 optional = True,
                 default  = 'localhost',
@@ -386,39 +339,10 @@ class Cache(Storage):
     def realkind(self):
         return 'cache'
 
-    def _actual_config_lookup(self, attr, fatal=True, default=None):
-        """Look for *attr* in the configuration."""
-        k_glove = '@' + self.session.glove.realkind
-        k_head = None if self.headdir == 'conf' else '-' + self.headdir
-        if k_head and self._actual_config.has_option(self.kind + k_head + k_glove, attr):
-            return self._actual_config.get(self.kind + k_head + k_glove, attr)
-        elif k_head and self._actual_config.has_option(self.kind + k_head, attr):
-            return self._actual_config.get(self.kind + k_head, attr)
-        elif self._actual_config.has_option(self.kind + k_glove, attr):
-            this_attr = self._actual_config.get(self.kind + k_glove, attr)
-        elif self._actual_config.has_option(self.kind, attr):
-            this_attr = self._actual_config.get(self.kind, attr)
-        else:
-            if fatal:
-                raise AttributeError('Could not find default ' + attr + ' in config.')
-            else:
-                this_attr = default
-        return this_attr
-
-    @property
-    def actual_rootdir(self):
-        """This cache rootdir (potentially read form the configuration file)."""
-        return self.actual('rootdir')
-
-    @property
-    def actual_headdir(self):
-        """This cache headdir (potentially read form the configuration file)."""
-        return self.actual('headdir')
-
     @property
     def tag(self):
         """The identifier of this cache place."""
-        return '{:s}_{:s}_{:s}'.format(self.realkind, self.kind, self.actual_headdir)
+        return '{:s}_{:s}_{:s}'.format(self.realkind, self.kind, self.headdir)
 
     def _formatted_path(self, subpath, **kwargs):  # @UnusedVariable
         raise NotImplementedError()
@@ -567,9 +491,6 @@ class AbstractArchive(Storage):
     _footprint = dict(
         info = 'Default archive description',
         attr = dict(
-            inifile = dict(
-                default  = '@archive-[storage].ini',
-            ),
             tube = dict(
                 info     = "How to communicate with the archive ?",
             ),
@@ -1022,7 +943,7 @@ class FixedEntryCache(Cache):
     @property
     def entry(self):
         """Tries to figure out what could be the actual entry point for storage space."""
-        return self.sh.path.join(self.actual_rootdir, self.kind, self.actual_headdir)
+        return self.sh.path.join(self.rootdir, self.kind, self.headdir)
 
     @property
     def tag(self):
@@ -1051,7 +972,7 @@ class FixedEntryCache(Cache):
                 self.sh.getlogname()
             ))
             dumpfile = self.sh.path.join(self.entry, '.history', logfile)
-        if self.actual_record:
+        if self.record:
             self.sh.pickle_dump(self.history, dumpfile)
 
 
@@ -1154,7 +1075,7 @@ class MarketPlaceCache(Cache):
         conf['externalconfigs'] = defaultdict(lambda: dict(restrict=None,
                                                            seen=False))
         # If no configuration section is available... that's fine just do nothing
-        main_sname = '{0.kind:s}-{0.actual_headdir:s}'.format(self)
+        main_sname = '{0.kind:s}-{0.headdir:s}'.format(self)
         if maincfg.has_section(main_sname):
             conf['register'] = dict(maincfg.items(main_sname))
             localcfg = conf['register'].get('siteconf', None)
@@ -1261,7 +1182,7 @@ class MarketPlaceCache(Cache):
         if rootdir is None:
             return rootdir
         else:
-            return self.sh.path.join(rootdir, self.actual_headdir, subpath.lstrip('/'))
+            return self.sh.path.join(rootdir, self.headdir, subpath.lstrip('/'))
 
     @marketplace_check_write_permission
     def _actual_insert(self, item, local, **kwargs):
@@ -1313,8 +1234,8 @@ class MtoolCache(FixedEntryCache):
                              '(MTOOLDIR having the highest priority)')
                 raise RuntimeError('Unable to find an appropriate location for the cache space')
         else:
-            cache = self.actual_rootdir
-        return self.sh.path.join(cache, self.actual_headdir)
+            cache = self.rootdir
+        return self.sh.path.join(cache, self.headdir)
 
 
 class MtoolBuddiesCache(MtoolCache):
@@ -1397,8 +1318,8 @@ class Op2ResearchCache(FixedEntryCache):
             cache = fs + mt if mt.startswith('/') else self.sh.path.join(fs, mt)
             cache = self.sh.path.join(cache, 'cache')
         else:
-            cache = self.actual_rootdir
-        return self.sh.path.join(cache, self.actual_headdir)
+            cache = self.rootdir
+        return self.sh.path.join(cache, self.headdir)
 
 
 class HackerCache(FixedEntryCache):
@@ -1430,5 +1351,5 @@ class HackerCache(FixedEntryCache):
             sh.mkdir(sweethome)
             logger.debug('Using %s hack cache: %s', self.__class__, sweethome)
         else:
-            sweethome = self.actual_rootdir
-        return sh.path.join(sweethome, self.actual_headdir)
+            sweethome = self.rootdir
+        return sh.path.join(sweethome, self.headdir)
