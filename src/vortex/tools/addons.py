@@ -8,6 +8,7 @@ from bronx.fancies import loggers
 from bronx.syntax.decorators import nicedeco
 import footprints
 
+from vortex.config import from_config
 from vortex.layout import contexts
 from vortex.tools.env import Environment
 from vortex.tools.systems import OSExtended
@@ -16,6 +17,14 @@ logger = loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []
+
+
+def get_from_config_w_default(section, key, default):
+    logger.info(f"Reading config value {section}.{key}")
+    try:
+        return from_config(section, key)
+    except KeyError:
+        return default
 
 
 class Addon(footprints.FootprintBase):
@@ -85,15 +94,20 @@ class Addon(footprints.FootprintBase):
                     self.path = self.sh.env.get(kpath)
                     break
             if self.path is None and self.cfginfo is not None:
-                tg = self.sh.default_target
                 addon_rootdir = self.sh.env.get(
                     self.cfginfo + 'root',
-                    tg.get(self.cfginfo + ':rootdir', None)
+                    get_from_config_w_default(
+                        section=self.cfginfo, key="rootdir", default=None,
+                    ),
                 )
                 if self.cycle is None:
                     self.cycle = self.sh.env.get(
                         self.cfginfo + 'cycle',
-                        tg.get(self.cfginfo + ':' + self.cfginfo + 'cycle')
+                        get_from_config_w_default(
+                            section=self.cfginfo,
+                            key=self.cfginfo + "cycle",
+                            default=None,
+                        ),
                     )
                 if addon_rootdir is not None and self.cycle is not None:
                     self.path = addon_rootdir + '/' + self.cycle
@@ -214,8 +228,9 @@ class FtrawEnableAddon(Addon):
         super().__init__(*args, **kw)
         # If needed, look in the config file for the rawftshell
         if self.rawftshell is None:
-            tg = self.sh.default_target
-            self.rawftshell = tg.get(self.cfginfo + ':rawftshell', None)
+            self.rawftshell = get_from_config_w_default(
+                section=self.cfginfo, key="rawftshell", default=None,
+            )
 
 
 class AddonGroup(footprints.FootprintBase):
