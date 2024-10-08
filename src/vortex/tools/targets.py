@@ -98,10 +98,6 @@ class Target(fp.FootprintBase):
         self._specialnodes = None
         self._sepcialnodesaliases = None
         self._specialproxies = None
-        if self._actualconfig is None:
-            self._actualconfig = GenericConfigParser(inifile=self.inifile,
-                                                     mkforce=self.iniauto,
-                                                     defaultinifile=self.defaultinifile)
 
     @property
     def realkind(self):
