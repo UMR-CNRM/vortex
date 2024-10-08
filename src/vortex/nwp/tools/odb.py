@@ -128,7 +128,7 @@ class TimeSlots:
 class OdbDriver:
     """A dedicated class for handling some ODB settings."""
 
-    def __init__(self, cycle, sh=None, env=None, target=None):
+    def __init__(self, cycle, sh=None, env=None):
         """
         A quite challenging initialisation since cycle, sh, env and target
         should be provided...
@@ -140,9 +140,6 @@ class OdbDriver:
         self.env = env
         if self.env is None:
             logger.critical('%s created with a proper environment access [%s]', self.__class__, self)
-        self.target = target
-        if self.target is None:
-            logger.critical('%s created with a proper target access [%s]', self.__class__, self)
 
     def setup(self, date, npool=1, nslot=1, iomethod=1, layout='ecma'):
         """Setup given environment with default ODB env variables."""
@@ -201,25 +198,31 @@ class OdbDriver:
     @property
     def _default_iotools_path(self):
         """The location to the default odb-tools utilities."""
-        iopath = self.target.get('odbtools:rootdir', self.env.TMPDIR)
-        iovers = self.target.get('odbtools:odbcycle', 'oper')
+        iopath = from_config(section="odbtools", key="rootdir")
+        iovers = from_config(section="odbtools", key="odbcycle")
         return self.sh.path.join(iopath, iovers)
 
     @property
     def _default_iocreate_path(self):
         """The location to the default create_ioassign utility."""
-        return self.env.get('ODB_IOCREATE_COMMAND',
-                            self.sh.path.join(self._default_iotools_path,
-                                              self.target.get('odbtools:iocreate',
-                                                              'create_ioassign')))
+        return self.env.get(
+            'ODB_IOCREATE_COMMAND',
+            self.sh.path.join(
+                self._default_iotools_path,
+                from_config(section="odbtools", key="iocreate"),
+            )
+        )
 
     @property
     def _default_iomerge_path(self):
         """The location to the default merge_ioassign utility."""
-        return self.env.get('ODB_IOMERGE_COMMAND',
-                            self.sh.path.join(self._default_iotools_path,
-                                              self.target.get('odbtools:iomerge',
-                                                              'merge_ioassign')))
+        return self.env.get(
+            'ODB_IOMERGE_COMMAND',
+            self.sh.path.join(
+                self._default_iotools_path,
+                from_config(section="odbtools", key="iomerge"),
+            )
+        )
 
     def ioassign_create(self, ioassign='ioassign.x', npool=1, layout='ecma',
                         dbpath=None, iocreate_path=None):
@@ -415,7 +418,6 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
             cycle=cycle,
             sh=self.system,
             env=self.env,
-            target=self.target,
         )
         if self.system.path.exists(self.ioassign):
             self._x_ioassign = self.system.path.abspath(self.ioassign)
