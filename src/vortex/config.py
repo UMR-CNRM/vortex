@@ -1,7 +1,11 @@
 import tomli
 
+from bronx.fancies import loggers
+
 
 VORTEX_CONFIG = None
+
+logger = loggers.getLogger(__name__)
 
 
 def load_config(configpath="vortex.toml"):
@@ -42,3 +46,11 @@ def from_config(section, key=None):
         print(f"Could not find key {key} in section {section} of configuration")
         raise(e)
     return value
+
+
+def get_from_config_w_default(section, key, default):
+    logger.info(f"Reading config value {section}.{key}")
+    try:
+        return from_config(section, key)
+    except KeyError:
+        return default

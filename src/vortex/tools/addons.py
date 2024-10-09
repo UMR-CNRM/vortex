@@ -8,7 +8,7 @@ from bronx.fancies import loggers
 from bronx.syntax.decorators import nicedeco
 import footprints
 
-from vortex.config import from_config
+from vortex.config import get_from_config_w_default
 from vortex.layout import contexts
 from vortex.tools.env import Environment
 from vortex.tools.systems import OSExtended
@@ -17,14 +17,6 @@ logger = loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []
-
-
-def get_from_config_w_default(section, key, default):
-    logger.info(f"Reading config value {section}.{key}")
-    try:
-        return from_config(section, key)
-    except KeyError:
-        return default
 
 
 class Addon(footprints.FootprintBase):
