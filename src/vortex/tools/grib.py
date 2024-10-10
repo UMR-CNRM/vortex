@@ -18,6 +18,7 @@ from bronx.fancies import loggers
 import footprints
 
 from . import addons
+from vortex.config import get_from_config_w_default
 from vortex.algo.components import AlgoComponentDecoMixin, algo_component_deco_mixin_autodoc
 from vortex.tools.net import DEFAULT_FTP_PORT
 
@@ -502,8 +503,11 @@ class GRIBAPI_Tool(addons.Addon):
         super().__init__(*args, **kw)
         # Additionaly, check for the GRIB_API_ROOTDIR key in the config file
         if self.path is None and self.cfginfo is not None:
-            tg = self.sh.default_target
-            addon_rootdir = tg.get(self.cfginfo + ':grib_api_rootdir', None)
+            addon_rootdir = get_from_config_w_default(
+                section=self.cfginfo,
+                key="grib_api_rootdir",
+                default=None,
+            )
             if addon_rootdir is not None:
                 self.path = addon_rootdir
 
