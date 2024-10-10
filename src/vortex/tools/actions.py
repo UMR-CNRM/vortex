@@ -12,7 +12,6 @@ import footprints
 from bronx.fancies import loggers
 from bronx.fancies.display import dict_as_str
 from vortex import sessions
-from vortex.util.authorizations import is_authorized_user
 from vortex.util.config import GenericConfigParser
 
 #: Export nothing
@@ -112,15 +111,12 @@ class Action:
     def get_active_service(self, **kw):
         """Return the actual service according to active status and user authorizations."""
         a_service = None
-        if is_authorized_user(action=self.kind):
-            if self.active:
-                a_service = self.get_actual_service(**kw)
-                if a_service is None:
-                    logger.warning('Could not find any service for action %s', self.kind)
-            else:
-                logger.warning('Action %s is not active', self.kind)
+        if self.active:
+            a_service = self.get_actual_service(**kw)
+            if a_service is None:
+                logger.warning('Could not find any service for action %s', self.kind)
         else:
-            logger.warning('User is not authorized to perform %s', self.kind)
+            logger.warning('Action %s is not active', self.kind)
         return a_service
 
     def execute(self, *args, **kw):
