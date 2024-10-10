@@ -207,20 +207,22 @@ class SMS(EcmwfLikeScheduler):
         super().__init__(*args, **kw)
         self._actual_rootdir = self.rootdir
         if self._actual_rootdir is None:
-            thistarget = self.sh.default_target
-            guesspath = self.env.SMS_INSTALL_ROOT or thistarget.get('sms:rootdir')
-            if guesspath is None:
-                logger.warning('SMS service could not guess install location [%s]', str(guesspath))
-            else:
-                generictarget = thistarget.generic() or self.env.TARGET
-                if generictarget is None:
-                    logger.warning('SMS service could not guess target name [%s]', generictarget)
-                else:
-                    self._actual_rootdir = guesspath + '/' + generictarget
+            self._actual_rootdir = (
+                self.env.SMS_INSTALL_ROOT or
+                from_config(section="sms", key="rootdir")
+            )
+            if self._actual_rootdir is None:
+                logger.warning(
+                    'SMS service could not guess install location [%s]',
+                    str(guesspath)
+                )
         if self.sh.path.exists(self.cmdpath('init')):
             self.env.setbinpath(self._actual_rootdir)
         else:
-            logger.warning('No SMS client found at init time [rootdir:%s]>', self._actual_rootdir)
+            logger.warning(
+                'No SMS client found at init time [rootdir:%s]>',
+                self._actual_rootdir
+            )
 
     def cmd_rename(self, cmd):
         """Remap command name. Strip any sms prefix."""
