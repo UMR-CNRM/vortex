@@ -873,9 +873,6 @@ class ArchiveStore(Store):
         # Store head ?
         if self.storehead:
             formatted = self.system.path.join(self.storehead, formatted)
-        # Export specials...
-        if from_config(section="storage", key="export_mapping"):
-            formatted = self.system.path.join(self.scheme, self.netloc, formatted)
         # Store root (if specified)
         pathroot = remote.get('root', self.storeroot)
         if pathroot is not None:

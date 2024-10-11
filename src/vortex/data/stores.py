@@ -672,11 +672,10 @@ class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
-        if not self.actual_export_mapping:
-            actual_mappingroot = self._actual_mappingroot
-            if not self.storeroot and actual_mappingroot:
-                remote['root'] = actual_mappingroot
-                xpath[3:4] = list(xpath[3])
+        actual_mappingroot = self._actual_mappingroot
+        if not self.storeroot and actual_mappingroot:
+            remote['root'] = actual_mappingroot
+            xpath[3:4] = list(xpath[3])
         remote['path'] = self.system.path.join(*xpath)
         return remote
 
@@ -726,11 +725,10 @@ class VortexFreeStdBaseArchiveStore(_VortexBaseArchiveStore, ConfigurableArchive
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].strip('/').split('/')
-        if not self.actual_export_mapping:
-            f_xpid = FreeXPid(xpath[2])
-            xpath[2] = f_xpid.id
-            if 'root' not in remote:
-                remote['root'] = self._actual_storeroot(f_xpid)
+        f_xpid = FreeXPid(xpath[2])
+        xpath[2] = f_xpid.id
+        if 'root' not in remote:
+            remote['root'] = self._actual_storeroot(f_xpid)
         remote['path'] = self.system.path.join(*xpath)
         return remote
 
@@ -789,15 +787,14 @@ class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
-        if not self.actual_export_mapping:
-            remote['root'] = self._actual_storeroot
-            if len(xpath) >= 5 and re.match(r'^\d{8}T\d{2,4}', xpath[4]):
-                # If a date is detected
-                vxdate = list(xpath[4])
-                vxdate.insert(4, '/')
-                vxdate.insert(7, '/')
-                vxdate.insert(10, '/')
-                xpath[4] = ''.join(vxdate)
+        remote['root'] = self._actual_storeroot
+        if len(xpath) >= 5 and re.match(r'^\d{8}T\d{2,4}', xpath[4]):
+            # If a date is detected
+            vxdate = list(xpath[4])
+            vxdate.insert(4, '/')
+            vxdate.insert(7, '/')
+            vxdate.insert(10, '/')
+            xpath[4] = ''.join(vxdate)
         remote['path'] = self.system.path.join(*xpath)
         return remote
 
