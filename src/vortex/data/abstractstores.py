@@ -49,61 +49,7 @@ def observer_board(obsname=None):
     return observer.get(tag=obsname)
 
 
-class _SetAsideStoreMixin:
-    """
-    This Mixin is intended to work with store-like classes. It provides the
-    necessary methods to take care of the "setaside" urlquery option.
-    """
-
-    def _check_set_aside(self, remote):
-        """Look for "setaside" entry in the url-query."""
-        if 'setaside_p' in remote['query']:
-            remote = remote.copy()
-            remote['query'] = remote['query'].copy()
-            a_spec = dict()
-            a_spec['scheme'] = remote['query'].pop('setaside_s', [self.scheme])[0]
-            a_spec['netloc'] = remote['query'].pop('setaside_n', [self.netloc])[0]
-            a_spec['remote_path'] = remote['query'].pop('setaside_p')[0]
-            set_aside_args_prefix = 'setaside_args_'
-            for k, v in remote['query'].items():
-                if k.startswith(set_aside_args_prefix):
-                    k = k[len(set_aside_args_prefix):]
-                    a_spec[k] = v[0]
-            return remote, a_spec
-        else:
-            return remote, None
-
-    @contextlib.contextmanager
-    def _do_set_aside_cocoon(self, local, options):
-        """If the requested file is intent=inout, creates a temporary copy."""
-        options_bis = options.copy()
-        intent = options_bis.pop('intent', CACHE_GET_INTENT_DEFAULT)
-        if intent != 'in':
-            local_bis = self.system.safe_fileaddsuffix(local)
-            fmt = options_bis.get('fmt', None)
-            self.system.cp(local, local_bis, intent='inout', fmt=fmt)
-            try:
-                yield local_bis, options_bis
-            finally:
-                self.system.rm(local_bis, fmt=fmt)
-        else:
-            yield local, options_bis
-
-    def _do_set_aside(self, remote, local, set_aside, options):
-        """Put the resource to the place designated by "setaside"."""
-        remote_bis = remote.copy()
-        remote_bis['path'] = set_aside.pop('remote_path')
-        st_bis_attr = self.footprint_as_shallow_dict()
-        st_bis_attr.update(set_aside)
-        st_bis = footprints.proxy.store(** st_bis_attr)
-        with self._do_set_aside_cocoon(local, options) as (local_bis, options_bis):
-            rc = st_bis.put(local_bis, remote_bis, options=options_bis)
-            if not rc:
-                logger.warning("An error occurred because of the 'set_aside'")
-            return rc
-
-
-class Store(footprints.FootprintBase, _SetAsideStoreMixin):
+class Store(footprints.FootprintBase):
     """Root class for any :class:`Store` subclasses."""
 
     _abstract = True
@@ -356,13 +302,10 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
         if not self._incache_inarchive_check(options):
             return False
         if not options.get('insitu', False) or self.use_cache():
-            remote, set_aside = self._check_set_aside(remote)
             if result_id:
                 rc = getattr(self, self.scheme + action, self.notyet)(result_id, remote, local, options)
             else:
                 rc = getattr(self, self.scheme + action, self.notyet)(remote, local, options)
-            if rc and set_aside:
-                rc = self._do_set_aside(remote, local, set_aside, options=options)
             self._observer_notify('get', rc, remote, local=local, options=options)
             return rc
         else:
@@ -438,7 +381,7 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
         return rc
 
 
-class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
+class MultiStore(footprints.FootprintBase):
     """Agregate various :class:`Store` items."""
 
     _abstract = True
@@ -643,7 +586,6 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
         """Go through internal opened stores for the first available resource."""
         rc = False
         refill_in_progress = True
-        remote, set_aside = self._check_set_aside(remote)
         f_rd_ostores = self.filtered_readable_openedstores(remote)
         if self.refillstore:
             f_wr_ostores = self.filtered_writeable_openedstores(remote)
@@ -684,10 +626,7 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
                 # Whatever the refill's outcome, that's fine
                 if rc:
                     break
-        if rc:
-            if set_aside:
-                rc = self._do_set_aside(remote, local, set_aside, options)
-        else:
+        if not rc:
             self._verbose_log(options, 'warning',
                               "Multistore get {:s}://{:s}: none of the opened store succeeded."
                               .format(self.scheme, self.netloc), slevel='info')

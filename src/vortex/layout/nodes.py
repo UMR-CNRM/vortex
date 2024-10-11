@@ -598,7 +598,7 @@ class Node(getbytag.GetByTag, NiceLayout):
         if 'rundate' in self.conf:
             toolbox.defaults['date'] = self.conf.rundate
 
-        for optk in ('cutoff', 'geometry', 'cycle', 'model', 'vortex_set_aside'):
+        for optk in ('cutoff', 'geometry', 'cycle', 'model'):
             if optk in self.conf:
                 value = self.conf.get(optk)
                 if isinstance(value, dict):

@@ -295,12 +295,6 @@ class Vortex(Provider):
                     default     = False,
                     doc_zorder  = -5,
                 ),
-                vortex_set_aside = dict(
-                    info        = "Do we need to re-archive retrieve data somewhere else?",
-                    optional    = True,
-                    type        = FPDict,
-                    doc_visibility = footprints.doc.visibility.GURU,
-                ),
             ),
             fastkeys = {'block', 'experiment'},
         )
@@ -319,8 +313,6 @@ class Vortex(Provider):
             self._namebuilder = self._CUSTOM_NAME_BUILDERS[self.namebuild]
         else:
             self._namebuilder = self._DEFAULT_NAME_BUILDER
-        self._x_set_aside = None
-        self._x_set_aside_specs = None
 
     @property
     def namebuilder(self):
@@ -372,75 +364,6 @@ class Vortex(Provider):
         """
         return self.namebuilder.pack_basename(resource.namebuilding_info())
 
-    @property
-    def x_set_aside(self):
-        if self._x_set_aside is None:
-            if self.vortex_set_aside is not None:
-                input_set_aside = self.vortex_set_aside
-            else:
-                t = sessions.current()
-                if t.env.VORTEX_PROVIDER_SET_ASIDE:
-                    input_set_aside = StringDecoder(substitution_cb=t.env.get)(t.env.VORTEX_PROVIDER_SET_ASIDE)
-                else:
-                    input_set_aside = dict()
-            if not isinstance(input_set_aside, dict):
-                logger.warning("setaside should decode as a dictionary (got '%s' that translate into '%s')",
-                               self.vortex_set_aside, input_set_aside)
-            # New configuration style ?
-            if set(input_set_aside.keys()) < {'defaults', 'edits', 'excludes', 'includes'}:
-                self._x_set_aside = dict()
-                if 'excludes' in input_set_aside and 'includes' in input_set_aside:
-                    logger.warning("excludes/includes can not appear at the same time. Ignoring set_aside.")
-                else:
-                    for what in ('includes', 'excludes'):
-                        if what in input_set_aside:
-                            self._x_set_aside[what] = {any_vortex_xpid(k)
-                                                       for k in input_set_aside[what]}
-                    if 'edits' in input_set_aside:
-                        self._x_set_aside['edits'] = {any_vortex_xpid(k): v
-                                                      for k, v in input_set_aside['edits'].items()}
-                    else:
-                        self._x_set_aside['edits'] = dict()
-                    self._x_set_aside['defaults'] = input_set_aside.get('defaults', dict())
-            # Legacy configuration style
-            else:
-                # Check the dictionary keys
-                self._x_set_aside = dict()
-                for k, v in input_set_aside.items():
-                    try:
-                        k = any_vortex_xpid(k)
-                    except ValueError:
-                        logger.warning("erroneous xpid in the vortex_set_aside dictionary (%s). Ignoring it.", k)
-                    else:
-                        self._x_set_aside[k] = v
-        return self._x_set_aside
-
-    @property
-    def x_set_aside_specs(self):
-        if self._x_set_aside_specs is None:
-            self._x_set_aside_specs = dict()
-            # New configuration style
-            if 'defaults' in self.x_set_aside:
-                if (('excludes' in self.x_set_aside and
-                     self.experiment not in self.x_set_aside['excludes']) or
-                    ('includes' in self.x_set_aside and
-                     self.experiment in self.x_set_aside['includes']) or
-                    ('includes' not in self.x_set_aside and
-                     'excludes' not in self.x_set_aside)):
-                    self._x_set_aside_specs = self.x_set_aside['defaults'].copy()
-                    self._x_set_aside_specs.update(
-                        self.x_set_aside['edits'].get(self.experiment, dict())
-                    )
-            # Legacy configuration style
-            else:
-                if self.experiment in self.x_set_aside:
-                    value = self.x_set_aside[self.experiment]
-                    if isinstance(value, dict):
-                        self._x_set_aside_specs = value
-                    else:
-                        self._x_set_aside_specs = dict(experiment=value)
-        return self._x_set_aside_specs.copy()
-
     def urlquery(self, resource):
         """Construct the urlquery (taking into account stacked storage)."""
         s_urlquery = super().urlquery(resource)
@@ -458,19 +381,6 @@ class Vortex(Provider):
             uqs['stackpath'] = [(self.namebuilder.pack_pathname(stackpathinfo) + '/' +
                                  self.basename(stackres)), ]
             uqs['stackfmt'] = [stackres.nativefmt, ]
-        # Deal with set_aside
-        if self.x_set_aside_specs:
-            provider_attrs = self.footprint_as_shallow_dict()
-            del provider_attrs['vortex_set_aside']
-            for k, v in self.x_set_aside_specs.items():
-                if not k.startswith('stor'):
-                    provider_attrs[k] = v
-            provider_bis = fpx.provider(** provider_attrs)
-            uqs['setaside_n'] = [provider_bis.netloc(resource), ]
-            uqs['setaside_p'] = [provider_bis.pathname(resource) + '/' + provider_bis.basename(resource), ]
-            for k, v in self.x_set_aside_specs.items():
-                if k.startswith('stor'):
-                    uqs['setaside_args_{:s}'.format(k)] = v
         return urlparse.urlencode(sorted(uqs.items()), doseq=True)
 
 
