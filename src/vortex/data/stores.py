@@ -983,26 +983,6 @@ class VortexCacheBuddiesStore(_VortexCacheBaseStore):
     )
 
 
-class VortexCacheMarketPlaceStore(_VortexCacheBaseStore):
-    """Some kind of centralised cache for VORTEX experiments."""
-
-    _footprint = dict(
-        info = "VORTEX's centralised Cache access",
-        attr = dict(
-            netloc = dict(
-                values  = ['{:s}.{:s}cache-market.fr'.format(v, s)
-                           for v in ('vortex', 'vortex-free') for s in ('', 'stacked-')]
-            ),
-            strategy = dict(
-                default = 'marketplace',
-            ),
-            rtouch = dict(
-                default = False,
-            ),
-        )
-    )
-
-
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
     """The DSI/OP VORTEX cache where researchers can get the freshest data."""
 
@@ -1046,8 +1026,10 @@ class _AbstractVortexCacheMultiStore(MultiStore):
     )
 
     def filtered_readable_openedstores(self, remote):
-        """Deals with stacked and marketplace stores that are not always active."""
+        """Deals with stacked stores that are not always active."""
         ostores = [self.openedstores[0], ]
+        # TODO is the call to cache.allow_reads still required without
+        # marketplace stores?
         ostores.extend([sto for sto in self.openedstores[1:]
                         if ((not sto.stackedstore or 'stackpath' in remote['query']) and
                             sto.cache.allow_reads(remote['path']))
@@ -1055,10 +1037,7 @@ class _AbstractVortexCacheMultiStore(MultiStore):
         return ostores
 
     def filtered_writeable_openedstores(self, remote):
-        """
-        Deals with marketplace stores that are not always active and never
-        writes into stack stores.
-        """
+        """never writes into stack stores."""
         ostores = [self.openedstores[0], ]
         ostores.extend([sto for sto in self.openedstores[1:]
                         if not sto.stackedstore and sto.cache.allow_writes(remote['path'])])
@@ -1083,9 +1062,7 @@ class VortexCacheStore(_AbstractVortexCacheMultiStore):
         s_mt_netloc = '{base:s}.stacked-cache-mt.{country:s}'.format(** netloc_m.groupdict())
         bd_netloc = '{base:s}.cache-buddies.{country:s}'.format(** netloc_m.groupdict())
         s_bd_netloc = '{base:s}.stacked-cache-buddies.{country:s}'.format(** netloc_m.groupdict())
-        ma_netloc = '{base:s}.cache-market.{country:s}'.format(** netloc_m.groupdict())
-        s_ma_netloc = '{base:s}.stacked-cache-market.{country:s}'.format(** netloc_m.groupdict())
-        return [mt_netloc, s_mt_netloc, bd_netloc, s_bd_netloc, ma_netloc, s_ma_netloc]
+        return [mt_netloc, s_mt_netloc, bd_netloc, s_bd_netloc]
 
 
 class VortexVsopCacheStore(_AbstractVortexCacheMultiStore):
@@ -1135,6 +1112,7 @@ class _AbstractVortexStackMultiStore(MultiStore):
         )
     )
 
+    # TODO is this still needed without marketplace stores?
     def filtered_readable_openedstores(self, remote):
         """Deals with marketplace stores that are not always active."""
         ostores = [self.openedstores[0], ]
@@ -1167,8 +1145,7 @@ class VortexStackStore(_AbstractVortexStackMultiStore):
         netloc_m = re.match(r'(?P<base>vortex.*)\.stack\.(?P<country>\w+)', self.netloc)
         s_mt_netloc = '{base:s}.stacked-cache-mt.{country:s}'.format(** netloc_m.groupdict())
         s_bd_netloc = '{base:s}.stacked-cache-buddies.{country:s}'.format(** netloc_m.groupdict())
-        s_ma_netloc = '{base:s}.stacked-cache-market.{country:s}'.format(** netloc_m.groupdict())
-        return [s_mt_netloc, s_bd_netloc, s_ma_netloc]
+        return [s_mt_netloc, s_bd_netloc]
 
 
 class VortexVsopStackStore(_AbstractVortexStackMultiStore):
