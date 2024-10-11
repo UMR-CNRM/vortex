@@ -890,39 +890,6 @@ class LocalArchive(AbstractLocalArchive):
         return super()._formatted_path(rawpath, **kwargs)
 
 
-class LocalBucketArchive(AbstractLocalArchive):
-    """The default class to handle storage in a Bucket (for export)."""
-
-    _footprint = dict(
-        info = 'Default local archive description',
-        attr = dict(
-            storage = dict(
-                outcast  = ['localhost', ],
-            ),
-        ),
-        only = dict(
-            storage = footprints.FPRegex(r'^\w+\.bucket\.localhost$')
-        )
-    )
-
-    def __init__(self, *kargs, **kwargs):
-        super().__init__(*kargs, **kwargs)
-        self._bucketname = self.storage.split('.')[0]
-
-    @property
-    def bucketname(self):
-        return self._bucketname
-
-    def _formatted_path(self, rawpath, **kwargs):
-        root = kwargs.get('root', None)
-        if root is not None:
-            raise ValueError("The {!r} storage does not support the 'root' argument".format(self.__class__))
-        rawpath = self.sh.path.expanduser(
-            self.sh.path.join('~', 'vortexbucket', self.bucketname, rawpath)
-        )
-        return super()._formatted_path(rawpath, **kwargs)
-
-
 # Concrete cache implementations
 # ------------------------------
 
