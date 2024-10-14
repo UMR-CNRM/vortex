@@ -766,7 +766,7 @@ class ArchiveStore(Store):
             self._actual_storage = (
                 self.system.env.VORTEX_DEFAULT_STORAGE or
                 self.system.glove.default_fthost or
-                from_config(section="storage", key="address"),
+                from_config(section="storage", key="address")
             )
             if self._actual_storage is None:
                 raise ValueError('Unable to find the archive network name.')
