@@ -1040,11 +1040,10 @@ class Op2ResearchCache(FixedEntryCache):
         info = 'MTOOL like Operations Cache (read-only)',
         attr = dict(
             kind = dict(
-                values   = ['op2r_primary', 'op2r_secondary'],
+                values   = ['op2r'],
             ),
             rootdir = dict(
                 optional = True,
-                default  = 'auto'
             ),
             headdir = dict(
                 optional = True,
@@ -1059,16 +1058,10 @@ class Op2ResearchCache(FixedEntryCache):
 
     @property
     def entry(self):
-        if self.rootdir == 'auto':
-            fs = self.sh.default_target.get('op:' + self.kind[5:] + 'fs', '')
-            mt = self.sh.default_target.get('op:mtooldir', None)
-            if mt is None:
-                raise ValueError("The {!r} cache can't be initialised since op:mtooldir is missing".format(
-                    self.kind))
-            cache = fs + mt if mt.startswith('/') else self.sh.path.join(fs, mt)
-            cache = self.sh.path.join(cache, 'cache')
-        else:
-            cache = self.rootdir
+        cache = (
+            self.rootdir or
+            from_config(section="storage", key="op_rootdir")
+        )
         return self.sh.path.join(cache, self.headdir)
 
 
