@@ -778,7 +778,7 @@ class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
     def _actual_storeroot(self):
         return (
             self.storeroot or
-            self._actual_from_genericconf(
+            from_config(
                 section="storage", key="op_rootdir",
             )
         )
