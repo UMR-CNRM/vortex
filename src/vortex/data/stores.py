@@ -980,6 +980,7 @@ class VortexCacheBuddiesStore(_VortexCacheBaseStore):
     )
 
 
+# TODO Not sure this class is needed anymore
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
     """The DSI/OP VORTEX cache where researchers can get the freshest data."""
 
@@ -987,8 +988,10 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
         info = 'VORTEX Mtool cache access',
         attr = dict(
             netloc = dict(
-                values  = ['vsop.{:s}cache-{:s}.fr'.format(s, l)
-                           for l in ('primary', 'secondary') for s in ('', 'stacked-')],
+                values  = [
+                    'vsop.{:s}cache-op2r.fr'.format(s)
+                    for s in ('', 'stacked-')
+                ],
             ),
             strategy = dict(
                 default = 'op2r',
@@ -1002,8 +1005,7 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
     @property
     def underlying_cache_kind(self):
         """The kind of cache that will be used."""
-        mgrp = re.match(r'\w+\.(?:stacked-)?cache-(\w+)\.\w+', self.netloc)
-        return '_'.join((self.strategy, mgrp.group(1)))
+        return self.strategy
 
 
 class _AbstractVortexCacheMultiStore(MultiStore):
@@ -1084,12 +1086,14 @@ class VortexVsopCacheStore(_AbstractVortexCacheMultiStore):
 
     def alternates_netloc(self):
         """For Non-Op users, Op caches may be accessed in read-only mode."""
-        todo = ['vsop.cache-mt.fr', 'vsop.stacked-cache-mt.fr', ]  # The MTOOL Caches remain a must :-)
+        todo = [
+            'vsop.cache-mt.fr',
+            'vsop.stacked-cache-mt.fr',
+        ]
         if self.glovekind != 'opuser':
-            for loc in ('primary', 'secondary'):
-                if int(self.system.default_target.get('stores:vsop_cache_op{}'.format(loc), '0')):
-                    for s in ('', 'stacked-'):
-                        todo.append('vsop.{:s}cache-{:s}.fr'.format(s, loc))
+            todo += [
+                'vsop.cache-op2r.fr', 'vsop.stacked-cache-op2r.fr',
+            ]
         return todo
 
 
@@ -1165,9 +1169,7 @@ class VortexVsopStackStore(_AbstractVortexStackMultiStore):
         """For Non-Op users, Op caches may be accessed in read-only mode."""
         todo = ['vsop.stacked-cache-mt.fr', ]
         if self.glovekind != 'opuser':
-            for loc in ('primary', 'secondary'):
-                if int(self.system.default_target.get('stores:vsop_cache_op{}'.format(loc), '0')):
-                    todo.append('vsop.stacked-cache-{:s}.fr'.format(loc))
+            todo.append("vsop.stacked-cache-op2r.fr")
         return todo
 
 
