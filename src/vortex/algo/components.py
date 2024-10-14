@@ -623,11 +623,10 @@ class AlgoComponent(footprints.FootprintBase, metaclass=AlgoComponentMeta):
 
     def export(self, packenv):
         """Export environment variables in given pack."""
-        if self.target.config.has_section(packenv):
-            for k, v in self.target.config.items(packenv):
-                if k not in self.env:
-                    logger.info('Setting %s env %s = %s', packenv.upper(), k, v)
-                    self.env[k] = v
+        for k, v in from_config(section=packenv).items():
+            if k not in self.env:
+                logger.info('Setting %s env %s = %s', packenv.upper(), k, v)
+                self.env[k] = v
 
     def prepare(self, rh, opts):
         """Set some defaults env values."""
