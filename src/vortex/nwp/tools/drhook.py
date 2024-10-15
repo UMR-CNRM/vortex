@@ -39,9 +39,24 @@ class DrHookDecoMixin(AlgoComponentDecoMixin):
 
     def _drhook_varexport(self, rh, opts):  # @UnusedVariable
         """Export proper DrHook variables"""
-        # Basic exports
-        self.export('drhook{}'.format('prof' if self.drhookprof else ''))
+        drhook_vars = (
+            [
+                ("DR_HOOK", "1"),
+                ("DR_HOOK_OPT", "prof"),
+                ("DR_HOOK_IGNORE_SIGNALS", "-1"),
+            ]
+            if self.drhookprof else
+            [("DR_HOOK", "0"), ("DR_HOOK_IGNORE_SIGNALS", "-1")]
+        )
         if not isinstance(self, Parallel):
-            self.export('drhook_not_mpi')
+            drhook_vars += [
+                ("DR_HOOK_SILENT", "1"),
+                ("DR_HOOK_NOT_MPI", "1"),
+                ("DR_HOOK_ASSERT_MPI_INITIALIZED", "0"),
+            ]
+        for k, v in drhook_vars:
+            logger.info('Setting DRHOOK env %s = %s', k, v)
+            self.env[k] = v
+
 
     _MIXIN_PREPARE_HOOKS = (_drhook_varexport, )
