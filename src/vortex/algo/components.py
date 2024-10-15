@@ -1602,12 +1602,6 @@ class Parallel(xExecutableAlgoComponent):
                 alias           = ['mpi'],
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
-            mpiconflabel = dict(
-                info            = ('Some extra label used when reading the mpitool' +
-                                   'configuration in the configuration file'),
-                optional        = True,
-                doc_visibility  = footprints.doc.visibility.GURU,
-            ),
             mpiverbose = dict(
                 info            = 'Boost logging verbosity in mpitools',
                 optional        = True,
@@ -1898,7 +1892,7 @@ class Parallel(xExecutableAlgoComponent):
             mpi, args = self._bootstrap_mpitool(rh, opts)
 
             # Specific parallel settings
-            mpi.setup(opts, self.mpiconflabel)
+            mpi.setup(opts)
 
             # This is actual running command
             self.spawn(args, opts)
