@@ -26,3 +26,4 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "vortex.data" = ["geometries.ini"]
+"vortex.algo" = ["mpitools_templates/*.tpl"]
