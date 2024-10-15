@@ -1613,9 +1613,9 @@ class OmpiMpiRun(MpiTool):
         if self.envelope:
             self.system.remove(self._envelope_rankfile_name)
 
-    def setup_environment(self, opts, conflabel):
+    def setup_environment(self, opts):
         """Tweak the environment with some srun specific settings."""
-        super().setup_environment(opts, conflabel)
+        super().setup_environment(opts)
         if self.bindingmethod == 'native' and 'OMP_PROC_BIND' not in self.env:
             self._logged_env_set('OMP_PROC_BIND', 'true')
         for libpath in self._mpilib_identification()[2]:

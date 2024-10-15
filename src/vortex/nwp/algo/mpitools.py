@@ -174,14 +174,14 @@ class MpiAuto(mpitools.MpiTool):
                 cmdl.append(self.optprefix + self.optmap['openmp'])
                 cmdl.append(str(openmp))
 
-    def setup_environment(self, opts, conflabel):
+    def setup_environment(self, opts):
         """Last minute fixups."""
-        super().setup_environment(opts, conflabel)
+        super().setup_environment(opts)
         if self.bindingmethod in ('arch', 'vortex'):
             # Make sure srun does nothing !
             self._logged_env_set('SLURM_CPU_BIND', 'none')
 
-    def setup(self, opts=None, conflabel=None):
+    def setup(self, opts=None):
         """Ensure that the prefixcommand has the execution rights."""
         for bin_obj in self.binaries:
             prefix_c = bin_obj.options.get('prefixcommand', None)
@@ -190,7 +190,7 @@ class MpiAuto(mpitools.MpiTool):
                     self.system.xperm(prefix_c, force=True)
                 else:
                     raise OSError('The prefixcommand do not exists.')
-        super().setup(opts, conflabel)
+        super().setup(opts)
 
 
 class MpiAutoDDT(MpiAuto):
