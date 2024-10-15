@@ -67,7 +67,7 @@ class MpiAuto(mpitools.MpiTool):
         )
     )
 
-    _envelope_wrapper_tpl = '@mpitools/envelope_wrapper_mpiauto.tpl'
+    _envelope_wrapper_tpl = '@envelope_wrapper_mpiauto.tpl'
     _envelope_rank_var = 'MPIAUTORANK'
     _needs_mpilib_specific_mpienv = False
 
