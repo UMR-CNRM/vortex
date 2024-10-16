@@ -74,7 +74,7 @@ class Bateur(VortexWorkerBlindRun):
 
     def vortex_task(self, **kwargs):
         odb_drv = odb.OdbDriver(self.cycle,
-                                self.system, self.system.env, self.system.default_target)
+                                self.system, self.system.env)
         self.system.cd('wkdir_' + self.base)
 
         dbpath = self.system.path.join(self.workdir, 'ECMA.' + self.base)
