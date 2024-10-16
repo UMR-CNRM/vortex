@@ -91,9 +91,6 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
                     default         = 'XPVT',
                     doc_visibility  = footprints.doc.visibility.ADVANCED,
                 ),
-                mpiconflabel = dict(
-                    default  = 'mplbased'
-                )
             )
         )
     ]

@@ -52,9 +52,6 @@ class OdbMonitoring(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin)
                 remap = dict(can='surf', surface='surf', atmospheric='atm'),
                 info = 'The processing stage of the ODB base.',
             ),
-            mpiconflabel = dict(
-                default  = 'mplbased'
-            )
         )
     )
 
