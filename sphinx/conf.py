@@ -26,12 +26,6 @@
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.intersphinx',
               'sphinx.ext.todo', 'sphinx.ext.viewcode', ]
 
-import IPython
-assert IPython
-
-extensions.append('IPython.sphinxext.ipython_console_highlighting')
-extensions.append('IPython.sphinxext.ipython_directive')
-
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
