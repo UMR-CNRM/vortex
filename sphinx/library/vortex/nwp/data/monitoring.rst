@@ -1,7 +1,7 @@
-:mod:`common.data.monitoring` --- Common resources for observation monitoring
-=============================================================================
+:mod:`vortex.nwp.data.monitoring` --- Common resources for observation monitoring
+=================================================================================
 
-.. automodule:: common.data.monitoring
+.. automodule:: vortex.nwp.data.monitoring
    :synopsis: Common resources for observation monitoring
 
 .. moduleauthor:: The Vortex Team

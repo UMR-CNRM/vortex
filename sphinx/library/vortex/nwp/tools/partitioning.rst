@@ -1,7 +1,7 @@
-:mod:`common.tools.partitioning` --- Compute simple domain partitionings
-========================================================================
+:mod:`vortex.nwp.tools.partitioning` --- Compute simple domain partitionings
+============================================================================
 
-.. automodule:: common.tools.partitioning
+.. automodule:: vortex.nwp.tools.partitioning
    :synopsis: Compute simple domain partitionings
 
 .. moduleauthor:: The Vortex Team

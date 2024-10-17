@@ -1,7 +1,7 @@
-:mod:`common.algo.odbtools` --- Algo components for observations processing
-===========================================================================
+:mod:`vortex.nwp.algo.odbtools` --- Algo components for observations processing
+===============================================================================
 
-.. automodule:: common.algo.odbtools
+.. automodule:: vortex.nwp.algo.odbtools
    :synopsis: Algo components for observations processing
 
 .. moduleauthor:: The Vortex Team

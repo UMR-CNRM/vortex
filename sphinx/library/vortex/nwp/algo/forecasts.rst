@@ -1,7 +1,7 @@
-:mod:`common.algo.forecasts` --- Algo components for global or LAM  forecasts
-=============================================================================
+:mod:`vortex.nwp.algo.forecasts` --- Algo components for global or LAM  forecasts
+=================================================================================
 
-.. automodule:: common.algo.forecasts
+.. automodule:: vortex.nwp.algo.forecasts
    :synopsis: Forecasts behavior for usual applications
 
 .. moduleauthor:: The Vortex Team

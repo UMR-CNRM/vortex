@@ -1,7 +1,7 @@
-:mod:`common.syntax` --- The :mod:`common` syntax mostly deals with attributes resolution and arguments expansion. The most important usage is done by :class:`FootprintBase` derivated objects
-===============================================================================================================================================================================================
+:mod:`vortex.nwp.syntax` --- The :mod:`common` syntax mostly deals with attributes resolution and arguments expansion. The most important usage is done by :class:`FootprintBase` derivated objects
+===================================================================================================================================================================================================
 
-.. automodule:: common.syntax
+.. automodule:: vortex.nwp.syntax
    :synopsis: The :mod:`common` syntax mostly deals with attributes resolution and arguments expansion. The most important usage is done by :class:`FootprintBase` derivated objects
 
 .. moduleauthor:: The Vortex Team
@@ -18,11 +18,11 @@ Package
 Modules
 -------
 
-* :mod:`common.syntax.stdattrs`
+* :mod:`vortex.nwp.syntax.stdattrs`
 
 
 .. Included Modules
 .. ----------------
 
 .. hints
-.. * :mod:`common.syntax.`
+.. * :mod:`vortex.nwp.syntax.`

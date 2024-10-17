@@ -1,7 +1,7 @@
-:mod:`common.util.ens` --- Some utilities for handling ensembles
-================================================================
+:mod:`vortex.nwp.util.ens` --- Some utilities for handling ensembles
+====================================================================
 
-.. automodule:: common.util.ens
+.. automodule:: vortex.nwp.util.ens
    :synopsis: Common utility functions useful for ensemble processing
 
 .. moduleauthor:: The Vortex Team

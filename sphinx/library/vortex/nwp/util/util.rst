@@ -1,7 +1,7 @@
-:mod:`common.util` --- Comon util package
-=========================================
+:mod:`vortex.nwp.util` --- Comon util package
+=============================================
 
-.. automodule:: common.util
+.. automodule:: vortex.nwp.util
    :synopsis: Some utilities shared by usual applications
 
 .. moduleauthor:: The Vortex Team
@@ -16,10 +16,10 @@ Package
 Modules
 -------
 
-* :mod:`common.util.async`
-* :mod:`common.util.beacon`
-* :mod:`common.util.diffpygram`
-* :mod:`common.util.ens`
-* :mod:`common.util.hooks`
-* :mod:`common.util.taskdeco`
-* :mod:`common.util.useepygram`
+* :mod:`vortex.nwp.util.async`
+* :mod:`vortex.nwp.util.beacon`
+* :mod:`vortex.nwp.util.diffpygram`
+* :mod:`vortex.nwp.util.ens`
+* :mod:`vortex.nwp.util.hooks`
+* :mod:`vortex.nwp.util.taskdeco`
+* :mod:`vortex.nwp.util.useepygram`

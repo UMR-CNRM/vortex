@@ -1,7 +1,7 @@
-:mod:`common.tools.bdap` --- Utilities to work with the BDAP database
-=====================================================================
+:mod:`vortex.nwp.tools.bdap` --- Utilities to work with the BDAP database
+=========================================================================
 
-.. automodule:: common.tools.bdap
+.. automodule:: vortex.nwp.tools.bdap
    :synopsis: Utilities to work with the BDAP database
 
 .. moduleauthor:: The Vortex Team

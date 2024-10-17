@@ -1,7 +1,7 @@
-:mod:`common.util.beacon` --- Some utilities to generate beacon files
-=====================================================================
+:mod:`vortex.nwp.util.beacon` --- Some utilities to generate beacon files
+=========================================================================
 
-.. automodule:: common.util.beacon
+.. automodule:: vortex.nwp.util.beacon
    :synopsis: Some utilities to generate beacon files
 
 .. moduleauthor:: The Vortex Team

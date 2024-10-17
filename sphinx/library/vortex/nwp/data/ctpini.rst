@@ -1,7 +1,7 @@
-:mod:`common.data.ctpini` --- Special resources for CTPini
-==========================================================
+:mod:`vortex.nwp.data.ctpini` --- Special resources for CTPini
+==============================================================
 
-.. automodule:: common.data.ctpini
+.. automodule:: vortex.nwp.data.ctpini
    :synopsis: Special resources for CTPini
 
 .. moduleauthor:: The Vortex Team

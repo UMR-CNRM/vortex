@@ -1,7 +1,7 @@
-:mod:`common.tools.agt` --- Utility functions and classes to use Soprano API
-============================================================================
+:mod:`vortex.nwp.tools.agt` --- Utility functions and classes to use Soprano API
+================================================================================
 
-.. automodule:: common.tools.agt
+.. automodule:: vortex.nwp.tools.agt
    :synopsis: Utility functions and classes to use Soprano API
 
 .. moduleauthor:: The Vortex Team

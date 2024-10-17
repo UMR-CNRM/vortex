@@ -1,7 +1,7 @@
-:mod:`common.algo.assim` --- Algo components for assimilation process
-=====================================================================
+:mod:`vortex.nwp.algo.assim` --- Algo components for assimilation process
+=========================================================================
 
-.. automodule:: common.algo.assim
+.. automodule:: vortex.nwp.algo.assim
    :synopsis: Algo components for assimilation process
 
 .. moduleauthor:: The Vortex Team

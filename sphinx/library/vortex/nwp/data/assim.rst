@@ -1,7 +1,7 @@
-:mod:`common.data.assim` --- Common data assimilation ressources
-================================================================
+:mod:`vortex.nwp.data.assim` --- Common data assimilation ressources
+====================================================================
 
-.. automodule:: common.data.assim
+.. automodule:: vortex.nwp.data.assim
    :synopsis: Ressources used by NWP data assimilation systems
 
 .. moduleauthor:: The Vortex Team

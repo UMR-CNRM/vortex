@@ -1,7 +1,7 @@
-:mod:`common.algo.fpserver` --- AlgoComponents for the next generation of Fullpos runs
-======================================================================================
+:mod:`vortex.nwp.algo.fpserver` --- AlgoComponents for the next generation of Fullpos runs
+==========================================================================================
 
-.. automodule:: common.algo.fpserver
+.. automodule:: vortex.nwp.algo.fpserver
    :synopsis: AlgoComponents for the next generation of Fullpos runs (based on the 903 configuration).
 
 .. moduleauthor:: The Vortex Team

@@ -1,7 +1,7 @@
-:mod:`common.tools.odb` --- Common interest classes to help setup the ODB software environment
-==============================================================================================
+:mod:`vortex.nwp.tools.odb` --- Common interest classes to help setup the ODB software environment
+==================================================================================================
 
-.. automodule:: common.tools.odb
+.. automodule:: vortex.nwp.tools.odb
    :synopsis: Common interest classes to help setup the ODB software environment.
 
 .. moduleauthor:: The Vortex Team

@@ -1,7 +1,7 @@
-:mod:`common.tools.conftools` --- Small objects that can be instantiated from a configuration file
-==================================================================================================
+:mod:`vortex.nwp.tools.conftools` --- Small objects that can be instantiated from a configuration file
+======================================================================================================
 
-.. automodule:: common.tools.conftools
+.. automodule:: vortex.nwp.tools.conftools
    :synopsis: Conftools are small objects that can be instantiated from an application's configuration file
 
 .. moduleauthor:: The Vortex Team

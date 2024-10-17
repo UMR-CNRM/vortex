@@ -1,7 +1,7 @@
-:mod:`common.algo.eda` --- Algo components dedicated to ensemble data assimilation
-==================================================================================
+:mod:`vortex.nwp.algo.eda` --- Algo components dedicated to ensemble data assimilation
+======================================================================================
 
-.. automodule:: common.algo.eda
+.. automodule:: vortex.nwp.algo.eda
    :synopsis: Algo components dedicated to ensemble data assimilation
 
 .. moduleauthor:: The Vortex Team

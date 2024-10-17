@@ -1,7 +1,7 @@
-:mod:`common.algo.ifsroot` --- IFS parallel behavior
-====================================================
+:mod:`vortex.nwp.algo.ifsroot` --- IFS parallel behavior
+========================================================
 
-.. automodule:: common.algo.ifsroot
+.. automodule:: vortex.nwp.algo.ifsroot
    :synopsis: IFS base parallel algo component
 
 .. moduleauthor:: The Vortex Team

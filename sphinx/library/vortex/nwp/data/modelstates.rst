@@ -1,7 +1,7 @@
-:mod:`common.data.modelstates` --- Common model states resources
-================================================================
+:mod:`vortex.nwp.data.modelstates` --- Common model states resources
+====================================================================
 
-.. automodule:: common.data.modelstates
+.. automodule:: vortex.nwp.data.modelstates
    :synopsis: Model states resources for usual applications
 
 .. moduleauthor:: The Vortex Team

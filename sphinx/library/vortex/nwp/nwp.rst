@@ -1,7 +1,7 @@
-:mod:`common` --- Main package for commonly shared resources and tools
-======================================================================
+:mod:`vortex.nwp` --- Main package for commonly shared resources and tools
+==========================================================================
 
-.. automodule:: common
+.. automodule:: vortex.nwp
    :synopsis: Commonly shared resources and tools
 
 .. moduleauthor:: The Vortex Team
@@ -13,7 +13,7 @@ Package
 
 .. autodata:: __all__
 
-* :mod:`common.algo`
-* :mod:`common.data`
-* :mod:`common.syntax`
-* :mod:`common.tools`
+* :mod:`vortex.nwp.algo`
+* :mod:`vortex.nwp.data`
+* :mod:`vortex.nwp.syntax`
+* :mod:`vortex.nwp.tools`

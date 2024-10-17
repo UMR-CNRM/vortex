@@ -1,7 +1,7 @@
-:mod:`common.tools.ifstools` --- Various tools related to the IFS code
-======================================================================
+:mod:`vortex.nwp.tools.ifstools` --- Various tools related to the IFS code
+==========================================================================
 
-.. automodule:: common.tools.ifstools
+.. automodule:: vortex.nwp.tools.ifstools
    :synopsis: Various tools related to the IFS code
 
 .. moduleauthor:: The Vortex Team

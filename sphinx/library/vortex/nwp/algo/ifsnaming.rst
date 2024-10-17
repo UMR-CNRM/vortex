@@ -1,7 +1,7 @@
-:mod:`common.algo.ifsnaming` --- Ensemble of classes that deal with input/output filenames for IFS/Arpege related binaries
-==========================================================================================================================
+:mod:`vortex.nwp.algo.ifsnaming` --- Ensemble of classes that deal with input/output filenames for IFS/Arpege related binaries
+==============================================================================================================================
 
-.. automodule:: common.algo.ifsnaming
+.. automodule:: vortex.nwp.algo.ifsnaming
    :synopsis: Ensemble of classes that deal with input/output filenames for IFS/Arpege related binaries
               (those that inherits from :class:`IFSParallel`)
 

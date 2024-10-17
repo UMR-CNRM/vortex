@@ -1,7 +1,7 @@
-:mod:`common.data.configfiles` --- Various configuration files (Namelists excepted)
-===================================================================================
+:mod:`vortex.nwp.data.configfiles` --- Various configuration files (Namelists excepted)
+=======================================================================================
 
-.. automodule:: common.data.configfiles
+.. automodule:: vortex.nwp.data.configfiles
    :synopsis: Various configuration files (Namelists excepted)
 
 .. moduleauthor:: The Vortex Team

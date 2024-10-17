@@ -1,7 +1,7 @@
-:mod:`common.data.fields` --- Simple field ressources
-=====================================================
+:mod:`vortex.nwp.data.fields` --- Simple field ressources
+=========================================================
 
-.. automodule:: common.data.fields
+.. automodule:: vortex.nwp.data.fields
    :synopsis: Simple field ressources
 
 .. moduleauthor:: The Vortex Team

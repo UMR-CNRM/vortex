@@ -1,7 +1,7 @@
-:mod:`common.tools.grib` --- generic GRIB manipulation tools
-============================================================
+:mod:`vortex.nwp.tools.grib` --- generic GRIB manipulation tools
+================================================================
 
-.. automodule:: common.tools.grib
+.. automodule:: vortex.nwp.tools.grib
    :synopsis: generic GRIB manipulation tools
 
 .. moduleauthor:: The Vortex Team

@@ -1,7 +1,7 @@
-:mod:`common.algo.mpitools` --- Usual MPI interfaces
-====================================================
+:mod:`vortex.nwp.algo.mpitools` --- Usual MPI interfaces
+========================================================
 
-.. automodule:: common.algo.mpitools
+.. automodule:: vortex.nwp.algo.mpitools
    :synopsis: Usual MPI interfaces
 
 .. moduleauthor:: The Vortex Team

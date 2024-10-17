@@ -1,7 +1,7 @@
-:mod:`common.data.consts` --- Common constant resources
-=======================================================
+:mod:`vortex.nwp.data.consts` --- Common constant resources
+===========================================================
 
-.. automodule:: common.data.consts
+.. automodule:: vortex.nwp.data.consts
    :synopsis: Constants resources for usual applications
 
 .. moduleauthor:: The Vortex Team

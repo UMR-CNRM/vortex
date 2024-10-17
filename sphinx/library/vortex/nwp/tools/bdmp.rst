@@ -1,7 +1,7 @@
-:mod:`common.tools.bdmp` --- TODO description
-=============================================
+:mod:`vortex.nwp.tools.bdmp` --- TODO description
+=================================================
 
-.. automodule:: common.tools.bdmp
+.. automodule:: vortex.nwp.tools.bdmp
    :synopsis: TODO description
 
 .. moduleauthor:: The Vortex Team

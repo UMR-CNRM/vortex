@@ -1,7 +1,7 @@
-:mod:`common.algo.eps` --- Algo components for ensemble forecasts processing
-============================================================================
+:mod:`vortex.nwp.algo.eps` --- Algo components for ensemble forecasts processing
+================================================================================
 
-.. automodule:: common.algo.eps
+.. automodule:: vortex.nwp.algo.eps
    :synopsis: Generic algo components useful to process ensemble forecasts
 
 .. moduleauthor:: The Vortex Team

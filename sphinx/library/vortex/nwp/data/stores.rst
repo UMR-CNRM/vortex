@@ -1,7 +1,7 @@
-:mod:`common.data.stores` --- data stores of general interest
-=============================================================
+:mod:`vortex.nwp.data.stores` --- data stores of general interest
+=================================================================
 
-.. automodule:: common.data.stores
+.. automodule:: vortex.nwp.data.stores
    :synopsis: data stores of general interest
 
 .. moduleauthor:: The Vortex Team

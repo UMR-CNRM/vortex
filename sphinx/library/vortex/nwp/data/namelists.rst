@@ -1,7 +1,7 @@
-:mod:`common.data.namelists` --- Common FORTRAN namelists resources
-===================================================================
+:mod:`vortex.nwp.data.namelists` --- Common FORTRAN namelists resources
+=======================================================================
 
-.. automodule:: common.data.namelists
+.. automodule:: vortex.nwp.data.namelists
    :synopsis: FORTRAN namelists for usual applications
 
 .. moduleauthor:: The Vortex Team

@@ -1,7 +1,7 @@
-:mod:`common.tools.drhook` --- Common interest classes to help setup the DrHook library environment
-===================================================================================================
+:mod:`vortex.nwp.tools.drhook` --- Common interest classes to help setup the DrHook library environment
+=======================================================================================================
 
-.. automodule:: common.tools.drhook
+.. automodule:: vortex.nwp.tools.drhook
    :synopsis: Common interest classes to help setup the DrHook library environment
 
 .. moduleauthor:: The Vortex Team

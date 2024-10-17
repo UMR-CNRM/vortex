@@ -1,7 +1,7 @@
-:mod:`common.syntax.stdattrs` --- Provides some pre-defined Footprints' attributes
-==================================================================================
+:mod:`vortex.nwp.syntax.stdattrs` --- Provides some pre-defined Footprints' attributes
+======================================================================================
 
-.. automodule:: common.syntax.stdattrs
+.. automodule:: vortex.nwp.syntax.stdattrs
    :synopsis: This module provides some pre-defined Footprints' attributes
 
 .. moduleauthor:: The Vortex Team

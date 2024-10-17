@@ -1,7 +1,7 @@
-:mod:`common.util.diffpygram` --- TODO Module Header
-====================================================
+:mod:`vortex.nwp.util.diffpygram` --- TODO Module Header
+========================================================
 
-.. automodule:: common.util.diffpygram
+.. automodule:: vortex.nwp.util.diffpygram
    :synopsis: TODO Module Synopsis
 
 .. moduleauthor:: The Vortex Team

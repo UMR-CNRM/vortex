@@ -1,7 +1,7 @@
-:mod:`common.tools.gribdiff` --- generic GRIB diff tool
-=======================================================
+:mod:`vortex.nwp.tools.gribdiff` --- generic GRIB diff tool
+===========================================================
 
-.. automodule:: common.tools.gribdiff
+.. automodule:: vortex.nwp.tools.gribdiff
    :synopsis: generic GRIB diff tools
 
 .. moduleauthor:: The Vortex Team

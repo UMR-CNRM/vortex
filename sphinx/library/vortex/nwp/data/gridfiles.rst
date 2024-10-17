@@ -1,7 +1,7 @@
-:mod:`common.data.gridfiles` --- Common lat-lon resources
-=========================================================
+:mod:`vortex.nwp.data.gridfiles` --- Common lat-lon resources
+=============================================================
 
-.. automodule:: common.data.gridfiles
+.. automodule:: vortex.nwp.data.gridfiles
    :synopsis: Lat-Lon resources for usual applications
 
 .. moduleauthor:: The Vortex Team

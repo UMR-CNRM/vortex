@@ -1,7 +1,7 @@
-:mod:`common.data.executables` --- Common executable resources
-==============================================================
+:mod:`vortex.nwp.data.executables` --- Common executable resources
+==================================================================
 
-.. automodule:: common.data.executables
+.. automodule:: vortex.nwp.data.executables
    :synopsis: Executable resources for usual applications
 
 .. moduleauthor:: The Vortex Team

@@ -1,7 +1,7 @@
-:mod:`common.data.providers` --- data providers of general interest
-===================================================================
+:mod:`vortex.nwp.data.providers` --- data providers of general interest
+=======================================================================
 
-.. automodule:: common.data.providers
+.. automodule:: vortex.nwp.data.providers
    :synopsis: data providers of general interest
 
 .. moduleauthor:: The Vortex Team

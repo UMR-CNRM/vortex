@@ -1,7 +1,7 @@
-:mod:`common.data.query` --- Query files used by various databases
-==================================================================
+:mod:`vortex.nwp.data.query` --- Query files used by various databases
+======================================================================
 
-.. automodule:: common.data.query
+.. automodule:: vortex.nwp.data.query
    :synopsis: Query files used by various databases
 
 .. moduleauthor:: The Vortex Team

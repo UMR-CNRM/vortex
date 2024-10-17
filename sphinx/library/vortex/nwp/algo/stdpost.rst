@@ -1,7 +1,7 @@
-:mod:`common.algo.stdpost` --- Algo components for post-processing
-==================================================================
+:mod:`vortex.nwp.algo.stdpost` --- Algo components for post-processing
+======================================================================
 
-.. automodule:: common.algo.stdpost
+.. automodule:: vortex.nwp.algo.stdpost
    :synopsis: Algo components for post-processing
 
 .. moduleauthor:: The Vortex Team

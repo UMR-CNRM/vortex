@@ -1,7 +1,7 @@
-:mod:`common.data.eda` --- Common resources useful in ensemble data assimilation
-================================================================================
+:mod:`vortex.nwp.data.eda` --- Common resources useful in ensemble data assimilation
+====================================================================================
 
-.. automodule:: common.data.eda
+.. automodule:: vortex.nwp.data.eda
    :synopsis: Common resources useful in ensemble data assimilation
 
 .. moduleauthor:: The Vortex Team

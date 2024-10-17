@@ -1,7 +1,7 @@
-:mod:`common.data.diagnostics` --- Diagnostics from forecasts
-=============================================================
+:mod:`vortex.nwp.data.diagnostics` --- Diagnostics from forecasts
+=================================================================
 
-.. automodule:: common.data.diagnostics
+.. automodule:: vortex.nwp.data.diagnostics
    :synopsis: Diagnostics from forecasts
 
 .. moduleauthor:: The Vortex Team

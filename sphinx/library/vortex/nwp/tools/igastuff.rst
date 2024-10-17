@@ -1,7 +1,7 @@
-:mod:`common.tools.igastuff` --- TODO Module Header
-===================================================
+:mod:`vortex.nwp.tools.igastuff` --- TODO Module Header
+=======================================================
 
-.. automodule:: common.tools.igastuff
+.. automodule:: vortex.nwp.tools.igastuff
    :synopsis: TODO Module Synopsis
 
 .. moduleauthor:: The Vortex Team

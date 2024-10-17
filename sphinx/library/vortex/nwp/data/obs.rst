@@ -1,7 +1,7 @@
-:mod:`common.data.obs` --- Common observations related resources
-================================================================
+:mod:`vortex.nwp.data.obs` --- Common observations related resources
+====================================================================
 
-.. automodule:: common.data.obs
+.. automodule:: vortex.nwp.data.obs
    :synopsis: Observations related resources
 
 .. moduleauthor:: The Vortex Team

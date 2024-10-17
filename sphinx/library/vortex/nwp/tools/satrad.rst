@@ -1,7 +1,7 @@
-:mod:`common.tools.satrad` --- Common interest classes to help setup the RTTOV/IFS environment
-==============================================================================================
+:mod:`vortex.nwp.tools.satrad` --- Common interest classes to help setup the RTTOV/IFS environment
+==================================================================================================
 
-.. automodule:: common.tools.satrad
+.. automodule:: vortex.nwp.tools.satrad
    :synopsis: Common interest classes to help setup the RTTOV/IFS environment
 
 .. moduleauthor:: The Vortex Team

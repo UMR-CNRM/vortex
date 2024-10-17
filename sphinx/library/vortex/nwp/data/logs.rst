@@ -1,7 +1,7 @@
-:mod:`common.data.logs` --- Common log files
-============================================
+:mod:`vortex.nwp.data.logs` --- Common log files
+================================================
 
-.. automodule:: common.data.logs
+.. automodule:: vortex.nwp.data.logs
    :synopsis: Log files for usual applications
 
 .. moduleauthor:: The Vortex Team

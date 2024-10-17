@@ -1,7 +1,7 @@
-:mod:`common.algo.coupling` --- Algo components for generic coupling
-====================================================================
+:mod:`vortex.nwp.algo.coupling` --- Algo components for generic coupling
+========================================================================
 
-.. automodule:: common.algo.coupling
+.. automodule:: vortex.nwp.algo.coupling
    :synopsis: Generic coupling algo components
 
 .. moduleauthor:: The Vortex Team

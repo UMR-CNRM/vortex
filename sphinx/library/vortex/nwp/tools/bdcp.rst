@@ -1,7 +1,7 @@
-:mod:`common.tools.bdcp` --- TODO description
-=============================================
+:mod:`vortex.nwp.tools.bdcp` --- TODO description
+=================================================
 
-.. automodule:: common.tools.bdcp
+.. automodule:: vortex.nwp.tools.bdcp
    :synopsis: TODO description
 
 .. moduleauthor:: The Vortex Team

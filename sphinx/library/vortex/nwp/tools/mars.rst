@@ -1,7 +1,7 @@
-:mod:`common.tools.mars` --- TODO description
-=============================================
+:mod:`vortex.nwp.tools.mars` --- TODO description
+=================================================
 
-.. automodule:: common.tools.mars
+.. automodule:: vortex.nwp.tools.mars
    :synopsis: TODO description
 
 .. moduleauthor:: The Vortex Team

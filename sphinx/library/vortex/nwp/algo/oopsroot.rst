@@ -1,7 +1,7 @@
-:mod:`common.algo.oopsroot` --- Common AlgoComponents for OOPS
-==============================================================
+:mod:`vortex.nwp.algo.oopsroot` --- Common AlgoComponents for OOPS
+==================================================================
 
-.. automodule:: common.algo.oopsroot
+.. automodule:: vortex.nwp.algo.oopsroot
    :synopsis: Common AlgoComponents for OOPS
 
 .. moduleauthor:: The Vortex Team

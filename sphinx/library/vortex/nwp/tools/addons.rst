@@ -1,7 +1,7 @@
-:mod:`common.tools.addons` --- Addons for shell objects
-=======================================================
+:mod:`vortex.nwp.tools.addons` --- Addons for shell objects
+===========================================================
 
-.. automodule:: common.tools.addons
+.. automodule:: vortex.nwp.tools.addons
    :synopsis: Addon definition for extending shell
 
 .. moduleauthor:: The Vortex Team

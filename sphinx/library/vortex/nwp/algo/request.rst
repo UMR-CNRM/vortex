@@ -1,7 +1,7 @@
-:mod:`common.algo.request` --- A set of AlgoComponents interrogating various databases
-======================================================================================
+:mod:`vortex.nwp.algo.request` --- A set of AlgoComponents interrogating various databases
+==========================================================================================
 
-.. automodule:: common.algo.request
+.. automodule:: vortex.nwp.algo.request
    :synopsis: A set of AlgoComponents interrogating various databases.
 
 .. moduleauthor:: The Vortex Team

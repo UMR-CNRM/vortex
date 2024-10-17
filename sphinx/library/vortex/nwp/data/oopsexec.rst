@@ -1,7 +1,7 @@
-:mod:`common.data.oopsexec` --- TODO description
-================================================
+:mod:`vortex.nwp.data.oopsexec` --- TODO description
+====================================================
 
-.. automodule:: common.data.oopsexec
+.. automodule:: vortex.nwp.data.oopsexec
    :synopsis: TODO description
 
 .. moduleauthor:: The Vortex Team

@@ -1,7 +1,7 @@
-:mod:`common.util.taskdeco` --- A collection of Tasks decorators
-================================================================
+:mod:`vortex.nwp.util.taskdeco` --- A collection of Tasks decorators
+====================================================================
 
-.. automodule:: common.util.taskdeco
+.. automodule:: vortex.nwp.util.taskdeco
    :synopsis: A collection of Tasks decorators (to add usual inputs/outputs to existing classes)
 
 .. moduleauthor:: The Vortex Team

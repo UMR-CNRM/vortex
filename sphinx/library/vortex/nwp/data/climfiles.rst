@@ -1,7 +1,7 @@
-:mod:`common.data.climfiles` --- Common climatological resources
-================================================================
+:mod:`vortex.nwp.data.climfiles` --- Common climatological resources
+====================================================================
 
-.. automodule:: common.data.climfiles
+.. automodule:: vortex.nwp.data.climfiles
    :synopsis: Climatological resources used by NWP models
 
 .. moduleauthor:: The Vortex Team

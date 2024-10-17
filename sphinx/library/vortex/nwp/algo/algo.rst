@@ -1,7 +1,7 @@
-:mod:`common.algo` --- Common algo components package
-=====================================================
+:mod:`vortex.nwp.algo` --- Common algo components package
+=========================================================
 
-.. automodule:: common.algo
+.. automodule:: vortex.nwp.algo
    :synopsis: Algo components shared by usual applications
 
 .. moduleauthor:: The Vortex Team
@@ -16,19 +16,19 @@ Package
 Included Modules
 ----------------
 
-* :mod:`common.algo.assim`
-* :mod:`common.algo.clim`
-* :mod:`common.algo.coupling`
-* :mod:`common.algo.eda`
-* :mod:`common.algo.eps`
-* :mod:`common.algo.forecasts`
-* :mod:`common.algo.fpserver`
-* :mod:`common.algo.ifsroot`
-* :mod:`common.algo.ifsnaming`
-* :mod:`common.algo.monitoring`
-* :mod:`common.algo.mpitools`
-* :mod:`common.algo.odbtools`
-* :mod:`common.algo.oopsroot`
-* :mod:`common.algo.oopstests`
-* :mod:`common.algo.request`
-* :mod:`common.algo.stdpost`
+* :mod:`vortex.nwp.algo.assim`
+* :mod:`vortex.nwp.algo.clim`
+* :mod:`vortex.nwp.algo.coupling`
+* :mod:`vortex.nwp.algo.eda`
+* :mod:`vortex.nwp.algo.eps`
+* :mod:`vortex.nwp.algo.forecasts`
+* :mod:`vortex.nwp.algo.fpserver`
+* :mod:`vortex.nwp.algo.ifsroot`
+* :mod:`vortex.nwp.algo.ifsnaming`
+* :mod:`vortex.nwp.algo.monitoring`
+* :mod:`vortex.nwp.algo.mpitools`
+* :mod:`vortex.nwp.algo.odbtools`
+* :mod:`vortex.nwp.algo.oopsroot`
+* :mod:`vortex.nwp.algo.oopstests`
+* :mod:`vortex.nwp.algo.request`
+* :mod:`vortex.nwp.algo.stdpost`

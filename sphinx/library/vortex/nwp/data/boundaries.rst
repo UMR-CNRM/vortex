@@ -1,7 +1,7 @@
-:mod:`common.data.boundaries` --- Common boundaries conditions resources
-========================================================================
+:mod:`vortex.nwp.data.boundaries` --- Common boundaries conditions resources
+============================================================================
 
-.. automodule:: common.data.boundaries
+.. automodule:: vortex.nwp.data.boundaries
    :synopsis: Boundaries conditions resources for usual applications
 
 .. moduleauthor:: The Vortex Team

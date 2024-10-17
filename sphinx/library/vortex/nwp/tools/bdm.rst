@@ -1,7 +1,7 @@
-:mod:`common.tools.bdm` --- Utility classes and function to work with the BDM database
-======================================================================================
+:mod:`vortex.nwp.tools.bdm` --- Utility classes and function to work with the BDM database
+==========================================================================================
 
-.. automodule:: common.tools.bdm
+.. automodule:: vortex.nwp.tools.bdm
    :synopsis: Utility classes and function to work with the BDM database
 
 .. moduleauthor:: The Vortex Team

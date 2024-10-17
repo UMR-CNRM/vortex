@@ -1,7 +1,7 @@
-:mod:`common.algo.oopstests` --- AlgoComponents for OOPS elementary tests
-=========================================================================
+:mod:`vortex.nwp.algo.oopstests` --- AlgoComponents for OOPS elementary tests
+=============================================================================
 
-.. automodule:: common.algo.oopstests
+.. automodule:: vortex.nwp.algo.oopstests
    :synopsis: AlgoComponents for OOPS elementary tests
 
 .. moduleauthor:: The Vortex Team

@@ -1,7 +1,7 @@
-:mod:`common.util.hooks` --- Some useful hooks
-==============================================
+:mod:`vortex.nwp.util.hooks` --- Some useful hooks
+==================================================
 
-.. automodule:: common.util.hooks
+.. automodule:: vortex.nwp.util.hooks
    :synopsis: Some useful hooks
 
 .. moduleauthor:: The Vortex Team

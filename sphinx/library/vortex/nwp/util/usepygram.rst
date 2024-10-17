@@ -1,7 +1,7 @@
-:mod:`common.util.usepygram` --- Standard usage of EPYGRAM with VORTEX
-======================================================================
+:mod:`vortex.nwp.util.usepygram` --- Standard usage of EPYGRAM with VORTEX
+==========================================================================
 
-.. automodule:: common.util.usepygram
+.. automodule:: vortex.nwp.util.usepygram
    :synopsis: Common asynchronous tasks
 
 .. moduleauthor:: The Vortex Team

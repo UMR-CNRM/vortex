@@ -156,22 +156,22 @@ We have seen that the output of the parse command of a :class:`~bronx.datagrip.n
 object produces a dictionary-like object (:class:`~bronx.datagrip.namelist.NamelistSet`) that
 contains :class:`~bronx.datagrip.namelist.NamelistBlock` values.
 
-However it is possible to go a bit further with the :class:`common.data.namelists.NamelistContent`.
+However it is possible to go a bit further with the :class:`vortex.nwp.data.namelists.NamelistContent`.
 
 Namelist content as internal resource content
 =============================================
 
-In fact the :class:`common.data.namelists.NamelistContent` is defined as the default content class
-resources of the kind ``namelist`` derivated from class :class:`common.data.namelists.Namelist`.
-But this class :class:`~common.data.namelists.NamelistContent`, could also be used as a standalone
+In fact the :class:`vortex.nwp.data.namelists.NamelistContent` is defined as the default content class
+resources of the kind ``namelist`` derivated from class :class:`vortex.nwp.data.namelists.Namelist`.
+But this class :class:`~vortex.nwp.data.namelists.NamelistContent`, could also be used as a standalone
 class, as much of the :class:`vortex.data.contents.DataContent`:
 
 .. code-block:: python
 
-  >>> from common.data.namelists import NamelistContent
+  >>> from vortex.nwp.data.namelists import NamelistContent
   >>> nc = NamelistContent()
   >>> nc
-  <common.data.namelists.NamelistContent object at 0x17e6790>
+  <vortex.nwp.data.namelists.NamelistContent object at 0x17e6790>
   >>> len(nc)
   0
 
@@ -199,7 +199,7 @@ Named or anonymous creation of block is possible:
    /
 
 All of the methods of the :class:`~bronx.datagrip.namelist.NamelistSet`
-class are available in the :class:`~common.data.namelists.NamelistContent` and
+class are available in the :class:`~vortex.nwp.data.namelists.NamelistContent` and
 compatibility is ensured.
 
 However, some extra methods are added in order to work with Vortex's resource and
@@ -210,14 +210,14 @@ Combining namelist content and resource container
 
 Instead of starting from scratch, it is obviously possible to merge from a dictionnary of
 already defined :class:`~bronx.datagrip.namelist.NamelistBlock` values, but is also possible
-to provide the :class:`~common.data.namelists.NamelistContent` with a
+to provide the :class:`~vortex.nwp.data.namelists.NamelistContent` with a
 :class:`vortex.data.containers.Container` derived object:
 
 .. code-block:: python
 
   >>> from vortex import toolbox
   >>> fc = toolbox.container(file='namelistfc')
-  >>> from common.data.namelists import NamelistContent
+  >>> from vortex.nwp.data.namelists import NamelistContent
   >>> nc = NamelistContent()
   >>> nc.slurp(fc)
   >>> len(nc)
@@ -241,7 +241,7 @@ to provide the :class:`~common.data.namelists.NamelistContent` with a
 Advanced methods
 ================
 
-The :meth:`~common.data.namelists.NamelistContent.setmacro` method propagates the specified value
+The :meth:`~vortex.nwp.data.namelists.NamelistContent.setmacro` method propagates the specified value
 of the macro to any block using it:
 
 .. code-block:: python
@@ -259,7 +259,7 @@ of the macro to any block using it:
      NPRTRW=2,
    /
 
-The :meth:`~common.data.namelists.NamelistContent.merge` method is abled to merge a
-:class:`~common.data.namelists.NamelistContent` object with another
-:class:`~common.data.namelists.NamelistContent` or with a raw
+The :meth:`~vortex.nwp.data.namelists.NamelistContent.merge` method is abled to merge a
+:class:`~vortex.nwp.data.namelists.NamelistContent` object with another
+:class:`~vortex.nwp.data.namelists.NamelistContent` or with a raw
 :class:`~bronx.datagrip.namelist.NamelistSet` object.

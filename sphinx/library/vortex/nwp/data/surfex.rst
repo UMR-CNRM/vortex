@@ -1,7 +1,7 @@
-:mod:`common.data.surfex` --- Common surfex related resources
-=============================================================
+:mod:`vortex.nwp.data.surfex` --- Common surfex related resources
+=================================================================
 
-.. automodule:: common.data.surfex
+.. automodule:: vortex.nwp.data.surfex
    :synopsis: Common surfex related resources
 
 .. moduleauthor:: The Vortex Team

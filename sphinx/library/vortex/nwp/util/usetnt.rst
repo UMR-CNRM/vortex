@@ -1,7 +1,7 @@
-:mod:`common.util.usetnt` --- Usage of the TNT package
-======================================================
+:mod:`vortex.nwp.util.usetnt` --- Usage of the TNT package
+==========================================================
 
-.. automodule:: common.util.usetnt
+.. automodule:: vortex.nwp.util.usetnt
    :synopsis: Usage of the TNT package
 
 .. moduleauthor:: The Vortex Team

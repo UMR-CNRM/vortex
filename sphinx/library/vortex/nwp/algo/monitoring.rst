@@ -1,7 +1,7 @@
-:mod:`common.algo.monitoring` --- Algo components for observation monitoring
-============================================================================
+:mod:`vortex.nwp.algo.monitoring` --- Algo components for observation monitoring
+================================================================================
 
-.. automodule:: common.algo.monitoring
+.. automodule:: vortex.nwp.algo.monitoring
    :synopsis: Algo components for observation monitoring
 
 .. moduleauthor:: The Vortex Team

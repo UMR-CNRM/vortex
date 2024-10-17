@@ -1,7 +1,7 @@
-:mod:`common.util.async` --- Some utilities for handling asynchronous tasks
-===========================================================================
+:mod:`vortex.nwp.util.async` --- Some utilities for handling asynchronous tasks
+===============================================================================
 
-.. automodule:: common.util.async
+.. automodule:: vortex.nwp.util.async
    :synopsis: Common asynchronous tasks
 
 .. moduleauthor:: The Vortex Team
