@@ -29,11 +29,6 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: ConfigurableMpiTool
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: MpiBinaryDescription
    :show-inheritance:
    :members:

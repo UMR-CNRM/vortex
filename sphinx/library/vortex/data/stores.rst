@@ -104,11 +104,6 @@ Cache stores classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: VortexCacheMarketPlaceStore
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: VortexCacheStore
    :show-inheritance:
    :members:
