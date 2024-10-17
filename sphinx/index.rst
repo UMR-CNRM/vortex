@@ -27,14 +27,6 @@ method but may be a bit obscure for a first look at Vortex):
 
    The Vortex Standard Library <library/libindex>
 
-Vortex is shipped with additional packages that are leveraged in Vortex but
-may also be used independently (they are hosted in the ``site`` sub-directory):
-
-.. toctree::
-   :maxdepth: 1
-
-   Site Packages Standard Libraries <library/siteindex>
-
 Extras
 ------
 
@@ -44,29 +36,7 @@ Extras
 
 .. toctree::
    :maxdepth: 1
-
-   List of default geometries (from geometries.ini) <geometries>
-   List of default BDPE identifiers (from bdpe-map-resources.ini) <bdpe-map-resources>
-   List of default pollutant elements (from pollutants-elements-std.ini) <pollutants-elements-std>
-   List of default pollutant sites (from pollutants-sites-std.ini) <pollutants-sites-std>
-   checkreport
-
-.. toctree::
-   :maxdepth: 1
    :hidden:
 
    tododoc
 
-Indices and tables
-------------------
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-* :ref:`notebooks_sum`
-
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   notebooks/index
