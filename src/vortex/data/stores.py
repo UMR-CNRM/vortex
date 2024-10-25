@@ -886,9 +886,6 @@ class _VortexCacheBaseStore(CacheStore, _VortexStackedStorageMixin):
             scheme = dict(
                 values  = ['vortex'],
             ),
-            rootdir = dict(
-                default = 'auto'
-            ),
             headdir = dict(
                 default = 'vortex',
                 outcast = ['xp', ],

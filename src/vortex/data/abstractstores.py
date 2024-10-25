@@ -1195,10 +1195,6 @@ class CacheStore(Store):
                 optional = True,
                 default  = 'std',
             ),
-            rootdir = dict(
-                optional = True,
-                default  = 'conf'
-            ),
             headdir = dict(
                 optional = True,
                 default  = 'conf',
@@ -1242,7 +1238,6 @@ class CacheStore(Store):
         if not self._cache:
             self._cache = footprints.proxy.caches.default(
                 kind=self.underlying_cache_kind,
-                rootdir=self.rootdir,
                 headdir=self.headdir,
                 rtouch=self.rtouch,
                 rtouchskip=self.rtouchskip,
