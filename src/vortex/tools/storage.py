@@ -902,7 +902,7 @@ class FixedEntryCache(Cache):
             rootdir = dict(
                 info     = "The cache's location (usually on a filesystem).",
                 optional = True,
-                default  = '/tmp',
+                default  = None,
             ),
         )
     )
@@ -910,6 +910,8 @@ class FixedEntryCache(Cache):
     @property
     def entry(self):
         """Tries to figure out what could be the actual entry point for storage space."""
+        if not self.rootdir:
+            self.rootdir = "/tmp"
         return self.sh.path.join(self.rootdir, self.kind, self.headdir)
 
     @property
@@ -953,10 +955,6 @@ class MtoolCache(FixedEntryCache):
                 values   = ['mtool', 'swapp'],
                 remap    = dict(swapp = 'mtool'),
             ),
-            rootdir = dict(
-                optional = True,
-                default  = 'auto'
-            ),
             headdir = dict(
                 optional = True,
                 default  = 'vortex',
@@ -967,7 +965,7 @@ class MtoolCache(FixedEntryCache):
     @property
     def entry(self):
         """Tries to figure out what could be the actual entry point for cache space."""
-        if self.rootdir == 'auto':
+        if not self.rootdir:
             e = self.sh.env
             if e.MTOOL_STEP_CACHE and self.sh.path.isdir(e.MTOOL_STEP_CACHE):
                 cache = e.MTOOL_STEP_CACHE
@@ -1041,9 +1039,6 @@ class Op2ResearchCache(FixedEntryCache):
         attr = dict(
             kind = dict(
                 values   = ['op2r'],
-            ),
-            rootdir = dict(
-                optional = True,
             ),
             headdir = dict(
                 optional = True,
