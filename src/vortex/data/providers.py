@@ -255,16 +255,19 @@ class Vortex(Provider):
     _DEFAULT_NAME_BUILDER = names.VortexNameBuilder()
     _CUSTOM_NAME_BUILDERS = dict()
 
-    _abstract = True
     _footprint = [
         block,
         member,
         scenario,
         namespacefp,
-        xpid,
         dict(
             info = 'Vortex provider',
             attr = dict(
+                experiment = dict(
+                    info = "Provider experiment id",
+                    type = str,
+                    optional = False,
+                ),
                 member = dict(
                     type    = FmtInt,
                     args    = dict(fmt = '03'),
@@ -313,6 +316,8 @@ class Vortex(Provider):
             self._namebuilder = self._CUSTOM_NAME_BUILDERS[self.namebuild]
         else:
             self._namebuilder = self._DEFAULT_NAME_BUILDER
+        if self.experiment in ("oper", "dble"):
+            self.experiment = self.experiment.upper()
 
     @property
     def namebuilder(self):
@@ -338,6 +343,8 @@ class Vortex(Provider):
 
     def netloc(self, resource):
         """Returns the current ``namespace``."""
+        if self.experiment in ("OPER", "DBLE"):
+            return "vsop." + self.namespace.domain
         return self.namespace.netloc
 
     def _pathname_info(self, resource):
@@ -382,22 +389,6 @@ class Vortex(Provider):
                                  self.basename(stackres)), ]
             uqs['stackfmt'] = [stackres.nativefmt, ]
         return urlparse.urlencode(sorted(uqs.items()), doseq=True)
-
-
-class VortexStd(Vortex):
-    """Standard Vortex provider (any experiment with an Olive id)."""
-
-    _footprint = [
-        legacy_xpid,
-        dict(
-            info = 'Vortex provider for casual experiments with an Olive XPID',
-            attr = dict(
-                experiment = dict(
-                    outcast = opsuites | demosuites,
-                ),
-            ),
-        ),
-    ]
 
 
 # Activate the footprint's fasttrack on the resources collector
