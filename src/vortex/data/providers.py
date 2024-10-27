@@ -284,7 +284,21 @@ class Vortex(Provider):
                         'open.multi.fr': 'vortex.multi.fr',
                         'open.stack.fr': 'vortex.stack.fr',
                     }
+                    optional = True,
+                    default = None,
                 ),
+                cache = dict(
+                    info = "Whether or not to use the cache",
+                    type = bool,
+                    optional = True,
+                    default = None,
+                )
+                archive = dict(
+                    info = "Whether or not to use the archive",
+                    type = bool,
+                    optional = True,
+                    default = None,
+                )
                 namebuild = dict(
                     info           = "The object responsible for building filenames.",
                     optional       = True,
