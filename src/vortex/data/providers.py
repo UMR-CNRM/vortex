@@ -249,6 +249,23 @@ class Remote(Provider):
             return 'relative=1'
 
 
+def set_namespace_from_cache_settings(usecache, usearchive):
+    usecache = True if (usecache is None) else usecache
+    usearchive = True if (usearchive is None) else usearchive
+
+    if not (usecache or usearchive):
+        # Let caller raise appropriate exception
+        return None
+
+    if usecache and usearchive:
+        domain = "multi"
+    if usecache and not usearchive:
+        domain = "cache"
+    if not usecache and usearchive:
+        domain = "archive"
+    return ".".join(("vortex", domain, "fr"))
+
+
 class Vortex(Provider):
     """Main provider of the toolbox, using a fix-size path and a dedicated name factory."""
 
@@ -267,6 +284,7 @@ class Vortex(Provider):
                     info = "Provider experiment id",
                     type = str,
                     optional = False,
+                    access = "rwx",
                 ),
                 member = dict(
                     type    = FmtInt,
@@ -277,28 +295,28 @@ class Vortex(Provider):
                         'vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr', 'vortex.stack.fr',
                         'open.cache.fr', 'open.archive.fr', 'open.multi.fr', 'open.stack.fr',
                     ],
-                    default  = Namespace('vortex.cache.fr'),
                     remap    = {
                         'open.cache.fr': 'vortex.cache.fr',
                         'open.archive.fr': 'vortex.archive.fr',
                         'open.multi.fr': 'vortex.multi.fr',
                         'open.stack.fr': 'vortex.stack.fr',
-                    }
+                    },
                     optional = True,
                     default = None,
+                    access = "rwx",
                 ),
                 cache = dict(
                     info = "Whether or not to use the cache",
                     type = bool,
                     optional = True,
                     default = None,
-                )
+                ),
                 archive = dict(
                     info = "Whether or not to use the archive",
                     type = bool,
                     optional = True,
                     default = None,
-                )
+                ),
                 namebuild = dict(
                     info           = "The object responsible for building filenames.",
                     optional       = True,
@@ -332,6 +350,34 @@ class Vortex(Provider):
             self._namebuilder = self._DEFAULT_NAME_BUILDER
         if self.experiment in ("oper", "dble"):
             self.experiment = self.experiment.upper()
+
+        # Ensure compatibility with deprecated namespace attribute
+        # Under the hood the namespace attribute is still used to
+        # define caching behaviour -- it's passed to the store __init__ --
+        # but it's value is set from the value of the newly introduced
+        # attributes 'cache' and 'archive'.
+
+        # If 'namespace' is specified and either 'cache' and/or 'archive'
+        # are specified, 'namespace' is ignored
+        if self.namespace and (self.cache or self.archive):
+            logger.warning(
+                f"Ignoring attribute \"namespace\" set to {self.namespace} "
+                "as attribute(s) cache and/or archive are specified"
+            )
+        if self.namespace and ((self.cache is None) and (self.archive is None)):
+            raise DeprecationWarning(
+                "Using attribute \"namespace\" is deprecated, use \"cache\""
+                "and/or \"archive\" instead."
+            )
+        else:
+            self.namespace = set_namespace_from_cache_settings(
+                self.cache, self.archive,
+        )
+            if not self.namespace:
+                raise ValueError(
+                    "Attributes \"cache\" and \"archive\" cannot be "
+                    "both specified as \"False\"."
+                )
 
     @property
     def namebuilder(self):
