@@ -244,3 +244,4 @@ if 'VORTEX_PROJECT_SSLCERT_OVERRIDE' in os.environ:
 
 # Concatenate the class docstring and the __init__ docstring
 autoclass_content = 'both'
+exclude_patterns = ['library/libindex.rst', 'library/**/*.rst']
