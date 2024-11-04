@@ -24,7 +24,7 @@ Contents
    :maxdepth: 1
 
    Installation <install>
-   Tutorial <gettingstarted>
-   How to guides <stepbystep/index>
+   Tutorial <tutorial/fetch>
    Concepts <technical/index>
-   Reference <examples>
+   Examples <examples>
+   Reference <library/libindex>
