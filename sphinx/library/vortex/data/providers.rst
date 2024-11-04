@@ -38,17 +38,3 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: VortexOp
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: VortexStd
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: VortexFreeStd
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
