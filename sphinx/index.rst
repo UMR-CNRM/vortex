@@ -25,6 +25,6 @@ Contents
 
    Installation <install>
    Tutorial <tutorial/fetch>
-   Concepts <technical/index>
+   User guide <user-guide/data-layout>
    Examples <examples>
    Reference <library/libindex>
