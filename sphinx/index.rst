@@ -27,4 +27,4 @@ Contents
    Tutorial <tutorial/fetch>
    User guide <user-guide/data-layout>
    Examples <examples>
-   Reference <library/libindex>
+   Reference <reference/index>
