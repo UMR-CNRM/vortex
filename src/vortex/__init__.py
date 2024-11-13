@@ -92,16 +92,13 @@ config.load_config()
 
 # Load some superstars sub-packages
 from .toolbox import (
-    show_toolbox_settings,
-    quickview,
     input,
     output,
     executable,
-    algo,
     promise,
     diff,
-    rescue,
 )
+from .toolbox import algo as task
 from . import nwp
 
 # Now load plugins that have been installed with the
