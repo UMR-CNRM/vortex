@@ -26,7 +26,9 @@ __prompt__ = 'Vortex v-' + __version__ + ':'
 __nextversion__ = '1.10.2'
 __tocinfoline__ = 'VORTEX core package'
 
-__all__ = []
+__all__ = [
+    "input", "output", "executable", "task", "promise", "diff",
+]
 
 # Set vortex specific priorities for footprints usage
 
