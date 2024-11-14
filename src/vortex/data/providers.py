@@ -19,6 +19,7 @@ from footprints import proxy as fpx
 from footprints.stdtypes import FPDict
 
 from vortex import sessions
+from vortex.config import from_config
 from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, \
     demosuites, scenario, member, block
 from vortex.syntax.stdattrs import LegacyXPid, any_vortex_xpid
@@ -252,6 +253,13 @@ class Remote(Provider):
 def set_namespace_from_cache_settings(usecache, usearchive):
     usecache = True if (usecache is None) else usecache
     usearchive = True if (usearchive is None) else usearchive
+
+    # Default usearchive to False is no storage section is defined in
+    # the configuration file
+    try:
+        from_config(section="storage")
+    except KeyError:
+        usearchive = False
 
     if not (usecache or usearchive):
         # Let caller raise appropriate exception
