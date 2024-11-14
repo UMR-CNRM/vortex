@@ -26,12 +26,6 @@
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.intersphinx',
               'sphinx.ext.todo', 'sphinx.ext.viewcode', ]
 
-import IPython
-assert IPython
-
-extensions.append('IPython.sphinxext.ipython_console_highlighting')
-extensions.append('IPython.sphinxext.ipython_directive')
-
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -250,3 +244,9 @@ if 'VORTEX_PROJECT_SSLCERT_OVERRIDE' in os.environ:
 
 # Concatenate the class docstring and the __init__ docstring
 autoclass_content = 'both'
+
+html_theme = "sphinx_book_theme"
+
+exclude_patterns = ['library/libindex.rst', 'library/**/*.rst']
+
+highlight_language = "none"

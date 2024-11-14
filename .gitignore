@@ -63,3 +63,5 @@ playground
 # Matthieu unwanted files
 tag
 oper_tag
+
+.venv

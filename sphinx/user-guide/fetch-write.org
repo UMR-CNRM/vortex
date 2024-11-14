@@ -1,0 +1,320 @@
+#+PROPERTY: header-args    :eval no
+#+OPTIONS: toc:nil num:nil author:nil
+#+TITLE: Fetching and writing data files
+
+VORTEX facilitates the transfer of data files between an arbitrary
+location and the current working directory. This location can either
+be a leaf of the <todolink>data tree or a specific path.
+
+* Fetching files from the data tree
+
+This is achieved by creating a resource handler using the ~input~
+function, then calling the ~get~ method on this handler.
+
+The ~vortex.input~ function can take a large number of keyword
+arguments, the list of which can be broken down into three categories:
+
+- Arguments specifying the type of ressource, that is which subclass
+  of ~vortex.data.resources.Resource~ will eventually be instantiated
+  as part of the handler's creation.
+- Arguments specifying the the location of the source data file.
+  For example whether or not the resource is fetched from the
+  local data tree, a remote data tree -- or from a specific path.
+- A single argument ~local~ specifying the name of the resulting file
+  in the current working directory.
+  
+A call to ~vortex.input~ does not trigger any file transfer (<TODO>or
+link?).  It only returns a ~vortex.data.Handler~ object that
+aggregates information about the underlying resource, source location
+and target file. Fetching the file is only achieved by calling the
+~get~ method on a ~Handler~ object.
+
+The following example fetches a initial conditon file from experiment
+~xpid~ in the data tree into a file ~ICMSHFCSTINIT~ in the current
+working directory:
+
+#+begin_src python
+  import vortex as vtx
+
+  handler = vtx.input(
+      kind="analysis",
+      date="2024082600",
+      model="arpege",
+      cutoff="production",
+      geometry="franmgsp",
+      filling="atm",
+      block="4dupd2",
+      experiment="xpid",
+      local="ICMSHFCSTINIT",
+  )
+
+  #  Actually trigger data transfer
+  handler.get()
+#+end_src
+
+** Resource description expansion
+
+A call to ~vortex.input~ can refer to multiple source data files.  For
+instance, consider the case of fetching hourly forecast output files:
+
+#+begin_src python
+  import vortex as vtx
+
+  handler = vtx.input(
+      kind="gridpoint",
+      date="2024082600",
+      model="arpege",
+      origin="historic",
+      cutoff="production",
+      geometry="franmgsp",
+      term=[1, 2, 3, 4, 5, 6],
+      block="forecast",
+      experiment="xpid",
+      local="ICMSHFCSTINIT",
+  )
+#+end_src
+
+Setting argument ~term~ to a list of 6 items means ~vortex.input~ will
+eventually return /list/ of 6 ~vortex.data.Handler~ objects.  The
+above call is in fact equivalent to:
+
+#+begin_src python
+  handlers = [
+      vtx.input(
+	  kind="gridpoint",
+	  date="2024082600",
+	  model="arpege",
+	  origin="historic",
+	  cutoff="production",
+	  geometry="franmgsp",
+	  term=term,
+	  block="forecast",
+	  experiment="xpid",
+	  local="ICMSHFCSTINIT",
+      )
+      for term in range(1,7)
+  ]
+#+end_src
+
+Expansion works across arguments. The following call
+
+#+begin_src python
+  handlers = vtx.input(
+      kind="gridpoint",
+      date="2024082600",
+      model="arpege",
+      origin="historic",
+      cutoff="production",
+      geometry="franmgsp",
+      term=[1, 2, 3, 4, 5, 6],
+      block="forecast",
+      experiment=["xpid1", "xpid2", "xpid3"],
+      local="ICMSHFCSTINIT",
+  )
+#+end_src
+
+if syntactic sugar for
+
+#+begin_src python
+  handlers = [
+      vtx.input(
+	  kind="gridpoint",
+	  date="2024082600",
+	  model="arpege",
+	  origin="historic",
+	  cutoff="production",
+	  geometry="franmgsp",
+	  term=term,
+	  block="forecast",
+	  experiment=xp,
+	  local="ICMSHFCSTINIT",
+      )
+      for term in range(1,7)
+      for xp in ["xpid1", "xpid2", "xpid3"]
+  ]
+#+end_src
+
+It also possible to refer to the value passed for a given argument
+within the value of another. This is achieved using square brackets
+~[]~ whenever the value is a string. For instance:
+
+#+begin_src python
+  handlers = vtx.input(
+      kind="historic",
+      # ...
+      term = [0, 1, 2, 3],
+      local="ICMSHFCST+[term::fmthm]",
+  )
+  for h in handlers:
+      h.get()
+#+end_src
+
+The above results in three files ~ICMSHFCST+0001:00~,
+~ICMSHFCST+0002:00~ and ~ICMSHFCST+0003:00~ in the current working
+directory.  
+
+The double ~::~ syntax is used to execute a method call on the
+resulting object.  In the above example, ~[term]~ would refer to the
+~term~ attribute of the resource object, which is an instance of
+~Time~.  Specifying ~term::fmthm~ evaluates method ~fmthm~ on the
+~Time~ object, resulting in the string ~0001:00~, ~0002:00~ or
+~0003:00~, depending on the value of ~term~.
+
+* Writing data files to the data tree
+
+Transfering files /to/ the data tree is the mirror operation to
+fetching from it.  It works very similarly, this time getting a
+~Handler~ object from the ~output~ function and calling ~put~ on the
+handler.
+
+The following example writes initial condition file ~ICMSHFCSTINIT~ in
+the current working directory into the experiment ~xpid~ in the data
+tree.
+
+#+begin_src python
+  import vortex as vtx
+
+  handler = vtx.output(
+      kind="analysis",
+      date="2024082600",
+      model="arpege",
+      cutoff="production",
+      geometry="franmgsp",
+      filling="atm",
+      block="4dupd2",
+      experiment="xpid",
+      local="ICMSHFCSTINIT",
+  )
+
+  #  Actually trigger data transfer
+  handler.put()
+#+end_src
+
+* Ressource resolution
+
+The list of arguments passed to ~vortex.input~ or ~vortex.output~ is
+arbitrary.  However, a resource handler will only be successfully
+instancitated if the argumentts specifying the ressource match the
+attributes of an existing ~vortex.data.Ressource~ subclass.
+
+As an example, let's assume the following call to ~vortex.input~.  It
+is identical to the above call in section <todolink> except for a
+missing ~geometry~ argument.
+
+#+begin_src python
+  import vortex as vtx
+
+  handler = vtx.input(
+      kind="analysis",
+      date="2024082600",
+      model="arpege",
+      cutoff="production",
+      filling="atm",
+      block="4dupd2",
+      experiment="xpid",
+      local="ICMSHFCSTINIT",
+  )
+#+end_src
+
+#+begin_example
+  # No resource found in description 
+   Report Footprint-Resource: 
+
+       vortex.nwp.data.modelstates.Analysis3D
+	   geometry   : {'why': 'Missing value'}
+
+       vortex.nwp.data.modelstates.Analysis4D
+	   geometry   : {'why': 'Missing value'}
+	   term       : {'why': 'Missing value'}
+#+end_example
+
+The call to ~vortex.input~ fails because no ~Resource~ subclass was
+found to match the ressource attributes specified as arguments to
+~input~.  The error message provides a list of canditate classes
+together with a description of why the class was not selected.
+Particularly, it indicates that the class
+~common.data.modelstates.Analysis3D~ was not selected because of a
+missing ~geometry~ argument to ~input~.
+
+Many resource attributes have a set of prescribed values. Specifying
+arguments to ~vortex.input~ or ~vortex.output~ with values not in this
+set will also cause the call to fail.  The below example specifies the
+~cutoff~ argument as ="foo"=, which is not part of the two prescribed
+values ="assim"= and ="production"=:
+
+#+begin_src python
+  import vortex as vtx
+
+  handler = vtx.input(
+      kind="analysis",
+      date="2024082600",
+      model="foo",
+      cutoff="production",
+      filling="atm",
+      block="4dupd2",
+      experiment="xpid",
+      local="ICMSHFCSTINIT",
+  )
+#+end_src
+
+#+begin_example
+  # No resource found in description 
+   Report Footprint-Resource: 
+
+       vortex.nwp.data.modelstates.Analysis3D
+	   model      : {'why': 'Not in values', 'args': 'foo'}
+
+       vortex.nwp.data.modelstates.Analysis4D
+	   term       : {'why': 'Missing value'}
+#+end_example
+
+It can be difficult to know which arguments to provide ~vortex.input~
+or ~vortex.output~ to accurately match the attributes of the
+~Resource~ subclass that represent the actual resource you are
+targting.
+
+If you know the ~Resource~ subclass name, you can look up the
+attributes and their prescribed values in the reference documentation
+<todolink>.  If you don't, a good strategy is to build the call to
+~vortex.input~ / ~vortex.output~ interactively, using the output of
+the resource resolution as a guide.  You can use the resource
+attributes reference as a starting point <todolink>.
+
+* Setting default arguments
+
+It is common for several calls to functions ~vortex.input~ or
+~vortex.output~ to share a large part of their argument
+specifications.  To avoid having to repeat the same arguments between
+each call, ~vortex~ provides the ~defaults~ function.
+
+In the following example, both calls to ~input~ and ~output~ share the
+arguments specified by the call to ~vortex.defaults~:
+
+#+begin_src python
+  import vortex as vtx
+
+  vtx.defaults(
+      kind="analysis",
+      date="2024082600",
+      cutoff="production",
+      model="arpege",
+      experiment="xpid",
+  )
+
+  input_handler = vtx.input(
+      kind="analysis",
+      filling="atm",
+      block="4dupd2",
+      local="ICMSHFCSTINIT",
+  )
+
+  # ...
+  # ...
+
+  output_handlers = vtx.output(
+      kind="historic",
+      block="forecast",
+      term = [0, 1, 2, 3],
+      local="ICMSHFCST+[term::fmthm]",
+  )
+#+end_src

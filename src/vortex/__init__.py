@@ -26,7 +26,9 @@ __prompt__ = 'Vortex v-' + __version__ + ':'
 __nextversion__ = '1.10.2'
 __tocinfoline__ = 'VORTEX core package'
 
-__all__ = []
+__all__ = [
+    "input", "output", "executable", "task", "promise", "diff",
+]
 
 # Set vortex specific priorities for footprints usage
 
@@ -92,16 +94,13 @@ config.load_config()
 
 # Load some superstars sub-packages
 from .toolbox import (
-    show_toolbox_settings,
-    quickview,
     input,
     output,
     executable,
-    algo,
     promise,
     diff,
-    rescue,
 )
+from .toolbox import algo as task
 from . import nwp
 
 # Now load plugins that have been installed with the

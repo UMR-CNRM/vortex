@@ -133,7 +133,7 @@ auto_html_docs:
 	make -C $(AUTO_HTML_DOC) docs
 
 # Build the sphinx-html documentation
-html: $(NOTEBOOKS) $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES)
+html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 # Clean the notebooks
