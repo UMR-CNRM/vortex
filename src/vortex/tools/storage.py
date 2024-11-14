@@ -1055,7 +1055,7 @@ class Op2ResearchCache(FixedEntryCache):
     def entry(self):
         cache = (
             self.rootdir or
-            from_config(section="storage", key="op_rootdir")
+            from_config(section="data-tree", key="op_rootdir")
         )
         return self.sh.path.join(cache, self.headdir)
 
