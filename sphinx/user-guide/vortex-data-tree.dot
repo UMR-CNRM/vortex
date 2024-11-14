@@ -1,0 +1,108 @@
+digraph G {
+
+vtree [label="$VORTEX_TREE", fillcolor="#99e699", style="filled"]
+
+ellipsis0 [label="..."]
+ellipsis1 [label="..."]
+ellipsis2 [label="..."]
+ellipsis3 [label="..."]
+ellipsis4 [label="..."]
+ellipsis5 [label="..."]
+
+subgraph cluster_0 {
+    arpege;
+    arome;
+    mocage;
+    ellipsis0;
+    label= "VAPP";
+    labeljust = "r"
+    style="rounded"
+    bgcolor="#80e5ff"
+}
+
+subgraph cluster_1 {
+    "4dvarfr";
+    ifsfr;
+    aearp;
+    ellipsis1;
+    label= "VCONF";
+    labeljust = "r";
+    style="rounded"
+    bgcolor="#80e5ff"
+}
+
+subgraph cluster_2 {
+    ellipsis2;
+    OPER;
+    exp1;
+    exp2;
+    exp3;
+    exp4;
+    label = "EXPERIMENT"
+    labeljust = "r"
+    labelloc = "c";
+    style="rounded"
+    bgcolor="#80e5ff"
+}
+
+subgraph cluster_3 {
+    ellipsis3;
+    "20231030T0000P";
+    "20231030T0600P";
+    "20231030T1200P";
+    label = "DATE"
+    labeljust = "r";
+    style="rounded"
+    bgcolor="#80e5ff";
+
+}
+
+subgraph cluster_4 {
+    ellipsis4;
+    forecast;
+    ic;
+    surfan;
+    "4dupd2";
+    label = "BLOCK"
+    labeljust = "r";
+    style="rounded"
+    bgcolor="#80e5ff";
+}
+
+
+vtree -> arpege
+vtree -> arome
+vtree -> mocage
+vtree -> ellipsis0
+
+arpege -> "4dvarfr"
+arpege -> ifsfr
+arpege -> aearp
+arpege -> ellipsis1
+
+"4dvarfr" -> ellipsis2
+"4dvarfr" -> OPER
+"4dvarfr" -> exp1
+"4dvarfr" -> exp2
+"4dvarfr" -> exp3
+"4dvarfr" -> exp4
+
+exp2 -> "20231030T0000P"
+exp2 -> "20231030T0600P"
+exp2 -> "20231030T1200P"
+exp2 -> ellipsis3
+
+"20231030T0600P" -> forecast
+"20231030T0600P" -> ic
+"20231030T0600P" -> surfan
+"20231030T0600P" -> "4dupd2"
+
+"20231030T0600P" -> ellipsis4
+
+forecast -> "historic.arpege.<...>.fa"
+forecast -> "grid.arpege-forecast.<...>.grib"
+forecast -> ellipsis5
+
+
+
+}

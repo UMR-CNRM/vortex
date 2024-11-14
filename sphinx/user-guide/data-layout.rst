@@ -1,22 +1,33 @@
-====================
-The VORTEX data tree
-====================
+======================
+The *vortex* data tree
+======================
 
 
-The vortex functions ``input`` and ``output`` assume that data files are
-laid out as a directory tree with a specific structure, described below.
+Unless a :doc:`specific location <explicit-paths>` is specified, the
+vortex functions :py:func:`input <vortex.input>` and :py:func:`output
+<vortex.output>` assume that data files are arranged within a directory
+tree made of 5 distinct levels:
 
-Data tree layout
-----------------
+- :ref:`vapp`
+- :ref:`vconf <vapp>`
+- :ref:`experiment`
+- :ref:`date`
+- :ref:`block`
+
+Below is the graphical representation of a *vortex* data tree:
+
+.. image:: /img/vortex-data-tree.png
 
 The root directory
-~~~~~~~~~~~~~~~~~~
+------------------
 
 By default, the data tree root directory is located in the user's home
-directoty as ``vortex.d``.
+directory as ``vortex.d``.
+
+.. _vapp:
 
 The VAPP/VCONF levels
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 The root directory is followed by two levels of directories, specified
 by the arguments ``vapp`` and ``vconf``.  For example, a call to
@@ -37,8 +48,10 @@ The name for the ``vapp`` and ``vconf`` directories is **arbitrary**, and
 the ``vortex.input`` function will create non-existing directories
 automatically.
 
+.. _experiment:
+
 The experiment identifier level
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 Below the ``vconf`` level are directories named after the experiment
 identifier.  The experiment identifier is set by the value passed to
@@ -56,8 +69,10 @@ ressource to be written under ``arpege/4dvarfr/my-experiment``.
         # ...
     )
 
+.. _date:
+
 The date level
-~~~~~~~~~~~~~~
+--------------
 
 An experiment subdirectory for a given experiment identifier typically
 contains multiple date directories named following the convention
@@ -88,8 +103,10 @@ condition is valid on the 2024-11-04 at 06:00UTC will be found under
 the ``20241104T0600P`` or ``20241104T0600A`` directories, **not** under the
 ``20241106T0900P`` or ``20241106T0900A`` directories.
 
+.. _block:
+
 The block level
-~~~~~~~~~~~~~~~
+---------------
 
 Within a date directory, data files are grouped into subdirectory
 referred to as *blocks*.  Similarly to *vapp*, *vconf* and
@@ -117,7 +134,7 @@ block directory will be created if they do not already exist.
         related to aeronautics.
 
 The file level
-~~~~~~~~~~~~~~
+--------------
 
 Finally, block directories contain the data files themselves
 
@@ -135,8 +152,3 @@ Finally, block directories contain the data files themselves
 The files names are computed according to rules defined by the
 underlying ``Ressource`` objects instanciated by calls to functions like
 ``vortex.input`` or ``vortex.output``.
-
-Remote data trees
------------------
-
-lorem ispum
