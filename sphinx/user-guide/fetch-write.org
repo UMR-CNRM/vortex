@@ -1,3 +1,5 @@
+#+PROPERTY: header-args    :eval no
+#+OPTIONS: toc:nil num:nil author:nil
 #+TITLE: Fetching and writing data files
 
 VORTEX facilitates the transfer of data files between an arbitrary

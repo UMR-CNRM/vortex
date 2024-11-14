@@ -1,3 +1,7 @@
+#+PROPERTY: header-args    :eval no
+#+OPTIONS: toc:nil num:nil author:nil
+#+TITLE: Remote data trees
+
 By default, vortex fetches and write data from and from a /local/ data
 tree, see <todolink>.  It is however possible to configure access to a
 remote data tree usinf the FTP protocol, for instance acting as a data archive.

@@ -1,13 +1,18 @@
+#+PROPERTY: header-args    :eval no
+#+OPTIONS: toc:nil num:nil author:nil
+#+TITLE: Specifying set locations
+
 Vortex makes it possible to fetch (write) data files from (to)
 locations outside of the vortex data tree, whether it is local or
 remote.
 
-* Fetching (writing) from (to) an explicit path
+* Location on the location machine
 
-This is achieved by specifying an optional extra argument ~remote~,
-~to calls to ~vortex.input~ or ~vortex.output~.  The value must be a
-string containing the path to the target or source data file.  The
-path must either be absolute or relative to the user's home directory.
+You can specify an explicit path to write (read) a resource from (to)
+by passing an optional extra argument ~remote~ to calls to
+~vortex.input~ or ~vortex.output~.  The value must be a string
+containing the path to the target or source data file.  The path must
+either be absolute or relative to the user's home directory.
 
 Passing the ~remote~ argument replaces passing arguments specifying
 the location of the source (target) data file within the vortex data
@@ -27,9 +32,27 @@ tree, such as ~block~, ~experiment~, ~vapp~ or ~vconf~.
   )
 #+end_src
 
-* Fetching (writing) from (to) an explicit path on a remote machine
+* Location on a remote machine
 
 The two optional arguments ~hostname~ and ~tube~ can be used to
 specify the address and protocol of a remote machine:
 
-- ~address~ :: 
+- ~hostname~ :: A string containing the address of the remote machine
+- ~tube~ :: Specifies the protocol used to access the remote
+  machine. Allowed values are `"scp"` to use SSH and `"ftp"` to use
+  FTP.
+
+For instance:
+
+#+begin_src python
+  handler = vtx.input(
+      kind="analysis",
+      date="2024082600",
+      # ...
+      remote="/home/user/data/analysis.fa"
+      hostname="hendrix.meteo.fr",
+      tube="ftp",
+  )
+#+end_src
+
+The requests are made with the current user's account.
