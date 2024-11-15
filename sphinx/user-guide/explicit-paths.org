@@ -6,7 +6,7 @@ Vortex makes it possible to fetch (write) data files from (to)
 locations outside of the vortex data tree, whether it is local or
 remote.
 
-* Location on the location machine
+* Local paths
 
 You can specify an explicit path to write (read) a resource from (to)
 by passing an optional extra argument ~remote~ to calls to
@@ -32,7 +32,7 @@ tree, such as ~block~, ~experiment~, ~vapp~ or ~vconf~.
   )
 #+end_src
 
-* Location on a remote machine
+* Remote paths
 
 The two optional arguments ~hostname~ and ~tube~ can be used to
 specify the address and protocol of a remote machine:
