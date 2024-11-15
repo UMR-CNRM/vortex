@@ -19,7 +19,7 @@ from footprints import proxy as fpx
 from footprints.stdtypes import FPDict
 
 from vortex import sessions
-from vortex.config import from_config
+from vortex import config
 from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, \
     demosuites, scenario, member, block
 from vortex.syntax.stdattrs import LegacyXPid, any_vortex_xpid
@@ -256,9 +256,7 @@ def set_namespace_from_cache_settings(usecache, usearchive):
 
     # Default usearchive to False is no storage section is defined in
     # the configuration file
-    try:
-        from_config(section="storage")
-    except KeyError:
+    if not config.is_defined(section="storage"):
         usearchive = False
 
     if not (usecache or usearchive):

@@ -14,7 +14,7 @@ from bronx.fancies import loggers
 import footprints
 
 from vortex import sessions
-from vortex.config import from_config
+from vortex import config
 from vortex.data.abstractstores import Store, ArchiveStore, ConfigurableArchiveStore, CacheStore
 from vortex.data.abstractstores import MultiStore, PromiseStore
 from vortex.data.abstractstores import ARCHIVE_GET_INTENT_DEFAULT
@@ -666,7 +666,9 @@ class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
     @property
     def _actual_mappingroot(self):
         """Read the get entry point form configuration."""
-        return from_config(section="storage", key="rootdir")
+        return config.from_config(
+            section="storage", key="rootdir",
+        )
 
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
@@ -778,7 +780,7 @@ class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
     def _actual_storeroot(self):
         return (
             self.storeroot or
-            from_config(
+            config.from_config(
                 section="storage", key="op_rootdir",
             )
         )
@@ -1087,7 +1089,15 @@ class VortexVsopCacheStore(_AbstractVortexCacheMultiStore):
             'vsop.cache-mt.fr',
             'vsop.stacked-cache-mt.fr',
         ]
-        if self.glovekind != 'opuser':
+
+        # Only set up op2r cache if the associated filepath
+        # is configured
+        if (
+                (self.glovekind != 'opuser') and
+                config.is_defined(
+                    section="data-tree", key="op_rootdir",
+                )
+        ):
             todo += [
                 'vsop.cache-op2r.fr', 'vsop.stacked-cache-op2r.fr',
             ]

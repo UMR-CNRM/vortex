@@ -47,6 +47,13 @@ def from_config(section, key=None):
         raise(e)
     return value
 
+def is_defined(section, key=None):
+    if section not in VORTEX_CONFIG.keys():
+        return False
+    if key:
+        return key in VORTEX_CONFIG[section].keys()
+    return True
+
 
 def get_from_config_w_default(section, key, default):
     logger.info(f"Reading config value {section}.{key}")
