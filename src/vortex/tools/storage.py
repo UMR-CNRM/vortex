@@ -33,6 +33,7 @@ import re
 import time
 from collections import defaultdict
 from datetime import datetime
+import os
 
 import footprints
 from bronx.fancies import loggers
@@ -44,7 +45,7 @@ from vortex.tools.delayedactions import d_action_status
 from vortex.tools.systems import istruedef
 # TODO clean instances of GenericConfigParser
 from vortex.util.config import GenericConfigParser
-from vortex.config import from_config
+from vortex import config
 
 #: No automatic export
 __all__ = []
@@ -965,25 +966,14 @@ class MtoolCache(FixedEntryCache):
     @property
     def entry(self):
         """Tries to figure out what could be the actual entry point for cache space."""
-        if not self.rootdir:
-            e = self.sh.env
-            if e.MTOOL_STEP_CACHE and self.sh.path.isdir(e.MTOOL_STEP_CACHE):
-                cache = e.MTOOL_STEP_CACHE
-                logger.debug('Using mtool step cache %s', cache)
-            elif e.MTOOLDIR and self.sh.path.isdir(e.MTOOLDIR):
-                cache = self.sh.path.join(e.MTOOLDIR, 'cache')
-                logger.debug('Using mtool dir cache %s', cache)
-            elif e.FTDIR or e.WORKDIR or e.SCRATCH:
-                cache = self.sh.path.join(e.FTDIR or e.WORKDIR or e.SCRATCH, self.kind, 'cache')
-                logger.debug('Using default cache %s', cache)
-            else:
-                logger.error('Unable to find an appropriate location for the cache space.')
-                logger.error('Tip: Set either the MTOOLDIR, FTDIR or WORKDIR environment variables ' +
-                             '(MTOOLDIR having the highest priority)')
-                raise RuntimeError('Unable to find an appropriate location for the cache space')
-        else:
-            cache = self.rootdir
-        return self.sh.path.join(cache, self.headdir)
+        if self.rootdir:
+            return os.path.join(self.rootdir, self.headdir)
+        if config.is_defined(section="data-tree", key="rootdir"):
+            return config.is_define(
+                section="data-tree", key="rootdir",
+            )
+        return os.path.join(os.environ["HOME"], "vortex.d")
+
 
 
 class MtoolBuddiesCache(MtoolCache):
@@ -1055,7 +1045,7 @@ class Op2ResearchCache(FixedEntryCache):
     def entry(self):
         cache = (
             self.rootdir or
-            from_config(section="data-tree", key="op_rootdir")
+            config.from_config(section="data-tree", key="op_rootdir")
         )
         return self.sh.path.join(cache, self.headdir)
 
