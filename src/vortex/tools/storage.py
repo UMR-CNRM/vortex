@@ -44,7 +44,7 @@ from vortex.tools.delayedactions import d_action_status
 from vortex.tools.systems import istruedef
 # TODO clean instances of GenericConfigParser
 from vortex.util.config import GenericConfigParser
-from vortex.config import from_config
+from vortex import config
 
 #: No automatic export
 __all__ = []
@@ -1055,7 +1055,7 @@ class Op2ResearchCache(FixedEntryCache):
     def entry(self):
         cache = (
             self.rootdir or
-            from_config(section="data-tree", key="op_rootdir")
+            config.from_config(section="data-tree", key="op_rootdir")
         )
         return self.sh.path.join(cache, self.headdir)
 
