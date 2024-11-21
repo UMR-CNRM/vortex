@@ -49,10 +49,11 @@ def from_config(section, key=None):
 
 
 def set_config(section, key, value):
+    global VORTEX_CONFIG
     if section not in VORTEX_CONFIG.keys():
         VORTEX_CONFIG[section] = {}
     if key in VORTEX_CONFIG[section]:
-        looger.warning(
+        logger.warning(
             f"Updating existing configuration {section}:{key}"
         )
     VORTEX_CONFIG[section][key] = value
