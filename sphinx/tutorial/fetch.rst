@@ -2,7 +2,6 @@
 Tutorial
 ========
 
-
 This tutorial will guide you throughout writing a simple vortex
 script.  This script will result in the execution of a Python program
 which behavior resembles this of a numerical weather prediction
@@ -49,22 +48,47 @@ contain threep extra files to look like this:
     ICMSHFCST+2.grib
     ICMSHFCST+3.grib
 
-Fecthing input data
+Fetching input data
 -------------------
 
-To work through this tutorial, you will need to download the input
-data archive and extract its content on your computer.  The
-exctraction location doesn't matter, as long as it is somewhere where
-you have read and write access.
+To work through this tutorial, you will need to download the
+:download:`input data archive <vortex-tutorial-data.zip>` and extract
+its content on your computer. The exctraction location doesn't matter,
+as long as it is somewhere where you have read and write access.
 
-It's time to write some Python code. Use the ``vortex.input`` function
-to define an input resource for the initial condition file:
+Let's start with specifying the location of the vortex data tree, a
+directory hierarchy that holds data files that can be fetched and
+stored by *vortex*. By default, the data tree is located in the user's
+home directory, but for the purpose of this tutorial you will
+configure the data tree root node to be the directory
+``vortex_data_tree`` located within the tutorial data files:
 
 .. code:: python
 
-    import vortex as vtx
+   import vortex as vtx
 
-    initial_condition = vtx.input(
+   vtx.config.set_config(
+       section="data-tree",
+       key="rootdir",
+       value="<tutorial/data>/vortex_data_tree",
+   )
+
+See :doc:`../user-guide/configuration` for more information about
+configuration vortex, including setting an alternative location for
+the data tree.
+
+.. note::
+
+   In this tutorial, the character string `<tutorial/data>` is
+   placeholder for the path to wherever you extracted the the tutorial
+   data archive.
+
+Next, use the :py:func:`vortex.input` function to define an input
+resource for the initial condition file:
+
+.. code:: python
+
+    handlers = vtx.input(
         kind="analysis",
         date="2024082600",
         model="arpege",
@@ -75,12 +99,20 @@ to define an input resource for the initial condition file:
         vapp="vapp",
         vconf="vconf",
         experiment="vortex-tutorial",
-        archive=False,
+	block="4dupd2",
         local="ICMSHFCSTINIT",
     )
 
-The ``vortex.input`` function returns an object of type ``Handler``,
-representing the initial condition file.  An instance of ``Handler`` is
+The :py:func:`vortex.input` function returns a list of objects of type
+:py:class:`Handler <vortex.data.handlers.Handler>`. In our case, this
+list contains only a single item mapping to the initial condition
+file.
+
+.. code:: python
+
+   initial_condition = handlers[0]
+
+An instance of :py:class:`Handler <vortex.data.handlers.Handler>` is
 able to compute the file path to the underlying physical file:
 
 .. code:: python
@@ -88,56 +120,68 @@ able to compute the file path to the underlying physical file:
     initial_condition.locate()
 
 This path is computed from the values of the arguments passed to the
-``vortex.input`` function.  This path can be *computed* because the
-initial condition file is a *ressource* that was stored by another
-vortex script.  Its location is therefore well defined in the
-standardised vortex data layout. See ?? for more information regarding
-the the vortex data layout.
+:py:func:`vortex.input` function. This path can be *computed* because
+the initial condition file is a *ressource* that was stored by another
+vortex script. Its location is therefore well defined within a
+standardised data tree layout, see :doc:`../user-guide/data-layout`.
 
-To fetch the file into the current working directory, simply use the
-``Handler.get`` method:
+To fetch the file into the current working directory, use the
+:py:func:`get <vortex.data.handlers.Handler.get>` method on the
+resource handler:
 
 .. code:: python
 
     initial_condition.get()
 
 We then need to fetch the configuration file in the current working
-direcotry, as ``fort.4``.  Similarly to the initial condition file, use
-the ``vortex.input`` again
+directory, as a file named``fort.4``. This is what the fake forecast
+expects. Similarly to the initial condition file, use the
+:py:func:`vortex.input` function again:
 
 .. code:: python
 
     config_file = vtx.input(
         kind="namelist",
-        remote="../forecast_configuration_files/main_arpege.nam",
+        remote="<tutorial/data>/forecast_configuration_files/main_arpege.nam",
         local="fort.4",
     )
 
-This time the call to ``vortex.input`` is much simpler, the path to the
-configuration file is specified explicitly.
+Be sure to replace ``<tutorial/data>`` by the file path where you
+extracted the tutorial data.
 
-Finally, use the ``get`` method on the ``config_file`` handler to fetch
-the file into the current directory, with the name ``fort.4``:
+This time the call to :py:func:`vortex.input` is much simpler because
+the path to the configuration file is specified explicitly using the
+`remote` argument. See :doc:`../user-guide/explicit-paths`.
+
+Finally, use the :py:func:`get <vortex.data.handlers.Handler.get>`
+method on the ``config_file`` handler to fetch the file into the
+current directory.
 
 .. code:: python
 
     config_file.get()
 
+Observe that a new file named ``fort.4`` was created in the current
+working directory. This file is in fact a (hard) link pointing to the
+location specified as a value to the ``remote`` argument to
+:py:func:`vortex.input`.
+
 Running the fake forecast program
 ---------------------------------
 
 With the input data files copied into the current working directory,
-we are ready to run the program.  We will first fetch the program
-itself -- in this case a Python script -- into the current working
-directory, then instanciate an *algorithmic component* object which
-will allow use to actually run the script.
+you are now ready to run the program.  You will first fetch the
+program itself -- in this case a Python script -- into the current
+working directory, then instanciate an *algorithmic component* object
+which will be responsible to actually run the script.
 
 Fetching the fake forecast program
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The VORTEX library considers programs, whether they are scripts
 written in interpreted languages or compiled binaries, as
-*executables*. Fecthing an executable is similar to fecthing an input:
+*executables*. Fetching an executable is similar to fetching an input
+data file:
 
 .. code:: python
 
@@ -148,8 +192,9 @@ written in interpreted languages or compiled binaries, as
         local="fake-forecast.py",
     )
 
-Similarly to ``vortex.input``, ``vortex.executable`` returns an instance of
-``Handler``, which you can call ``get`` on:
+Similarly to :py:func:`vortex.input`, ``vortex.executable`` returns an
+instance of :py:class:`Handler <vortex.data.handlers.Handler>`, which
+you can call :py:func:`get <vortex.data.handlers.Handler.get>` on:
 
 .. code:: python
 
@@ -173,10 +218,10 @@ Algorithmic components classes are instanciated using the
     )
 
 With ``interpreter="python"`` and ``engine="exec"``, the ``vtx.algo``
-returns an instance of ``Expresso``.  This class encapsulates behavior
-required the run a Python script, potentially setting up environment
-variables like ``PYTHONPATH`` or switching to a different Python
-interpreter.
+returns an instance of :py:class:`vortex.algo.components.Expresso`.
+This class encapsulates behavior required the run a Python script,
+potentially setting up environment variables like ``PYTHONPATH`` or
+switching to a different Python interpreter.
 
 Finally, the script can be run using the ``run`` method on the ``algo``
 object, which takes an executable object as a argument
@@ -193,16 +238,15 @@ so that they be later retrieved by other vortex scripts.
 Storing outputs into the data tree
 ----------------------------------
 
-In this section we use the ``vortex.output`` function to store the files
-generated by the fake forecast program into a location form where
-later VORTEX scripts will be able to retrieve them.
+In this section we use the :py:func:`vortex.output` function to store
+the files generated by the fake forecast program into the :doc:`vortex
+data tree <../user-guide/data-layout>`. This way, subsequent VORTEX
+scripts will be able to retrieve them using the
+:py:func:`vortex.input` function.
 
-You can think of this third step as writing outputs into the data
-tree, next to inputs.  This way, an output from a vortex script can
-act as an input of anoother.
-
-Calling the ``vortex.output`` function is very similar to calling
-``vortex.input``:
+Store files in the data tree is achieved by calling the
+:py:func:`vortex.output`. Its interface is indentical to
+:py:func:`vortex.input`'s:
 
 .. code:: python
 
@@ -216,15 +260,16 @@ Calling the ``vortex.output`` function is very similar to calling
         vapp="vapp",
         vconf="vconf",
         experiment="vortex-tutorial",
-        archive=False,
         term=[1, 2, 3],
         local="ICMSHFCST+[term].grib",
      )
 
-It works in reverse from ``input``: instead of fetching files from the
-data tree, it writes to it files present in the current working
-directory that are named as the value passed to the ``local`` argument
-to ``output``.
+The :py:func:`vortex.output` function returns a list Handlers
+instances whose :py:func:`put <vortex.data.handlers.Handler.put>`
+method works in the opposite direction of :py:func:`vortex.input`:
+instead of reading files from the data tree, it writes to it files
+present in the current working directory that are named as the value
+passed to the ``local`` argument to :py:func:`vortex.output`.
 
 Note the addition of the argument ``term``, also referenced within the
 string passed to ``local``:
@@ -237,27 +282,15 @@ string passed to ``local``:
        local="ICMSHFCST+[term].grib",
     )
 
-Values of arguments to functions such as ``input``, ``output`` or
-``executable`` can reference the values of other arguments.  If a value
-is a sequence, then it is expanded into as many elements are there are
-in the sequence.  In this case, ``vtx.output`` returns a list of
-``Handler`` objects instead of a single object.
+Values of arguments to functions such as :py:func:`vortex.input`,
+:py:func:`vortex.output` or :py:func:`vortex.executable` can reference
+the values of other arguments. Sequence are expanded into as many
+elements as they contain. In this case, ``vtx.output`` returns a list
+of 3 :py:class:`Handler <vortex.data.handlers.Handler>` objects instead
+of a single object.
 
-For example, the above call to ``output`` is equivalent to:
-
-.. code:: python
-
-    historic_files = [
-        vtx.output(
-            # ...
-            term=term,
-            local=f"ICMSHFCST+{term}.grib",
-        )
-        for term in range(1,4)
-    ]
-
-Finally, calling ``put`` on the handlers will write the files into the
-data tree:
+Finally, calling :py:func:`put <vortex.data.handlers.Handler.put>` on
+the handlers will write the files into the data tree:
 
 .. code:: python
 
@@ -267,19 +300,23 @@ data tree:
 You can now list the content of the ``forecast`` block to check that the
 3 files where indeed written there:
 
-.. code:: python
+.. code:: shell
 
-    ROOT=cache/vortex/tutorials/fake-forecast
-    ls -l $ROOT/vortex-tutorial/20240826T0000P/forecast
+    DATATREE_ROOT=<tutorial/data>/vortex_data_tree
+    ls -l $DATATREE_ROOT/tutorial/fake-forecast/vortex-tutorial/20240826T0000P/forecast
+
+.. _setting-default-values:
 
 Setting default values
 ----------------------
 
 Definitions of vortex inputs and outputs often feature the same
-arguments and values.  Vortex provides the ``defaults`` function, which
-can be used to prevent repetition of arguments.
+arguments and values. Vortex provides the :py:func:`vortex.defaults`
+function, which can be used to prevent repeating arguments to
+functions :py:func:`vortex.input`, :py:func:`vortex.output` or
+:py:func:`vortex.executable`.
 
-Using ``vortex.defaults``, the script becomes:
+Using :py:func:`vortex.defaults`, the script becomes:
 
 .. code:: python
 
@@ -290,17 +327,16 @@ Using ``vortex.defaults``, the script becomes:
         model="arpege",
         cutoff="production",
         geometry="franmgsp",
-        nativefmt="grib",
         vapp="vapp",
         vconf="vconf",
         experiment="vortex-tutorial",
-        archive=False,
         term=[1, 2, 3],
     )
 
     initial_condition = vtx.input(
         kind="analysis",
         local="ICMSHFCSTINIT",
+	block="4dupd2",
     )
 
     config_file = vtx.input(
@@ -320,7 +356,9 @@ Using ``vortex.defaults``, the script becomes:
 
     for output_handler in vtx.output(
         kind="modelstate",
+	nativefmt="grib",
         local="ICMSHFCST+[term].grib",
+	block="forecast",
     ):
         output_handler.put()
 
@@ -328,18 +366,19 @@ A post-processing task
 ----------------------
 
 We conclude this tutorial by implementing a subsequent vortex script,
-illustring how outputs of one vortex script can be transparently used
-as inputs of another.
+illustring how outputs of one vortex script can be used as inputs of
+another.
 
 This new vortex script will:
 
 1. fetch all three forecast output files
 
-2. concatenate themp
+2. concatenate them
 
 3. write the resulting file back into the data tree
 
-Open a new file ``aggregate-task.py`` and start with calling ``vortex.input``:
+Open a new file ``aggregate-task.py`` and start with calling
+:py:func:`vortex.input`:
 
 .. code:: python
 
@@ -353,7 +392,6 @@ Open a new file ``aggregate-task.py`` and start with calling ``vortex.input``:
         vconf="fake-forecast",
         experiment="vortex-tutorial",
         geometry="franmgsp",
-        archive=False,
         term=[1, 2, 3],
     )
 
@@ -368,7 +406,8 @@ Open a new file ``aggregate-task.py`` and start with calling ``vortex.input``:
         handler.get()
 
 Observe that the arguments specified are identical to those provided
-to the ``vortex.output`` function in section ??.
+to the :py:func:`vortex.output` function in section
+:ref:`Setting-default-values`.
 
 With the three files present in the working directory, let's
 concatenate them:
@@ -390,3 +429,8 @@ Finally, we write the resulting file into the data tree:
         nativefmt="lfi",
         block="postprocessing",
     ).put()
+
+.. code:: shell
+
+    DATATREE_ROOT=<tutorial/data>/vortex_data_tree
+    ls -l $DATATREE_ROOT/tutorial/fake-forecast/vortex-tutorial/20240826T0000P/postprocessing

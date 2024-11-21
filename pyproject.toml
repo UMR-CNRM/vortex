@@ -21,6 +21,9 @@ dependencies = [
     "bronx", "footprints", "taylorism",
 ]
 
+[project.optional-dependencies]
+dev = ["sphinx", "sphinx-book-theme", "sphinx-copybutton"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

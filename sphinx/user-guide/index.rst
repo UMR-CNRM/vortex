@@ -12,4 +12,5 @@ Contents
    fetch-write
    data-layout
    remote-data-trees
+   oper-dble-data-trees
    explicit-paths

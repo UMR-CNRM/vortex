@@ -6,6 +6,7 @@ VORTEX reference documentation
    :maxdepth: 2
 
    vortex
+   handlers
    resources
    static
    executables

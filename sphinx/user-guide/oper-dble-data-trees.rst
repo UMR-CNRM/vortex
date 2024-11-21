@@ -17,32 +17,61 @@ string value to the ``experiment`` argument of functions
     )
 
 The values ``"oper"`` and ``"dble"``, however, are special cases that
-modify the base behavior of functions :py:func:`vortex.input` and
-:py:func:`vortex.output`.  This behaviour depends on whether or not a
-:doc:`remote data tree <remote-data-trees>` is used.
+enable fetching data files from an additional **local** data tree in
+case they are not found in the default local data tree.
 
-Local data tree
-===============
+.. note::
 
-The behaviour associated to ``"oper"`` and ``"dble"`` experiments is
-special only in the fact that the corresponding directory name is
-capitalised:
+   The additional data tree associated with special experiments
+   identifiers ``"oper"`` and ``"dble"`` can only be *fetched* from.  In
+   other words, a call to ``put`` on a ``Handler`` object returned by
+   :py:func:`vortex.output` will *not* write the file in the
+   additional directory.
+
+   This is mostly because the use of an additional data tree was
+   designed as a cache space for fetching data files produced by NWP
+   operational runs.
+
+This behavior is enabled whenever a configuration entry ``op_rootdir``
+is set within the ``data-tree`` section of the configuration.  Note
+that, similarly to the defaut data tree, this extra data tree is *not*
+accessed whenever ``cache=False`` is passed to :py:func:`vortex.input`
+or :py:func:`vortex.output`.
+
+Example
+========
+
+Assume the following directory trees::
+
+    /home/user/vortex.d/arome/ifsfr/DBLE/.../
+         file1
+         file2
+
+    /vortex/cache/arome/ifsfr/DBLE/.../
+         file1
+         file2
+         file3
+
+As well as the following configuration:
+
+.. code:: toml
+
+   [data-tree]
+   op_rootdir = "/vortex/cache"
+
+Suppose that a call to :py:func:`vortex.input`:
 
 .. code:: python
 
-    handler = vortex.input(
-        vapp="arome",
-        vconf="ifsfr",
-        kind='analysis',
-        # ...
-        cache = True,
-        archive = False,
-    )
-    handler.locate()
+   handler = vortex.input(
+       # ...
+       experiment="dble",
+       # ...
+   )
 
-    /home/user/vortex.d/arome/ifsfr/DBLE/.../.../analysis.atm-arome.franmg-01km30.grib
-
-Remote data tree
-================
-
-
+results to a handler on node ``arome/ifsfr/DBLE/.../file1`` of the
+data tree.  Then a call to ``handler.get`` will fetch the file
+``file1`` from the default local data tree ``/home/user/vortex.d``.
+However, all call to ``get`` on a handler on node
+``arome/ifsfr/DBLE/.../file3`` would fetch the file ``file3`` from the
+additional local data tree ``/vortex/cache``.

@@ -47,6 +47,18 @@ def from_config(section, key=None):
         raise(e)
     return value
 
+
+def set_config(section, key, value):
+    global VORTEX_CONFIG
+    if section not in VORTEX_CONFIG.keys():
+        VORTEX_CONFIG[section] = {}
+    if key in VORTEX_CONFIG[section]:
+        logger.warning(
+            f"Updating existing configuration {section}:{key}"
+        )
+    VORTEX_CONFIG[section][key] = value
+
+
 def is_defined(section, key=None):
     if section not in VORTEX_CONFIG.keys():
         return False
