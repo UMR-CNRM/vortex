@@ -3,7 +3,7 @@ import tomli
 from bronx.fancies import loggers
 
 
-VORTEX_CONFIG = None
+VORTEX_CONFIG = {}
 
 logger = loggers.getLogger(__name__)
 
