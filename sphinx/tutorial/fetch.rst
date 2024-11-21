@@ -2,7 +2,6 @@
 Tutorial
 ========
 
-
 This tutorial will guide you throughout writing a simple vortex
 script.  This script will result in the execution of a Python program
 which behavior resembles this of a numerical weather prediction
@@ -74,7 +73,7 @@ configure the data tree root node to be the directory
        value="<tutorial/data>/vortex_data_tree",
    )
 
-See :doc:`/user-guide/configuration` for more information about
+See :doc:`../user-guide/configuration` for more information about
 configuration vortex, including setting an alternative location for
 the data tree.
 
@@ -89,7 +88,7 @@ resource for the initial condition file:
 
 .. code:: python
 
-    initial_condition = vtx.input(
+    handlers = vtx.input(
         kind="analysis",
         date="2024082600",
         model="arpege",
@@ -100,14 +99,21 @@ resource for the initial condition file:
         vapp="vapp",
         vconf="vconf",
         experiment="vortex-tutorial",
+	block="4dupd2",
         local="ICMSHFCSTINIT",
     )
 
-The :py:func:`vortex.input` function returns an object of type
-:py:class:`Handler <vortex.data.handlers.Handler>`, representing the
-initial condition file. An instance of :py:class:`Handler
-<vortex.data.handlers.Handler>` is able to compute the file path to
-the underlying physical file:
+The :py:func:`vortex.input` function returns a list of objects of type
+:py:class:`Handler <vortex.data.handlers.Handler>`. In our case, this
+list contains only a single item mapping to the initial condition
+file.
+
+.. code:: python
+
+   initial_condition = handlers[0]
+
+An instance of :py:class:`Handler <vortex.data.handlers.Handler>` is
+able to compute the file path to the underlying physical file:
 
 .. code:: python
 
