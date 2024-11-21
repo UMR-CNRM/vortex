@@ -228,20 +228,6 @@ man_pages = [
      [u'The Vortex Team'], 1)
 ]
 
-# Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {
-    "arpifs_listings": ("https://arpifs-listings.readthedocs.io/en/latest", None),
-    "bronx": ("https://bronx.readthedocs.io/en/latest", None),
-    "footprints": ("https://footprints.readthedocs.io/en/latest", None),
-    "taylorism": ("https://taylorism.readthedocs.io/en/latest", None),
-    "thenamelisttool": ("https://thenamelisttool.readthedocs.io/en/latest", None),
-}
-
-# Because of Meteo-France's proxy we need this :-(
-import os
-if 'VORTEX_PROJECT_SSLCERT_OVERRIDE' in os.environ:
-    tls_cacerts = os.environ['VORTEX_PROJECT_SSLCERT_OVERRIDE']
-
 # Concatenate the class docstring and the __init__ docstring
 autoclass_content = 'both'
 
