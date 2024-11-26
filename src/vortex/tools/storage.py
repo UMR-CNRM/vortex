@@ -969,7 +969,7 @@ class MtoolCache(FixedEntryCache):
         if self.rootdir:
             return os.path.join(self.rootdir, self.headdir)
         if config.is_defined(section="data-tree", key="rootdir"):
-            return config.is_define(
+            return config.from_config(
                 section="data-tree", key="rootdir",
             )
         return os.path.join(os.environ["HOME"], "vortex.d")
