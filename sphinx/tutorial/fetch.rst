@@ -48,43 +48,88 @@ contain threep extra files to look like this:
     ICMSHFCST+2.grib
     ICMSHFCST+3.grib
 
-Fetching input data
--------------------
+
+Initial set up
+--------------
 
 To work through this tutorial, you will need to download the
 :download:`input data archive <vortex-tutorial-data.zip>` and extract
 its content on your computer. The exctraction location doesn't matter,
 as long as it is somewhere where you have read and write access.
 
-Let's start with specifying the location of the vortex data tree, a
-directory hierarchy that holds data files that can be fetched and
-stored by *vortex*. By default, the data tree is located in the user's
-home directory, but for the purpose of this tutorial you will
-configure the data tree root node to be the directory
-``vortex_data_tree`` located within the tutorial data files:
+The archive contains the following files:
+
+- ``fake-forecast.py``: A Python script that reads in a data file and a
+  configuration file, both expected to be present in the current
+  directory, and writes a set of files ``ICMSHFCST+01.grib``,
+  ``ICMSHFCST+02.grib``, ``ICMSHFCST+03.grib``.  The number of output
+  files is specified by the content of the configuration file.
+- ``forecast_configuration_files/main_arpege.nam``: A configuration
+  file consisting of one ``KEY=VALUE`` pair per line.
+- ``data_tree``: The root directory for the *vortex data tree*, from
+  which input files are fetched from and ouput files written to.
+
+.. note::
+
+   The examples in this tutorial assume that the tutorial data archive
+   was extracted in directory ``/home/user``.  Be sure to replace this
+   path by the path to the directory where your extracted the tutorial
+   data archive.
+
+
+This tutorial is a guide to writing a Python script, using the
+*vortex* library, to fetch required input data from the data tree
+directory, run the ``fetch-forecast.py`` program, and write output
+files to the data tree.
+
+Start by creating a empty directory. The location and name do not
+matter and we'll just call it ``vortex-tutorial``.  Using your
+favorite text editor, create a new Python file ``run-forecast.py`` and
+write the following lines to it:
 
 .. code:: python
+
+   # run-forecast.py
 
    import vortex as vtx
 
    vtx.config.set_config(
        section="data-tree",
        key="rootdir",
-       value="<tutorial/data>/vortex_data_tree",
+       # Be sure to replace "/home/user/" by the path where you
+       # extracted the tutorial data archvie.
+       value="/home/user/vortex-tutorial-data/vortex_data_tree",
    )
 
+   print(
+       "The data tree root is",
+       vtx.config.from_config("data-tree", "rootdir"),
+   )
+
+The call to :py:func:`vortex.config.set_config` specifies the location
+of the vortex data tree, a directory hierarchy that holds data files
+that *vortex* can fetch data from and write data to. By default, the
+data tree is located in the user's home directory, but for the purpose
+of this tutorial you will configure the data tree root node to be the
+directory ``vortex_data_tree`` located within the tutorial data files.
+
+.. tip::
+
+   You can run the script with ``python -i`` to execute the script in an
+   interactive Python session.
+
+.. seealso::
+
 See :doc:`../user-guide/configuration` for more information about
-configuration vortex, including setting an alternative location for
+configuring *vortex*, including setting an alternative location for
 the data tree.
 
-.. note::
 
-   In this tutorial, the character string `<tutorial/data>` is
-   placeholder for the path to wherever you extracted the the tutorial
-   data archive.
+Fetching input data
+-------------------
 
-Next, use the :py:func:`vortex.input` function to define an input
-resource for the initial condition file:
+Use the :py:func:`vortex.input` function to define an input resource
+for the initial condition input file:
 
 .. code:: python
 
