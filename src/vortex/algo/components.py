@@ -629,9 +629,9 @@ class AlgoComponent(footprints.FootprintBase, metaclass=AlgoComponentMeta):
                 self.env[k] = v
 
     def prepare(self, rh, opts):
-        """Set some defaults env values."""
-        if opts.get('fortran', True):
-            self.export('fortran')
+        """Abstract method.
+        """
+        pass
 
     def absexcutable(self, xfile):
         """Retuns the absolute pathname of the ``xfile`` executable."""
