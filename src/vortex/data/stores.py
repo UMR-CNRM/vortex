@@ -952,33 +952,6 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
     )
 
 
-class VortexCacheBuddiesStore(_VortexCacheBaseStore):
-    """Some kind of MTOOL cache to access friends VORTEX R&D experiments."""
-
-    _footprint = dict(
-        info = 'VORTEX MTOOL like Cache access',
-        attr = dict(
-            netloc = dict(
-                values  = ['{:s}.{:s}cache-buddies.fr'.format(v, s)
-                           for v in ('vortex', 'vortex-free') for s in ('', 'stacked-')]
-            ),
-            strategy = dict(
-                default = 'mtoolbuddies',
-            ),
-            headdir = dict(
-                default = 'vortexbuddies',
-            ),
-            rtouch = dict(
-                default = False,
-            ),
-            readonly = dict(
-                values  = [True, ],
-                default = True,
-            )
-        )
-    )
-
-
 # TODO Not sure this class is needed anymore
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
     """The DSI/OP VORTEX cache where researchers can get the freshest data."""
@@ -1058,9 +1031,7 @@ class VortexCacheStore(_AbstractVortexCacheMultiStore):
         netloc_m = re.match(r'(?P<base>vortex.*)\.cache\.(?P<country>\w+)', self.netloc)
         mt_netloc = '{base:s}.cache-mt.{country:s}'.format(** netloc_m.groupdict())
         s_mt_netloc = '{base:s}.stacked-cache-mt.{country:s}'.format(** netloc_m.groupdict())
-        bd_netloc = '{base:s}.cache-buddies.{country:s}'.format(** netloc_m.groupdict())
-        s_bd_netloc = '{base:s}.stacked-cache-buddies.{country:s}'.format(** netloc_m.groupdict())
-        return [mt_netloc, s_mt_netloc, bd_netloc, s_bd_netloc]
+        return [mt_netloc, s_mt_netloc]
 
 
 class VortexVsopCacheStore(_AbstractVortexCacheMultiStore):
@@ -1152,8 +1123,7 @@ class VortexStackStore(_AbstractVortexStackMultiStore):
         """Go through the various stacked stores."""
         netloc_m = re.match(r'(?P<base>vortex.*)\.stack\.(?P<country>\w+)', self.netloc)
         s_mt_netloc = '{base:s}.stacked-cache-mt.{country:s}'.format(** netloc_m.groupdict())
-        s_bd_netloc = '{base:s}.stacked-cache-buddies.{country:s}'.format(** netloc_m.groupdict())
-        return [s_mt_netloc, s_bd_netloc]
+        return [s_mt_netloc]
 
 
 class VortexVsopStackStore(_AbstractVortexStackMultiStore):

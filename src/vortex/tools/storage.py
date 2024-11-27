@@ -975,35 +975,6 @@ class MtoolCache(FixedEntryCache):
         return os.path.join(os.environ["HOME"], "vortex.d")
 
 
-
-class MtoolBuddiesCache(MtoolCache):
-    """Read-only MTOOL like caches."""
-
-    _footprint = dict(
-        info = 'A place to store file to be sent with ftserv',
-        attr = dict(
-            kind = dict(
-                values   = ['mtoolbuddies', ],
-            ),
-            headdir = dict(
-                optional = True,
-                default  = 'vortexbuddies',
-            ),
-            readonly = dict(
-                values  = [True, ],
-                default = True,
-            )
-        )
-    )
-
-    def allow_reads(self, item):  # @UnusedVariable
-        """
-        This method can be used to determine whether or not the present object
-        supports reads for **item**.
-        """
-        return self.sh.path.isdir(self.entry)
-
-
 class FtStashCache(MtoolCache):
     """A place to store file to be sent with ftserv."""
 
