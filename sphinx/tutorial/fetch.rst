@@ -452,7 +452,7 @@ Open a new file ``aggregate-task.py`` and start with calling
 
     import vortex as vtx
 
-    vortex.defaults(
+    vtx.defaults(
         date="2024082600",
         model="arpege",
         cutoff="production",
@@ -484,7 +484,7 @@ concatenate them:
 
     with open("result.txt", "w") as target:
         for handler in historic_files:
-            with open(handler.container.local, "r") as source:
+            with open(handler.container.localpath(), "r") as source:
                 target.write(source.readlines())
 
 Finally, we write the resulting file into the data tree:
@@ -500,5 +500,5 @@ Finally, we write the resulting file into the data tree:
 
 .. code:: shell
 
-    DATATREE_ROOT=<tutorial/data>/vortex_data_tree
+    DATATREE_ROOT=/home/user/vortex-tutorial-data/vortex_data_tree
     ls -l $DATATREE_ROOT/tutorial/fake-forecast/vortex-tutorial/20240826T0000P/postprocessing
