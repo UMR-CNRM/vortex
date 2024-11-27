@@ -18,7 +18,7 @@ classifiers = [
     "License :: CeCILL-C Free Software License Agreement (CECILL-C)",
 ]
 dependencies = [
-    "bronx", "footprints", "taylorism",
+    "bronx", "footprints", "taylorism", "tomli",
 ]
 
 [project.optional-dependencies]
