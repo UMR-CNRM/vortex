@@ -952,33 +952,6 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
     )
 
 
-class VortexCacheBuddiesStore(_VortexCacheBaseStore):
-    """Some kind of MTOOL cache to access friends VORTEX R&D experiments."""
-
-    _footprint = dict(
-        info = 'VORTEX MTOOL like Cache access',
-        attr = dict(
-            netloc = dict(
-                values  = ['{:s}.{:s}cache-buddies.fr'.format(v, s)
-                           for v in ('vortex', 'vortex-free') for s in ('', 'stacked-')]
-            ),
-            strategy = dict(
-                default = 'mtoolbuddies',
-            ),
-            headdir = dict(
-                default = 'vortexbuddies',
-            ),
-            rtouch = dict(
-                default = False,
-            ),
-            readonly = dict(
-                values  = [True, ],
-                default = True,
-            )
-        )
-    )
-
-
 # TODO Not sure this class is needed anymore
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
     """The DSI/OP VORTEX cache where researchers can get the freshest data."""
