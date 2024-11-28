@@ -1636,6 +1636,9 @@ class Parallel(xExecutableAlgoComponent):
         conf_dict = from_config(section="mpitool")
         if self.mpiname:
             conf_dict["mpiname"] = self.mpiname
+        # Make "mpirun" the default mpi command name
+        if "mpiname" not in conf_dict.keys():
+            conf_dict["mpiname"] = "mpirun"
         possible_attrs = functools.reduce(
             lambda s, t: s | t,
             [
