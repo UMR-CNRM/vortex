@@ -14,3 +14,4 @@ Contents
    remote-data-trees
    oper-dble-data-trees
    explicit-paths
+   configuration

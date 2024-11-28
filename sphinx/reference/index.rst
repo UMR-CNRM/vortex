@@ -11,3 +11,4 @@ VORTEX reference documentation
    static
    executables
    tasks
+   configuration
