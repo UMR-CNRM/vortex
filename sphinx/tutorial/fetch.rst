@@ -433,9 +433,9 @@ Using :py:func:`vortex.defaults`, the script becomes:
 A post-processing task
 ----------------------
 
-We conclude this tutorial by implementing a subsequent vortex script,
-illustring how outputs of one vortex script can be used as inputs of
-another.
+We conclude this tutorial by implementing a second vortex script,
+which will illustrate the way outputs of one vortex script can be used
+as inputs of another.
 
 This new vortex script will:
 
@@ -451,6 +451,14 @@ Open a new file ``aggregate-task.py`` and start with calling
 .. code:: python
 
     import vortex as vtx
+
+    vtx.config.set_config(
+       section="data-tree",
+       key="rootdir",
+       # Be sure to replace "/home/user/" by the path where you
+       # extracted the tutorial data archvie.
+       value="/home/user/vortex-tutorial-data/vortex_data_tree",
+   )
 
     vtx.defaults(
         date="2024082600",
@@ -472,6 +480,18 @@ Open a new file ``aggregate-task.py`` and start with calling
 
     for handler in historic_files:
         handler.get()
+
+.. note::
+
+   Because the location of the data tree root is different from the
+   default ``$HOME/.vortex.d``, it is necessary to call
+   :py:func:`vortex.config.set_config` again at the beginning of the
+   script.
+
+   For convenience, we could instead use the default location or
+   specify the location of the data tree in the :doc:`configuration
+   <../user-guide/configuration>`.
+
 
 Observe that the arguments specified are identical to those provided
 to the :py:func:`vortex.output` function in section
