@@ -1,6 +1,6 @@
-=========================================
-The `oper` and `dble` special experiments
-=========================================
+=============================================
+The ``oper`` and ``dble`` special experiments
+=============================================
 
 The description of the vortex data tree provided in :doc:`data-layout`
 mentions that nodes at the experiment identifier level can have

@@ -18,3 +18,136 @@ possible to print the entire configuration using
 .. seealso::
 
    :doc:`../reference/configuration`
+
+``data-tree``
+^^^^^^^^^^^^^
+
+``rootdir``
+
+The path to the root directory for the data tree. Can be absolute or
+relative to the current working directory.
+
+**Type**: Abritrary string.
+
+**Default value**: ``"$HOME/.vortex.d"``
+
+``op_rootdir``
+
+The path to the root directory for the additional data tree used by
+special experiments ``oper`` and ``dble``.  If unspecified, *vortex*
+will only lookup data files in the local data tree, and remote data
+trees if they are specified.
+
+**Type**: Arbitrary string.
+
+**Default value**: None
+
+``storage``
+^^^^^^^^^^^
+
+``address``
+
+The address of the server hosting a remote data tree.
+
+**Type**: Arbitrary string.
+
+**Default value**: None
+
+``rootdir``
+
+The path to the root directory for the remote data tree. Can be absolute or
+relative to the user's home directory on the remote machine.
+
+**Type**: Arbitrary string.
+
+**Default value**: ``"$HOME/.vortex.d"``
+
+``op_rootdir``
+
+The path to an alternative data tree specific to the ``oper`` and ``dble``
+special experiments.
+
+**Type**: Arbitrary string.
+
+**Default value**: ``storage:rootdir``.
+
+``export_mapping``
+
+TODO
+
+**Type**: boolean
+
+**Default value**: ``false``
+
+``usejeeves``
+
+TODO
+
+**Type**: boolean
+
+**Default value**: ``false``
+
+
+``mpitool``
+^^^^^^^^^^^
+
+``mpiname``
+
+Command name for the MPI launcher to use.
+
+**Values**:
+
+- ``"mpirun"``:  Standard MPI launcher on most systems: ``mpirun``.
+- ``"srun"``: Slum's ``srun`` launcher.
+- ``"openmpi"``: OpenMPI's ``mpirun`` launcher.
+- ``"mpiauto"``: *mpiauto* proxy launcher.
+- ``"srun-ddt"``: Slurm's ``srun`` launcher with support for the Arm
+  Distributed Debugging Tool.
+- ``"openmpi-ddt"``: OpenMPI's ``mpirun`` launcher with support for
+  the Arm Distributed Debugging Tool.
+
+**Default**: ``"mpirun"``
+
+``mpilauncher``
+
+Path to the MPI launcher executable.  Must be absolute.
+
+If unspecified, the command name is inferred form the value of
+``mpitool:mpiname`` and must be found in the shell's command path.
+
+**Type**: Arbitrary string.
+
+**Optional**
+
+``mpiopts``
+
+Option flags to pass the MPI launcher command.
+
+**Type**: Arbitrary string
+
+**Default value**: ``""``
+
+``mpienv``
+^^^^^^^^^^
+
+This section defines environment variables that will be exported prior
+to running an MPI executable.
+
+The section keys are arbitrary, and correspond to the name of the
+environment variables to be exported.  The associated values
+correspond to the value to give the environmet variable.
+
+.. topic:: Example
+
+   .. code:: toml
+
+      [mpienv]
+      DAPL_ACK_RETRY = "7"
+      DAPL_ACK_TIMER = "20"
+      DAPL_IB_SL = "0"
+      I_MPI_DAPL_UD = "on"
+      I_MPI_DAPL_UD_PROVIDER = "ofa-v2-mlx5_0-1u"
+
+.. attention::
+
+   All values are **strings**.
