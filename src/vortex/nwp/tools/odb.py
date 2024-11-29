@@ -196,32 +196,27 @@ class OdbDriver:
         env['ODB_DATAPATH_{:s}'.format(layout)] = dbpath
 
     @property
-    def _default_iotools_path(self):
-        """The location to the default odb-tools utilities."""
-        iopath = from_config(section="odbtools", key="rootdir")
-        iovers = from_config(section="odbtools", key="odbcycle")
-        return self.sh.path.join(iopath, iovers)
-
-    @property
     def _default_iocreate_path(self):
         """The location to the default create_ioassign utility."""
-        return self.env.get(
-            'ODB_IOCREATE_COMMAND',
-            self.sh.path.join(
-                self._default_iotools_path,
-                from_config(section="odbtools", key="iocreate"),
-            )
+        return self.sh.path.join(
+            from_config(section="nwp-tools", key="odb"),
+            get_from_config_w_default(
+                section="nwp-tools",
+                key="iocreate_cmd",
+                default="create_ioassign"
+            ),
         )
 
     @property
     def _default_iomerge_path(self):
         """The location to the default merge_ioassign utility."""
-        return self.env.get(
-            'ODB_IOMERGE_COMMAND',
-            self.sh.path.join(
-                self._default_iotools_path,
-                from_config(section="odbtools", key="iomerge"),
-            )
+        return self.sh.path.join(
+            from_config(section="nwp-tools", key="odb"),
+            get_from_config_w_default(
+                section="nwp-tools",
+                key="iomerge_cmd",
+                default="merge_ioassign"
+            ),
         )
 
     def ioassign_create(self, ioassign='ioassign.x', npool=1, layout='ecma',
