@@ -80,29 +80,9 @@ class Addon(footprints.FootprintBase):
         for k in [x for x in clsenv.keys() if x.isupper()]:
             self.env[k] = clsenv[k]
         if self.path is None:
-            for prefix in [x for x in (self.kind, self.cfginfo) if x is not None]:
-                kpath = prefix + 'path'
-                if kpath in self.sh.env:
-                    self.path = self.sh.env.get(kpath)
-                    break
-            if self.path is None and self.cfginfo is not None:
-                addon_rootdir = self.sh.env.get(
-                    self.cfginfo + 'root',
-                    get_from_config_w_default(
-                        section=self.cfginfo, key="rootdir", default=None,
-                    ),
-                )
-                if self.cycle is None:
-                    self.cycle = self.sh.env.get(
-                        self.cfginfo + 'cycle',
-                        get_from_config_w_default(
-                            section=self.cfginfo,
-                            key=self.cfginfo + "cycle",
-                            default=None,
-                        ),
-                    )
-                if addon_rootdir is not None and self.cycle is not None:
-                    self.path = addon_rootdir + '/' + self.cycle
+            self.path = get_from_config_w_default(
+                section="nwp-tools", key=self.kind, default=None,
+            )
 
     @classmethod
     def in_shell(cls, shell):
@@ -221,7 +201,7 @@ class FtrawEnableAddon(Addon):
         # If needed, look in the config file for the rawftshell
         if self.rawftshell is None:
             self.rawftshell = get_from_config_w_default(
-                section=self.cfginfo, key="rawftshell", default=None,
+                section="rawftshell", key=self.kind, default=None,
             )
 
 
