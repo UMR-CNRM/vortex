@@ -572,7 +572,7 @@ class Archive(AbstractArchive):
 
     def __init__(self, *kargs, **kwargs):
         super().__init__(*kargs, **kwargs)
-        self.default_usejeeves = from_config(
+        self.default_usejeeves = config.from_config(
             section="storage", key="usejeeves",
         )
 
