@@ -11,6 +11,7 @@ import operator
 import os.path
 import re
 from urllib import parse as urlparse
+import warnings
 
 from bronx.fancies import loggers
 from bronx.syntax.parsing import StringDecoder
@@ -371,9 +372,10 @@ class Vortex(Provider):
                 "as attribute(s) cache and/or archive are specified"
             )
         if self.namespace and ((self.cache is None) and (self.archive is None)):
-            raise DeprecationWarning(
+            warnings.warn(
                 "Using attribute \"namespace\" is deprecated, use \"cache\""
-                "and/or \"archive\" instead."
+                "and/or \"archive\" instead.",
+                category=DeprecationWarning,
             )
         else:
             self.namespace = set_namespace_from_cache_settings(
