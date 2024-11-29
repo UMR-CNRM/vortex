@@ -201,7 +201,7 @@ class FtrawEnableAddon(Addon):
         # If needed, look in the config file for the rawftshell
         if self.rawftshell is None:
             self.rawftshell = get_from_config_w_default(
-                section=self.cfginfo, key="rawftshell", default=None,
+                section="rawftshell", key=self.kind, default=None,
             )
 
 
