@@ -1,149 +1,18 @@
 stages:
-  - check
-  - test
   - deploy
 
-# Change pip's cache directory to be inside the project directory since we can
-# only cache local items.
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  VERSION: "3.10"
-
-default:
+pages:
+  stage: deploy
+  image: python:3.12-slim
   before_script:
-    - pip install --cert "$MF_CA_PEM" virtualenv
-    - virtualenv venv
-    - source venv/bin/activate
-    - pip install --cert "$MF_CA_PEM" -r tests/lockfile
-  cache: &global_cache
-    key:
-      files:
-        - tests/lockfile
-      prefix: $VERSION
-    paths:
-      - .cache/pip
-    policy: pull
-
-fill-cache:
+    - apt-get update && apt-get install make --no-install-recommends -y
+    - python -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org .[dev]
   script:
-    - echo "Filling the pip cache."
-  cache:
-    <<: *global_cache
-    policy: push
-  when: manual
-
-codechecker:
-  stage: check
-  image: "python:$VERSION"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  script: python project/bin/vortex_codechecker.py
-
-check-docs:
-  stage: check
-  image: "python:$VERSION"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-  script: python project/bin/checkdoc.py --light --fail
-
-test:
-  image: "python:$VERSION"
-  stage: test
-  rules:
-    - if: ($CI_PIPELINE_SOURCE == "merge_request_event") || ($CI_COMMIT_BRANCH == "master")
-  variables:
-    # The environment variables below must be set for some tests
-    # to pass.
-    VORTEX_DEFAULT_ENCODING: "C"
-    LOGNAME: "vortex-ci"
-    SHELL: "bash"
-  script:
-    - python -m pytest -k "not test_job_examples and not test_mailservices"
-      --cov-branch
-      --cov=footprints --cov=bronx
-      --cov=thenamelisttool --cov=taylorism --cov=arpifs_listings
-      --cov=vortex --cov=common --cov=olive --cov=gco --cov=iga
-      --cov=alpha --cov=cen --cov=davai --cov=ecmwf --cov=intairpol
-      --cov=previmar --cov-report=html
+    - make html
+  after_script:
+    - mv build/html/ ./public/
   artifacts:
     paths:
-      - htmlcov/
-
-build-docs:
-  image: "python:$VERSION"
-  stage: test
+    - public
   rules:
-    - if: $CI_COMMIT_BRANCH == "olive-dev"
-      changes:
-        - sphinx/**/*
-    - if: $CI_COMMIT_TAG
-  variables:
-    # Required to download fonts needed to build reveal presentation
-    # in sphinx/_static/auto_html_docs
-    # See sphinx/_static/auto_html_docs/Makefile
-    VORTEX_PROJECT_SSLCERT_OVERRIDE: "$MF_CA_PEM"
-  script:
-    - apt update -y && apt install -y dia pandoc
-    - make -C sphinx/ all
-  artifacts:
-    paths:
-      - sphinx/build/html
-
-deploy-docs:
-  stage: deploy
-  image: debian:bookworm
-  rules:
-    - if: $CI_COMMIT_BRANCH == "olive-dev"
-      changes:
-        - sphinx/**/*
-    - if: $CI_COMMIT_TAG
-  before_script:  # Override default before_script
-    - apt update && apt install -y openssh-client rsync
-    - chmod 600 "$SSH_PRIVATE_KEY"
-    - mkdir ~/.ssh && cp "$SSH_KNOWN_HOSTS" ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
-    - eval `ssh-agent` && ssh-add "$SSH_PRIVATE_KEY"
-  script:
-    - '[[ -n $CI_COMMIT_BRANCH ]] && target="$CI_COMMIT_BRANCH" || target="$CI_COMMIT_TAG"'
-    - 'rsync -a sphinx/build/html/ verolive@sxalgo1.cnrm.meteo.fr:/d0/intra-algopy/sphinx/vortex/$target'
-
-deploy-vortex:
-  stage: deploy
-  image: "debian:bookworm"
-  parallel:
-    matrix:
-      - TARGET:
-          - belenos
-          - taranis
-          - gmapsync
-          - sotrtm31-sidev
-          - sotrtm35-sidev
-          - sotrtm36-sidev
-          - sotrtm37-sidev
-          - sotrtm38-sidev
-          - camomille
-          - olivette1
-          - sxcoope1
-          - sxrecyf2
-          - sxprecip
-          - sxalgo1
-          - sxproc1
-          - sxobs1
-          - sxgmap3
-          - sxplasma
-          - vxolive
-          - mirage7
-  before_script:  # Override default before_script
-    - apt update && apt install -y openssh-client rsync bzip2 git
-    - chmod 600 "$SSH_PRIVATE_KEY"
-    - mkdir ~/.ssh && cp "$SSH_KNOWN_HOSTS" ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
-    - eval `ssh-agent` && ssh-add "$SSH_PRIVATE_KEY"
-    - chmod +x deploy
-  rules:
-    - if: $CI_COMMIT_BRANCH == "olive-dev"
-    - if: $CI_COMMIT_TAG
-  cache: []
-  script:
-    - '[[ -n $CI_COMMIT_BRANCH ]] && ref="$CI_COMMIT_BRANCH" || ref="$CI_COMMIT_TAG"'
-    - ./deploy $VORTEX_DEPLOY_TARGETS $TARGET $ref
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
