@@ -889,7 +889,7 @@ class _VortexCacheBaseStore(CacheStore, _VortexStackedStorageMixin):
                 values  = ['vortex'],
             ),
             headdir = dict(
-                default = 'vortex',
+                default = "",
                 outcast = ['xp', ],
             ),
             rtouch = dict(

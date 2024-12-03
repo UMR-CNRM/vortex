@@ -958,21 +958,28 @@ class MtoolCache(FixedEntryCache):
             ),
             headdir = dict(
                 optional = True,
-                default  = 'vortex',
+                default  = "",
             ),
         )
     )
 
     @property
     def entry(self):
-        """Tries to figure out what could be the actual entry point for cache space."""
+        """Tries to figure out what could be the actual entry point
+        for cache space.
+
+        """
         if self.rootdir:
             return os.path.join(self.rootdir, self.headdir)
+
         if config.is_defined(section="data-tree", key="rootdir"):
-            return config.from_config(
+            rootdir = config.from_config(
                 section="data-tree", key="rootdir",
             )
-        return os.path.join(os.environ["HOME"], "vortex.d")
+        else:
+            rootdir = self.sh.path.join(os.environ["HOME"], ".vortex.d")
+
+        return self.sh.path.join(rootdir, self.headdir)
 
 
 class FtStashCache(MtoolCache):
