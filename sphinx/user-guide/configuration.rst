@@ -151,3 +151,59 @@ correspond to the value to give the environmet variable.
 .. attention::
 
    All values are **strings**.
+
+``nwp-tools``
+^^^^^^^^^^^^^
+
+``lfi``
+
+Path to a directory containing the LFI commands such as ``lfi_copy``
+or ``lfi_merge``.  The path should be absolute.
+
+**Type**: Arbitrary string
+
+``odb``
+
+Path to a directory containing the ``create`` and ``merge`` "ioassign"
+commands. The path should be absolute.
+
+``iomerge_cmd``
+
+Name of the merge command.
+
+**Type**: string
+
+**Default value**: ``"merge_ioassign"``
+
+``iocreate_cmd``
+
+Name of the create command.
+
+**Type**: string
+
+**Default value**: ``"create_ioassign"``
+
+``fortran``
+^^^^^^^^^^
+
+This section defines environment variables that will be exported prior
+to running a NWP model executable.
+
+The section keys are arbitrary, and correspond to the name of the
+environment variables to be exported.  The associated values
+correspond to the value to give the environmet variable.
+
+.. topic:: Example
+
+   .. code:: toml
+
+      [fortran]
+      OMP_STACKSIZE = "4G"
+      KMP_BLOCKTIME = "12"
+      OMP_WAIT_POLICY = "ACTIVE"
+      TBB_MALLOC_USE_HUGE_PAGES = "1"
+      MKL_CBWR = "AUTO,STRICT"
+
+.. attention::
+
+   All values are **strings**.
