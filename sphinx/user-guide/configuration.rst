@@ -135,7 +135,7 @@ to running an MPI executable.
 
 The section keys are arbitrary, and correspond to the name of the
 environment variables to be exported.  The associated values
-correspond to the value to give the environmet variable.
+correspond to the value to give the environment variable.
 
 .. topic:: Example
 
@@ -191,7 +191,7 @@ to running a NWP model executable.
 
 The section keys are arbitrary, and correspond to the name of the
 environment variables to be exported.  The associated values
-correspond to the value to give the environmet variable.
+correspond to the value to give the environment variable.
 
 .. topic:: Example
 
