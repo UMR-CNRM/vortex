@@ -110,7 +110,7 @@ The block level
 
 Within a date directory, data files are grouped into subdirectory
 referred to as *blocks*.  Similarly to *vapp*, *vconf* and
-*experiement* directories, the name of blocks is arbitrary.  Missing
+*experiment* directories, the name of blocks is arbitrary.  Missing
 block directory will be created if they do not already exist.
 
 .. note::

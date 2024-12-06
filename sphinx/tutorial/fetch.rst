@@ -4,10 +4,10 @@ Tutorial
 
 This tutorial will guide you throughout writing a simple vortex
 script.  This script will result in the execution of a Python program
-which behavior resembles this of a numerical weather prediction
+whose behavior resembles this of a numerical weather prediction
 forecast program.
 
-To run succesfully,l the program must be able to read two files in the
+To run succesfully, the program must be able to read two files in the
 current directory:
 
 - A file named ``ICSHMFCSINIT``, containing input data required by the
@@ -37,16 +37,16 @@ Supposing the content of the configuration file ``fort.4`` is
     TERM=3
 
 after running the fake forecast program, the working directory will
-contain threep extra files to look like this:
+contain three extra files to look like this:
 
 ::
 
     fake-forecast.py
     fort.4
     ICMSHFCSINIT
-    ICMSHFCST+1.grib
-    ICMSHFCST+2.grib
-    ICMSHFCST+3.grib
+    ICMSHFCST+01:00.grib
+    ICMSHFCST+02:00.grib
+    ICMSHFCST+03:00.grib
 
 
 Initial set up
@@ -61,8 +61,8 @@ The archive contains the following files:
 
 - ``fake-forecast.py``: A Python script that reads in a data file and a
   configuration file, both expected to be present in the current
-  directory, and writes a set of files ``ICMSHFCST+01.grib``,
-  ``ICMSHFCST+02.grib``, ``ICMSHFCST+03.grib``.  The number of output
+  directory, and writes a set of files ``ICMSHFCST+01:00.grib``,
+  ``ICMSHFCST+02:00.grib``, ``ICMSHFCST+03:00.grib``.  The number of output
   files is specified by the content of the configuration file.
 - ``forecast_configuration_files/main_arpege.nam``: A configuration
   file consisting of one ``KEY=VALUE`` pair per line.
@@ -97,7 +97,7 @@ write the following lines to it:
        section="data-tree",
        key="rootdir",
        # Be sure to replace "/home/user/" by the path where you
-       # extracted the tutorial data archvie.
+       # extracted the tutorial data archive.
        value="/home/user/vortex-tutorial-data/vortex_data_tree",
    )
 
@@ -290,16 +290,16 @@ potentially setting up environment variables like ``PYTHONPATH`` or
 switching to a different Python interpreter.
 
 Finally, the script can be run using the ``run`` method on the ``task``
-object, which takes an executable object as a argument
+object, which takes an executable object as a argument.
 
 .. code:: python
 
     task.run(exe)
 
-At this point, the script ran and produced 3 files ``ICMSHFCST+0.grib``,
-``ICMSHFCST+1.grib`` and ``ICMSHFCST+2.grib`` in the current working
+At this point, the script ran and produced 3 files ``ICMSHFCST+01:00.grib``,
+``ICMSHFCST+02:00.grib`` and ``ICMSHFCST+03:00.grib`` in the current working
 directory.  The next step is to store them into the vortex data tree,
-so that they be later retrieved by other vortex scripts.
+so that they can be retrieved later by other vortex scripts.
 
 Storing outputs into the data tree
 ----------------------------------
@@ -311,7 +311,7 @@ scripts will be able to retrieve them using the
 :py:func:`vortex.input` function.
 
 Storing files in the data tree is achieved by calling the
-:py:func:`vortex.output`. Its interface is indentical to
+:py:func:`vortex.output`. Its interface is identical to
 :py:func:`vortex.input`'s:
 
 .. code:: python
@@ -478,12 +478,12 @@ Open a new file ``aggregate-task.py`` and start with calling
         vconf="fake-forecast",
         experiment="vortex-tutorial",
         geometry="global1798",
-        term=[1, 2, 3],
     )
 
     historic_files = vtx.output(
         kind="modelstate",
         nativefmt="grib",
+        term=[1, 2, 3],
         local="ICMSHFCST+[term].grib",
         block="forecast",
     )
@@ -515,7 +515,7 @@ concatenate them:
     with open("result.txt", "w") as target:
         for handler in historic_files:
             with open(handler.container.localpath(), "r") as source:
-                target.write(source.readlines())
+                target.writelines(source.readlines())
 
 Finally, we write the resulting file into the data tree:
 
