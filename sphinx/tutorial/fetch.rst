@@ -120,9 +120,9 @@ directory ``vortex_data_tree`` located within the tutorial data files.
 
 .. seealso::
 
-See :doc:`../user-guide/configuration` for more information about
-configuring *vortex*, including setting an alternative location for
-the data tree.
+   See :doc:`../user-guide/configuration` for more information about
+   configuring *vortex*, including setting an alternative location for
+   the data tree.
 
 
 Fetching input data
