@@ -198,7 +198,7 @@ Similarly to the initial condition file, use the
     config_file = vtx.input(
         kind="namelist",
 	model="arpege",
-        remote="/home/user/forecast_configuration_files/main_arpege.nam",
+        remote="/home/user/vortex-tutorial-data/forecast_configuration_files/main_arpege.nam",
         local="fort.4",
     )[0]
 
@@ -388,7 +388,12 @@ Using :py:func:`vortex.defaults`, the script becomes:
 
 .. code:: python
 
-    import vtx
+    import vortex as vtx
+
+    vtx.config.set_config(
+        section="data-tree", key="rootdir",
+	value="/home/user/vortex-tutorial-data/vortex_data_tree",
+     )
 
     vtx.defaults(
         date="2024082600",
@@ -398,37 +403,42 @@ Using :py:func:`vortex.defaults`, the script becomes:
         vapp="tutorial",
         vconf="fake-forecast",
         experiment="vortex-tutorial",
-        term=[1, 2, 3],
     )
 
     initial_condition = vtx.input(
         kind="analysis",
         local="ICMSHFCSTINIT",
-	block="4dupd2",
-    )
+        block="4dupd2",
+    )[0]
 
     config_file = vtx.input(
         kind="namelist",
-        remote="../forecast_configuration_files/main_arpege.nam",
+        remote="/home/user/vortex-tutorial-data/forecast_configuration_files/main_arpege.nam",
         local="fort.4",
-      )
+      )[0]
 
     exe = vtx.executable(
         kind="script",
         language="python",
-        remote="../../fake-forecast.py",
+        remote="/home/user/vortex-tutorial-data/fake-forecast.py",
         local="fake-forecast.py",
-    )
+    )[0]
 
-    vtx.algo(interpreter="python", engine="exec").run(exe)
+    vtx.task(interpreter="python", engine="exec").run(exe)
 
     for output_handler in vtx.output(
         kind="modelstate",
-	nativefmt="grib",
+        nativefmt="grib",
         local="ICMSHFCST+[term].grib",
-	block="forecast",
+        block="forecast",
+        term=[1, 2, 3],
     ):
         output_handler.put()
+
+.. attention::
+
+   Be sure to replace ``"/home/user"`` by the path to the directory
+   you extracted the tutorial data to.
 
 A post-processing task
 ----------------------
