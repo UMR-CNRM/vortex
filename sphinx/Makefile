@@ -132,8 +132,11 @@ footprints_libindex:
 auto_html_docs:
 	make -C $(AUTO_HTML_DOC) docs
 
+tutorial/vortex-tutorial-data.zip:
+	zip -r tutorial/vortex-tutorial-data.zip tutorial/vortex-tutorial-data
+
 # Build the sphinx-html documentation
-html:
+html: tutorial/vortex-tutorial-data.zip
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 # Clean the notebooks
