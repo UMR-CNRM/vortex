@@ -184,7 +184,7 @@ Name of the create command.
 **Default value**: ``"create_ioassign"``
 
 ``fortran``
-^^^^^^^^^^
+^^^^^^^^^^^
 
 This section defines environment variables that will be exported prior
 to running a NWP model executable.
