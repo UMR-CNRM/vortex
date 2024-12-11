@@ -120,9 +120,9 @@ directory ``vortex_data_tree`` located within the tutorial data files.
 
 .. seealso::
 
-See :doc:`../user-guide/configuration` for more information about
-configuring *vortex*, including setting an alternative location for
-the data tree.
+   See :doc:`../user-guide/configuration` for more information about
+   configuring *vortex*, including setting an alternative location for
+   the data tree.
 
 
 Fetching input data
@@ -388,7 +388,12 @@ Using :py:func:`vortex.defaults`, the script becomes:
 
 .. code:: python
 
-    import vtx
+    import vortex as vtx
+
+    vtx.config.set_config(
+        section="data-tree", key="rootdir",
+	value="/home/user/vortex-tutorial-data/vortex_data_tree",
+     )
 
     vtx.defaults(
         date="2024082600",
@@ -398,7 +403,6 @@ Using :py:func:`vortex.defaults`, the script becomes:
         vapp="tutorial",
         vconf="fake-forecast",
         experiment="vortex-tutorial",
-        term=[1, 2, 3],
     )
 
     initial_condition = vtx.input(
@@ -407,33 +411,39 @@ Using :py:func:`vortex.defaults`, the script becomes:
         nativefmt="grib",
         local="ICMSHFCSTINIT",
         block="4dupd2",
-    )
+    )[0]
     initial_condition.get()
 
     config_file = vtx.input(
         kind="namelist",
-        remote="../forecast_configuration_files/main_arpege.nam",
+        remote="/home/user/vortex-tutorial-data/forecast_configuration_files/main_arpege.nam",
         local="fort.4",
-      )
+    )[0]
     config_file.get()
 
     exe = vtx.executable(
         kind="script",
         language="python",
-        remote="../../fake-forecast.py",
+        remote="/home/user/vortex-tutorial-data/fake-forecast.py",
         local="fake-forecast.py",
-    )
+    )[0]
     exe.get()
 
-    vtx.algo(interpreter="python", engine="exec").run(exe)
+    vtx.task(interpreter="python", engine="exec").run(exe)
 
     for output_handler in vtx.output(
         kind="modelstate",
         nativefmt="grib",
         local="ICMSHFCST+[term].grib",
         block="forecast",
+        term=[1, 2, 3],
     ):
         output_handler.put()
+
+.. attention::
+
+   Be sure to replace ``"/home/user"`` by the path to the directory
+   you extracted the tutorial data to.
 
 A post-processing task
 ----------------------

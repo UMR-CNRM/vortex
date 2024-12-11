@@ -5,7 +5,7 @@ pages:
   stage: deploy
   image: python:3.12-slim
   before_script:
-    - apt-get update && apt-get install make --no-install-recommends -y
+    - apt-get update && apt-get install make zip --no-install-recommends -y
     - python -m pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org .[dev]
   script:
     - make -C sphinx html
