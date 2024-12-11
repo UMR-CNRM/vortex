@@ -403,15 +403,19 @@ Using :py:func:`vortex.defaults`, the script becomes:
 
     initial_condition = vtx.input(
         kind="analysis",
+        filling="atm",
+        nativefmt="grib",
         local="ICMSHFCSTINIT",
-	block="4dupd2",
+        block="4dupd2",
     )
+    initial_condition.get()
 
     config_file = vtx.input(
         kind="namelist",
         remote="../forecast_configuration_files/main_arpege.nam",
         local="fort.4",
       )
+    config_file.get()
 
     exe = vtx.executable(
         kind="script",
@@ -419,14 +423,15 @@ Using :py:func:`vortex.defaults`, the script becomes:
         remote="../../fake-forecast.py",
         local="fake-forecast.py",
     )
+    exe.get()
 
     vtx.algo(interpreter="python", engine="exec").run(exe)
 
     for output_handler in vtx.output(
         kind="modelstate",
-	nativefmt="grib",
+        nativefmt="grib",
         local="ICMSHFCST+[term].grib",
-	block="forecast",
+        block="forecast",
     ):
         output_handler.put()
 
