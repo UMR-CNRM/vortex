@@ -471,7 +471,7 @@ Open a new file ``aggregate-task.py`` and start with calling
        section="data-tree",
        key="rootdir",
        # Be sure to replace "/home/user/" by the path where you
-       # extracted the tutorial data archvie.
+       # extracted the tutorial data archive.
        value="/home/user/vortex-tutorial-data/vortex_data_tree",
    )
 
@@ -513,7 +513,7 @@ to the :py:func:`vortex.output` function in section
 :ref:`Setting-default-values`.
 
 With the three files present in the working directory, let's
-concatenate them:
+concatenate them into a new file ``result.txt``:
 
 .. code:: python
 
@@ -522,18 +522,37 @@ concatenate them:
             with open(handler.container.localpath(), "r") as source:
                 target.writelines(source.readlines())
 
-Finally, we write the resulting file into the data tree:
+For the sake of this tutorial, let's pretend that we want to interpret
+the output file ``result.txt`` as a :py:class:`horizontal diagnostics
+resource <vortex.nwp.data.diagnostics>`, and write it into the data
+tree as a such:
 
 .. code:: python
 
-    vortex.output(
-        kind="dhh",
+    # Reminder: vortex.output returns a list, even if
+    # there is only one element in it.
+    for output in vtx.output(
+        kind="ddh",
         scope="global",
         nativefmt="lfi",
         block="postprocessing",
-    ).put()
+        term=3,
+        local="result.txt",
+    ):
+         # Write content of file "result.txt" in current working directory
+	 # as file ddh.arpege-global.tl1798-c22+0003:00.lfi
+	 # in the data tree
+         output.put()
 
 .. code:: shell
 
     DATATREE_ROOT=/home/user/vortex-tutorial-data/vortex_data_tree
     ls -l $DATATREE_ROOT/tutorial/fake-forecast/vortex-tutorial/20240826T0000P/postprocessing
+
+.. note::
+
+   The use of the DDH resource in the previous example is arbitrary,
+   for the sole purpose of illustrating the storage of the result of a
+   postprocessing operation into the data tree.  The content of file
+   ``ddh.arpege-global.tl1798-c22+0003:00.lfi`` is not *really* this
+   of a true horizontal diagnostics file.
