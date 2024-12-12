@@ -407,15 +407,19 @@ Using :py:func:`vortex.defaults`, the script becomes:
 
     initial_condition = vtx.input(
         kind="analysis",
+        filling="atm",
+        nativefmt="grib",
         local="ICMSHFCSTINIT",
         block="4dupd2",
     )[0]
+    initial_condition.get()
 
     config_file = vtx.input(
         kind="namelist",
         remote="/home/user/vortex-tutorial-data/forecast_configuration_files/main_arpege.nam",
         local="fort.4",
-      )[0]
+    )[0]
+    config_file.get()
 
     exe = vtx.executable(
         kind="script",
@@ -423,6 +427,7 @@ Using :py:func:`vortex.defaults`, the script becomes:
         remote="/home/user/vortex-tutorial-data/fake-forecast.py",
         local="fake-forecast.py",
     )[0]
+    exe.get()
 
     vtx.task(interpreter="python", engine="exec").run(exe)
 
