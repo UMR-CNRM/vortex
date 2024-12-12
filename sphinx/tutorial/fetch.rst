@@ -400,6 +400,7 @@ Using :py:func:`vortex.defaults`, the script becomes:
         model="arpege",
         cutoff="production",
         geometry="global1798",
+	nativefmt="grib",
         vapp="tutorial",
         vconf="fake-forecast",
         experiment="vortex-tutorial",
@@ -408,7 +409,6 @@ Using :py:func:`vortex.defaults`, the script becomes:
     initial_condition = vtx.input(
         kind="analysis",
         filling="atm",
-        nativefmt="grib",
         local="ICMSHFCSTINIT",
         block="4dupd2",
     )[0]
