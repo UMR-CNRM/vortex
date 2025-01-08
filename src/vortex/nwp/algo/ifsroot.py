@@ -301,9 +301,6 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super().prepare(rh, opts)
-        # Export fortran environment variables
-        if opts.get('fortran', True):
-            self.export('fortran')
         # Namelist fixes
         self.prepare_namelists(rh, opts)
 
