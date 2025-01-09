@@ -26,5 +26,4 @@ Contents
    Installation <install>
    Tutorial <tutorial/fetch>
    User guide <user-guide/index>
-   Examples <examples>
    Reference <reference/index>
