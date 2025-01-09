@@ -27,11 +27,7 @@ well as fetching and storing the data they consume and generate.
 
 ### Documentation
 
-The documentation is available at
-
-http://cnrm-gmap.gitlab.meteo.fr/vortex-nwp/
-
-currently only reachable from Météo-France's internal network.
+The documentation is available at [vortex-nwp.readthedocs.io](https://vortex-nwp.readthedocs.io).
 
 ### Installation
 
