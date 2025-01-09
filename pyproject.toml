@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["sphinx", "sphinx-book-theme", "sphinx-copybutton"]
+docs = ["sphinx", "sphinx-book-theme", "sphinx-copybutton"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
