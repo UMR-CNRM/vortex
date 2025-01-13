@@ -13,7 +13,9 @@ from vortex.algo.components import (
 from vortex.syntax.stdattrs import model
 from vortex.tools import grib
 
-from . import ifsnaming  # @UnusedImport
+# footprints import
+from . import ifsnaming as ifsnaming
+
 from ..syntax.stdattrs import algo_member
 from ..tools import satrad, drhook
 

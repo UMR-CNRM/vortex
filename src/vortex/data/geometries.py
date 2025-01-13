@@ -62,7 +62,6 @@ import bronx.patterns.getbytag
 import footprints
 
 from vortex.syntax.stddeco import namebuilding_insert, generic_pathname_insert
-from vortex.util.config import GenericConfigParser
 
 #: No automatic export
 __all__ = []

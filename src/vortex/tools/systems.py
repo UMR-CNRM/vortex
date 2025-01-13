@@ -2555,7 +2555,7 @@ class OSExtended(System):
                         if linkto is not None:
                             self._os.symlink(linkto, dstname)
                         else:
-                            rc = self._sh.copyfile(srcname, dstname)
+                            self._sh.copyfile(srcname, dstname)
                     else:
                         # Will raise a SpecialFileError for unsupported file types
                         self._sh.copyfile(srcname, dstname)
@@ -3578,7 +3578,7 @@ class OSExtended(System):
                 # since we need to get an error if the target directory already
                 # exists
                 self._os.mkdir(ldir)
-            except FileExistsError as os_e:
+            except FileExistsError:
                 rc = False
             else:
                 rc = True
@@ -3695,8 +3695,7 @@ class Python34:
 
         # Optional, netcdf comparison tool
         b_netcdf_checker = ExternalCodeImportChecker("netdcf")
-        with b_netcdf_checker as npregister:
-            from bronx.datagrip import netcdf as b_netcdf
+        from bronx.datagrip import netcdf as b_netcdf
 
         if b_netcdf_checker.is_available():
             # Unfortunately, the netCDF4 package seems to leak memory,

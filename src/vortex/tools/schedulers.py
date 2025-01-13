@@ -8,6 +8,7 @@ import functools
 from bronx.fancies import loggers
 import footprints
 
+from vortex import config
 from .services import Service
 
 __all__ = []
@@ -240,14 +241,10 @@ class SMS(EcmwfLikeScheduler):
         super().__init__(*args, **kw)
         self._actual_rootdir = self.rootdir
         if self._actual_rootdir is None:
-            self._actual_rootdir = self.env.SMS_INSTALL_ROOT or from_config(
-                section="sms", key="rootdir"
+            self._actual_rootdir = (
+                self.env.SMS_INSTALL_ROOT
+                or config.from_config(section="sms", key="rootdir")
             )
-            if self._actual_rootdir is None:
-                logger.warning(
-                    "SMS service could not guess install location [%s]",
-                    str(guesspath),
-                )
         if self.sh.path.exists(self.cmdpath("init")):
             self.env.setbinpath(self._actual_rootdir)
         else:

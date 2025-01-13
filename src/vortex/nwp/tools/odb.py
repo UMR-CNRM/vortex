@@ -13,6 +13,7 @@ from vortex.algo.components import (
     AlgoComponentError,
     algo_component_deco_mixin_autodoc,
 )
+from vortex import config
 from vortex.layout.dataflow import intent
 
 from ..syntax.stdattrs import ArpIfsSimplifiedCycle
@@ -233,8 +234,8 @@ class OdbDriver:
     def _default_iocreate_path(self):
         """The location to the default create_ioassign utility."""
         return self.sh.path.join(
-            from_config(section="nwp-tools", key="odb"),
-            get_from_config_w_default(
+            config.from_config(section="nwp-tools", key="odb"),
+            config.get_from_config_w_default(
                 section="nwp-tools",
                 key="iocreate_cmd",
                 default="create_ioassign",
@@ -245,8 +246,8 @@ class OdbDriver:
     def _default_iomerge_path(self):
         """The location to the default merge_ioassign utility."""
         return self.sh.path.join(
-            from_config(section="nwp-tools", key="odb"),
-            get_from_config_w_default(
+            config.from_config(section="nwp-tools", key="odb"),
+            config.get_from_config_w_default(
                 section="nwp-tools",
                 key="iomerge_cmd",
                 default="merge_ioassign",

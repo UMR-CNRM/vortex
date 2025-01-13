@@ -17,7 +17,7 @@ import footprints
 
 from vortex.tools.env import Environment
 
-from vortex import gloves  # @UnusedImport
+from vortex import gloves as gloves  # footprints import
 from vortex.layout import contexts
 
 #: No automatic export

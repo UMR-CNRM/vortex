@@ -6,35 +6,23 @@ Of course, the :class:`Vortex` abstract provider is a must see. It has three
 declinations depending on the experiment indentifier type.
 """
 
-import collections
-import operator
 import os.path
-import re
 from urllib import parse as urlparse
 import warnings
 
 from bronx.fancies import loggers
-from bronx.syntax.parsing import StringDecoder
 import footprints
 from footprints import proxy as fpx
-from footprints.stdtypes import FPDict
 
-from vortex import sessions
 from vortex import config
 from vortex.syntax.stdattrs import (
     xpid,
-    legacy_xpid,
-    free_xpid,
-    opsuites,
-    demosuites,
     scenario,
     member,
     block,
 )
-from vortex.syntax.stdattrs import LegacyXPid, any_vortex_xpid
-from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt
+from vortex.syntax.stdattrs import namespacefp, FmtInt
 from vortex.tools import net, names
-from vortex.util.config import GenericConfigParser
 
 #: No automatic export
 __all__ = ["Provider"]

@@ -4,12 +4,12 @@ Various System needed for NWP applications.
 
 from vortex.tools.addons import AddonGroup
 
-# Load the proper Addon modules...
-import vortex.tools.folder  # @UnusedImport
-import vortex.tools.lfi  # @UnusedImport
-import vortex.tools.grib  # @UnusedImport
-import vortex.tools.listings  # @UnusedImport
-import vortex.tools.surfex  # @UnusedImport
+# Import the proper Addon modules for footprints
+from vortex.tools import folder as folder
+from vortex.tools import lfi as lfi
+from vortex.tools import grib as grib
+from vortex.tools import listings as listings
+from vortex.tools import surfex as surfex
 
 #: No automatic export
 __all__ = []

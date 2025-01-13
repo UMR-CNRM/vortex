@@ -32,7 +32,6 @@ import contextlib
 import ftplib
 import re
 import time
-from collections import defaultdict
 from datetime import datetime
 import os
 
@@ -43,10 +42,7 @@ from bronx.syntax.decorators import nicedeco
 from vortex import sessions
 from vortex.tools.actions import actiond as ad
 from vortex.tools.delayedactions import d_action_status
-from vortex.tools.systems import istruedef
 
-# TODO clean instances of GenericConfigParser
-from vortex.util.config import GenericConfigParser
 from vortex import config
 
 #: No automatic export

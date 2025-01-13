@@ -1531,7 +1531,6 @@ class SRun(MpiTool):
         :param list[str] cmdl: the command line as a list
         """
         # Simple case, only one envelope description
-        has_bin_groups = not all([b.group is None for b in self.binaries])
         openmps = {b.options.get("openmp", 1) for b in self.binaries}
         if (
             len(self.envelope) == 1

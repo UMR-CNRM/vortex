@@ -33,3 +33,6 @@ where = ["src"]
 
 [tool.ruff]
 line-length = 79
+
+[tool.ruff.lint]
+ignore = ["E741"]

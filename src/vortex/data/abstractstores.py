@@ -6,7 +6,6 @@ Store objects use the :mod:`footprints` mechanism.
 """
 
 from collections import defaultdict
-import contextlib
 import copy
 import functools
 import re
@@ -28,7 +27,6 @@ from vortex.syntax.stdattrs import (
 from vortex.tools import storage
 from vortex.tools import compression
 from vortex.tools import net
-from vortex.tools.env import vartrue
 from vortex.tools.systems import ExecutionError
 from vortex.syntax.stdattrs import Namespace
 

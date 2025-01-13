@@ -432,7 +432,7 @@ def mkjob(t, **kw):
         # Using ast ensures that a valid python script was generated
         try:
             ast.parse(pycode, "compile.mkjob.log", "exec")
-        except SyntaxError as e:
+        except SyntaxError:
             logger.error(
                 "Error while attempting to parse the following script:\n%s",
                 pycode,

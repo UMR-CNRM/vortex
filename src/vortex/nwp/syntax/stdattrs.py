@@ -4,11 +4,16 @@ of attributes description that could be used in the footprint definition of any
 class which follow the :class:`footprints.Footprint` syntax.
 """
 
-from bronx.stdtypes.date import Time
-import footprints
+import re
+from functools import total_ordering
 
-#: Export a set of attributes :data:`a_run`, etc..
-__all__ = []
+import footprints
+from bronx.stdtypes.date import Time
+
+from vortex.syntax.stddeco import namebuilding_append
+
+#: Export some new class for attributes in footprint objects, eg : GenvKey
+__all__ = ["GenvKey", "GenvDomain"]
 
 #: Usual Footprint for a single member (in an algo Component)
 a_algo_member = dict(
@@ -137,22 +142,6 @@ def show():
             )
         )
 
-
-"""
-This module provides some pre-defined attributes descriptions or combined sets
-of attributes description that could be used in the footprint definition of any
-class which follow the :class:`footprints.Footprint` syntax.
-"""
-
-import re
-from functools import total_ordering
-
-import footprints
-
-from vortex.syntax.stddeco import namebuilding_append
-
-#: Export some new class for attributes in footprint objects, eg : GenvKey
-__all__ = ["GenvKey", "GenvDomain"]
 
 domain_remap = dict()
 
