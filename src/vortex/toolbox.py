@@ -16,7 +16,7 @@ from bronx.syntax import mktuple
 
 import footprints
 
-from vortex import sessions, data, proxy, VortexForceComplete
+from vortex import sessions, data, proxy
 from vortex.layout.dataflow import stripargs_section, intent, ixo, Section
 
 #: Automatic export of superstar interface.
@@ -28,6 +28,12 @@ logger = loggers.getLogger(__name__)
 defaults = footprints.setup.defaults
 
 sectionmap = {"input": "get", "output": "put", "executable": "get"}
+
+
+class VortexForceComplete(Exception):
+    """Exception for handling fast exit mecanisms."""
+
+    pass
 
 
 # Toolbox defaults

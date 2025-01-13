@@ -100,15 +100,6 @@ footprints.setup.callback = vortexfpdefaults
 ticket = sessions.get
 sh = sessions.system
 
-# Specific toolbox exceptions
-
-
-class VortexForceComplete(Exception):
-    """Exception for handling fast exit mecanisms."""
-
-    pass
-
-
 # If a config file can be found in current dir, load it
 config.load_config()
 

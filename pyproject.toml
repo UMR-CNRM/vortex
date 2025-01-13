@@ -23,6 +23,7 @@ dependencies = [
 
 [project.optional-dependencies]
 docs = ["sphinx", "sphinx-book-theme", "sphinx-copybutton"]
+dev = ["ruff==0.9.1", "pytest"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
