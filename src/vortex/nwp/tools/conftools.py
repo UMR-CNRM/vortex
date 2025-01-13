@@ -31,12 +31,12 @@ class ConfTool(footprints.FootprintBase):
     """Abstract class for conftools objects."""
 
     _abstract = True
-    _collector = ('conftool',)
+    _collector = ("conftool",)
     _footprint = dict(
-        info = 'Abstract Conf/Weird Tool',
-        attr = dict(
-            kind = dict(),
-        )
+        info="Abstract Conf/Weird Tool",
+        attr=dict(
+            kind=dict(),
+        ),
     )
 
 
@@ -45,12 +45,14 @@ class AbstractObjectProxyConfTool(ConfTool):
 
     _abstract = True
     _footprint = dict(
-        info = 'Conf tool that find the appropriate begin/end date for an input resource.',
-        attr = dict(
-            kind = dict(
-                values      = ['objproxy', ],
+        info="Conf tool that find the appropriate begin/end date for an input resource.",
+        attr=dict(
+            kind=dict(
+                values=[
+                    "objproxy",
+                ],
             ),
-        )
+        ),
     )
 
     def __init__(self, *kargs, **kwargs):
@@ -72,13 +74,15 @@ class AbstractObjectProxyConfTool(ConfTool):
 
 
 #: Holds coupling's data for a particular cutoff/hour
-CouplingInfos = collections.namedtuple('CouplingInfos',
-                                       ('base', 'dayoff', 'cutoff', 'vapp', 'vconf', 'xpid', 'model', 'steps')
-                                       )
+CouplingInfos = collections.namedtuple(
+    "CouplingInfos",
+    ("base", "dayoff", "cutoff", "vapp", "vconf", "xpid", "model", "steps"),
+)
 
 
 class CouplingOffsetConfError(Exception):
     """Abstract exception raise by :class:`CouplingOffsetConfTool` objects."""
+
     pass
 
 
@@ -86,7 +90,7 @@ class CouplingOffsetConfPrepareError(CouplingOffsetConfError):
     """Exception raised when an error occurs during coupling data calculations."""
 
     def __init__(self, fmtk):
-        msg = 'It is useless to compute coupling for: {}.'.format(fmtk)
+        msg = "It is useless to compute coupling for: {}.".format(fmtk)
         super().__init__(msg)
 
 
@@ -94,11 +98,11 @@ class CouplingOffsetConfRefillError(CouplingOffsetConfError):
     """Exception raised when an orror occurs during refill."""
 
     def __init__(self, fmtk, hh=None):
-        msg = 'It is useless to compute a refill for: {}'.format(fmtk)
+        msg = "It is useless to compute a refill for: {}".format(fmtk)
         if hh is None:
-            msg += '.'
+            msg += "."
         else:
-            msg += ' at HH={!s}.'.format(hh)
+            msg += " at HH={!s}.".format(hh)
         super().__init__(msg)
 
 
@@ -106,88 +110,96 @@ class CouplingOffsetConfTool(ConfTool):
     """Conf tool that do all sorts of computations for coupling."""
 
     _footprint = dict(
-        info = 'Conf tool that do all sorts of computations for coupling',
-        attr = dict(
-            kind = dict(
-                values= ['couplingoffset', ],
+        info="Conf tool that do all sorts of computations for coupling",
+        attr=dict(
+            kind=dict(
+                values=[
+                    "couplingoffset",
+                ],
             ),
-            cplhhlist = dict(
-                info = ('The list of cutoff and hours for this application. '
-                        'If omitted, all entries of the **cplhhbase** attribute are used. ' +
-                        "(e.g ``{'assim':[0, 6, 12, 18], 'production':[0, ]}``)"),
-                type = FPDict,
-                optional = True,
+            cplhhlist=dict(
+                info=(
+                    "The list of cutoff and hours for this application. "
+                    "If omitted, all entries of the **cplhhbase** attribute are used. "
+                    + "(e.g ``{'assim':[0, 6, 12, 18], 'production':[0, ]}``)"
+                ),
+                type=FPDict,
+                optional=True,
             ),
-            cplhhbase = dict(
-                info = ('For a given cutoff and hour, gives the base hour to couple to. ' +
-                        "(e.g ``{'assim':{0:0, 6:6, 12:12, 18:18}, 'production':{0:18}}``)."),
-                type = FPDict,
+            cplhhbase=dict(
+                info=(
+                    "For a given cutoff and hour, gives the base hour to couple to. "
+                    + "(e.g ``{'assim':{0:0, 6:6, 12:12, 18:18}, 'production':{0:18}}``)."
+                ),
+                type=FPDict,
             ),
-            cpldayoff = dict(
-                info = ('For a given cutoff and hour, gives an offset in days. 0 by default. ' +
-                        "(e.g ``{'assim':{'default':0}, 'production':{'default':1}}``)."),
-                type = FPDict,
-                optional = True,
+            cpldayoff=dict(
+                info=(
+                    "For a given cutoff and hour, gives an offset in days. 0 by default. "
+                    + "(e.g ``{'assim':{'default':0}, 'production':{'default':1}}``)."
+                ),
+                type=FPDict,
+                optional=True,
             ),
-            cplcutoff = dict(
-                info = 'For a given cutoff and hour, gives the base cutoff to couple to.',
-                type = FPDict,
+            cplcutoff=dict(
+                info="For a given cutoff and hour, gives the base cutoff to couple to.",
+                type=FPDict,
             ),
-            cplvapp = dict(
-                info = 'For a given cutoff and hour, gives the base vapp to couple to.',
-                type = FPDict,
+            cplvapp=dict(
+                info="For a given cutoff and hour, gives the base vapp to couple to.",
+                type=FPDict,
             ),
-            cplvconf = dict(
-                info = 'For a given cutoff and hour, gives the base vconf to couple to.',
-                type = FPDict,
+            cplvconf=dict(
+                info="For a given cutoff and hour, gives the base vconf to couple to.",
+                type=FPDict,
             ),
-            cplxpid = dict(
-                info = 'For a given cutoff and hour, gives the experiment ID to couple to.',
-                type = FPDict,
-                optional = True,
+            cplxpid=dict(
+                info="For a given cutoff and hour, gives the experiment ID to couple to.",
+                type=FPDict,
+                optional=True,
             ),
-            cplmodel = dict(
-                info = 'For a given cutoff and hour, gives the base model to couple to.',
-                type = FPDict,
-                optional = True,
+            cplmodel=dict(
+                info="For a given cutoff and hour, gives the base model to couple to.",
+                type=FPDict,
+                optional=True,
             ),
-            cplsteps = dict(
-                info = 'For a given cutoff and hour, gives then list of requested terms.',
-                type = FPDict,
+            cplsteps=dict(
+                info="For a given cutoff and hour, gives then list of requested terms.",
+                type=FPDict,
             ),
-            finalterm = dict(
-                info = 'For a given cutoff and hour, the final term (for "finalterm" token substitution)',
-                type = FPDict,
-                optional = True
+            finalterm=dict(
+                info='For a given cutoff and hour, the final term (for "finalterm" token substitution)',
+                type=FPDict,
+                optional=True,
             ),
-            refill_cutoff = dict(
-                values = ['assim', 'production', 'all'],
-                info = 'By default, what is the cutoff name of the refill task.',
-                optional = True,
-                default = 'assim',
+            refill_cutoff=dict(
+                values=["assim", "production", "all"],
+                info="By default, what is the cutoff name of the refill task.",
+                optional=True,
+                default="assim",
             ),
-            compute_on_refill = dict(
-                info = 'Is it necessary to compute coupling files for the refilling cutoff ?',
-                optional = True,
-                default = True,
-                type = bool,
+            compute_on_refill=dict(
+                info="Is it necessary to compute coupling files for the refilling cutoff ?",
+                optional=True,
+                default=True,
+                type=bool,
             ),
-            isolated_refill = dict(
-                info = 'Are the refill tasks exclusive with prepare tasks ?',
-                optional = True,
-                default = True,
-                type = bool,
+            isolated_refill=dict(
+                info="Are the refill tasks exclusive with prepare tasks ?",
+                optional=True,
+                default=True,
+                type=bool,
             ),
-            verbose = dict(
-                info = 'When the object is created, print a summary.',
-                type = bool,
-                optional = True,
-                default = True,
+            verbose=dict(
+                info="When the object is created, print a summary.",
+                type=bool,
+                optional=True,
+                default=True,
             ),
-        )
+        ),
     )
 
-    _DFLT_KEY = 'default'
+    _DFLT_KEY = "default"
 
     def __init__(self, *kargs, **kwargs):
         super().__init__(*kargs, **kwargs)
@@ -204,7 +216,9 @@ class CouplingOffsetConfTool(ConfTool):
         else:
             for c, clist in self.cplhhlist.items():
                 if not isinstance(clist, (tuple, list)):
-                    clist = [clist, ]
+                    clist = [
+                        clist,
+                    ]
                 self._target_hhs[c].update([Time(h) for h in clist])
             t_hhbase = self._reshape_inputs(self.cplhhbase, value_reclass=Time)
 
@@ -218,63 +232,101 @@ class CouplingOffsetConfTool(ConfTool):
             t_model = t_vapp
         else:
             t_model = self._reshape_inputs(self.cplmodel)
-        t_xpid = self._reshape_inputs(self.cplxpid, class_default='')
+        t_xpid = self._reshape_inputs(self.cplxpid, class_default="")
 
         # If relevent, do "finalterm" token substitution
         if self.finalterm is not None:
-            t_finalterm = self._reshape_inputs(self.finalterm, value_reclass=str)
+            t_finalterm = self._reshape_inputs(
+                self.finalterm, value_reclass=str
+            )
             for c, cv in t_hhbase.items():
                 for hh in cv.keys():
                     if isinstance(t_steps[c][hh], str):
-                        t_steps[c][hh] = t_steps[c][hh].replace('finalterm',
-                                                                t_finalterm[c][hh])
+                        t_steps[c][hh] = t_steps[c][hh].replace(
+                            "finalterm", t_finalterm[c][hh]
+                        )
 
         # Build the dictionary of CouplingInfos objects
         self._cpl_data = collections.defaultdict(dict)
         for c, cv in t_hhbase.items():
-            self._cpl_data[c] = {hh: CouplingInfos(cv[hh], int(t_dayoff[c][hh]),
-                                                   t_cutoff[c][hh], t_vapp[c][hh],
-                                                   t_vconf[c][hh], t_xpid[c][hh],
-                                                   t_model[c][hh],
-                                                   rangex(t_steps[c][hh]))
-                                 for hh in cv.keys()}
+            self._cpl_data[c] = {
+                hh: CouplingInfos(
+                    cv[hh],
+                    int(t_dayoff[c][hh]),
+                    t_cutoff[c][hh],
+                    t_vapp[c][hh],
+                    t_vconf[c][hh],
+                    t_xpid[c][hh],
+                    t_model[c][hh],
+                    rangex(t_steps[c][hh]),
+                )
+                for hh in cv.keys()
+            }
 
         # Pre-compute the prepare terms
         self._prepare_terms_map = self._compute_prepare_terms()
         if self.verbose:
             print()
-            print('#### Coupling configuration tool initialised ####')
-            print('**** Coupling tasks terms map:')
-            print('{:s}  :  {:s}'.format(self._cpl_fmtkey(('HH', 'VAPP', 'VCONF', 'XPID', 'MODEL', 'CUTOFF')),
-                                         'Computed Terms'))
+            print("#### Coupling configuration tool initialised ####")
+            print("**** Coupling tasks terms map:")
+            print(
+                "{:s}  :  {:s}".format(
+                    self._cpl_fmtkey(
+                        ("HH", "VAPP", "VCONF", "XPID", "MODEL", "CUTOFF")
+                    ),
+                    "Computed Terms",
+                )
+            )
             for k in sorted(self._prepare_terms_map.keys()):
-                print('{:s}  :  {:s}'.format(self._cpl_fmtkey(k),
-                                             ' '.join([str(t.hour)
-                                                       for t in self._prepare_terms_map[k]
-                                                       ])
-                                             )
-                      )
+                print(
+                    "{:s}  :  {:s}".format(
+                        self._cpl_fmtkey(k),
+                        " ".join(
+                            [str(t.hour) for t in self._prepare_terms_map[k]]
+                        ),
+                    )
+                )
 
         # Pre-compute the default refill_map
         self._refill_terms_map = dict()
-        self._refill_terms_map[self.refill_cutoff] = self._compute_refill_terms(self.refill_cutoff,
-                                                                                self.compute_on_refill,
-                                                                                self.isolated_refill)
+        self._refill_terms_map[self.refill_cutoff] = (
+            self._compute_refill_terms(
+                self.refill_cutoff,
+                self.compute_on_refill,
+                self.isolated_refill,
+            )
+        )
         if self.verbose:
-            print('**** Refill tasks activation map (default refill_cutoff is: {:s}):'.format(self.refill_cutoff))
-            print('{:s}  :  {:s}'.format(self._rtask_fmtkey(('VAPP', 'VCONF', 'XPID', 'MODEL', 'CUTOFF')),
-                                         'Active hours'))
+            print(
+                "**** Refill tasks activation map (default refill_cutoff is: {:s}):".format(
+                    self.refill_cutoff
+                )
+            )
+            print(
+                "{:s}  :  {:s}".format(
+                    self._rtask_fmtkey(
+                        ("VAPP", "VCONF", "XPID", "MODEL", "CUTOFF")
+                    ),
+                    "Active hours",
+                )
+            )
             for k in sorted(self._refill_terms_map[self.refill_cutoff].keys()):
                 vdict = self._refill_terms_map[self.refill_cutoff][k]
-                print('{:s}  :  {:s}'.format(self._rtask_fmtkey(k),
-                                             ' '.join([str(t.hour) for t in sorted(vdict.keys())])))
+                print(
+                    "{:s}  :  {:s}".format(
+                        self._rtask_fmtkey(k),
+                        " ".join([str(t.hour) for t in sorted(vdict.keys())]),
+                    )
+                )
             print()
 
     @property
     def target_hhs(self):
         return self._target_hhs
 
-    def _reshape_inputs(self, input_dict, class_default=None, value_reclass=lambda x: x):
+    def _reshape_inputs(
+        self, input_dict, class_default=None, value_reclass=lambda x: x
+    ):
         """Deal with default values, check dictionaries and convert keys to Time objects."""
         # Convert keys to time objects
         r_dict = dict()
@@ -307,10 +359,15 @@ class CouplingOffsetConfTool(ConfTool):
                     myv[h] = last_default
             else:
                 if not my_c_hhs >= self.target_hhs[c]:
-                    logger.error("Inconsistent input arrays while processing: \n%s",
-                                 str(input_dict))
-                    logger.error("Cutoff %s, expecting the following HH: \n%s",
-                                 c, str(self.target_hhs[c]))
+                    logger.error(
+                        "Inconsistent input arrays while processing: \n%s",
+                        str(input_dict),
+                    )
+                    logger.error(
+                        "Cutoff %s, expecting the following HH: \n%s",
+                        c,
+                        str(self.target_hhs[c]),
+                    )
                     raise ValueError("Inconsistent input array.")
 
         # Filter values according to _target_hhs
@@ -331,13 +388,9 @@ class CouplingOffsetConfTool(ConfTool):
 
     @staticmethod
     def _cpl_fmtkey(k):
-        cutoff_map = dict(production='prod')
-        return '{:5s} {:6s}  {:24s} {:s} ({:s})'.format(
-            k[0],
-            cutoff_map.get(k[5], k[5]),
-            k[1] + '/' + k[2],
-            k[3],
-            k[4]
+        cutoff_map = dict(production="prod")
+        return "{:5s} {:6s}  {:24s} {:s} ({:s})".format(
+            k[0], cutoff_map.get(k[5], k[5]), k[1] + "/" + k[2], k[3], k[4]
         )
 
     @staticmethod
@@ -346,13 +399,15 @@ class CouplingOffsetConfTool(ConfTool):
 
     @staticmethod
     def _rtask_fmtkey(k):
-        cutoff_map = dict(production='prod')
-        return '{:6s}  {:24s} {:s} ({:s})'.format(cutoff_map.get(k[4], k[4]), k[0] + '/' + k[1], k[2], k[3])
+        cutoff_map = dict(production="prod")
+        return "{:6s}  {:24s} {:s} ({:s})".format(
+            cutoff_map.get(k[4], k[4]), k[0] + "/" + k[1], k[2], k[3]
+        )
 
     @staticmethod
     def _process_date(date):
         mydate = Date(date)
-        myhh = Time('{0.hour:d}:{0.minute:02d}'.format(mydate))
+        myhh = Time("{0.hour:d}:{0.minute:02d}".format(mydate))
         return mydate, myhh
 
     @staticmethod
@@ -366,47 +421,85 @@ class CouplingOffsetConfTool(ConfTool):
         terms_map = collections.defaultdict(set)
         for _, cv in self._cpl_data.items():
             for h, infos in cv.items():
-                key = self._cpl_key(infos.base, infos.cutoff, infos.vapp, infos.vconf, infos.xpid, infos.model)
+                key = self._cpl_key(
+                    infos.base,
+                    infos.cutoff,
+                    infos.vapp,
+                    infos.vconf,
+                    infos.xpid,
+                    infos.model,
+                )
                 targetoffset = self._hh_offset(h, infos.base, infos.dayoff)
                 terms_map[key].update([s + targetoffset for s in infos.steps])
         terms_map = {k: sorted(terms) for k, terms in terms_map.items()}
         return terms_map
 
-    def _compute_refill_terms(self, refill_cutoff, compute_on_refill, isolated_refill):
-        finaldates = collections.defaultdict(functools.partial(collections.defaultdict,
-                                                               functools.partial(collections.defaultdict, set)))
-        if refill_cutoff == 'all':
-            possiblehours = sorted(functools.reduce(lambda x, y: x | y,
-                                                    [set(l) for l in self.target_hhs.values()]))
+    def _compute_refill_terms(
+        self, refill_cutoff, compute_on_refill, isolated_refill
+    ):
+        finaldates = collections.defaultdict(
+            functools.partial(
+                collections.defaultdict,
+                functools.partial(collections.defaultdict, set),
+            )
+        )
+        if refill_cutoff == "all":
+            possiblehours = sorted(
+                functools.reduce(
+                    lambda x, y: x | y,
+                    [set(l) for l in self.target_hhs.values()],
+                )
+            )
         else:
             possiblehours = self.target_hhs[refill_cutoff]
 
         # Look 24hr ahead
         for c, cv in self._cpl_data.items():
             for h, infos in cv.items():
-                key = self._rtask_key(infos.cutoff, infos.vapp, infos.vconf, infos.xpid, infos.model)
+                key = self._rtask_key(
+                    infos.cutoff,
+                    infos.vapp,
+                    infos.vconf,
+                    infos.xpid,
+                    infos.model,
+                )
                 offset = self._hh_offset(h, infos.base, infos.dayoff)
                 for possibleh in possiblehours:
                     roffset = self._hh_offset(h, possibleh, 0)
-                    if ((roffset > 0 or
-                            (compute_on_refill and roffset == 0 and (refill_cutoff == 'all' or refill_cutoff == c))) and
-                            (roffset < offset or (isolated_refill and roffset == offset))):
-                        finaldates[key][possibleh][offset - roffset].update([s + offset for s in infos.steps])
+                    if (
+                        roffset > 0
+                        or (
+                            compute_on_refill
+                            and roffset == 0
+                            and (refill_cutoff == "all" or refill_cutoff == c)
+                        )
+                    ) and (
+                        roffset < offset
+                        or (isolated_refill and roffset == offset)
+                    ):
+                        finaldates[key][possibleh][offset - roffset].update(
+                            [s + offset for s in infos.steps]
+                        )
 
         for key, vdict in finaldates.items():
             for possibleh in vdict.keys():
-                vdict[possibleh] = {off: sorted(terms) for off, terms in vdict[possibleh].items()}
+                vdict[possibleh] = {
+                    off: sorted(terms)
+                    for off, terms in vdict[possibleh].items()
+                }
 
         return finaldates
 
     def compatible_with(self, other):
         if isinstance(other, self.__class__):
-            return (self.target_hhs == other.target_hhs and
-                    self.refill_cutoff == other.refill_cutoff)
+            return (
+                self.target_hhs == other.target_hhs
+                and self.refill_cutoff == other.refill_cutoff
+            )
         else:
             return False
 
-    def prepare_terms(self, date, cutoff, vapp, vconf, model=None, xpid=''):
+    def prepare_terms(self, date, cutoff, vapp, vconf, model=None, xpid=""):
         """
         For a task computing coupling files (at **date** and **cutoff**,
         for a specific **vapp** and **vconf**), lists the terms that should be
@@ -427,8 +520,11 @@ class CouplingOffsetConfTool(ConfTool):
         time delta with the coupling model/file base date.
         """
         _, myhh = self._process_date(date)
-        return self._hh_offset(myhh, self._cpl_data[cutoff][myhh].base,
-                               self._cpl_data[cutoff][myhh].dayoff)
+        return self._hh_offset(
+            myhh,
+            self._cpl_data[cutoff][myhh].base,
+            self._cpl_data[cutoff][myhh].dayoff,
+        )
 
     def coupling_date(self, date, cutoff):
         """
@@ -436,8 +532,11 @@ class CouplingOffsetConfTool(ConfTool):
         base date of the coupling model/file.
         """
         mydate, myhh = self._process_date(date)
-        return mydate - self._hh_offset(myhh, self._cpl_data[cutoff][myhh].base,
-                                        self._cpl_data[cutoff][myhh].dayoff)
+        return mydate - self._hh_offset(
+            myhh,
+            self._cpl_data[cutoff][myhh].base,
+            self._cpl_data[cutoff][myhh].dayoff,
+        )
 
     def coupling_terms(self, date, cutoff):
         """
@@ -445,8 +544,11 @@ class CouplingOffsetConfTool(ConfTool):
         list of terms that should be fetched from the coupling model/file.
         """
         _, myhh = self._process_date(date)
-        offset = self._hh_offset(myhh, self._cpl_data[cutoff][myhh].base,
-                                 self._cpl_data[cutoff][myhh].dayoff)
+        offset = self._hh_offset(
+            myhh,
+            self._cpl_data[cutoff][myhh].base,
+            self._cpl_data[cutoff][myhh].dayoff,
+        )
         return [s + offset for s in self._cpl_data[cutoff][myhh].steps]
 
     def _coupling_stuff(self, date, cutoff, stuff):
@@ -458,105 +560,157 @@ class CouplingOffsetConfTool(ConfTool):
         For a task needing coupling (at **date** and **cutoff**), return the
         prescribed steps.
         """
-        return self._coupling_stuff(date, cutoff, 'steps')
+        return self._coupling_stuff(date, cutoff, "steps")
 
     def coupling_cutoff(self, date, cutoff):
         """
         For a task needing coupling (at **date** and **cutoff**), return the
         cutoff of the coupling model/file.
         """
-        return self._coupling_stuff(date, cutoff, 'cutoff')
+        return self._coupling_stuff(date, cutoff, "cutoff")
 
     def coupling_vapp(self, date, cutoff):
         """
         For a task needing coupling (at **date** and **cutoff**), return the
         vapp of the coupling model/file.
         """
-        return self._coupling_stuff(date, cutoff, 'vapp')
+        return self._coupling_stuff(date, cutoff, "vapp")
 
     def coupling_vconf(self, date, cutoff):
         """
         For a task needing coupling (at **date** and **cutoff**), return the
         vconf of the coupling model/file.
         """
-        return self._coupling_stuff(date, cutoff, 'vconf')
+        return self._coupling_stuff(date, cutoff, "vconf")
 
     def coupling_xpid(self, date, cutoff):
         """
         For a task needing coupling (at **date** and **cutoff**), return the
         experiment ID of the coupling model/file.
         """
-        return self._coupling_stuff(date, cutoff, 'xpid')
+        return self._coupling_stuff(date, cutoff, "xpid")
 
     def coupling_model(self, date, cutoff):
         """
         For a task needing coupling (at **date** and **cutoff**), return the
         vconf of the coupling model/file.
         """
-        return self._coupling_stuff(date, cutoff, 'model')
+        return self._coupling_stuff(date, cutoff, "model")
 
-    def refill_terms(self, date, cutoff, vapp, vconf, model=None, refill_cutoff=None, xpid=''):
+    def refill_terms(
+        self,
+        date,
+        cutoff,
+        vapp,
+        vconf,
+        model=None,
+        refill_cutoff=None,
+        xpid="",
+    ):
         """The terms that should be computed for a given refill task."""
-        refill_cutoff = self.refill_cutoff if refill_cutoff is None else refill_cutoff
+        refill_cutoff = (
+            self.refill_cutoff if refill_cutoff is None else refill_cutoff
+        )
         if refill_cutoff not in self._refill_terms_map:
-            self._refill_terms_map[refill_cutoff] = self._compute_refill_terms(refill_cutoff,
-                                                                               self.compute_on_refill,
-                                                                               self.isolated_refill)
+            self._refill_terms_map[refill_cutoff] = self._compute_refill_terms(
+                refill_cutoff, self.compute_on_refill, self.isolated_refill
+            )
         if model is None:
             model = vapp
         mydate, myhh = self._process_date(date)
         key = self._rtask_key(cutoff, vapp, vconf, xpid, model)
         finaldates = dict()
-        if (key not in self._refill_terms_map[refill_cutoff] or
-                myhh not in self._refill_terms_map[refill_cutoff][key]):
+        if (
+            key not in self._refill_terms_map[refill_cutoff]
+            or myhh not in self._refill_terms_map[refill_cutoff][key]
+        ):
             raise CouplingOffsetConfRefillError(self._rtask_fmtkey(key))
-        for off, terms in self._refill_terms_map[refill_cutoff][key][myhh].items():
+        for off, terms in self._refill_terms_map[refill_cutoff][key][
+            myhh
+        ].items():
             finaldates[str(mydate - off)] = terms
-        return {'date': finaldates}
+        return {"date": finaldates}
 
-    def refill_dates(self, date, cutoff, vapp, vconf, model=None, refill_cutoff=None, xpid=''):
+    def refill_dates(
+        self,
+        date,
+        cutoff,
+        vapp,
+        vconf,
+        model=None,
+        refill_cutoff=None,
+        xpid="",
+    ):
         """The dates that should be processed in a given refill task."""
-        return list(self.refill_terms(date, cutoff, vapp, vconf, model=model,
-                                      refill_cutoff=refill_cutoff, xpid=xpid)['date'].keys())
+        return list(
+            self.refill_terms(
+                date,
+                cutoff,
+                vapp,
+                vconf,
+                model=model,
+                refill_cutoff=refill_cutoff,
+                xpid=xpid,
+            )["date"].keys()
+        )
 
-    def refill_months(self, date, cutoff, vapp, vconf, model=None, refill_cutoff=None, xpid=''):
+    def refill_months(
+        self,
+        date,
+        cutoff,
+        vapp,
+        vconf,
+        model=None,
+        refill_cutoff=None,
+        xpid="",
+    ):
         """The months that should be processed in a given refill task."""
-        mindate = min(self.refill_dates(date, cutoff, vapp, vconf, model=model,
-                                        refill_cutoff=refill_cutoff, xpid=xpid))
+        mindate = min(
+            self.refill_dates(
+                date,
+                cutoff,
+                vapp,
+                vconf,
+                model=model,
+                refill_cutoff=refill_cutoff,
+                xpid=xpid,
+            )
+        )
         minmonth = Month(mindate)
         return [minmonth, minmonth + 1]
 
 
 class AggregatedCouplingOffsetConfTool(ConfTool):
-
     _footprint = dict(
-        info = 'Aggregate several CouplingOffsetConfTool objects into one',
-        attr = dict(
-            kind = dict(
-                values= ['aggcouplingoffset', ],
+        info="Aggregate several CouplingOffsetConfTool objects into one",
+        attr=dict(
+            kind=dict(
+                values=[
+                    "aggcouplingoffset",
+                ],
             ),
-            nominal = dict(
-                info = "A list of couplingoffset objects used in nominal cases",
-                type = FPList,
+            nominal=dict(
+                info="A list of couplingoffset objects used in nominal cases",
+                type=FPList,
             ),
-            alternate = dict(
-                info = "A list of couplingoffset objects used in rescue modes",
-                type = FPList,
-                optional = True,
+            alternate=dict(
+                info="A list of couplingoffset objects used in rescue modes",
+                type=FPList,
+                optional=True,
             ),
-            use_alternates = dict(
-                info = 'Actually use rescue mode ?',
-                optional = True,
-                default = True,
-                type = bool,
+            use_alternates=dict(
+                info="Actually use rescue mode ?",
+                optional=True,
+                default=True,
+                type=bool,
             ),
-            verbose = dict(
-                info = 'When the object is created, print a summary.',
-                type = bool,
-                optional = True,
-                default = True,
+            verbose=dict(
+                info="When the object is created, print a summary.",
+                type=bool,
+                optional=True,
+                default=True,
             ),
-        )
+        ),
     )
 
     def __init__(self, *kargs, **kwargs):
@@ -570,26 +724,52 @@ class AggregatedCouplingOffsetConfTool(ConfTool):
         # Check consistency
         for num, toolobj in enumerate(self._toolslist[1:]):
             if not self._toolslist[0].compatible_with(toolobj):
-                print('\n', '*' * 50)
-                print('self._toolslist[0] =', self._toolslist[0], '\n',
-                      ' target_hhs    =', self._toolslist[0].target_hhs,
-                      ' refill_cutoff =', self._toolslist[0].refill_cutoff)
-                print('is not consistent with object num', num, ':', toolobj, '\n',
-                      ' target_hhs    =', toolobj.target_hhs,
-                      ' refill_cutoff =', toolobj.refill_cutoff)
+                print("\n", "*" * 50)
+                print(
+                    "self._toolslist[0] =",
+                    self._toolslist[0],
+                    "\n",
+                    " target_hhs    =",
+                    self._toolslist[0].target_hhs,
+                    " refill_cutoff =",
+                    self._toolslist[0].refill_cutoff,
+                )
+                print(
+                    "is not consistent with object num",
+                    num,
+                    ":",
+                    toolobj,
+                    "\n",
+                    " target_hhs    =",
+                    toolobj.target_hhs,
+                    " refill_cutoff =",
+                    toolobj.refill_cutoff,
+                )
                 raise CouplingOffsetConfError("Inconsistent sub-objects")
 
         if self.verbose:
             print()
-            print('#### Aggregated Coupling configuration tool initialised ####')
-            print('It is made of {:d} nominal configuration tool(s)'.format(len(self.nominal)))
+            print(
+                "#### Aggregated Coupling configuration tool initialised ####"
+            )
+            print(
+                "It is made of {:d} nominal configuration tool(s)".format(
+                    len(self.nominal)
+                )
+            )
             if self.alternate and self.use_alternates:
-                print('+ {:d} rescue-mode configuration tool(s)'.format(len(self.alternate)))
+                print(
+                    "+ {:d} rescue-mode configuration tool(s)".format(
+                        len(self.alternate)
+                    )
+                )
             else:
-                print('No rescue-mode configuration tool is considered (deactivated)')
+                print(
+                    "No rescue-mode configuration tool is considered (deactivated)"
+                )
             print()
 
-    def prepare_terms(self, date, cutoff, vapp, vconf, model=None, xpid=''):
+    def prepare_terms(self, date, cutoff, vapp, vconf, model=None, xpid=""):
         """
         For a task computing coupling files (at **date** and **cutoff**,
         for a specific **vapp** and **vconf**), lists the terms that should be
@@ -598,7 +778,11 @@ class AggregatedCouplingOffsetConfTool(ConfTool):
         terms = set()
         for toolobj in self._toolslist:
             try:
-                terms.update(toolobj.prepare_terms(date, cutoff, vapp, vconf, model=model, xpid=xpid))
+                terms.update(
+                    toolobj.prepare_terms(
+                        date, cutoff, vapp, vconf, model=model, xpid=xpid
+                    )
+                )
             except CouplingOffsetConfPrepareError as e:
                 lateste = e
         if not terms:
@@ -606,14 +790,30 @@ class AggregatedCouplingOffsetConfTool(ConfTool):
         else:
             return sorted(terms)
 
-    def refill_terms(self, date, cutoff, vapp, vconf, model=None, refill_cutoff=None, xpid=''):
+    def refill_terms(
+        self,
+        date,
+        cutoff,
+        vapp,
+        vconf,
+        model=None,
+        refill_cutoff=None,
+        xpid="",
+    ):
         """The terms that should be computed for a given refill task."""
         finaldates = collections.defaultdict(set)
         for toolobj in self._toolslist:
             try:
-                rt = toolobj.refill_terms(date, cutoff, vapp, vconf, model=model,
-                                          refill_cutoff=refill_cutoff, xpid=xpid)
-                for k, v in rt['date'].items():
+                rt = toolobj.refill_terms(
+                    date,
+                    cutoff,
+                    vapp,
+                    vconf,
+                    model=model,
+                    refill_cutoff=refill_cutoff,
+                    xpid=xpid,
+                )
+                for k, v in rt["date"].items():
                     finaldates[k].update(v)
             except CouplingOffsetConfRefillError as e:
                 lateste = e
@@ -622,23 +822,60 @@ class AggregatedCouplingOffsetConfTool(ConfTool):
         else:
             for k, v in finaldates.items():
                 finaldates[k] = sorted(v)
-            return {'date': finaldates}
+            return {"date": finaldates}
 
-    def refill_dates(self, date, cutoff, vapp, vconf, model=None, refill_cutoff=None, xpid=''):
+    def refill_dates(
+        self,
+        date,
+        cutoff,
+        vapp,
+        vconf,
+        model=None,
+        refill_cutoff=None,
+        xpid="",
+    ):
         """The dates that should be processed in a given refill task."""
-        return list(self.refill_terms(date, cutoff, vapp, vconf, model=model,
-                                      refill_cutoff=refill_cutoff, xpid=xpid)['date'].keys())
+        return list(
+            self.refill_terms(
+                date,
+                cutoff,
+                vapp,
+                vconf,
+                model=model,
+                refill_cutoff=refill_cutoff,
+                xpid=xpid,
+            )["date"].keys()
+        )
 
-    def refill_months(self, date, cutoff, vapp, vconf, model=None, refill_cutoff=None, xpid=''):
+    def refill_months(
+        self,
+        date,
+        cutoff,
+        vapp,
+        vconf,
+        model=None,
+        refill_cutoff=None,
+        xpid="",
+    ):
         """The months that should be processed in a given refill task."""
-        mindate = min(self.refill_dates(date, cutoff, vapp, vconf, model=model,
-                                        refill_cutoff=refill_cutoff, xpid=xpid))
+        mindate = min(
+            self.refill_dates(
+                date,
+                cutoff,
+                vapp,
+                vconf,
+                model=model,
+                refill_cutoff=refill_cutoff,
+                xpid=xpid,
+            )
+        )
         minmonth = Month(mindate)
         return [minmonth, minmonth + 1]
 
 
 class TimeSerieInputFinderError(Exception):
     """Any exception raise by :class:`TimeSerieInputFinderConfTool` objects."""
+
     pass
 
 
@@ -669,31 +906,27 @@ class TimeSerieInputFinderConfTool(ConfTool):
     """
 
     _footprint = dict(
-        info = 'Conf tool that find the appropriate begin/end date for an input resource.',
-        attr = dict(
-            kind = dict(
-                values      = ['timeserie', ],
+        info="Conf tool that find the appropriate begin/end date for an input resource.",
+        attr=dict(
+            kind=dict(
+                values=[
+                    "timeserie",
+                ],
             ),
-            timeserie_begin = dict(
-                info        = "The date when the time serie starts",
-                type        = Date
+            timeserie_begin=dict(
+                info="The date when the time serie starts", type=Date
             ),
-            timeserie_step = dict(
-                info        = "The step between files of the time serie.",
-                type        = Period
+            timeserie_step=dict(
+                info="The step between files of the time serie.", type=Period
             ),
-            upperbound_included = dict(
-                type        = bool,
-                optional    = True,
-                default     = True
+            upperbound_included=dict(type=bool, optional=True, default=True),
+            singlefile=dict(
+                info="The period requested by a user should be contained in a single file.",
+                type=bool,
+                optional=True,
+                default=False,
             ),
-            singlefile = dict(
-                info        = "The period requested by a user should be contained in a single file.",
-                type        = bool,
-                optional    = True,
-                default     = False
-            )
-        )
+        ),
     )
 
     def __init__(self, *kargs, **kwargs):
@@ -705,10 +938,14 @@ class TimeSerieInputFinderConfTool(ConfTool):
         """Find the appropriate tiem serie's file date just before **begindate**."""
         if begindate not in self._begincache:
             if begindate < self.timeserie_begin:
-                raise TimeSerieInputFinderError("Request begin date is too soon !")
+                raise TimeSerieInputFinderError(
+                    "Request begin date is too soon !"
+                )
             dt = begindate - self.timeserie_begin
             nsteps = int(math.floor(dt.length / self._steplength))
-            self._begincache[begindate] = self.timeserie_begin + nsteps * self.timeserie_step
+            self._begincache[begindate] = (
+                self.timeserie_begin + nsteps * self.timeserie_step
+            )
         return self._begincache[begindate]
 
     def _begindates_expansion(self, tdate, tlength):
@@ -719,7 +956,9 @@ class TimeSerieInputFinderConfTool(ConfTool):
             nfiles += 1
         if nfiles > 1:
             if self.singlefile:
-                raise TimeSerieInputFinderError("Multiple files requested but singlefile=.T.")
+                raise TimeSerieInputFinderError(
+                    "Multiple files requested but singlefile=.T."
+                )
             return [tdate + i * self.timeserie_step for i in range(0, nfiles)]
         else:
             return tdate
@@ -767,7 +1006,9 @@ class TimeSerieInputFinderConfTool(ConfTool):
     def begindate(self, begindate, term):
         """Find the file dates encompassing [**begindate**, **begindate** + **term**]."""
         begindate, term = self._date_term_normalise(begindate, term)
-        return self._begindates_expansion(self._begin_lookup(begindate), int(term) * 60)
+        return self._begindates_expansion(
+            self._begin_lookup(begindate), int(term) * 60
+        )
 
     def enddate(self, begindate, term):
         """Find the file enddates encompassing [**begindate**, **begindate** + **term**]."""
@@ -933,33 +1174,41 @@ class ArpIfsForecastTermConfTool(ConfTool):
     """
 
     _footprint = dict(
-        info = "Conf tool that helps setting up Arpege's forecast term and outputs",
-        attr = dict(
-            kind = dict(
-                values= ['arpifs_fcterms', ],
+        info="Conf tool that helps setting up Arpege's forecast term and outputs",
+        attr=dict(
+            kind=dict(
+                values=[
+                    "arpifs_fcterms",
+                ],
             ),
-            fcterm_def = dict(
-                info = ("The forecast's term for each cutoff and base time " +
-                        "(e.g ``{'assim':{0:6, 12:6}, 'production':{0:102}}``)"),
-                type = dict,
+            fcterm_def=dict(
+                info=(
+                    "The forecast's term for each cutoff and base time "
+                    + "(e.g ``{'assim':{0:6, 12:6}, 'production':{0:102}}``)"
+                ),
+                type=dict,
             ),
             fcterm_unit=dict(
                 info="The forecast's term unit (hour or timestep)",
-                values=['hour', 'timestep'],
+                values=["hour", "timestep"],
                 optional=True,
-                default='hour',
+                default="hour",
             ),
             hist_terms_def=dict(
-                info=("The forecast's terms when historical files are needed " +
-                      "(for permanant storage) " +
-                      "(e.g ``{'assim':{default: '0-finalterm-3'}, " +
-                      "'production':{0:'0-23-1,24-finalterm-6}}``)"),
+                info=(
+                    "The forecast's terms when historical files are needed "
+                    + "(for permanant storage) "
+                    + "(e.g ``{'assim':{default: '0-finalterm-3'}, "
+                    + "'production':{0:'0-23-1,24-finalterm-6}}``)"
+                ),
                 type=dict,
                 optional=True,
             ),
             surf_terms_def=dict(
-                info=("The forecast's terms when surface files are needed " +
-                      "(for permanant storage) "),
+                info=(
+                    "The forecast's terms when surface files are needed "
+                    + "(for permanant storage) "
+                ),
                 type=dict,
                 optional=True,
             ),
@@ -974,63 +1223,93 @@ class ArpIfsForecastTermConfTool(ConfTool):
                 optional=True,
             ),
             extra_fp_terms_def=dict(
-                info=("The forecast's terms when extra fullpos diagnostics are computed. " +
-                      "They are always computed by some offline tasks. " +
-                      "The dictionary has an additional level (describing the 'name' of the " +
-                      "extra fullpos processing"),
+                info=(
+                    "The forecast's terms when extra fullpos diagnostics are computed. "
+                    + "They are always computed by some offline tasks. "
+                    + "The dictionary has an additional level (describing the 'name' of the "
+                    + "extra fullpos processing"
+                ),
                 type=dict,
                 optional=True,
             ),
             secondary_diag_terms_def=dict(
-                info=("The forecast's terms when secondary diagnostics are computed. " +
-                      "Secondary dignostics are based on diagnostics previously created by " +
-                      "the inline/offline diag fullpos (see diag_fp_terms_def)." +
-                      "The dictionary has an additional level (describing the 'name' of the " +
-                      "secondary diags"),
+                info=(
+                    "The forecast's terms when secondary diagnostics are computed. "
+                    + "Secondary dignostics are based on diagnostics previously created by "
+                    + "the inline/offline diag fullpos (see diag_fp_terms_def)."
+                    + "The dictionary has an additional level (describing the 'name' of the "
+                    + "secondary diags"
+                ),
                 type=dict,
                 optional=True,
             ),
-            use_inline_fp = dict(
-                info = 'Use inline Fullpos to compute "core_fp_terms"',
-                type = bool,
-                optional = True,
-                default = True,
+            use_inline_fp=dict(
+                info='Use inline Fullpos to compute "core_fp_terms"',
+                type=bool,
+                optional=True,
+                default=True,
             ),
-        )
+        ),
     )
 
-    _ACTUAL_T_RE = re.compile(r'(\w+)_terms$')
-    _ACTUAL_FPLIST_T_RE = re.compile(r'(\w+)_terms_fplist$')
+    _ACTUAL_T_RE = re.compile(r"(\w+)_terms$")
+    _ACTUAL_FPLIST_T_RE = re.compile(r"(\w+)_terms_fplist$")
     _UNDEFINED = object()
 
     def __init__(self, *kargs, **kwargs):
         super().__init__(*kargs, **kwargs)
-        self._x_fcterm = self._check_data_keys_and_times(self.fcterm_def, 'fcterm_def',
-                                                         cast=self._cast_unique_value)
-        self._x_hist_terms = self._check_data_keys_and_times(self.hist_terms_def, 'hist_terms_def',
-                                                             cast=self._cast_timerangex)
-        self._x_surf_terms = self._check_data_keys_and_times(self.surf_terms_def, 'surf_terms_def',
-                                                             cast=self._cast_timerangex)
-        self._x_norm_terms = self._check_data_keys_and_times(self.norm_terms_def, 'norm_terms_def',
-                                                             cast=self._cast_timerangex)
-        self._x_diag_fp_terms = self._check_data_keys_and_times(self.diag_fp_terms_def, 'diag_fp_terms_def',
-                                                                cast=self._cast_timerangex)
-        self._x_extra_fp_terms = dict() if self.extra_fp_terms_def is None else self.extra_fp_terms_def
-        if not all([isinstance(v, dict) for v in self._x_extra_fp_terms.values()]):
+        self._x_fcterm = self._check_data_keys_and_times(
+            self.fcterm_def, "fcterm_def", cast=self._cast_unique_value
+        )
+        self._x_hist_terms = self._check_data_keys_and_times(
+            self.hist_terms_def, "hist_terms_def", cast=self._cast_timerangex
+        )
+        self._x_surf_terms = self._check_data_keys_and_times(
+            self.surf_terms_def, "surf_terms_def", cast=self._cast_timerangex
+        )
+        self._x_norm_terms = self._check_data_keys_and_times(
+            self.norm_terms_def, "norm_terms_def", cast=self._cast_timerangex
+        )
+        self._x_diag_fp_terms = self._check_data_keys_and_times(
+            self.diag_fp_terms_def,
+            "diag_fp_terms_def",
+            cast=self._cast_timerangex,
+        )
+        self._x_extra_fp_terms = (
+            dict()
+            if self.extra_fp_terms_def is None
+            else self.extra_fp_terms_def
+        )
+        if not all(
+            [isinstance(v, dict) for v in self._x_extra_fp_terms.values()]
+        ):
             raise ValueError("extra_fp_terms values need to be dictionaries")
-        self._x_extra_fp_terms = {k: self._check_data_keys_and_times(v,
-                                                                     'extra_fp_terms_def[{:s}]'.format(k),
-                                                                     cast=self._cast_timerangex)
-                                  for k, v in self._x_extra_fp_terms.items()}
-        self._x_secondary_diag_terms_def = (dict()
-                                            if self.secondary_diag_terms_def is None
-                                            else self.secondary_diag_terms_def)
-        if not all([isinstance(v, dict) for v in self._x_secondary_diag_terms_def.values()]):
+        self._x_extra_fp_terms = {
+            k: self._check_data_keys_and_times(
+                v,
+                "extra_fp_terms_def[{:s}]".format(k),
+                cast=self._cast_timerangex,
+            )
+            for k, v in self._x_extra_fp_terms.items()
+        }
+        self._x_secondary_diag_terms_def = (
+            dict()
+            if self.secondary_diag_terms_def is None
+            else self.secondary_diag_terms_def
+        )
+        if not all(
+            [
+                isinstance(v, dict)
+                for v in self._x_secondary_diag_terms_def.values()
+            ]
+        ):
             raise ValueError("extra_fp_terms values need to be dictionaries")
         self._x_secondary_diag_terms_def = {
-            k: self._check_data_keys_and_times(v,
-                                               'secondary_diag_terms_def[{:s}]'.format(k),
-                                               cast=self._cast_timerangex)
+            k: self._check_data_keys_and_times(
+                v,
+                "secondary_diag_terms_def[{:s}]".format(k),
+                cast=self._cast_timerangex,
+            )
             for k, v in self._x_secondary_diag_terms_def.items()
         }
         self._lookup_cache = dict()
@@ -1040,7 +1319,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
     def _clone(self, **kwargs):
         my_args = self.footprint_as_shallow_dict()
         my_args.update(kwargs)
-        return self.__class__(** my_args)
+        return self.__class__(**my_args)
 
     @property
     def no_inline(self):
@@ -1054,7 +1333,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
         return value
 
     def _cast_unique_value(self, value):
-        if self.fcterm_unit == 'hour':
+        if self.fcterm_unit == "hour":
             return Time(value)
         else:
             return int(value)
@@ -1063,7 +1342,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
     def _cast_timerangex(value):
         if not (value is None or isinstance(value, str)):
             if isinstance(value, collections.abc.Iterable):
-                value = ','.join([str(e) for e in value])
+                value = ",".join([str(e) for e in value])
             else:
                 value = str(value)
         return value
@@ -1074,8 +1353,10 @@ class ArpIfsForecastTermConfTool(ConfTool):
         if data is None:
             return dict(default=dict(default=None))
         else:
-            if not set(data.keys()) <= {'assim', 'production', 'default'}:
-                raise ValueError('Impoper value ({!s}) for "{:s}".'.format(data, dataname))
+            if not set(data.keys()) <= {"assim", "production", "default"}:
+                raise ValueError(
+                    'Impoper value ({!s}) for "{:s}".'.format(data, dataname)
+                )
             return data
 
     def _check_data_keys_and_times(self, data, dataname, cast=None):
@@ -1085,14 +1366,25 @@ class ArpIfsForecastTermConfTool(ConfTool):
         new_data = dict()
         for data_k, data_v in data.items():
             if not isinstance(data_v, dict):
-                raise ValueError('The {:s} "{:s}" entry should be a dictionary (got "{!s}")'
-                                 .format(dataname, data_k, data_v))
+                raise ValueError(
+                    'The {:s} "{:s}" entry should be a dictionary (got "{!s}")'.format(
+                        dataname, data_k, data_v
+                    )
+                )
             try:
-                new_data[data_k] = {'default' if k == 'default' else Time(k): cast(v)
-                                    for k, v in data_v.items()}
+                new_data[data_k] = {
+                    "default" if k == "default" else Time(k): cast(v)
+                    for k, v in data_v.items()
+                }
             except ValueError as e:
-                raise ValueError("Error while processing {:s}'s {:s}: ".format(dataname, data_k) +
-                                 "Could not convert to Time (original message '{!s}')".format(e))
+                raise ValueError(
+                    "Error while processing {:s}'s {:s}: ".format(
+                        dataname, data_k
+                    )
+                    + "Could not convert to Time (original message '{!s}')".format(
+                        e
+                    )
+                )
         return new_data
 
     def _cutoff_hh_lookup(self, what_desc, cutoff, hh, rawdata=None):
@@ -1101,15 +1393,23 @@ class ArpIfsForecastTermConfTool(ConfTool):
             hh = Time(hh)
         if (what_desc, cutoff, hh) not in self._lookup_cache:
             if rawdata is None:
-                rawdata = getattr(self, '_x_{:s}'.format(what_desc))
-            cutoff_v = rawdata.get(cutoff, rawdata.get('default', self._UNDEFINED))
+                rawdata = getattr(self, "_x_{:s}".format(what_desc))
+            cutoff_v = rawdata.get(
+                cutoff, rawdata.get("default", self._UNDEFINED)
+            )
             if cutoff_v is self._UNDEFINED:
-                raise ValueError('Nothing is defined for cutoff="{:s}" in "{:s}"'
-                                 .format(cutoff, what_desc))
-            hh_v = cutoff_v.get(hh, cutoff_v.get('default', self._UNDEFINED))
+                raise ValueError(
+                    'Nothing is defined for cutoff="{:s}" in "{:s}"'.format(
+                        cutoff, what_desc
+                    )
+                )
+            hh_v = cutoff_v.get(hh, cutoff_v.get("default", self._UNDEFINED))
             if hh_v is self._UNDEFINED:
-                raise ValueError('Nothing is defined for cutoff="{:s}"/hh="{!s}" in "{:s}"'
-                                 .format(cutoff, hh, what_desc))
+                raise ValueError(
+                    'Nothing is defined for cutoff="{:s}"/hh="{!s}" in "{:s}"'.format(
+                        cutoff, hh, what_desc
+                    )
+                )
             self._lookup_cache[(what_desc, cutoff, hh)] = hh_v
         return self._lookup_cache[(what_desc, cutoff, hh)]
 
@@ -1117,26 +1417,34 @@ class ArpIfsForecastTermConfTool(ConfTool):
         """Look for a particular cutoff in self._x_what_desc and resolve the rangex."""
         if (what_desc, cutoff, hh) not in self._lookup_rangex_cache:
             try:
-                what = self._cutoff_hh_lookup(what_desc, cutoff, hh, rawdata=rawdata)
+                what = self._cutoff_hh_lookup(
+                    what_desc, cutoff, hh, rawdata=rawdata
+                )
             except ValueError:
                 what = None
             if what is None:
                 self._lookup_rangex_cache[(what_desc, cutoff, hh)] = list()
             else:
-                finalterm = self._cutoff_hh_lookup('fcterm', cutoff, hh)
-                if 'finalterm' in what:
-                    what = what.replace('finalterm', str(finalterm))
+                finalterm = self._cutoff_hh_lookup("fcterm", cutoff, hh)
+                if "finalterm" in what:
+                    what = what.replace("finalterm", str(finalterm))
                 try:
                     tir = timeintrangex(what)
                 except (TypeError, ValueError):
                     raise ValueError(
-                        'Could not process "{:s}" using timeintrangex (from "{:s}" with cutoff={:s}/hh={!s})'
-                        .format(what, what_desc, cutoff, hh)
+                        'Could not process "{:s}" using timeintrangex (from "{:s}" with cutoff={:s}/hh={!s})'.format(
+                            what, what_desc, cutoff, hh
+                        )
                     )
-                if self.fcterm_unit == 'timestep' and not all([isinstance(i, int) for i in tir]):
-                    raise ValueError('No hours/minutes allowed when fcterm_unit is "timestep" ' +
-                                     '(from "{:s}" with cutoff={:s}/hh={!s})'
-                                     .format(what_desc, cutoff, hh))
+                if self.fcterm_unit == "timestep" and not all(
+                    [isinstance(i, int) for i in tir]
+                ):
+                    raise ValueError(
+                        'No hours/minutes allowed when fcterm_unit is "timestep" '
+                        + '(from "{:s}" with cutoff={:s}/hh={!s})'.format(
+                            what_desc, cutoff, hh
+                        )
+                    )
                 self._lookup_rangex_cache[(what_desc, cutoff, hh)] = sorted(
                     [t for t in tir if t <= finalterm]
                 )
@@ -1144,7 +1452,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
 
     def fcterm(self, cutoff, hh):
         """The forecast term for **cutoff** and **hh**."""
-        fcterm = self._cutoff_hh_lookup('fcterm', cutoff, hh)
+        fcterm = self._cutoff_hh_lookup("fcterm", cutoff, hh)
         if isinstance(fcterm, Time) and fcterm.minute == 0:
             return fcterm.hour
         else:
@@ -1152,22 +1460,22 @@ class ArpIfsForecastTermConfTool(ConfTool):
 
     def hist_terms(self, cutoff, hh):
         """The list of terms for requested/archived historical files."""
-        return self._cutoff_hh_rangex_lookup('hist_terms', cutoff, hh)
+        return self._cutoff_hh_rangex_lookup("hist_terms", cutoff, hh)
 
     def surf_terms(self, cutoff, hh):
         """The list of terms for historical surface files."""
-        return self._cutoff_hh_rangex_lookup('surf_terms', cutoff, hh)
+        return self._cutoff_hh_rangex_lookup("surf_terms", cutoff, hh)
 
     def norm_terms(self, cutoff, hh):
         """The list of terms for norm calculations."""
-        return self._cutoff_hh_rangex_lookup('norm_terms', cutoff, hh)
+        return self._cutoff_hh_rangex_lookup("norm_terms", cutoff, hh)
 
     def inline_terms(self, cutoff, hh):
         """The list of terms for inline diagnostics."""
         if self.use_inline_fp:
             return sorted(
-                set(self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh)) |
-                self._secondary_diag_terms_set(cutoff, hh)
+                set(self._cutoff_hh_rangex_lookup("diag_fp_terms", cutoff, hh))
+                | self._secondary_diag_terms_set(cutoff, hh)
             )
         else:
             return list()
@@ -1178,8 +1486,8 @@ class ArpIfsForecastTermConfTool(ConfTool):
             return list()
         else:
             return sorted(
-                set(self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh)) |
-                self._secondary_diag_terms_set(cutoff, hh)
+                set(self._cutoff_hh_rangex_lookup("diag_fp_terms", cutoff, hh))
+                | self._secondary_diag_terms_set(cutoff, hh)
             )
 
     def diag_terms_fplist(self, cutoff, hh):
@@ -1188,15 +1496,21 @@ class ArpIfsForecastTermConfTool(ConfTool):
         return FPList(flist) if flist else []
 
     def _extra_fp_terms_item_fplist(self, item, cutoff, hh):
-        flist = self._cutoff_hh_rangex_lookup('extra_fp_terms[{:s}]'.format(item),
-                                              cutoff, hh,
-                                              rawdata=self._x_extra_fp_terms[item])
+        flist = self._cutoff_hh_rangex_lookup(
+            "extra_fp_terms[{:s}]".format(item),
+            cutoff,
+            hh,
+            rawdata=self._x_extra_fp_terms[item],
+        )
         return FPList(flist) if flist else []
 
     def _secondary_diag_terms_item_fplist(self, item, cutoff, hh):
-        flist = self._cutoff_hh_rangex_lookup('secondary_diag_terms[{:s}]'.format(item),
-                                              cutoff, hh,
-                                              rawdata=self._x_secondary_diag_terms_def[item])
+        flist = self._cutoff_hh_rangex_lookup(
+            "secondary_diag_terms[{:s}]".format(item),
+            cutoff,
+            hh,
+            rawdata=self._x_secondary_diag_terms_def[item],
+        )
         return FPList(flist) if flist else []
 
     @secure_getattr
@@ -1204,37 +1518,65 @@ class ArpIfsForecastTermConfTool(ConfTool):
         actual_m = self._ACTUAL_T_RE.match(item)
         actual_fplist_m = self._ACTUAL_FPLIST_T_RE.match(item)
         if actual_m and actual_m.group(1) in self._x_extra_fp_terms.keys():
-            return functools.partial(self._cutoff_hh_rangex_lookup,
-                                     'extra_fp_terms[{:s}]'.format(actual_m.group(1)),
-                                     rawdata=self._x_extra_fp_terms[actual_m.group(1)])
-        elif actual_fplist_m and actual_fplist_m.group(1) in self._x_extra_fp_terms.keys():
-            return functools.partial(self._extra_fp_terms_item_fplist,
-                                     actual_fplist_m.group(1))
-        elif actual_m and actual_m.group(1) in self._x_secondary_diag_terms_def.keys():
-            return functools.partial(self._cutoff_hh_rangex_lookup,
-                                     'secondary_diag_terms[{:s}]'.format(actual_m.group(1)),
-                                     rawdata=self._x_secondary_diag_terms_def[actual_m.group(1)])
-        elif actual_fplist_m and actual_fplist_m.group(1) in self._x_secondary_diag_terms_def.keys():
-            return functools.partial(self._secondary_diag_terms_item_fplist,
-                                     actual_fplist_m.group(1))
+            return functools.partial(
+                self._cutoff_hh_rangex_lookup,
+                "extra_fp_terms[{:s}]".format(actual_m.group(1)),
+                rawdata=self._x_extra_fp_terms[actual_m.group(1)],
+            )
+        elif (
+            actual_fplist_m
+            and actual_fplist_m.group(1) in self._x_extra_fp_terms.keys()
+        ):
+            return functools.partial(
+                self._extra_fp_terms_item_fplist, actual_fplist_m.group(1)
+            )
+        elif (
+            actual_m
+            and actual_m.group(1) in self._x_secondary_diag_terms_def.keys()
+        ):
+            return functools.partial(
+                self._cutoff_hh_rangex_lookup,
+                "secondary_diag_terms[{:s}]".format(actual_m.group(1)),
+                rawdata=self._x_secondary_diag_terms_def[actual_m.group(1)],
+            )
+        elif (
+            actual_fplist_m
+            and actual_fplist_m.group(1)
+            in self._x_secondary_diag_terms_def.keys()
+        ):
+            return functools.partial(
+                self._secondary_diag_terms_item_fplist,
+                actual_fplist_m.group(1),
+            )
         else:
             raise AttributeError('Attribute "{:s}" was not found'.format(item))
 
     def _fpoff_terms_set(self, cutoff, hh):
         fpoff_terms = set()
         for k, v in self._x_extra_fp_terms.items():
-            fpoff_terms.update(self._cutoff_hh_rangex_lookup('extra_fp_terms[{:s}]'.format(k),
-                                                             cutoff, hh, rawdata=v))
+            fpoff_terms.update(
+                self._cutoff_hh_rangex_lookup(
+                    "extra_fp_terms[{:s}]".format(k), cutoff, hh, rawdata=v
+                )
+            )
         if not self.use_inline_fp:
-            fpoff_terms.update(self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh))
+            fpoff_terms.update(
+                self._cutoff_hh_rangex_lookup("diag_fp_terms", cutoff, hh)
+            )
             fpoff_terms.update(self._secondary_diag_terms_set(cutoff, hh))
         return fpoff_terms
 
     def _secondary_diag_terms_set(self, cutoff, hh):
         sec_terms = set()
         for k, v in self._x_secondary_diag_terms_def.items():
-            sec_terms.update(self._cutoff_hh_rangex_lookup('secondary_diag_terms[{:s}]'.format(k),
-                                                           cutoff, hh, rawdata=v))
+            sec_terms.update(
+                self._cutoff_hh_rangex_lookup(
+                    "secondary_diag_terms[{:s}]".format(k),
+                    cutoff,
+                    hh,
+                    rawdata=v,
+                )
+            )
         return sec_terms
 
     def extra_hist_terms(self, cutoff, hh):
@@ -1256,14 +1598,17 @@ class ArpIfsForecastTermConfTool(ConfTool):
 
     def fpoff_items(self, cutoff, hh, discard=None, only=None):
         """List of active offline post-processing domains."""
-        items = {k
-                 for k, v in self._x_extra_fp_terms.items()
-                 if self._cutoff_hh_rangex_lookup('extra_fp_terms[{:s}]'.format(k),
-                                                  cutoff,
-                                                  hh,
-                                                  rawdata=v)}
-        if not self.use_inline_fp and self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh):
-            items.add('diag')
+        items = {
+            k
+            for k, v in self._x_extra_fp_terms.items()
+            if self._cutoff_hh_rangex_lookup(
+                "extra_fp_terms[{:s}]".format(k), cutoff, hh, rawdata=v
+            )
+        }
+        if not self.use_inline_fp and self._cutoff_hh_rangex_lookup(
+            "diag_fp_terms", cutoff, hh
+        ):
+            items.add("diag")
         if discard:
             items -= set(discard)
         if only:
@@ -1272,13 +1617,17 @@ class ArpIfsForecastTermConfTool(ConfTool):
 
     def fpoff_terms_map(self, cutoff, hh):
         """The mapping dictionary between offline post-processing terms and domains."""
-        return {k: getattr(self, '{:s}_terms'.format(k))(cutoff, hh)
-                for k in self.fpoff_items(cutoff, hh)}
+        return {
+            k: getattr(self, "{:s}_terms".format(k))(cutoff, hh)
+            for k in self.fpoff_items(cutoff, hh)
+        }
 
     def fpoff_terms_fpmap(self, cutoff, hh):
         """The mapping dictionary between offline post-processing terms and domains (as a FPlist)."""
-        return {k: getattr(self, '{:s}_terms_fplist'.format(k))(cutoff, hh)
-                for k in self.fpoff_items(cutoff, hh)}
+        return {
+            k: getattr(self, "{:s}_terms_fplist".format(k))(cutoff, hh)
+            for k in self.fpoff_items(cutoff, hh)
+        }
 
 
 class TimeSlotsConfTool(AbstractObjectProxyConfTool):
@@ -1294,18 +1643,19 @@ class TimeSlotsConfTool(AbstractObjectProxyConfTool):
     """
 
     _footprint = dict(
-        info = 'Gives easy access to a Timeslots object.',
-        attr = dict(
-            timeslots_def = dict(
-                info        = "The timeslots specification",
+        info="Gives easy access to a Timeslots object.",
+        attr=dict(
+            timeslots_def=dict(
+                info="The timeslots specification",
             ),
-        )
+        ),
     )
 
     def _create_proxied_obj(self):
         return TimeSlots(self.timeslots_def)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
+
     doctest.testmod()

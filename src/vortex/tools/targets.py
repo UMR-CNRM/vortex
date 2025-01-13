@@ -44,55 +44,55 @@ class Target(fp.FootprintBase):
 
     _abstract = True
     _explicit = False
-    _collector = ('target',)
+    _collector = ("target",)
     _footprint = dict(
-        info = 'Default target description',
-        attr = dict(
-            hostname = dict(
-                optional = True,
-                default  = platform.node(),
-                alias    = ('nodename', 'computer')
+        info="Default target description",
+        attr=dict(
+            hostname=dict(
+                optional=True,
+                default=platform.node(),
+                alias=("nodename", "computer"),
             ),
-            inetname = dict(
-                optional = True,
-                default  = platform.node(),
+            inetname=dict(
+                optional=True,
+                default=platform.node(),
             ),
-            fqdn = dict(
-                optional = True,
-                default  = default_fqdn(),
+            fqdn=dict(
+                optional=True,
+                default=default_fqdn(),
             ),
-            sysname = dict(
-                optional = True,
-                default  = platform.system(),
+            sysname=dict(
+                optional=True,
+                default=platform.system(),
             ),
-            userconfig = dict(
-                type     = GenericConfigParser,
-                optional = True,
-                default  = None,
+            userconfig=dict(
+                type=GenericConfigParser,
+                optional=True,
+                default=None,
             ),
-            inifile = dict(
-                optional = True,
-                default  = '@target-[hostname].ini',
+            inifile=dict(
+                optional=True,
+                default="@target-[hostname].ini",
             ),
-            defaultinifile = dict(
-                optional = True,
-                default  = 'target-commons.ini',
+            defaultinifile=dict(
+                optional=True,
+                default="target-commons.ini",
             ),
-            iniauto = dict(
-                type     = bool,
-                optional = True,
-                default  = True,
-            )
-        )
+            iniauto=dict(
+                type=bool,
+                optional=True,
+                default=True,
+            ),
+        ),
     )
 
-    _re_nodes_property = re.compile(r'(\w+)(nodes)$')
-    _re_proxies_property = re.compile(r'(\w+)(proxies)$')
-    _re_isnode_property = re.compile(r'is(\w+)node$')
-    _re_glove_rk_id = re.compile(r'^(.*)@\w+$')
+    _re_nodes_property = re.compile(r"(\w+)(nodes)$")
+    _re_proxies_property = re.compile(r"(\w+)(proxies)$")
+    _re_isnode_property = re.compile(r"is(\w+)node$")
+    _re_glove_rk_id = re.compile(r"^(.*)@\w+$")
 
     def __init__(self, *args, **kw):
-        logger.debug('Abstract target computer init %s', self.__class__)
+        logger.debug("Abstract target computer init %s", self.__class__)
         super().__init__(*args, **kw)
         self._actualconfig = self.userconfig
         self._specialnodes = None
@@ -101,7 +101,7 @@ class Target(fp.FootprintBase):
 
     @property
     def realkind(self):
-        return 'target'
+        return "target"
 
     @property
     def config(self):
@@ -135,23 +135,35 @@ class Target(fp.FootprintBase):
         The :meth:`get` method called whith ``key='sectionname:myoption'`` will
         return 'operations'.
         """
-        my_glove_rk = '@' + sessions.current().glove.realkind
-        if ':' in key:
-            section, option = (x.strip() for x in key.split(':', 1))
+        my_glove_rk = "@" + sessions.current().glove.realkind
+        if ":" in key:
+            section, option = (x.strip() for x in key.split(":", 1))
             # Check if an override section exists
-            sections = [x for x in (section + my_glove_rk, section)
-                        if x in self.config.sections()]
+            sections = [
+                x
+                for x in (section + my_glove_rk, section)
+                if x in self.config.sections()
+            ]
         else:
             option = key
             # First look in override sections, then in default one
-            sections = ([s for s in self.config.sections() if s.endswith(my_glove_rk)] +
-                        [s for s in self.config.sections() if not self._re_glove_rk_id.match(s)])
+            sections = [
+                s for s in self.config.sections() if s.endswith(my_glove_rk)
+            ] + [
+                s
+                for s in self.config.sections()
+                if not self._re_glove_rk_id.match(s)
+            ]
         # Return the first matching section/option
-        for section in [x for x in sections if self.config.has_option(x, option)]:
+        for section in [
+            x for x in sections if self.config.has_option(x, option)
+        ]:
             return self.config.get(section, option)
         return default
 
-    def getx(self, key, default=None, env_key=None, silent=False, aslist=False):
+    def getx(
+        self, key, default=None, env_key=None, silent=False, aslist=False
+    ):
         r"""Return a value from several sources.
 
         In turn, the following sources are considered:
@@ -179,10 +191,12 @@ class Target(fp.FootprintBase):
             value = None
 
         if value is None:
-            if ':' not in key:
+            if ":" not in key:
                 if silent:
                     return None
-                msg = 'Configuration key should be "section:option" not "{}"'.format(key)
+                msg = 'Configuration key should be "section:option" not "{}"'.format(
+                    key
+                )
                 raise KeyError(msg)
             value = self.get(key, default)
 
@@ -196,17 +210,28 @@ class Target(fp.FootprintBase):
             raise KeyError(msg)
 
         if aslist:
-            value = value.replace('\n', ' ').replace('\\', ' ').replace(',', ' ').split()
+            value = (
+                value.replace("\n", " ")
+                .replace("\\", " ")
+                .replace(",", " ")
+                .split()
+            )
 
         return value
 
     def sections(self):
         """Returns the list of sections contained in the config file."""
-        my_glove_rk = '@' + sessions.current().glove.realkind
-        return sorted({self._re_glove_rk_id.sub(r'\1', x)
-                       for x in self.config.sections()
-                       if ((not self._re_glove_rk_id.match(x)) or
-                           x.endswith(my_glove_rk))})
+        my_glove_rk = "@" + sessions.current().glove.realkind
+        return sorted(
+            {
+                self._re_glove_rk_id.sub(r"\1", x)
+                for x in self.config.sections()
+                if (
+                    (not self._re_glove_rk_id.match(x))
+                    or x.endswith(my_glove_rk)
+                )
+            }
+        )
 
     def options(self, key):
         """For a given section, returns the list of available options.
@@ -214,9 +239,10 @@ class Target(fp.FootprintBase):
         The result may depend on the current glove (see the :meth:`get`
         method documentation).
         """
-        my_glove_rk = '@' + sessions.current().glove.realkind
-        sections = [x for x in (key, key + my_glove_rk)
-                    if x in self.config.sections()]
+        my_glove_rk = "@" + sessions.current().glove.realkind
+        sections = [
+            x for x in (key, key + my_glove_rk) if x in self.config.sections()
+        ]
         options = set()
         for section in sections:
             options.update(self.config.options(section))
@@ -230,9 +256,12 @@ class Target(fp.FootprintBase):
         """
         items = dict()
         if key is not None:
-            my_glove_rk = '@' + sessions.current().glove.realkind
-            sections = [x for x in (key, key + my_glove_rk)
-                        if x in self.config.sections()]
+            my_glove_rk = "@" + sessions.current().glove.realkind
+            sections = [
+                x
+                for x in (key, key + my_glove_rk)
+                if x in self.config.sections()
+            ]
             for section in sections:
                 items.update(self.config.items(section))
         return items
@@ -241,7 +270,7 @@ class Target(fp.FootprintBase):
     def is_anonymous(cls):
         """Return a boolean either the current footprint define or not a mandatory set of hostname values."""
         fp = cls.footprint_retrieve()
-        return not bool(fp.attr['hostname']['values'])
+        return not bool(fp.attr["hostname"]["values"])
 
     def spawn_hook(self, sh):
         """Specific target hook before any serious execution."""
@@ -252,7 +281,12 @@ class Target(fp.FootprintBase):
         """Specific target hook before any component run."""
         yield
 
-    def _init_supernodes(self, main_re, rangeid='range', baseid='base',):
+    def _init_supernodes(
+        self,
+        main_re,
+        rangeid="range",
+        baseid="base",
+    ):
         """Read the configuration file in order to initialize the specialnodes
         and specialproxies lists.
 
@@ -261,40 +295,55 @@ class Target(fp.FootprintBase):
         *generic_nodes* keyword. In such a case, the node list will be
         auto-generated using the XXXrange and XXXbase configuration keys.
         """
-        confsection = 'generic_nodes'
+        confsection = "generic_nodes"
         confoptions = self.options(confsection)
-        nodetypes = [(m.group(1), m.group(2))
-                     for m in [main_re.match(k) for k in confoptions]
-                     if m is not None]
+        nodetypes = [
+            (m.group(1), m.group(2))
+            for m in [main_re.match(k) for k in confoptions]
+            if m is not None
+        ]
         outdict = dict()
         for nodetype, nodelistid in nodetypes:
-            nodelist = self.get(confsection + ':' + nodetype + nodelistid)
-            if nodelist == 'no_generic':
-                noderanges = self.get(confsection + ':' + nodetype + rangeid, None)
+            nodelist = self.get(confsection + ":" + nodetype + nodelistid)
+            if nodelist == "no_generic":
+                noderanges = self.get(
+                    confsection + ":" + nodetype + rangeid, None
+                )
                 if noderanges is None:
-                    raise ValueError('when {0:s}{1:s} == no_generic, {0:s}{2:s} must be provided'
-                                     .format(nodetype, nodelistid, rangeid))
-                nodebases = self.get(confsection + ':' + nodetype + baseid,
-                                     self.inetname + nodetype + '{:d}')
+                    raise ValueError(
+                        "when {0:s}{1:s} == no_generic, {0:s}{2:s} must be provided".format(
+                            nodetype, nodelistid, rangeid
+                        )
+                    )
+                nodebases = self.get(
+                    confsection + ":" + nodetype + baseid,
+                    self.inetname + nodetype + "{:d}",
+                )
                 outdict[nodetype] = list()
-                for (r, b) in zip(noderanges.split('+'), nodebases.split('+')):
-                    outdict[nodetype].extend([b.format(int(i)) for i in r.split(',')])
+                for r, b in zip(noderanges.split("+"), nodebases.split("+")):
+                    outdict[nodetype].extend(
+                        [b.format(int(i)) for i in r.split(",")]
+                    )
             else:
-                outdict[nodetype] = nodelist.split(',')
+                outdict[nodetype] = nodelist.split(",")
         return outdict
 
     @property
     def specialnodesaliases(self):
         """Return the list of known aliases."""
         if self._sepcialnodesaliases is None:
-            confsection = 'generic_nodes'
+            confsection = "generic_nodes"
             confoptions = self.options(confsection)
-            aliases_re = re.compile(r'(\w+)(aliases)')
-            nodetypes = [(m.group(1), m.group(2))
-                         for m in [aliases_re.match(k) for k in confoptions]
-                         if m is not None]
-            rdict = {ntype: self.get(confsection + ':' + ntype + key, '').split(',')
-                     for ntype, key in nodetypes}
+            aliases_re = re.compile(r"(\w+)(aliases)")
+            nodetypes = [
+                (m.group(1), m.group(2))
+                for m in [aliases_re.match(k) for k in confoptions]
+                if m is not None
+            ]
+            rdict = {
+                ntype: self.get(confsection + ":" + ntype + key, "").split(",")
+                for ntype, key in nodetypes
+            }
             self._sepcialnodesaliases = rdict
         return self._sepcialnodesaliases
 
@@ -320,7 +369,9 @@ class Target(fp.FootprintBase):
         equal to the specialnodes list.
         """
         if self._specialproxies is None:
-            self._specialproxies = self._init_supernodes(self._re_proxies_property, 'proxiesrange', 'proxiesbase')
+            self._specialproxies = self._init_supernodes(
+                self._re_proxies_property, "proxiesrange", "proxiesbase"
+            )
             for nodetype, nodelist in self.specialnodes.items():
                 if nodetype not in self._specialproxies:
                     self._specialproxies[nodetype] = nodelist
@@ -346,39 +397,44 @@ class Target(fp.FootprintBase):
         """
         kmatch = self._re_nodes_property.match(key)
         if kmatch is not None:
-            return fp.stdtypes.FPList(self.specialnodes.get(kmatch.group(1), []))
+            return fp.stdtypes.FPList(
+                self.specialnodes.get(kmatch.group(1), [])
+            )
         kmatch = self._re_proxies_property.match(key)
         if kmatch is not None:
-            return fp.stdtypes.FPList(self.specialproxies.get(kmatch.group(1), []))
+            return fp.stdtypes.FPList(
+                self.specialproxies.get(kmatch.group(1), [])
+            )
         kmatch = self._re_isnode_property.match(key)
         if kmatch is not None:
-            return ((kmatch.group(1) not in self.specialnodes) or
-                    any([self.hostname.startswith(s)
-                         for s in self.specialnodes[kmatch.group(1)]]))
+            return (kmatch.group(1) not in self.specialnodes) or any(
+                [
+                    self.hostname.startswith(s)
+                    for s in self.specialnodes[kmatch.group(1)]
+                ]
+            )
         raise AttributeError('The key "{:s}" does not exist.'.format(key))
 
     @property
     def ftraw_default(self):
         """The default value for the System object ftraw attribute."""
-        return ('ftraw' in self.specialnodes and
-                any([self.hostname.startswith(s)
-                     for s in self.specialnodes['ftraw']]))
+        return "ftraw" in self.specialnodes and any(
+            [self.hostname.startswith(s) for s in self.specialnodes["ftraw"]]
+        )
 
 
 class LocalTarget(Target):
     """A very generic class usable for most computers."""
 
     _footprint = dict(
-        info = 'Nice local target',
-        attr = dict(
-            sysname = dict(
-                values = ['Linux', 'Darwin', 'Local', 'Localhost']
-            ),
-        )
+        info="Nice local target",
+        attr=dict(
+            sysname=dict(values=["Linux", "Darwin", "Local", "Localhost"]),
+        ),
     )
 
 
 # Disable priority warnings on the target collector
-fcollect = fp.collectors.get(tag='target')
+fcollect = fp.collectors.get(tag="target")
 fcollect.non_ambiguous_loglevel = logging.DEBUG
 del fcollect

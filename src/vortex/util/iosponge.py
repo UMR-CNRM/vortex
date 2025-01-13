@@ -23,7 +23,9 @@ class IoSponge(io.BufferedIOBase):
     that limit the maximum of *size_check* and *guessed_size* is returned.
     """
 
-    def __init__(self, rawio, size_check=IOSPONGE_DEFAULT_SIZECHECK, guessed_size=0):
+    def __init__(
+        self, rawio, size_check=IOSPONGE_DEFAULT_SIZECHECK, guessed_size=0
+    ):
         """
         :param file rawio: Any kind of file-like object
         :param int size_check: The first size_check bytes will be buffered in
@@ -50,12 +52,14 @@ class IoSponge(io.BufferedIOBase):
         return self._seek
 
     def _generic_read(self, size, raw_read_cb):
-        ret = b''
+        ret = b""
         if self._seek < len(self._first_bytes):
             if size is None:
-                ret = self._first_bytes[self._seek:]
+                ret = self._first_bytes[self._seek :]
             else:
-                ret = self._first_bytes[self._seek:min(self._size_check, self._seek + size)]
+                ret = self._first_bytes[
+                    self._seek : min(self._size_check, self._seek + size)
+                ]
         if size is None:
             ret += raw_read_cb(None)
         elif len(ret) < size:

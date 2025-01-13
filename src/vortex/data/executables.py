@@ -24,6 +24,7 @@ __all__ = []
 
 class Jacket:
     """The class definition of in and out resources from a given executable."""
+
     def __init__(self, afile=None):
         if afile:
             self.config = JacketConfigParser(afile)
@@ -44,25 +45,25 @@ class Executable(Resource):
 
     _abstract = True
     _footprint = dict(
-        info = 'Miscellaneaous executable resource',
-        attr = dict(
-            cycle = dict(
-                info     = "Any kind of cycle name",
-                optional = True,
-                default  = None,
-                access   = 'rwx',
+        info="Miscellaneaous executable resource",
+        attr=dict(
+            cycle=dict(
+                info="Any kind of cycle name",
+                optional=True,
+                default=None,
+                access="rwx",
             ),
-            kind = dict(
-                info        = "The resource's kind.",
-                doc_zorder  = 90,
+            kind=dict(
+                info="The resource's kind.",
+                doc_zorder=90,
             ),
-            nativefmt = dict(
-                doc_visibility = footprints.doc.visibility.GURU,
+            nativefmt=dict(
+                doc_visibility=footprints.doc.visibility.GURU,
             ),
-            clscontents = dict(
-                doc_visibility = footprints.doc.visibility.GURU,
-            )
-        )
+            clscontents=dict(
+                doc_visibility=footprints.doc.visibility.GURU,
+            ),
+        ),
     )
 
     def stdin_text(self, **opts):
@@ -74,33 +75,33 @@ class Script(Executable):
     """Basic interpreted executable associated to a specific language."""
 
     _footprint = dict(
-        attr = dict(
-            rawopts = dict(
-                info     = "Options that will be passed directly to the script",
-                optional = True,
-                default  = '',
+        attr=dict(
+            rawopts=dict(
+                info="Options that will be passed directly to the script",
+                optional=True,
+                default="",
             ),
-            language = dict(
-                info     = "The programming language",
-                values   = ['perl', 'python', 'ksh', 'bash', 'sh', 'awk'],
+            language=dict(
+                info="The programming language",
+                values=["perl", "python", "ksh", "bash", "sh", "awk"],
             ),
-            kind = dict(
-                optional = True,
-                default  = 'script',
-                values   = ['script'],
-            )
+            kind=dict(
+                optional=True,
+                default="script",
+                values=["script"],
+            ),
         ),
-        fastkeys = {'language'},
+        fastkeys={"language"},
     )
 
     @property
     def realkind(self):
-        return 'script'
+        return "script"
 
     def command_line(self, **opts):
         """Returns optional attribute :attr:`rawopts`."""
         if self.rawopts is None:
-            return ''
+            return ""
         else:
             return self.rawopts
 
@@ -109,28 +110,31 @@ class GnuScript(Executable):
     """Basic interpreted executable with standard command line arguments."""
 
     _footprint = dict(
-        attr = dict(
-            language = dict(
-                info     = "The programming language",
-                values   = ['perl', 'python', 'ksh', 'bash', 'sh', 'awk'],
+        attr=dict(
+            language=dict(
+                info="The programming language",
+                values=["perl", "python", "ksh", "bash", "sh", "awk"],
             ),
-            kind = dict(
-                default  = 'gnuscript',
-                values   = ['gnuscript', 'argscript'],
-            )
+            kind=dict(
+                default="gnuscript",
+                values=["gnuscript", "argscript"],
+            ),
         ),
-        fastkeys = {'kind', 'language'},
+        fastkeys={"kind", "language"},
     )
 
     @property
     def realkind(self):
-        return 'script'
+        return "script"
 
     def command_line(self, **opts):
         """Returns a blank separated list of options."""
-        return ' '.join(['--' + k + ' ' + ' '.join([str(x)
-                                                    for x in mktuple(v)])
-                         for k, v in opts.items()])
+        return " ".join(
+            [
+                "--" + k + " " + " ".join([str(x) for x in mktuple(v)])
+                for k, v in opts.items()
+            ]
+        )
 
 
 class Binary(Executable):
@@ -138,25 +142,25 @@ class Binary(Executable):
 
     _abstract = True
     _footprint = dict(
-        attr = dict(
-            static = dict(
-                info     = "Statically linked binary.",
-                type     = bool,
-                optional = True,
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
+        attr=dict(
+            static=dict(
+                info="Statically linked binary.",
+                type=bool,
+                optional=True,
+                doc_visibility=footprints.doc.visibility.ADVANCED,
             ),
-            jacket = dict(
-                type            = Jacket,
-                optional        = True,
-                default         = Jacket(),
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
-            )
+            jacket=dict(
+                type=Jacket,
+                optional=True,
+                default=Jacket(),
+                doc_visibility=footprints.doc.visibility.ADVANCED,
+            ),
         )
     )
 
     @property
     def realkind(self):
-        return 'binary'
+        return "binary"
 
     def guess_binary_sources(self, provider):  # @UnusedVariable
         """A list of path that contains source files (for debugging purposes)."""
@@ -167,15 +171,15 @@ class BlackBox(Binary):
     """Binary resource with explicit command line options."""
 
     _footprint = dict(
-        attr = dict(
-            binopts = dict(
-                info     = "Options that will be passed directly to the binary",
-                optional = True,
-                default  = '',
+        attr=dict(
+            binopts=dict(
+                info="Options that will be passed directly to the binary",
+                optional=True,
+                default="",
             ),
-            kind = dict(
-                values   = ['binbox', 'blackbox'],
-                remap    = dict(binbox = 'blackbox'),
+            kind=dict(
+                values=["binbox", "blackbox"],
+                remap=dict(binbox="blackbox"),
             ),
         )
     )
@@ -191,23 +195,16 @@ class NWPModel(Binary):
     _abstract = True
     _footprint = [
         model_deco,
-        dict(
-            info = 'NWP Model',
-            attr = dict(
-                kind = dict(
-                    values = ['nwpmodel']
-                )
-            )
-        )
+        dict(info="NWP Model", attr=dict(kind=dict(values=["nwpmodel"]))),
     ]
 
     @property
     def realkind(self):
-        return 'nwpmodel'
+        return "nwpmodel"
 
     def command_line(self, **opts):
         """Abstract method."""
-        return ''
+        return ""
 
 
 class OceanographicModel(Binary):
@@ -217,68 +214,62 @@ class OceanographicModel(Binary):
     _footprint = [
         model_deco,
         dict(
-            info = 'Oceanographic Model',
-            attr = dict(
-                kind = dict(
-                    values = ['oceanmodel']
-                )
-            )
-        )
+            info="Oceanographic Model",
+            attr=dict(kind=dict(values=["oceanmodel"])),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'oceanmodel'
+        return "oceanmodel"
 
     def command_line(self, **opts):
         """Abstract method."""
-        return ''
+        return ""
 
 
 class SurfaceModel(Binary):
-
     _abstract = True
     _footprint = [
         model_deco,
         dict(
-            info = 'Model used for the Safran-Surfex-Mepra chain.',
-            attr = dict(
-                kind  = dict(
-                    values = ['surfacemodel', 'snowmodel'],
-                    remap = dict(autoremap = 'first'),
+            info="Model used for the Safran-Surfex-Mepra chain.",
+            attr=dict(
+                kind=dict(
+                    values=["surfacemodel", "snowmodel"],
+                    remap=dict(autoremap="first"),
                 ),
             ),
-        )
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'surfacemodel'
+        return "surfacemodel"
 
     def command_line(self, **opts):
         """Abstract method."""
-        return ''
+        return ""
 
 
 class ChemistryModel(Binary):
-
     _abstract = True
     _footprint = [
         model_deco,
         dict(
-            info = 'Base class for Chemistry models.',
-            attr = dict(
-                kind  = dict(
-                    values = ['chemistrymodel'],
+            info="Base class for Chemistry models.",
+            attr=dict(
+                kind=dict(
+                    values=["chemistrymodel"],
                 ),
             ),
-        )
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'chemistrymodel'
+        return "chemistrymodel"
 
     def command_line(self, **opts):
         """Abstract method."""
-        return ''
+        return ""

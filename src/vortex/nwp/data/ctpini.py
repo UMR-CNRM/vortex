@@ -22,15 +22,15 @@ class CtpiniDirectiveFile(GeoFlowResource):
     """
 
     _footprint = dict(
-        info = "Ctpini directive file",
-        attr = dict(
-            kind = dict(
-                values = ["ctpini_directives_file", ],
+        info="Ctpini directive file",
+        attr=dict(
+            kind=dict(
+                values=[
+                    "ctpini_directives_file",
+                ],
             ),
-            nativefmt = dict(
-                default = "ascii"
-            )
-        )
+            nativefmt=dict(default="ascii"),
+        ),
     )
 
     @property
@@ -47,8 +47,8 @@ class AsciiFiles(StaticResource):
     _footprint = [
         gvar,
         dict(
-            info = 'Abstract class for ascii files from genv.',
-        )
+            info="Abstract class for ascii files from genv.",
+        ),
     ]
 
 
@@ -59,21 +59,19 @@ class CtpiniAsciiFiles(AsciiFiles):
 
     _footprint = [
         dict(
-            info = "Ctpini Genv ascii files.",
-            attr = dict(
-                kind = dict(
-                    values = ["ctpini_ascii_file"],
+            info="Ctpini Genv ascii files.",
+            attr=dict(
+                kind=dict(
+                    values=["ctpini_ascii_file"],
                 ),
-                source = dict(
-                    values = ["levels", "covano", "fort61", "coor", "cov46"],
+                source=dict(
+                    values=["levels", "covano", "fort61", "coor", "cov46"],
                 ),
-                gvar = dict(
-                    default = "tsr_misc_[source]",
+                gvar=dict(
+                    default="tsr_misc_[source]",
                 ),
-                clscontents=dict(
-                    default = DataTemplate
-                ),
-            )
+                clscontents=dict(default=DataTemplate),
+            ),
         )
     ]
 
@@ -88,31 +86,49 @@ class GridPointCtpini(GridPoint):
     """
 
     _footprint = dict(
-        info = 'Ctpini Gridpoint Fields',
-        attr = dict(
-            kind = dict(
-                values = ['ctpini_gridpoint', ],
+        info="Ctpini Gridpoint Fields",
+        attr=dict(
+            kind=dict(
+                values=[
+                    "ctpini_gridpoint",
+                ],
             ),
-            origin = dict(
-                values = ['oper', 'PS', 'dble', 'PX', 'ctpini', 'PTSR', ],
-                remap = dict(
-                    PS = 'oper',
-                    PX = 'dble',
-                    PTSR = 'ctpini',
+            origin=dict(
+                values=[
+                    "oper",
+                    "PS",
+                    "dble",
+                    "PX",
+                    "ctpini",
+                    "PTSR",
+                ],
+                remap=dict(
+                    PS="oper",
+                    PX="dble",
+                    PTSR="ctpini",
                 ),
             ),
-            parameter = dict(
-                values = ['PMERSOL', 'T850HPA', 'Z15PVU', 'Z20PVU', 'Z07PVU', 'TROPO'],
+            parameter=dict(
+                values=[
+                    "PMERSOL",
+                    "T850HPA",
+                    "Z15PVU",
+                    "Z20PVU",
+                    "Z07PVU",
+                    "TROPO",
+                ],
             ),
-            run_ctpini = dict(
-                optional = True,
-                default = None,
+            run_ctpini=dict(
+                optional=True,
+                default=None,
             ),
-            nativefmt = dict(
-                values = ['geo', ],
-                default = 'geo',
+            nativefmt=dict(
+                values=[
+                    "geo",
+                ],
+                default="geo",
             ),
-        )
+        ),
     )
 
     @property
@@ -122,12 +138,12 @@ class GridPointCtpini(GridPoint):
     def namebuilding_info(self):
         """Generic information, radical = ``grid``."""
         ninfo = super().namebuilding_info()
-        if self.origin == 'ctpini' and self.run_ctpini is not None:
+        if self.origin == "ctpini" and self.run_ctpini is not None:
             source = [self.model, self.origin, self.parameter, self.run_ctpini]
         else:
             source = [self.model, self.origin, self.parameter]
         ninfo.update(
-            radical='ctpini-grid',
+            radical="ctpini-grid",
             src=source,
         )
         return ninfo

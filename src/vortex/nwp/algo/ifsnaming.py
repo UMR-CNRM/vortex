@@ -38,33 +38,32 @@ __all__ = []
 # Base & Generic classes
 # ##############################################################################
 
+
 class IFSNamingConvention(footprints.FootprintBase):
     """Abstract class for any object representing an IFS/Arpege naming scheme."""
 
     _abstract = True
-    _collector = ('ifsnamingconv', )
+    _collector = ("ifsnamingconv",)
     _footprint = [
         model,
         actualfmt,
         arpifs_cycle,
         dict(
-            attr = dict(
-                kind = dict(
-                    info = 'The type of targeted input/output file'
+            attr=dict(
+                kind=dict(info="The type of targeted input/output file"),
+                conf=dict(
+                    info="IFS/Arpege configuration number",
+                    type=int,
                 ),
-                conf = dict(
-                    info = 'IFS/Arpege configuration number',
-                    type = int,
+                xpname=dict(
+                    info="IFS/Arpege experiment name",
                 ),
-                xpname = dict(
-                    info = 'IFS/Arpege experiment name',
+                actualfmt=dict(
+                    info="The target file format",
+                    optional=True,
                 ),
-                actualfmt = dict(
-                    info = 'The target file format',
-                    optional = True,
-                )
             )
-        )
+        ),
     ]
 
     def _naming_format_string(self, **kwargs):
@@ -72,16 +71,18 @@ class IFSNamingConvention(footprints.FootprintBase):
         raise NotImplementedError()
 
     def __call__(self, **kwargs):
-        return self._naming_format_string(** kwargs).format(xpname=self.xpname,
-                                                            conf=self.conf,
-                                                            fmt=self.actualfmt,
-                                                            model=self.model,
-                                                            ** kwargs)
+        return self._naming_format_string(**kwargs).format(
+            xpname=self.xpname,
+            conf=self.conf,
+            fmt=self.actualfmt,
+            model=self.model,
+            **kwargs,
+        )
 
 
 # Activate the footprint's fasttrack on the ifsnamingconv collector
-ncollect = footprints.collectors.get(tag='ifsnamingconv')
-ncollect.fasttrack = ('kind', )
+ncollect = footprints.collectors.get(tag="ifsnamingconv")
+ncollect.fasttrack = ("kind",)
 del ncollect
 
 
@@ -92,12 +93,10 @@ class IFSHardWiredNamingConvention(IFSNamingConvention):
     """
 
     _footprint = dict(
-        attr = dict(
-            namingformat = dict()
+        attr=dict(namingformat=dict()),
+        priority=dict(
+            level=footprints.priorities.top.TOOLBOX  # @UndefinedVariable
         ),
-        priority = dict(
-            level = footprints.priorities.top.TOOLBOX  # @UndefinedVariable
-        )
     )
 
     def _naming_format_string(self, **kwargs):
@@ -107,203 +106,245 @@ class IFSHardWiredNamingConvention(IFSNamingConvention):
 # Climatology files names
 # ##############################################################################
 
+
 class ModelClimName(IFSNamingConvention):
     """An IFS/Arpege model clim."""
 
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['modelclim', ],
+        attr=dict(
+            kind=dict(
+                values=[
+                    "modelclim",
+                ],
             ),
-            conf = dict(
-                outcast = [701, ],
+            conf=dict(
+                outcast=[
+                    701,
+                ],
             ),
-            model = dict(
-                outcast = ['surfex', ]
-            )
+            model=dict(
+                outcast=[
+                    "surfex",
+                ]
+            ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'Const.Clim'
+        return "Const.Clim"
 
 
 class SurfexClimName(IFSNamingConvention):
     """A Surfex model clim."""
 
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['modelclim', ],
+        attr=dict(
+            kind=dict(
+                values=[
+                    "modelclim",
+                ],
             ),
-            model = dict(
-                values = ['surfex', ]
-            )
+            model=dict(
+                values=[
+                    "surfex",
+                ]
+            ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'Const.Clim.sfx'
+        return "Const.Clim.sfx"
 
 
 class TargetClimName(IFSNamingConvention):
     """A BDAP clim file or a target domain IFS/Arpege clim file."""
 
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['targetclim', ],
+        attr=dict(
+            kind=dict(
+                values=[
+                    "targetclim",
+                ],
             ),
-            model = dict(
-                outcast = ['surfex', ]
-            )
+            model=dict(
+                outcast=[
+                    "surfex",
+                ]
+            ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'const.clim.{area:s}'
+        return "const.clim.{area:s}"
 
 
 class SurfexTargetClimName(IFSNamingConvention):
     """A target domain Surfex clim file."""
 
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['targetclim', ],
+        attr=dict(
+            kind=dict(
+                values=[
+                    "targetclim",
+                ],
             ),
-            model = dict(
-                values = ['surfex', ]
-            )
+            model=dict(
+                values=[
+                    "surfex",
+                ]
+            ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'const.clim.sfx.{area:s}'
+        return "const.clim.sfx.{area:s}"
 
 
 class CanariModelClimName(IFSNamingConvention):
     """An IFS/Arpege model clim (specific naming for Canari)."""
 
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['modelclim', ],
+        attr=dict(
+            kind=dict(
+                values=[
+                    "modelclim",
+                ],
             ),
-            conf = dict(
-                values = [701, ],
+            conf=dict(
+                values=[
+                    701,
+                ],
             ),
-            model = dict(
-                outcast = ['surfex', ]
-            )
+            model=dict(
+                outcast=[
+                    "surfex",
+                ]
+            ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'ICMSH{xpname:s}CLIM'
+        return "ICMSH{xpname:s}CLIM"
 
 
 class CanariClosestModelClimName(CanariModelClimName):
     """An IFS/Arpege model clim for the closest month (specific naming for Canari)."""
 
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['closest_modelclim', ],
+        attr=dict(
+            kind=dict(
+                values=[
+                    "closest_modelclim",
+                ],
             ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'ICMSH{xpname:s}CLI2'
+        return "ICMSH{xpname:s}CLI2"
 
 
 # Initial conditions file names
 # ##############################################################################
 
-class InitialContionsName(IFSNamingConvention):
 
+class InitialContionsName(IFSNamingConvention):
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['ic', ],
+        attr=dict(
+            kind=dict(
+                values=[
+                    "ic",
+                ],
             ),
-            model = dict(
-                outcast = ['surfex', ]
-            )
+            model=dict(
+                outcast=[
+                    "surfex",
+                ]
+            ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'ICMSH{xpname:s}INIT'
+        return "ICMSH{xpname:s}INIT"
 
 
 class SurfexInitialContionsName(IFSNamingConvention):
-
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['ic', ],
+        attr=dict(
+            kind=dict(
+                values=[
+                    "ic",
+                ],
             ),
-            model = dict(
-                values = ['surfex', ]
-            )
+            model=dict(
+                values=[
+                    "surfex",
+                ]
+            ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'ICMSH{xpname:s}INIT.sfx'
+        return "ICMSH{xpname:s}INIT.sfx"
 
 
 class IauAnalysisName(IFSNamingConvention):
-
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['iau_analysis', ],
+        attr=dict(
+            kind=dict(
+                values=[
+                    "iau_analysis",
+                ],
             ),
-            model = dict(
-                outcast = ['surfex', ]
-            )
+            model=dict(
+                outcast=[
+                    "surfex",
+                ]
+            ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'ICIAU{xpname:s}IN{number:02d}'
+        return "ICIAU{xpname:s}IN{number:02d}"
 
 
 class IauBackgroundName(IFSNamingConvention):
-
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['iau_background', ],
+        attr=dict(
+            kind=dict(
+                values=[
+                    "iau_background",
+                ],
             ),
-            model = dict(
-                outcast = ['surfex', ]
-            )
+            model=dict(
+                outcast=[
+                    "surfex",
+                ]
+            ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'ICIAU{xpname:s}BK{number:02d}'
+        return "ICIAU{xpname:s}BK{number:02d}"
 
 
 # Lateral Boundary Conditions Files
 # ##############################################################################
 
-class LAMBoundaryConditionsName(IFSNamingConvention):
 
+class LAMBoundaryConditionsName(IFSNamingConvention):
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['lbc', ],
+        attr=dict(
+            kind=dict(
+                values=[
+                    "lbc",
+                ],
             ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'ELSCF{xpname:s}ALBC{number:03d}'
+        return "ELSCF{xpname:s}ALBC{number:03d}"
 
 
 # Strange files used in the EDA
@@ -311,20 +352,26 @@ class LAMBoundaryConditionsName(IFSNamingConvention):
 
 
 class IfsEdaInputName(IFSNamingConvention):
-
     _abstract = True
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['edainput', ],
+        attr=dict(
+            kind=dict(
+                values=[
+                    "edainput",
+                ],
             ),
-            variant = dict(
-                values = ['infl', 'infl_factor', 'mean', 'covb', ],
+            variant=dict(
+                values=[
+                    "infl",
+                    "infl_factor",
+                    "mean",
+                    "covb",
+                ],
             ),
-            totalnumber = dict(
-                info = 'The total number of input files',
-                type = int,
-                optional = True,
+            totalnumber=dict(
+                info="The total number of input files",
+                type=int,
+                optional=True,
             ),
         )
     )
@@ -335,69 +382,82 @@ class IfsEdaInputName(IFSNamingConvention):
             ndigits = max(int(math.floor(math.log10(self.totalnumber))) + 1, 3)
         else:
             ndigits = 3
-        return '{number:0' + str(ndigits) + 'd}'
+        return "{number:0" + str(ndigits) + "d}"
 
 
 class IfsEdaArpegeFaInputName(IfsEdaInputName):
-
     _footprint = dict(
-        attr = dict(
-            model = dict(
-                values = ['arpege', ]
+        attr=dict(
+            model=dict(
+                values=[
+                    "arpege",
+                ]
             ),
-            actualfmt = dict(
-                values = ['fa', ]
-            )
+            actualfmt=dict(
+                values=[
+                    "fa",
+                ]
+            ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'FAMEMBER_' + self._number_fmt
+        return "FAMEMBER_" + self._number_fmt
 
 
 class IfsEdaArpegeGribInputName(IfsEdaInputName):
-
     _footprint = dict(
-        attr = dict(
-            model = dict(
-                values = ['arpege', ]
+        attr=dict(
+            model=dict(
+                values=[
+                    "arpege",
+                ]
             ),
-            actualfmt = dict(
-                values = ['grib', ]
-            )
+            actualfmt=dict(
+                values=[
+                    "grib",
+                ]
+            ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'GRIBERm' + self._number_fmt
+        return "GRIBERm" + self._number_fmt
 
 
 class IfsEdaAromeInputName(IfsEdaInputName):
-
     _footprint = dict(
-        attr = dict(
-            model = dict(
-                values = ['arome', ]
+        attr=dict(
+            model=dict(
+                values=[
+                    "arome",
+                ]
             ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'ELSCF{xpname:s}ALBC' + self._number_fmt
+        return "ELSCF{xpname:s}ALBC" + self._number_fmt
 
 
 class IfsEdaOutputName(IFSNamingConvention):
-
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['edaoutput', ],
+        attr=dict(
+            kind=dict(
+                values=[
+                    "edaoutput",
+                ],
             ),
-            variant = dict(
-                values = ['infl', 'infl_factor', 'mean', 'covb', ],
+            variant=dict(
+                values=[
+                    "infl",
+                    "infl_factor",
+                    "mean",
+                    "covb",
+                ],
             ),
         )
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'ICMSH{xpname:s}+{term.fmth}_m{number:03d}'
+        return "ICMSH{xpname:s}+{term.fmth}_m{number:03d}"

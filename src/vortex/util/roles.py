@@ -5,15 +5,15 @@ Factory for named roles.
 #: No automatic export
 __all__ = []
 
-_activetag = 'default'
+_activetag = "default"
 
 
 def stdfactoryrole(role):
     """Standard processing for role names."""
-    return ''.join([s[0].upper() + s[1:] for s in role.split()])
+    return "".join([s[0].upper() + s[1:] for s in role.split()])
 
 
-def switchfactory(tag='default'):
+def switchfactory(tag="default"):
     """Switch the current active factory to the existing one identified through its ``tag``."""
     if tag in _rolesgateway:
         global _activetag
@@ -46,6 +46,4 @@ def setrole(role, tag=None):
     return _rolesgateway[tag](role)
 
 
-_rolesgateway = dict(
-    default=stdfactoryrole
-)
+_rolesgateway = dict(default=stdfactoryrole)

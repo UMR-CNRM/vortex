@@ -21,7 +21,7 @@ _ORIGIN_INFO = """Describes where the data originaly comes from. The most common
 values are: ana (that stands for analysis), fcst (that stands for
 forecast), hst (that stands for Historic file. i.e a file that contains a
 full model state variable), stat_ad (that stands for statistical adapatation)."""
-_ORIGIN_INFO = _ORIGIN_INFO.replace('\n', ' ')
+_ORIGIN_INFO = _ORIGIN_INFO.replace("\n", " ")
 
 
 class AbstractGridpoint(GeoFlowResource):
@@ -35,48 +35,67 @@ class AbstractGridpoint(GeoFlowResource):
 
     _abstract = True
     _footprint = dict(
-        info = 'Any kind of GridPoint file.',
-        attr = dict(
-            origin = dict(
-                info = _ORIGIN_INFO,
-                values = [
-                    'analyse', 'ana', 'guess', 'gss', 'arpege', 'arp', 'arome', 'aro',
-                    'aladin', 'ald', 'historic', 'hst', 'forecast', 'fcst', 'era40', 'e40',
-                    'era15', 'e15', 'interp', 'sumo', 'filter', 'stat_ad',
+        info="Any kind of GridPoint file.",
+        attr=dict(
+            origin=dict(
+                info=_ORIGIN_INFO,
+                values=[
+                    "analyse",
+                    "ana",
+                    "guess",
+                    "gss",
+                    "arpege",
+                    "arp",
+                    "arome",
+                    "aro",
+                    "aladin",
+                    "ald",
+                    "historic",
+                    "hst",
+                    "forecast",
+                    "fcst",
+                    "era40",
+                    "e40",
+                    "era15",
+                    "e15",
+                    "interp",
+                    "sumo",
+                    "filter",
+                    "stat_ad",
                 ],
-                remap = dict(
-                    analyse = 'ana',
-                    guess = 'gss',
-                    arpege = 'arp',
-                    aladin = 'ald',
-                    arome = 'aro',
-                    historic = 'hst',
-                    forecast = 'fcst',
-                    era40 = 'e40',
-                    era15 = 'e15'
-                )
+                remap=dict(
+                    analyse="ana",
+                    guess="gss",
+                    arpege="arp",
+                    aladin="ald",
+                    arome="aro",
+                    historic="hst",
+                    forecast="fcst",
+                    era40="e40",
+                    era15="e15",
+                ),
             ),
-            kind = dict(
-                values = ['gridpoint', 'gribfile', 'fullpos'],
-                remap = dict(
-                    fullpos = 'gridpoint'
-                )
+            kind=dict(
+                values=["gridpoint", "gribfile", "fullpos"],
+                remap=dict(fullpos="gridpoint"),
             ),
-            nativefmt   = dict(
-                values  = ['grib', 'grib1', 'grib2', 'netcdf', 'fa'],
+            nativefmt=dict(
+                values=["grib", "grib1", "grib2", "netcdf", "fa"],
             ),
-            filtername = dict(
+            filtername=dict(
                 # Dummy argument but avoid priority related messages with footprints
-                info = 'With GridPoint files, leave filtername empty...',
-                optional = True,
-                values = [None, ],
+                info="With GridPoint files, leave filtername empty...",
+                optional=True,
+                values=[
+                    None,
+                ],
             ),
-        )
+        ),
     )
 
     @property
     def realkind(self):
-        return 'gridpoint'
+        return "gridpoint"
 
     def olive_basename(self):
         """OLIVE specific naming convention (abstract)."""
@@ -89,35 +108,32 @@ class AbstractGridpoint(GeoFlowResource):
     def namebuilding_info(self):
         """Generic information, radical = ``grid``."""
         ninfo = super().namebuilding_info()
-        if self.origin in ('stat_ad', ):
+        if self.origin in ("stat_ad",):
             # For new ``origin`` please use this code path... Please, no more
             # weird logic like the one hard-coded in the else statement !
             source = self.origin
         else:
-            if self.model == 'mocage':
-                if self.origin == 'hst':
-                    source = 'forecast'
+            if self.model == "mocage":
+                if self.origin == "hst":
+                    source = "forecast"
                 else:
-                    source = 'sumo'
-            elif self.model in ('hycom', 'mfwam'):
-                if self.origin == 'ana':
-                    source = 'analysis'
+                    source = "sumo"
+            elif self.model in ("hycom", "mfwam"):
+                if self.origin == "ana":
+                    source = "analysis"
                 else:
-                    source = 'forecast'
+                    source = "forecast"
             else:
-                source = 'forecast'
+                source = "forecast"
         ninfo.update(
-            radical='grid',
+            radical="grid",
             src=[self.model, source],
         )
         return ninfo
 
     def iga_pathinfo(self):
         """Standard path information for IGA inline cache."""
-        directory = dict(
-            fa='fic_day',
-            grib='bdap'
-        )
+        directory = dict(fa="fic_day", grib="bdap")
         return dict(
             fmt=directory[self.nativefmt],
             nativefmt=self.nativefmt,
@@ -132,7 +148,9 @@ class GridPoint(AbstractGridpoint):
     """
 
     _abstract = True
-    _footprint = [term_deco, ]
+    _footprint = [
+        term_deco,
+    ]
 
 
 class TimePeriodGridPoint(AbstractGridpoint):
@@ -145,33 +163,48 @@ class TimePeriodGridPoint(AbstractGridpoint):
     _footprint = [
         timeperiod_deco,
         dict(
-            attr = dict(
-                begintime = dict(
-                    optional = True,
-                    default = Time(0),
+            attr=dict(
+                begintime=dict(
+                    optional=True,
+                    default=Time(0),
                 )
             )
-        )
+        ),
     ]
 
 
 # A bunch of generic footprint declaration to ease with class creation
 _NATIVEFMT_FULLPOS_FP = footprints.Footprint(
-    info='Abstract nativefmt for fullpos files.',
-    attr=dict(nativefmt=dict(values=['fa'],
-                             default='fa', ))
+    info="Abstract nativefmt for fullpos files.",
+    attr=dict(
+        nativefmt=dict(
+            values=["fa"],
+            default="fa",
+        )
+    ),
 )
 _NATIVEFMT_GENERIC_FP = footprints.Footprint(
-    info='Abstract nativefmt for any other gridpoint files.',
-    attr=dict(nativefmt=dict(values=['grib', 'grib1', 'grib2', 'netcdf'],
-                             default='grib'))
+    info="Abstract nativefmt for any other gridpoint files.",
+    attr=dict(
+        nativefmt=dict(
+            values=["grib", "grib1", "grib2", "netcdf"], default="grib"
+        )
+    ),
 )
 _FILTERNAME_AWARE_FPDECO = footprints.DecorativeFootprint(
     footprints.Footprint(
-        info='Abstract filtering attribute (used when the filtername attribute is allowed).',
-        attr=dict(filtername=dict(info="The filter used to obtain this data.",
-                                  optional=False, values=[],))),
-    decorator=[namebuilding_insert('filtername', lambda s: s.filtername), ]
+        info="Abstract filtering attribute (used when the filtername attribute is allowed).",
+        attr=dict(
+            filtername=dict(
+                info="The filter used to obtain this data.",
+                optional=False,
+                values=[],
+            )
+        ),
+    ),
+    decorator=[
+        namebuilding_insert("filtername", lambda s: s.filtername),
+    ],
 )
 
 
@@ -179,25 +212,27 @@ class GridPointMap(FlowResource):
     """Map of the gridpoint files as produced by fullpos."""
 
     _footprint = dict(
-        info = 'Gridpoint Files Map',
-        attr = dict(
-            kind = dict(
-                values   = ['gridpointmap', 'gribfilemap', 'fullposmap'],
-                remap = dict(fullposmap = 'gridpointmap', )
+        info="Gridpoint Files Map",
+        attr=dict(
+            kind=dict(
+                values=["gridpointmap", "gribfilemap", "fullposmap"],
+                remap=dict(
+                    fullposmap="gridpointmap",
+                ),
             ),
-            clscontents = dict(
-                default = JsonDictContent,
+            clscontents=dict(
+                default=JsonDictContent,
             ),
-            nativefmt   = dict(
-                values  = ['json'],
-                default = 'json',
+            nativefmt=dict(
+                values=["json"],
+                default="json",
             ),
-        )
+        ),
     )
 
     @property
     def realkind(self):
-        return 'gridpointmap'
+        return "gridpointmap"
 
 
 class GridPointFullPos(GridPoint):
@@ -205,7 +240,7 @@ class GridPointFullPos(GridPoint):
 
     _footprint = [
         _NATIVEFMT_FULLPOS_FP,
-        dict(info='GridPoint file produced by Fullpos (with a single term)'),
+        dict(info="GridPoint file produced by Fullpos (with a single term)"),
     ]
 
     def olive_basename(self):
@@ -213,46 +248,60 @@ class GridPointFullPos(GridPoint):
 
         t = self.term.hour
         e = env.current()
-        if 'VORTEX_ANA_TERMSHIFT' not in e and self.origin == 'ana':
+        if "VORTEX_ANA_TERMSHIFT" not in e and self.origin == "ana":
             t = 0
 
         name = None
-        if self.model == 'mocage':
-            if self.origin == 'hst':
-                name = 'HM' + self.geometry.area + '+' + self.term.fmthour
-            elif self.origin == 'sumo':
-                deltastr = 'PT{!s}H'.format(self.term.hour)
+        if self.model == "mocage":
+            if self.origin == "hst":
+                name = "HM" + self.geometry.area + "+" + self.term.fmthour
+            elif self.origin == "sumo":
+                deltastr = "PT{!s}H".format(self.term.hour)
                 deltadate = self.date + deltastr
-                name = 'SM' + self.geometry.area + '_void' + '+' + deltadate.ymd
-            elif self.origin == 'interp':
-                deltastr = 'PT{!s}H'.format(self.term.hour)
+                name = (
+                    "SM" + self.geometry.area + "_void" + "+" + deltadate.ymd
+                )
+            elif self.origin == "interp":
+                deltastr = "PT{!s}H".format(self.term.hour)
                 deltadate = self.date + deltastr
-                name = 'SM' + self.geometry.area + '_interp' + '+' + deltadate.ymd
+                name = (
+                    "SM" + self.geometry.area + "_interp" + "+" + deltadate.ymd
+                )
         else:
-            name = 'PFFPOS' + self.origin.upper() + self.geometry.area + '+' + self.term.nice(t)
+            name = (
+                "PFFPOS"
+                + self.origin.upper()
+                + self.geometry.area
+                + "+"
+                + self.term.nice(t)
+            )
 
         if name is None:
-            raise ValueError('Could not build a proper olive name: {!s}'.format(self))
+            raise ValueError(
+                "Could not build a proper olive name: {!s}".format(self)
+            )
 
         return name
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
 
-        deltastr = 'PT{!s}H'.format(self.term.hour)
+        deltastr = "PT{!s}H".format(self.term.hour)
         deltadate = self.date + deltastr
 
         name = None
-        if self.origin == 'hst':
-            if self.model == 'ifs':
-                name = 'PFFPOS' + self.geometry.area + '+' + self.term.fmthour
+        if self.origin == "hst":
+            if self.model == "ifs":
+                name = "PFFPOS" + self.geometry.area + "+" + self.term.fmthour
             else:
-                name = 'HM' + self.geometry.area + '+' + deltadate.ymdh
-        elif self.origin == 'interp':
-            name = 'SM' + self.geometry.area + '+' + deltadate.ymd
+                name = "HM" + self.geometry.area + "+" + deltadate.ymdh
+        elif self.origin == "interp":
+            name = "SM" + self.geometry.area + "+" + deltadate.ymd
 
         if name is None:
-            raise ValueError('Could not build a proper archive name: {!s}'.format(self))
+            raise ValueError(
+                "Could not build a proper archive name: {!s}".format(self)
+            )
 
         return name
 
@@ -262,7 +311,7 @@ class GridPointExport(GridPoint):
 
     _footprint = [
         _NATIVEFMT_GENERIC_FP,
-        dict(info='Generic gridpoint file (with a single term)'),
+        dict(info="Generic gridpoint file (with a single term)"),
     ]
 
     def olive_basename(self):
@@ -270,39 +319,62 @@ class GridPointExport(GridPoint):
 
         t = self.term.hour
         e = env.current()
-        if 'VORTEX_ANA_TERMSHIFT' not in e and self.origin == 'ana':
+        if "VORTEX_ANA_TERMSHIFT" not in e and self.origin == "ana":
             t = 0
-        return 'GRID' + self.origin.upper() + self.geometry.area + '+' + self.term.nice(t)
+        return (
+            "GRID"
+            + self.origin.upper()
+            + self.geometry.area
+            + "+"
+            + self.term.nice(t)
+        )
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
 
         name = None
-        if re.match('aladin|arome', self.model):
-            name = 'GRID' + self.geometry.area + 'r{!s}'.format(self.date.hour) + '_' + self.term.fmthour
-        elif re.match('arp|hycom|surcotes', self.model):
-            name = '(gribfix:igakey)'
-        elif self.model == 'ifs':
-            deltastr = 'PT{!s}H'.format(self.term.hour)
+        if re.match("aladin|arome", self.model):
+            name = (
+                "GRID"
+                + self.geometry.area
+                + "r{!s}".format(self.date.hour)
+                + "_"
+                + self.term.fmthour
+            )
+        elif re.match("arp|hycom|surcotes", self.model):
+            name = "(gribfix:igakey)"
+        elif self.model == "ifs":
+            deltastr = "PT{!s}H".format(self.term.hour)
             deltadate = self.date + deltastr
-            name = 'MET' + deltadate.ymd + '.' + self.geometry.area + '.grb'
+            name = "MET" + deltadate.ymd + "." + self.geometry.area + ".grb"
 
         if name is None:
-            raise ValueError('Could not build a proper archive name: {!s}'.format(self))
+            raise ValueError(
+                "Could not build a proper archive name: {!s}".format(self)
+            )
 
         return name
 
 
 class FilteredGridPointExport(GridPointExport):
     """Generic single term gridpoint file using a standard format."""
-    _footprint = [_FILTERNAME_AWARE_FPDECO, ]
+
+    _footprint = [
+        _FILTERNAME_AWARE_FPDECO,
+    ]
 
 
 class TimePeriodGridPointExport(TimePeriodGridPoint):
     """Generic multi term gridpoint file using a standard format."""
-    _footprint = [_NATIVEFMT_GENERIC_FP, ]
+
+    _footprint = [
+        _NATIVEFMT_GENERIC_FP,
+    ]
 
 
 class FilteredTimePeriodGridPointExport(TimePeriodGridPointExport):
     """Generic multi term gridpoint file using a standard format."""
-    _footprint = [_FILTERNAME_AWARE_FPDECO, ]
+
+    _footprint = [
+        _FILTERNAME_AWARE_FPDECO,
+    ]

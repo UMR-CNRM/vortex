@@ -21,10 +21,15 @@ def update_namelist(t, rh, *completive_rh):
     touched = False
     for crh in completive_rh:
         if not isinstance(crh, (list, tuple)):
-            crh = [crh, ]
+            crh = [
+                crh,
+            ]
         for arh in crh:
-            logger.info('Merging: {!r} :\n{:s}'.format(arh.container,
-                                                       arh.contents.dumps()))
+            logger.info(
+                "Merging: {!r} :\n{:s}".format(
+                    arh.container, arh.contents.dumps()
+                )
+            )
             rh.contents.merge(arh.contents)
             touched = True
     if touched:
@@ -36,14 +41,16 @@ def concatenate(t, rh, *rhlist):
     blocksize = 32 * 1024 * 1024  # 32Mb
     rh.container.close()
     with rh.container.iod_context():
-        myfh = rh.container.iodesc(mode='ab')
+        myfh = rh.container.iodesc(mode="ab")
         for crh in rhlist:
             if not isinstance(crh, (list, tuple)):
-                crh = [crh, ]
+                crh = [
+                    crh,
+                ]
             for arh in crh:
-                logger.info('Appending %s to self.', str(arh.container))
+                logger.info("Appending %s to self.", str(arh.container))
                 with arh.container.iod_context():
-                    afh = arh.container.iodesc(mode='rb')
+                    afh = arh.container.iodesc(mode="rb")
                     stuff = afh.read(blocksize)
                     while stuff:
                         myfh.write(stuff)
@@ -64,14 +71,17 @@ def insert_cutoffs(t, rh, rh_cutoff_source, fuse_per_obstype=False):
             ValueError("The resource handler's list is empty.")
     # Get the CutoffDispenser
     import vortex.tools.listings
+
     assert vortex.tools.listings
-    if rh_cutoff_source.container.actualfmt == 'bdmbufr_listing':
+    if rh_cutoff_source.container.actualfmt == "bdmbufr_listing":
         c_disp_callback = functools.partial(
             rh_cutoff_source.contents.data.cutoffs_dispenser,
-            fuse_per_obstype=fuse_per_obstype
+            fuse_per_obstype=fuse_per_obstype,
         )
     else:
-        raise RuntimeError("Incompatible < {!s} > ressource handler".format(rh_cutoff_source))
+        raise RuntimeError(
+            "Incompatible < {!s} > ressource handler".format(rh_cutoff_source)
+        )
     # Fill the gaps in the original request
     rh.contents.add_cutoff_info(c_disp_callback())
     # Actually save the result to file
@@ -79,7 +89,6 @@ def insert_cutoffs(t, rh, rh_cutoff_source, fuse_per_obstype=False):
 
 
 def _new_static_cutoff_dispencer(base_date, cutoffs_def):
-
     def x_period(p):
         try:
             return Period(p)
@@ -89,8 +98,10 @@ def _new_static_cutoff_dispencer(base_date, cutoffs_def):
     if not isinstance(base_date, Date):
         base_date = Date(base_date)
     if isinstance(cutoffs_def, collections.abc.Mapping):
-        cutoffs_def = {(k if isinstance(k, Period) else x_period(k)): v
-                       for k, v in cutoffs_def.items()}
+        cutoffs_def = {
+            (k if isinstance(k, Period) else x_period(k)): v
+            for k, v in cutoffs_def.items()
+        }
         cutoffs = {base_date + k: v for k, v in cutoffs_def.items()}
         c_disp = StaticCutoffDispenser(max(cutoffs.keys()), cutoffs)
     else:
@@ -110,19 +121,19 @@ def insert_static_cutoffs(t, rh, base_date, cutoffs_def):
                         associates a cutoff with a list of `obstypes`.
     """
     # Fill the gaps in the original request
-    rh.contents.add_cutoff_info(_new_static_cutoff_dispencer(base_date, cutoffs_def))
+    rh.contents.add_cutoff_info(
+        _new_static_cutoff_dispencer(base_date, cutoffs_def)
+    )
     # Actually save the result to files
     rh.save()
 
 
 def arpifs_obs_error_correl_legacy2oops(t, rh):
     """Convert a constant file that contains observation errors correlations."""
-    if rh.resource.realkind != 'correlations':
-        raise ValueError('Incompatible resource: {!s}'.format(rh))
+    if rh.resource.realkind != "correlations":
+        raise ValueError("Incompatible resource: {!s}".format(rh))
     if rh.contents[0].startswith("SIGMAO"):
         logger.warning("Non conversion is needed...")
     else:
-        rh.contents[:0] = ["SIGMAO unused\n",
-                           "1 1.2\n",
-                           "CORRELATIONS\n"]
+        rh.contents[:0] = ["SIGMAO unused\n", "1 1.2\n", "CORRELATIONS\n"]
         rh.save()

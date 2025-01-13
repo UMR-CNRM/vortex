@@ -26,6 +26,7 @@ logger = loggers.getLogger(__name__)
 
 class DataContentError(ValueError):
     """General content error."""
+
     pass
 
 
@@ -40,12 +41,12 @@ class DataContent:
         self._metadata = ReadOnlyDict()
         self._size = 0
         for k, v in kw.items():
-            self.__dict__['_' + k] = v
+            self.__dict__["_" + k] = v
 
     @secure_getattr
     def __getattr__(self, attr):
         """Forward get attribute request to internal data object."""
-        if attr not in ('__getstate__', '__deepcopy__'):
+        if attr not in ("__getstate__", "__deepcopy__"):
             return getattr(self.data, attr)
         else:
             raise AttributeError(attr)
@@ -83,8 +84,10 @@ class DataContent:
         one hour before the date specified in the resource's footprint.
         """
         if not len(self.metadata):
-            logger.error('Metadata check is not implemented for this format. ' +
-                         'The check will always succeed...')
+            logger.error(
+                "Metadata check is not implemented for this format. "
+                + "The check will always succeed..."
+            )
         delta = delta or {}
         outcome = True
         for mkey, mval in self.metadata.items():
@@ -94,8 +97,10 @@ class DataContent:
                     cval += delta[mkey]
                 outcome = outcome and cval == mval
         if not outcome:
-            logger.warning("The ressource in the container doesn't match the resource footprint: %s",
-                           str(self.metadata))
+            logger.warning(
+                "The ressource in the container doesn't match the resource footprint: %s",
+                str(self.metadata),
+            )
         return outcome
 
     @property
@@ -119,7 +124,9 @@ class DataContent:
     def _merge_checkclass(self, *kargs):
         """Utility method to check that all the kargs objects are compatible self."""
         if not all([isinstance(obj, self.__class__) for obj in kargs]):
-            raise DataContentError("The object's types are not compatible with self")
+            raise DataContentError(
+                "The object's types are not compatible with self"
+            )
 
     def merge(self, *kargs):
         """Merge several DataContents into one.
@@ -137,7 +144,9 @@ class DataContent:
     def diff(self, ref):
         """Compare the present content with the ``ref`` content."""
         if not self.is_diffable():
-            raise NotImplementedError("Diff is not implemented for this content")
+            raise NotImplementedError(
+                "Diff is not implemented for this content"
+            )
         else:
             return self._actual_diff(ref)
 
@@ -152,6 +161,7 @@ class DataContent:
 
 class UnknownContent(DataContent):
     """Fake DataContent subclass."""
+
     pass
 
 
@@ -221,7 +231,13 @@ class IndexedTable(AlmostDictContent):
         """Get data from the ``container``."""
         with container.preferred_decoding(byte=False):
             container.rewind()
-            self.extend([x.split() for x in container.readlines() if not x.startswith('#')])
+            self.extend(
+                [
+                    x.split()
+                    for x in container.readlines()
+                    if not x.startswith("#")
+                ]
+            )
             self._size = container.totalsize
 
 
@@ -232,7 +248,7 @@ class JsonDictContent(AlmostDictContent):
 
     def __init__(self, **kw):
         self._bronx_tpl = None
-        super().__init__(** kw)
+        super().__init__(**kw)
 
     def slurp(self, container):
         """Get data from the ``container``."""
@@ -275,7 +291,7 @@ class AlmostListContent(DataContent):
     _diffable = True
 
     def __init__(self, **kw):
-        self._maxprint = kw.pop('maxprint', 20)
+        self._maxprint = kw.pop("maxprint", 20)
         super().__init__(**kw)
         if self._data is None:
             self._data = list()
@@ -346,7 +362,7 @@ class AlmostListContent(DataContent):
 
     def merge(self, *kargs, **kwargs):
         """Merge several data contents into one."""
-        unique = kwargs.get('unique', False)
+        unique = kwargs.get("unique", False)
         self._merge_checkclass(*kargs)
         for obj in kargs:
             self.data.extend(obj.data)
@@ -354,12 +370,18 @@ class AlmostListContent(DataContent):
         # Check if the item are unique, raise an error if not (option unique = True)
         if unique:
             arg_elements = collections.Counter(self.data)
-            repeated_elements = [element for element, count in arg_elements.items() if count > 1]
+            repeated_elements = [
+                element for element, count in arg_elements.items() if count > 1
+            ]
             if len(repeated_elements) > 0:
-                logger.exception('Repeated argument are present. It should not. Stop.' +
-                                 'The list of the repeated elements follows: %s',
-                                 str(sorted(repeated_elements)))
-                raise DataContentError('Repeated argument are present. It should not.')
+                logger.exception(
+                    "Repeated argument are present. It should not. Stop."
+                    + "The list of the repeated elements follows: %s",
+                    str(sorted(repeated_elements)),
+                )
+                raise DataContentError(
+                    "Repeated argument are present. It should not."
+                )
 
 
 class TextContent(AlmostListContent):
@@ -369,25 +391,27 @@ class TextContent(AlmostListContent):
     """
 
     def __init__(self, **kw):
-        kw.setdefault('fmt', None)
+        kw.setdefault("fmt", None)
         super().__init__(**kw)
 
     def __str__(self):
         if len(self) > self.maxprint:
-            catlist = self[0:3] + ['...'] + self[-3:]
+            catlist = self[0:3] + ["..."] + self[-3:]
         else:
             catlist = self[:]
-        return '\n'.join([str(x) for x in catlist])
+        return "\n".join([str(x) for x in catlist])
 
     def slurp(self, container):
         with container.preferred_decoding(byte=False):
-            self._data.extend([x.split() for x in container if not x.startswith('#')])
+            self._data.extend(
+                [x.split() for x in container if not x.startswith("#")]
+            )
             self._size = container.totalsize
 
     def formatted_data(self, item):
         """Return a formatted string according to optional internal fmt."""
         if self._fmt is None:
-            return ' '.join([str(x) for x in item])
+            return " ".join([str(x) for x in item])
         else:
             return self._fmt.format(*item)
 
@@ -397,7 +421,7 @@ class TextContent(AlmostListContent):
         with container.iod_context():
             with container.preferred_decoding(byte=False):
                 for item in self:
-                    container.write(self.formatted_data(item) + '\n')
+                    container.write(self.formatted_data(item) + "\n")
 
 
 class DataRaw(AlmostListContent):
@@ -459,7 +483,7 @@ class FormatAdapter(DataContent):
     def __init__(self, **kw):
         super().__init__(**kw)
         if self._data is None and footprints.proxy.dataformats is None:
-            logger.warning('No collector for data formats')
+            logger.warning("No collector for data formats")
             self._datafmt = None
 
     def __enter__(self):
@@ -469,7 +493,7 @@ class FormatAdapter(DataContent):
         """
         t = sessions.current()
         t.env.delta(
-            LFI_HNDL_SPEC=':1',
+            LFI_HNDL_SPEC=":1",
             DR_HOOK_SILENT=1,
             DR_HOOK_NOT_MPI=1,
             OMP_NUM_THREADS=1,
@@ -487,12 +511,15 @@ class FormatAdapter(DataContent):
             with self:
                 self._data = footprints.proxy.dataformat(
                     filename=container.abspath,
-                    openmode='r',
+                    openmode="r",
                     fmtdelayedopen=True,
                     format=container.actualfmt.upper(),
                 )
                 # Look for a metadatareader object
-                if self._data is not None and footprints.proxy.metadatareaders is not None:
+                if (
+                    self._data is not None
+                    and footprints.proxy.metadatareaders is not None
+                ):
                     mreader = footprints.proxy.metadatareader(
                         format=container.actualfmt.upper(),
                         _emptywarning=False,
@@ -511,14 +538,14 @@ class MetaDataReader(footprints.FootprintBase):
     """
 
     _abstract = True
-    _collector = ('metadatareader',)
+    _collector = ("metadatareader",)
     _footprint = dict(
-        info = 'Abstract MetaDataReader',
-        attr = dict(
-            format = dict(
-                type     = str,
+        info="Abstract MetaDataReader",
+        attr=dict(
+            format=dict(
+                type=str,
             )
-        )
+        ),
     )
 
     def __init__(self, *kargs, **kwargs):
@@ -557,7 +584,7 @@ class MetaDataReader(footprints.FootprintBase):
 
     def __repr__(self):
         if self._datahide is None:
-            return '{}: Not yet initialised'.format(self.__class__)
+            return "{}: Not yet initialised".format(self.__class__)
         else:
             return repr(self._data)
 
@@ -572,7 +599,7 @@ class FormatAdapterAbstractImplementation(footprints.FootprintBase):
     """
 
     _abstract = True
-    _collector = ('dataformat',)
+    _collector = ("dataformat",)
     _footprint = dict(
         attr=dict(
             filename=dict(
@@ -580,8 +607,8 @@ class FormatAdapterAbstractImplementation(footprints.FootprintBase):
             ),
             openmode=dict(
                 info="File open-mode.",
-                values=['r', 'rw'],
-                default='r',
+                values=["r", "rw"],
+                default="r",
                 optional=True,
             ),
             fmtdelayedopen=dict(
@@ -590,7 +617,6 @@ class FormatAdapterAbstractImplementation(footprints.FootprintBase):
                 default=True,
                 optional=True,
             ),
-            format=dict(
-            ),
+            format=dict(),
         )
     )

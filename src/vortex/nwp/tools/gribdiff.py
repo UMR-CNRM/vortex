@@ -18,7 +18,7 @@ class _GRIBDIFF_Plus_St:
         self._result = result
 
     def __str__(self):
-        return '{:s} | rc={:d}>'.format(repr(self).rstrip('>'), self.rc)
+        return "{:s} | rc={:d}>".format(repr(self).rstrip(">"), self.rc)
 
     @property
     def result(self):
@@ -38,8 +38,9 @@ class _GRIBDIFF_Plus_Res:
         self._epydiff_res = epydiff_res
 
     def __str__(self):
-        return ('{0:s} | gribapi_rc={1:d} epydiff_done={2:d}>'.
-                format(repr(self).rstrip('>'), self._gapi, self._epydiff))
+        return "{0:s} | gribapi_rc={1:d} epydiff_done={2:d}>".format(
+            repr(self).rstrip(">"), self._gapi, self._epydiff
+        )
 
     def differences(self):
         """Print detailed informations about the diff."""
@@ -52,17 +53,17 @@ class GRIBDIFF_Plus(GRIBAPI_Tool):
     """
 
     _footprint = dict(
-        info = 'Default GRIBAPI system interface',
-        attr = dict(
-            maxepydiff = dict(
-                info = 'Epygram diffs are costfull, they will run only maxepydiff times',
-                type = int,
-                default = 2,
-                optional = True,
+        info="Default GRIBAPI system interface",
+        attr=dict(
+            maxepydiff=dict(
+                info="Epygram diffs are costfull, they will run only maxepydiff times",
+                type=int,
+                default=2,
+                optional=True,
             ),
         ),
-        priority = dict(
-            level = footprints.priorities.top.TOOLBOX  # @UndefinedVariable
+        priority=dict(
+            level=footprints.priorities.top.TOOLBOX  # @UndefinedVariable
         ),
     )
 
@@ -76,10 +77,12 @@ class GRIBDIFF_Plus(GRIBAPI_Tool):
         if not rc:
             if self._epyavail is None:
                 from ..util.usepygram import epygram_checker
-                self._epyavail = epygram_checker.is_available(version='1.0.0')
+
+                self._epyavail = epygram_checker.is_available(version="1.0.0")
             if self._epyavail:
                 if self._epycount < self.maxepydiff:
                     from ..util.diffpygram import EpyGribDiff
+
                     gdiff = EpyGribDiff(grib2, grib1)  # Ref file is first...
                     self._epycount += 1
                     res = _GRIBDIFF_Plus_Res(rc, True, str(gdiff))
@@ -88,12 +91,14 @@ class GRIBDIFF_Plus(GRIBAPI_Tool):
                         outfh.write(gdiff.format_diff(detailed=True))
                 else:
                     res = _GRIBDIFF_Plus_Res(
-                        rc, False,
-                        "grib_compare failed (but the Epygram diffs max number is exceeded...)"
+                        rc,
+                        False,
+                        "grib_compare failed (but the Epygram diffs max number is exceeded...)",
                     )
             else:
-                res = _GRIBDIFF_Plus_Res(rc, False,
-                                         "grib_compare failed (Epygram unavailable)")
+                res = _GRIBDIFF_Plus_Res(
+                    rc, False, "grib_compare failed (Epygram unavailable)"
+                )
         else:
             res = _GRIBDIFF_Plus_Res(rc, False, "")
         return _GRIBDIFF_Plus_St(rc, res)

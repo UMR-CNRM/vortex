@@ -16,7 +16,9 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-@namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
+@namebuilding_insert(
+    "geo", lambda s: s._geo2basename_info(add_stretching=False)
+)
 class RawFiles(GeoFlowResource):
     """Input files for wavelet covariances estimation. To be removed soon."""
 
@@ -24,23 +26,21 @@ class RawFiles(GeoFlowResource):
         term_deco,
         gvar,
         dict(
-            info = 'Input files for wavelet covariances estimation',
-            attr = dict(
-                kind = dict(
-                    values   = ['rawfiles'],
+            info="Input files for wavelet covariances estimation",
+            attr=dict(
+                kind=dict(
+                    values=["rawfiles"],
                 ),
-                nativefmt   = dict(
-                    values  = ['rawfiles', 'unknown'],
+                nativefmt=dict(
+                    values=["rawfiles", "unknown"],
                 ),
-                gvar = dict(
-                    default = 'aearp_rawfiles_t[geometry:truncation]'
+                gvar=dict(default="aearp_rawfiles_t[geometry:truncation]"),
+                ipert=dict(
+                    type=int,
+                    optional=True,
                 ),
-                ipert = dict(
-                    type = int,
-                    optional = True,
-                ),
-            )
-        )
+            ),
+        ),
     ]
 
     @property
@@ -49,7 +49,9 @@ class RawFiles(GeoFlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'RAWFILEP(memberfix:member)+{:s}.{:d}'.format(self.term.fmthour, self.geometry.truncation)
+        return "RAWFILEP(memberfix:member)+{:s}.{:d}".format(
+            self.term.fmthour, self.geometry.truncation
+        )
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -58,11 +60,13 @@ class RawFiles(GeoFlowResource):
     def gget_basename(self):
         """GGET specific naming convention."""
         if self.ipert is None:
-            raise ValueError('ipert is mandatory with the GCO provider')
-        return dict(suffix='.{:03d}.tar'.format(self.ipert))
+            raise ValueError("ipert is mandatory with the GCO provider")
+        return dict(suffix=".{:03d}.tar".format(self.ipert))
 
 
-@namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
+@namebuilding_insert(
+    "geo", lambda s: s._geo2basename_info(add_stretching=False)
+)
 class RandBFiles(GeoFlowResource):
     """Input files for wavelet covariances estimation."""
 
@@ -70,33 +74,33 @@ class RandBFiles(GeoFlowResource):
         term_deco,
         gvar,
         dict(
-            info = 'Input files for wavelet covariances estimation',
-            attr = dict(
-                kind = dict(
-                    values   = ['randbfiles', 'famembers'],
-                    remap    = dict(autoremap = 'first')
+            info="Input files for wavelet covariances estimation",
+            attr=dict(
+                kind=dict(
+                    values=["randbfiles", "famembers"],
+                    remap=dict(autoremap="first"),
                 ),
-                nativefmt   = dict(
-                    values  = ['fa', 'unknown'],
+                nativefmt=dict(
+                    values=["fa", "unknown"],
                 ),
-                gvar = dict(
-                    default = 'aearp_randb_t[geometry:truncation]'
+                gvar=dict(default="aearp_randb_t[geometry:truncation]"),
+                ipert=dict(
+                    type=int,
+                    optional=True,
                 ),
-                ipert = dict(
-                    type = int,
-                    optional = True,
-                ),
-            )
-        )
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'randbfiles'
+        return "randbfiles"
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'famember(memberfix:member)+{:s}.{:d}'.format(self.term.fmthour, self.geometry.truncation)
+        return "famember(memberfix:member)+{:s}.{:d}".format(
+            self.term.fmthour, self.geometry.truncation
+        )
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -105,8 +109,8 @@ class RandBFiles(GeoFlowResource):
     def gget_basename(self):
         """GGET specific naming convention."""
         if self.ipert is None:
-            raise ValueError('ipert is mandatory with the GCO provider')
-        return dict(suffix='.{:03d}.{}'.format(self.ipert, 'fa'))
+            raise ValueError("ipert is mandatory with the GCO provider")
+        return dict(suffix=".{:03d}.{}".format(self.ipert, "fa"))
 
 
 class InflationFactor(_BackgroundErrorInfo):
@@ -115,29 +119,24 @@ class InflationFactor(_BackgroundErrorInfo):
     """
 
     _footprint = dict(
-        info='Inflation factor profiles',
+        info="Inflation factor profiles",
         attr=dict(
             kind=dict(
-                values=['infl_factor', 'infl', 'inflation_factor'],
-                remap=dict(autoremap='first'),
+                values=["infl_factor", "infl", "inflation_factor"],
+                remap=dict(autoremap="first"),
             ),
-            gvar = dict(
-                default = 'inflation_factor'
-            ),
+            gvar=dict(default="inflation_factor"),
             nativefmt=dict(
-                values=['ascii'],
-                default='ascii',
+                values=["ascii"],
+                default="ascii",
             ),
-            term=dict(
-                optional=True,
-                default=3
-            ),
+            term=dict(optional=True, default=3),
         ),
     )
 
     @property
     def realkind(self):
-        return 'inflation_factor'
+        return "inflation_factor"
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""

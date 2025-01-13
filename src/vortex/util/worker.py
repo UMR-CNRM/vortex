@@ -47,12 +47,14 @@ class VortexWorker:
     See :mod:`vortex.gloves`.
     """
 
-    _PRIVATESESSION_TAG = 'asyncworker_view'
-    _PRIVATEGLOVE_TAG = 'asyncworker_id'
+    _PRIVATESESSION_TAG = "asyncworker_view"
+    _PRIVATEGLOVE_TAG = "asyncworker_id"
     _PRIVATESESSION = None
     _PRIVATEMODULES = set()
 
-    def __init__(self, modules=tuple(), verbose=False, logger=None, profile=None):
+    def __init__(
+        self, modules=tuple(), verbose=False, logger=None, profile=None
+    ):
         self._logger = logger
         self._modules = modules
         self._context_lock = False
@@ -74,21 +76,22 @@ class VortexWorker:
         """The session associated with Async Worker."""
         if self._PRIVATESESSION is None:
             import vortex
+
             t = vortex.sessions.get(
                 tag=self._PRIVATESESSION_TAG,
                 glove=vortex.sessions.getglove(
-                    tag=self._PRIVATEGLOVE_TAG,
-                    profile=self.profile
-                )
+                    tag=self._PRIVATEGLOVE_TAG, profile=self.profile
+                ),
             )
             sh = t.system()
             import vortex.tools.lfi  # @UnusedImport
             import vortex.tools.grib  # @UnusedImport
             import vortex.tools.folder  # @UnusedImport
             import footprints as fp
-            fp.proxy.addon(kind='lfi', shell=sh)
-            fp.proxy.addon(kind='grib', shell=sh)
-            fp.proxy.addon(kind='allfolders', shell=sh, verboseload=False)
+
+            fp.proxy.addon(kind="lfi", shell=sh)
+            fp.proxy.addon(kind="grib", shell=sh)
+            fp.proxy.addon(kind="allfolders", shell=sh, verboseload=False)
             self._PRIVATESESSION = t
         return self._PRIVATESESSION
 
@@ -100,8 +103,8 @@ class VortexWorker:
         if not self.verbose:
             # footprints & bronx can be very talkative... we try to limit that !
             global_level = logger.getEffectiveLevel()
-            f_logger = loggers.getLogger('footprints')
-            b_logger = loggers.getLogger('bronx')
+            f_logger = loggers.getLogger("footprints")
+            b_logger = loggers.getLogger("bronx")
             if global_level <= logging.INFO and not self.verbose:
                 f_logger.setLevel(logging.INFO)
                 b_logger.setLevel(logging.INFO)
@@ -111,7 +114,9 @@ class VortexWorker:
 
     def __enter__(self, *args):
         if self._context_lock:
-            raise RuntimeError('Imbricated context manager calls are forbidden.')
+            raise RuntimeError(
+                "Imbricated context manager calls are forbidden."
+            )
         self._context_lock = True
         if self.logger is None:
             self._logger = logger
@@ -119,6 +124,7 @@ class VortexWorker:
             self.reset_loggers(self.logger)
         # Activate our own session
         import vortex
+
         self._context_prev_ticket = vortex.sessions.current()
         if not self.session.active:
             self.session.activate()
@@ -128,23 +134,29 @@ class VortexWorker:
                 self.session.sh.import_module(modname)
                 self._PRIVATEMODULES.add(modname)
         # Ok, let's talk...
-        self.logger.info('VORTEX enter glove_profile=%s ', self.session.glove.profile)
-        self.logger.debug('       modules=%s addons=%s', self.modules, self.session.sh.loaded_addons())
+        self.logger.info(
+            "VORTEX enter glove_profile=%s ", self.session.glove.profile
+        )
+        self.logger.debug(
+            "       modules=%s addons=%s",
+            self.modules,
+            self.session.sh.loaded_addons(),
+        )
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         """Well... nothing much to do..."""
         if exc_value is not None:
-            self.logger.critical('VORTEX exits on error', exc_info=exc_value)
+            self.logger.critical("VORTEX exits on error", exc_info=exc_value)
             self.rc = False
         else:
-            self.logger.debug('VORTEX exits nicely.')
+            self.logger.debug("VORTEX exits nicely.")
         self._context_prev_ticket.activate()
         self._context_lock = False
         return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
 
     doctest.testmod(verbose=False)

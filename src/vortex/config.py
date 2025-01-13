@@ -2,6 +2,7 @@
 the value of configuration options, respectively.
 
 """
+
 import tomli
 
 from bronx.fancies import loggers
@@ -38,21 +39,15 @@ def load_config(configpath="vortex.toml"):
     global VORTEX_CONFIG
     try:
         with open(configpath, "rb") as f:
-             VORTEX_CONFIG = tomli.load(f)
+            VORTEX_CONFIG = tomli.load(f)
         print(f"Successfully read configuration file {configpath}")
     except FileNotFoundError:
-        print(
-            f"Could not read configuration file {configpath}"
-            " (not found)."
-        )
-        print(
-            "Use load_config(/path/to/config) to update the configuration"
-        )
+        print(f"Could not read configuration file {configpath} (not found).")
+        print("Use load_config(/path/to/config) to update the configuration")
 
 
 def print_config():
-    """Print configuration (key, value) pairs
-    """
+    """Print configuration (key, value) pairs"""
     if VORTEX_CONFIG:
         for k, v in VORTEX_CONFIG:
             print(k.upper(), v)
@@ -68,16 +63,18 @@ def from_config(section, key=None):
         subconfig = VORTEX_CONFIG[section]
     except KeyError as e:
         print(f"Could not find section {section} in configuration")
-        raise(e)
+        raise (e)
 
     if not key:
         return subconfig
 
     try:
         value = subconfig[key]
-    except KeyError as e :
-        print(f"Could not find key {key} in section {section} of configuration")
-        raise(e)
+    except KeyError as e:
+        print(
+            f"Could not find key {key} in section {section} of configuration"
+        )
+        raise (e)
     return value
 
 
@@ -87,9 +84,7 @@ def set_config(section, key, value):
     if section not in VORTEX_CONFIG.keys():
         VORTEX_CONFIG[section] = {}
     if key in VORTEX_CONFIG[section]:
-        logger.warning(
-            f"Updating existing configuration {section}:{key}"
-        )
+        logger.warning(f"Updating existing configuration {section}:{key}")
     VORTEX_CONFIG[section][key] = value
 
 
@@ -108,7 +103,6 @@ def is_defined(section, key=None):
 
 
 def get_from_config_w_default(section, key, default):
-    logger.info(f"Reading config value {section}.{key}")
     try:
         return from_config(section, key)
     except KeyError:

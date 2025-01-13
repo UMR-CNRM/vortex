@@ -25,7 +25,7 @@ __all__ = []
 
 logger = loggers.getLogger(__name__)
 
-_RE_AUTO_TPL = re.compile(r'^@(([^/].*)\.tpl)$')
+_RE_AUTO_TPL = re.compile(r"^@(([^/].*)\.tpl)$")
 
 _RE_ENCODING = re.compile(r"^\s*#.*?coding[=:]\s*([-\w.]+)")
 
@@ -70,7 +70,7 @@ class AbstractTemplatingAdapter(metaclass=abc.ABCMeta):
         for m in kargs:
             todo.update(m)
         todo.update(kwargs)
-        return self(** todo)
+        return self(**todo)
 
     safe_substitute = substitute
 
@@ -86,7 +86,7 @@ class LegacyTemplatingAdapter(AbstractTemplatingAdapter):
     See :class:`AbstractTemplatingAdapter` for more details on this class usage.
     """
 
-    KIND = 'legacy'
+    KIND = "legacy"
 
     def _rendering_tool_init(self, tpl_str):
         return string.Template(tpl_str)
@@ -108,7 +108,7 @@ class TwoPassLegacyTemplatingAdapter(AbstractTemplatingAdapter):
     See :class:`AbstractTemplatingAdapter` for more details on this class usage.
     """
 
-    KIND = 'twopasslegacy'
+    KIND = "twopasslegacy"
 
     def _rendering_tool_init(self, tpl_str):
         return string.Template(tpl_str)
@@ -121,7 +121,9 @@ class TwoPassLegacyTemplatingAdapter(AbstractTemplatingAdapter):
 
     def __call__(self, **kwargs):
         """Render the template using the kwargs dictionary."""
-        return string.Template(self._tpl_obj.substitute(kwargs)).substitute(kwargs)
+        return string.Template(self._tpl_obj.substitute(kwargs)).substitute(
+            kwargs
+        )
 
 
 class Jinja2TemplatingAdapter(AbstractTemplatingAdapter):
@@ -133,32 +135,46 @@ class Jinja2TemplatingAdapter(AbstractTemplatingAdapter):
     See :class:`AbstractTemplatingAdapter` for more details on this class usage.
     """
 
-    KIND = 'jinja2'
+    KIND = "jinja2"
 
     @contextlib.contextmanager
     def _elaborate_on_jinja2_error(self):
         import jinja2
+
         try:
             yield
         except jinja2.exceptions.TemplateError as e:
             if isinstance(e, jinja2.exceptions.TemplateSyntaxError):
-                logger.error("%s exception while processing Jinja2 templates:\n" +
-                             "  Toplevel template file: %s\n"
-                             "  Jinja2 template info  : %s (line %d)\n" +
-                             "  Jinja2 error message  : %s",
-                             e.__class__, self._tpl_file, e.name, e.lineno, e.message)
+                logger.error(
+                    "%s exception while processing Jinja2 templates:\n"
+                    + "  Toplevel template file: %s\n"
+                    "  Jinja2 template info  : %s (line %d)\n"
+                    + "  Jinja2 error message  : %s",
+                    e.__class__,
+                    self._tpl_file,
+                    e.name,
+                    e.lineno,
+                    e.message,
+                )
             else:
-                logger.error("%s exception while processing Jinja2 templates:\n" +
-                             "  Toplevel template file: %s",
-                             e.__class__, self._tpl_file)
+                logger.error(
+                    "%s exception while processing Jinja2 templates:\n"
+                    + "  Toplevel template file: %s",
+                    e.__class__,
+                    self._tpl_file,
+                )
             raise
 
     def _rendering_tool_init(self, tpl_str):
         import jinja2
-        loader = jinja2.FileSystemLoader(
-            self._tpl_dirs,
-            encoding=self._tpl_encoding,
-            followlinks=True) if self._tpl_dirs else None
+
+        loader = (
+            jinja2.FileSystemLoader(
+                self._tpl_dirs, encoding=self._tpl_encoding, followlinks=True
+            )
+            if self._tpl_dirs
+            else None
+        )
         j_env = jinja2.Environment(loader=loader, autoescape=False)
         with self._elaborate_on_jinja2_error():
             return j_env.from_string(tpl_str)
@@ -169,7 +185,9 @@ class Jinja2TemplatingAdapter(AbstractTemplatingAdapter):
             return self._tpl_obj.render(kwargs)
 
 
-def load_template(t, tplfile, encoding=None, version=None, default_templating='legacy'):
+def load_template(
+    t, tplfile, encoding=None, version=None, default_templating="legacy"
+):
     """Load a template according to *tplfile*.
 
 
@@ -208,8 +226,8 @@ def load_template(t, tplfile, encoding=None, version=None, default_templating='l
     * ``twopasslegacy``: see :class:`TwoPassLegacyTemplatingAdapter`
     * ``jinja2``: see :class:`Jinja2TemplatingAdapter`
     """
-    persodir = t.sh.path.join(t.glove.configrc, 'templates')
-    sitedir = t.sh.path.join(t.glove.siteroot, 'templates')
+    persodir = t.sh.path.join(t.glove.configrc, "templates")
+    sitedir = t.sh.path.join(t.glove.siteroot, "templates")
     with importlib.resources.as_file(
         importlib.resources.files("vortex.algo")
     ) as path:
@@ -220,7 +238,7 @@ def load_template(t, tplfile, encoding=None, version=None, default_templating='l
         if t.sh.path.exists(tplfile):
             tplfile = t.sh.path.abspath(tplfile)
         else:
-            raise ValueError('Template file not found: <{}>'.format(tplfile))
+            raise ValueError("Template file not found: <{}>".format(tplfile))
     else:
         searchdirs = (persodir, pkgdir, sitedir)
         new_tplfile = None
@@ -238,7 +256,7 @@ def load_template(t, tplfile, encoding=None, version=None, default_templating='l
                 persodir = t.sh.path.join(persodir, autodir)
                 sitedir = t.sh.path.join(sitedir, sitedir)
                 autofile = t.sh.path.basename(autofile)
-            allowedre = re.compile(autofile + r'-v(\d+).tpl')
+            allowedre = re.compile(autofile + r"-v(\d+).tpl")
             alloweditems = dict()
             for inputdir in (sitedir, persodir):
                 if not t.sh.path.exists(inputdir):
@@ -246,29 +264,34 @@ def load_template(t, tplfile, encoding=None, version=None, default_templating='l
                 for fs_item in t.sh.listdir(inputdir):
                     fs_match = allowedre.match(fs_item)
                     if fs_match:
-                        alloweditems[int(fs_match.group(1))] = t.sh.path.join(inputdir, fs_item)
+                        alloweditems[int(fs_match.group(1))] = t.sh.path.join(
+                            inputdir, fs_item
+                        )
             for item_version in sorted(alloweditems.keys(), reverse=True):
                 if item_version <= version:
                     new_tplfile = alloweditems[item_version]
                     break
         if not new_tplfile:
-            raise ValueError('Template file not found: <{}> with version >= {!s}.'
-                             .format(tplfile, version))
+            raise ValueError(
+                "Template file not found: <{}> with version >= {!s}.".format(
+                    tplfile, version
+                )
+            )
         else:
             tplfile = new_tplfile
     try:
         ignored_lines = set()
-        actual_encoding = None if encoding == 'script' else encoding
+        actual_encoding = None if encoding == "script" else encoding
         actual_templating = default_templating
         # To determine the encoding & templating open the file with the default
         # encoding (ignoring decoding errors) and look for comments
-        with open(tplfile, errors='replace') as tpfld_tmp:
+        with open(tplfile, errors="replace") as tpfld_tmp:
             if encoding is None:
                 actual_encoding = tpfld_tmp.encoding
             # Only inspect the first 10 lines
             for iline, line in enumerate(itertools.islice(tpfld_tmp, 10)):
                 # Encoding
-                if encoding == 'script':
+                if encoding == "script":
                     encoding_match = _RE_ENCODING.match(line)
                     if encoding_match:
                         ignored_lines.add(iline)
@@ -279,22 +302,36 @@ def load_template(t, tplfile, encoding=None, version=None, default_templating='l
                     ignored_lines.add(iline)
                     actual_templating = templating_match.group(1)
         # Read the template and delete the encoding line if present
-        logger.debug('Opening %s with encoding %s', tplfile, str(actual_encoding))
+        logger.debug(
+            "Opening %s with encoding %s", tplfile, str(actual_encoding)
+        )
         with open(tplfile, encoding=actual_encoding) as tpfld:
-            tpl_txt = "".join([l for (i, l) in enumerate(tpfld)
-                               if i not in ignored_lines])
+            tpl_txt = "".join(
+                [l for (i, l) in enumerate(tpfld) if i not in ignored_lines]
+            )
 
-        template_rendering_classes = {cls.KIND: cls for cls in globals().values()
-                                      if (isinstance(cls, type) and
-                                          issubclass(cls, AbstractTemplatingAdapter) and
-                                          cls.KIND)}
+        template_rendering_classes = {
+            cls.KIND: cls
+            for cls in globals().values()
+            if (
+                isinstance(cls, type)
+                and issubclass(cls, AbstractTemplatingAdapter)
+                and cls.KIND
+            )
+        }
         try:
-            template_rendering_cls = template_rendering_classes[actual_templating]
+            template_rendering_cls = template_rendering_classes[
+                actual_templating
+            ]
         except KeyError:
-            raise ValueError('Unknown templating system < {:s} >'.format(actual_templating))
-        tpl = template_rendering_cls(tpl_txt, tplfile, actual_encoding, searchdirs)
+            raise ValueError(
+                "Unknown templating system < {:s} >".format(actual_templating)
+            )
+        tpl = template_rendering_cls(
+            tpl_txt, tplfile, actual_encoding, searchdirs
+        )
     except Exception as pb:
-        logger.error('Could not read template <%s>', str(pb))
+        logger.error("Could not read template <%s>", str(pb))
         raise
     return tpl
 
@@ -324,10 +361,17 @@ class GenericReadOnlyConfigParser:
         documentation for more details.
     """
 
-    _RE_AUTO_SETFILE = re.compile(r'^@([^/]+\.ini)$')
+    _RE_AUTO_SETFILE = re.compile(r"^@([^/]+\.ini)$")
 
-    def __init__(self, inifile=None, parser=None, mkforce=False,
-                 clsparser=_DEFAULT_CONFIG_PARSER, encoding=None, defaultinifile=None):
+    def __init__(
+        self,
+        inifile=None,
+        parser=None,
+        mkforce=False,
+        clsparser=_DEFAULT_CONFIG_PARSER,
+        encoding=None,
+        defaultinifile=None,
+    ):
         self.parser = parser
         self.mkforce = mkforce
         self.clsparser = clsparser
@@ -345,7 +389,7 @@ class GenericReadOnlyConfigParser:
 
     def as_dump(self):
         """Return a nicely formated class name for dump in footprint."""
-        return 'file={!s}'.format(self.file)
+        return "file={!s}".format(self.file)
 
     def setfile(self, inifile, encoding=None):
         """Read the specified **inifile** as new configuration.
@@ -387,12 +431,16 @@ class GenericReadOnlyConfigParser:
         glove = sessions.current().glove
         if not isinstance(inifile, str):
             if self.defaultinifile:
-                sitedefaultinifile = glove.siteconf + '/' + self.defaultinifile
+                sitedefaultinifile = glove.siteconf + "/" + self.defaultinifile
                 if local.path.exists(sitedefaultinifile):
                     with open(sitedefaultinifile, encoding=encoding) as a_fh:
                         self.parser.read_file(a_fh)
                 else:
-                    raise ValueError('Configuration file ' + sitedefaultinifile + ' not found')
+                    raise ValueError(
+                        "Configuration file "
+                        + sitedefaultinifile
+                        + " not found"
+                    )
             # Assume it's an IO descriptor
             inifile.seek(0)
             self.parser.read_file(inifile)
@@ -406,11 +454,13 @@ class GenericReadOnlyConfigParser:
                 if local.path.exists(inifile):
                     filestack.append(local.path.abspath(inifile))
                 else:
-                    raise ValueError('Configuration file ' + inifile + ' not found')
+                    raise ValueError(
+                        "Configuration file " + inifile + " not found"
+                    )
             else:
                 autofile = autofile.group(1)
-                sitefile = glove.siteconf + '/' + autofile
-                persofile = glove.configrc + '/' + autofile
+                sitefile = glove.siteconf + "/" + autofile
+                persofile = glove.configrc + "/" + autofile
                 if local.path.exists(sitefile):
                     filestack.append(sitefile)
                 if local.path.exists(persofile):
@@ -421,14 +471,20 @@ class GenericReadOnlyConfigParser:
                         local.filecocoon(persofile)
                         local.touch(persofile)
                     else:
-                        raise ValueError('Configuration file ' + inifile + ' not found')
+                        raise ValueError(
+                            "Configuration file " + inifile + " not found"
+                        )
             if self.defaultinifile:
-                sitedefaultinifile = glove.siteconf + '/' + self.defaultinifile
+                sitedefaultinifile = glove.siteconf + "/" + self.defaultinifile
                 if local.path.exists(sitedefaultinifile):
                     # Insert at the beginning (i.e. smallest priority)
                     filestack.insert(0, local.path.abspath(sitedefaultinifile))
                 else:
-                    raise ValueError('Configuration file ' + sitedefaultinifile + ' not found')
+                    raise ValueError(
+                        "Configuration file "
+                        + sitedefaultinifile
+                        + " not found"
+                    )
             self.file = ",".join(filestack)
             for a_file in filestack:
                 with open(a_file, encoding=encoding) as a_fh:
@@ -444,18 +500,31 @@ class GenericReadOnlyConfigParser:
             if merged:
                 dico[section] = dict(self.items(section))
             else:
-                dico[section] = {k: v for k, v in self.items(section)
-                                 if k in self.parser._sections[section]}
+                dico[section] = {
+                    k: v
+                    for k, v in self.items(section)
+                    if k in self.parser._sections[section]
+                }
         return dico
 
     def __getattr__(self, attr):
         # Give access to a very limited set of methods
-        if attr.startswith('get') or attr in ('defaults', 'sections', 'options', 'items',
-                                              'has_section', 'has_option'):
+        if attr.startswith("get") or attr in (
+            "defaults",
+            "sections",
+            "options",
+            "items",
+            "has_section",
+            "has_option",
+        ):
             return getattr(self.parser, attr)
         else:
-            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" +
-                                 str(attr) + "'")
+            raise AttributeError(
+                self.__class__.__name__
+                + " instance has no attribute '"
+                + str(attr)
+                + "'"
+            )
 
     def footprint_export(self):
         return self.file
@@ -489,7 +558,7 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
         and ``base2``. In case of a conflict, ``base1`` takes precedence over ``base2``.
     """
 
-    _RE_VALIDATE = re.compile(r'([\w-]+)[ \t]*:?')
+    _RE_VALIDATE = re.compile(r"([\w-]+)[ \t]*:?")
     _RE_KEYC = re.compile(r"%\(([^)]+)\)s")
 
     _max_interpolation_depth = 20
@@ -503,7 +572,7 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
         if self.parser.has_section(zend_section):
             found_sections.append(zend_section)
         for section in self.parser.sections():
-            pieces = re.split(r'[ \t]*:[ \t]*', section)
+            pieces = re.split(r"[ \t]*:[ \t]*", section)
             if len(pieces) >= 2 and pieces[0] == zend_section:
                 found_sections.append(section)
                 for inherited in pieces[1:]:
@@ -527,12 +596,16 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
             else:
                 break
         if value and self._RE_KEYC.match(value):
-            raise InterpolationDepthError(self.options(section), section, rawval)
+            raise InterpolationDepthError(
+                self.options(section), section, rawval
+            )
         return value
 
     def get(self, section, option, raw=False, myvars=None):
         """Behaves like the GenericConfigParser's ``get`` method."""
-        expanded = [s for s in self._get_section_list(section) if s is not None]
+        expanded = [
+            s for s in self._get_section_list(section) if s is not None
+        ]
         if not expanded:
             raise NoSectionError(section)
         expanded.reverse()
@@ -541,7 +614,9 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
         mydefault = self.defaults().get(option, None)
         for isection in expanded:
             try:
-                tmp_result = self.parser.get(isection, option, raw=True, vars=myvars)
+                tmp_result = self.parser.get(
+                    isection, option, raw=True, vars=myvars
+                )
                 if tmp_result is not mydefault:
                     acc_result = tmp_result
             except NoOptionError as err:
@@ -558,7 +633,9 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
     def sections(self):
         """Behaves like the Python ConfigParser's ``section`` method."""
         seen = set()
-        for section_m in [self._RE_VALIDATE.match(s) for s in self.parser.sections()]:
+        for section_m in [
+            self._RE_VALIDATE.match(s) for s in self.parser.sections()
+        ]:
             if section_m is not None:
                 seen.add(section_m.group(1))
         return list(seen)
@@ -571,7 +648,9 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
         """Behaves like the Python ConfigParser's ``options`` method."""
         expanded = self._get_section_list(section)
         if not expanded:
-            return self.parser.options(section)  # A realistic exception will be thrown !
+            return self.parser.options(
+                section
+            )  # A realistic exception will be thrown !
         options = set()
         for isection in [s for s in expanded]:
             options.update(set(self.parser.options(isection)))
@@ -583,20 +662,29 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
 
     def items(self, section, raw=False, myvars=None):
         """Behaves like the Python ConfigParser's ``items`` method."""
-        return [(o, self.get(section, o, raw, myvars)) for o in self.options(section)]
+        return [
+            (o, self.get(section, o, raw, myvars))
+            for o in self.options(section)
+        ]
 
     def __getattr__(self, attr):
         # Give access to a very limited set of methods
-        if attr in ('defaults',):
+        if attr in ("defaults",):
             return getattr(self.parser, attr)
         else:
-            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" +
-                                 str(attr) + "'")
+            raise AttributeError(
+                self.__class__.__name__
+                + " instance has no attribute '"
+                + str(attr)
+                + "'"
+            )
 
     def as_dict(self, merged=True):
         """Export the configuration file as a dictionary."""
         if not merged:
-            raise ValueError("merged=False is not allowed with ExtendedReadOnlyConfigParser.")
+            raise ValueError(
+                "merged=False is not allowed with ExtendedReadOnlyConfigParser."
+            )
         return super().as_dict(merged=True)
 
 
@@ -622,9 +710,18 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
         documentation for more details.
     """
 
-    def __init__(self, inifile=None, parser=None, mkforce=False,
-                 clsparser=_DEFAULT_CONFIG_PARSER, encoding=None, defaultinifile=None):
-        super().__init__(inifile, parser, mkforce, clsparser, encoding, defaultinifile)
+    def __init__(
+        self,
+        inifile=None,
+        parser=None,
+        mkforce=False,
+        clsparser=_DEFAULT_CONFIG_PARSER,
+        encoding=None,
+        defaultinifile=None,
+    ):
+        super().__init__(
+            inifile, parser, mkforce, clsparser, encoding, defaultinifile
+        )
         self.updates = list()
 
     def setall(self, kw):
@@ -636,7 +733,7 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
 
     def save(self):
         """Write the current state of the configuration in the inital file."""
-        with open(self.file.split(",").pop(), 'wb') as configfile:
+        with open(self.file.split(",").pop(), "wb") as configfile:
             self.write(configfile)
 
     @property
@@ -650,9 +747,13 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
 
     def __getattr__(self, attr):
         # Give access to all of the parser's methods
-        if attr.startswith('__'):
-            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" +
-                                 str(attr) + "'")
+        if attr.startswith("__"):
+            raise AttributeError(
+                self.__class__.__name__
+                + " instance has no attribute '"
+                + str(attr)
+                + "'"
+            )
         return getattr(self.parser, attr)
 
 
@@ -678,12 +779,14 @@ class DelayedConfigParser(GenericConfigParser):
 
     def __getattribute__(self, attr):
         try:
-            logger.debug('Getattr %s < %s >', attr, self)
-            if attr in filter(lambda x: not x.startswith('_'),
-                              dir(_DEFAULT_CONFIG_PARSER) + ['setall', 'save']):
-                object.__getattribute__(self, 'refresh')()
+            logger.debug("Getattr %s < %s >", attr, self)
+            if attr in filter(
+                lambda x: not x.startswith("_"),
+                dir(_DEFAULT_CONFIG_PARSER) + ["setall", "save"],
+            ):
+                object.__getattribute__(self, "refresh")()
         except Exception:
-            logger.critical('Trouble getattr %s < %s >', attr, self)
+            logger.critical("Trouble getattr %s < %s >", attr, self)
         return object.__getattribute__(self, attr)
 
 
@@ -709,7 +812,7 @@ class JacketConfigParser(GenericConfigParser):
         build on the basis of a comma separated list.
         """
         s = _DEFAULT_CONFIG_PARSER.get(self, section, option)
-        tmplist = s.replace(' ', '').split(',')
+        tmplist = s.replace(" ", "").split(",")
         if len(tmplist) > 1:
             return tmplist
         else:
@@ -738,13 +841,20 @@ class AppConfigStringDecoder(StringDecoder):
 
     """
 
-    BUILDERS = StringDecoder.BUILDERS + ['geometry', 'date', 'time',
-                                         'rangex', 'daterangex',
-                                         'iniconf', 'conftool']
+    BUILDERS = StringDecoder.BUILDERS + [
+        "geometry",
+        "date",
+        "time",
+        "rangex",
+        "daterangex",
+        "iniconf",
+        "conftool",
+    ]
 
     def remap_geometry(self, value):
         """Convert all values to Geometry objects."""
         from vortex.data import geometries
+
         try:
             value = geometries.get(tag=value)
         except ValueError:
@@ -770,6 +880,7 @@ class AppConfigStringDecoder(StringDecoder):
     def _build_geometry(self, value, remap, subs):
         val = self._value_expand(value, remap, subs)
         from vortex.data import geometries
+
         return geometries.get(tag=val)
 
     def _build_date(self, value, remap, subs):
@@ -784,72 +895,94 @@ class AppConfigStringDecoder(StringDecoder):
         """Build a rangex or daterangex from the **value** string."""
         # Try to read names arguments
         try:
-            values = self._sparser(value, itemsep=' ', keysep=':')
-            if all([k in ('start', 'end', 'step', 'shift', 'fmt', 'prefix')
-                    for k in values.keys()]):
-                return cb(**{k: self._value_expand(v, remap, subs)
-                             for k, v in values.items()})
+            values = self._sparser(value, itemsep=" ", keysep=":")
+            if all(
+                [
+                    k in ("start", "end", "step", "shift", "fmt", "prefix")
+                    for k in values.keys()
+                ]
+            ):
+                return cb(
+                    **{
+                        k: self._value_expand(v, remap, subs)
+                        for k, v in values.items()
+                    }
+                )
         except StringDecoderSyntaxError:
             pass
         # The usual case...
-        return cb([self._value_expand(v, remap, subs)
-                   for v in self._sparser(value, itemsep=',')])
+        return cb(
+            [
+                self._value_expand(v, remap, subs)
+                for v in self._sparser(value, itemsep=",")
+            ]
+        )
 
     def _build_rangex(self, value, remap, subs):
         """Build a rangex from the **value** string."""
-        return self._build_generic_rangex(bdate.timeintrangex, value, remap, subs)
+        return self._build_generic_rangex(
+            bdate.timeintrangex, value, remap, subs
+        )
 
     def _build_daterangex(self, value, remap, subs):
         """Build a daterangex from the **value** string."""
         return self._build_generic_rangex(bdate.daterangex, value, remap, subs)
 
     def _build_fpgeneric(self, value, remap, subs, collector):
-        fp = {k: self._value_expand(v, remap, subs)
-              for k, v in self._sparser(value, itemsep=' ', keysep=':').items()}
+        fp = {
+            k: self._value_expand(v, remap, subs)
+            for k, v in self._sparser(value, itemsep=" ", keysep=":").items()
+        }
         obj = footprints.collectors.get(tag=collector).load(**fp)
         if obj is None:
-            raise StringDecoderSyntaxError(value,
-                                           'No object could be created from the {} collector'.
-                                           format(collector))
+            raise StringDecoderSyntaxError(
+                value,
+                "No object could be created from the {} collector".format(
+                    collector
+                ),
+            )
         return obj
 
     def _build_iniconf(self, value, remap, subs):
-        return self._build_fpgeneric(value, remap, subs, 'iniconf')
+        return self._build_fpgeneric(value, remap, subs, "iniconf")
 
     def _build_conftool(self, value, remap, subs):
-        return self._build_fpgeneric(value, remap, subs, 'conftool')
+        return self._build_fpgeneric(value, remap, subs, "conftool")
 
 
 class IniConf(footprints.FootprintBase):
     """
     Generic Python configuration file.
     """
-    _collector = ('iniconf',)
+
+    _collector = ("iniconf",)
     _abstract = True
     _footprint = dict(
-        info='Abstract Python Inifile',
+        info="Abstract Python Inifile",
         attr=dict(
-            kind = dict(
-                info     = "The configuration object kind.",
-                values   = ['generic', ],
+            kind=dict(
+                info="The configuration object kind.",
+                values=[
+                    "generic",
+                ],
             ),
-            clsconfig = dict(
-                type            = GenericReadOnlyConfigParser,
-                isclass         = True,
-                optional        = True,
-                default         = GenericReadOnlyConfigParser,
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
+            clsconfig=dict(
+                type=GenericReadOnlyConfigParser,
+                isclass=True,
+                optional=True,
+                default=GenericReadOnlyConfigParser,
+                doc_visibility=footprints.doc.visibility.ADVANCED,
             ),
-            inifile = dict(
-                kind     = 'The configuration file to look for.',
-                optional = True,
-                default  = '@[kind].ini',
+            inifile=dict(
+                kind="The configuration file to look for.",
+                optional=True,
+                default="@[kind].ini",
             ),
-        )
+        ),
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Ini Conf %s', self.__class__)
+        logger.debug("Ini Conf %s", self.__class__)
         super().__init__(*args, **kw)
         self._config = self.clsconfig(inifile=self.inifile)
 
@@ -864,67 +997,76 @@ class ConfigurationTable(IniConf):
     items (instantiated from the tableitem footprint's collector) from a given
     configuration file.
     """
+
     _abstract = True
     _footprint = dict(
-        info = 'Abstract configuration tables',
-        attr = dict(
-            kind = dict(
-                info     = "The configuration's table kind.",
+        info="Abstract configuration tables",
+        attr=dict(
+            kind=dict(
+                info="The configuration's table kind.",
             ),
-            family = dict(
-                info     = "The configuration's table family.",
+            family=dict(
+                info="The configuration's table family.",
             ),
-            version = dict(
-                info     = "The configuration's table version.",
-                optional = True,
-                default  = 'std',
+            version=dict(
+                info="The configuration's table version.",
+                optional=True,
+                default="std",
             ),
-            searchkeys = dict(
-                info     = "Item's attributes used to perform the lookup in the find method.",
-                type     = footprints.FPTuple,
-                optional = True,
-                default  = footprints.FPTuple(),
+            searchkeys=dict(
+                info="Item's attributes used to perform the lookup in the find method.",
+                type=footprints.FPTuple,
+                optional=True,
+                default=footprints.FPTuple(),
             ),
-            groupname = dict(
-                info     = "The class attribute matching the configuration file groupname",
-                optional = True,
-                default  = 'family',
+            groupname=dict(
+                info="The class attribute matching the configuration file groupname",
+                optional=True,
+                default="family",
             ),
-            inifile = dict(
-                optional = True,
-                default  = '@[family]-[kind]-[version].ini',
+            inifile=dict(
+                optional=True,
+                default="@[family]-[kind]-[version].ini",
             ),
-            clsconfig = dict(
-                default  = ExtendedReadOnlyConfigParser,
+            clsconfig=dict(
+                default=ExtendedReadOnlyConfigParser,
             ),
-            language = dict(
-                info     = "The default language for the translator property.",
-                optional = True,
-                default  = 'en',
+            language=dict(
+                info="The default language for the translator property.",
+                optional=True,
+                default="en",
             ),
-        )
+        ),
     )
 
     @property
     def realkind(self):
-        return 'configuration-table'
+        return "configuration-table"
 
     def groups(self):
         """Actual list of items groups described in the current iniconf."""
-        return [x for x in self.config.parser.sections()
-                if ':' not in x and not x.startswith('lang_')]
+        return [
+            x
+            for x in self.config.parser.sections()
+            if ":" not in x and not x.startswith("lang_")
+        ]
 
     def keys(self):
         """Actual list of different items in the current iniconf."""
-        return [x for x in self.config.sections()
-                if x not in self.groups() and not x.startswith('lang_')]
+        return [
+            x
+            for x in self.config.sections()
+            if x not in self.groups() and not x.startswith("lang_")
+        ]
 
     @property
     def translator(self):
         """The special section of the iniconf dedicated to translation, as a dict."""
-        if not hasattr(self, '_translator'):
-            if self.config.has_section('lang_' + self.language):
-                self._translator = self.config.as_dict()['lang_' + self.language]
+        if not hasattr(self, "_translator"):
+            if self.config.has_section("lang_" + self.language):
+                self._translator = self.config.as_dict()[
+                    "lang_" + self.language
+                ]
             else:
                 self._translator = None
         return self._translator
@@ -932,34 +1074,42 @@ class ConfigurationTable(IniConf):
     @property
     def tablelist(self):
         """List of unique instances of items described in the current iniconf."""
-        if not hasattr(self, '_tablelist'):
+        if not hasattr(self, "_tablelist"):
             self._tablelist = list()
             d = self.config.as_dict()
-            for item, group in [x.split(':') for x in self.config.parser.sections() if ':' in x]:
+            for item, group in [
+                x.split(":") for x in self.config.parser.sections() if ":" in x
+            ]:
                 try:
                     for k, v in d[item].items():
                         # Can occur in case of a redundant entry in the config file
                         if isinstance(v, str) and v:
-                            if re.match('none$', v, re.IGNORECASE):
+                            if re.match("none$", v, re.IGNORECASE):
                                 d[item][k] = None
-                            if re.search('[a-z]_[a-z]', v, re.IGNORECASE):
-                                d[item][k] = v.replace('_', "'")
+                            if re.search("[a-z]_[a-z]", v, re.IGNORECASE):
+                                d[item][k] = v.replace("_", "'")
                     d[item][self.searchkeys[0]] = item
                     d[item][self.groupname] = group
-                    d[item]['translator'] = self.translator
+                    d[item]["translator"] = self.translator
                     itemobj = footprints.proxy.tableitem(**d[item])
                     if itemobj is not None:
                         self._tablelist.append(itemobj)
                     else:
-                        logger.error("Unable to create the %s item object. Check the footprint !", item)
+                        logger.error(
+                            "Unable to create the %s item object. Check the footprint !",
+                            item,
+                        )
                 except (KeyError, IndexError):
-                    logger.warning('Some item description could not match')
+                    logger.warning("Some item description could not match")
         return self._tablelist
 
     def get(self, item):
         """Return the item with main key exactly matching the given argument."""
-        candidates = [x for x in self.tablelist
-                      if x.footprint_getattr(self.searchkeys[0]) == item]
+        candidates = [
+            x
+            for x in self.tablelist
+            if x.footprint_getattr(self.searchkeys[0]) == item
+        ]
         if candidates:
             return candidates[0]
         else:
@@ -967,8 +1117,13 @@ class ConfigurationTable(IniConf):
 
     def match(self, item):
         """Return the item with main key matching the given argument without case consideration."""
-        candidates = [x for x in self.tablelist
-                      if x.footprint_getattr(self.searchkeys[0]).lower().startswith(item.lower())]
+        candidates = [
+            x
+            for x in self.tablelist
+            if x.footprint_getattr(self.searchkeys[0])
+            .lower()
+            .startswith(item.lower())
+        ]
         if candidates:
             return candidates[0]
         else:
@@ -976,14 +1131,28 @@ class ConfigurationTable(IniConf):
 
     def grep(self, item):
         """Return a list of items with main key loosely matching the given argument."""
-        return [x for x in self.tablelist
-                if re.search(item, x.footprint_getattr(self.searchkeys[0]), re.IGNORECASE)]
+        return [
+            x
+            for x in self.tablelist
+            if re.search(
+                item, x.footprint_getattr(self.searchkeys[0]), re.IGNORECASE
+            )
+        ]
 
     def find(self, item):
         """Return a list of items with main key or name loosely matching the given argument."""
-        return [x for x in self.tablelist
-                if any([re.search(item, x.footprint_getattr(thiskey), re.IGNORECASE)
-                        for thiskey in self.searchkeys])]
+        return [
+            x
+            for x in self.tablelist
+            if any(
+                [
+                    re.search(
+                        item, x.footprint_getattr(thiskey), re.IGNORECASE
+                    )
+                    for thiskey in self.searchkeys
+                ]
+            )
+        ]
 
 
 class TableItem(footprints.FootprintBase):
@@ -992,27 +1161,27 @@ class TableItem(footprints.FootprintBase):
     """
 
     #: Attribute describing the item's name during RST exports
-    _RST_NAME = ''
+    _RST_NAME = ""
     #: Attributes that will appear on the top line of RST exports
     _RST_HOTKEYS = []
 
     _abstract = True
-    _collector = ('tableitem',)
+    _collector = ("tableitem",)
     _footprint = dict(
-        info = "Abstract configuration table's item.",
-        attr = dict(
+        info="Abstract configuration table's item.",
+        attr=dict(
             # Define your own...
-            translator = dict(
-                optional = True,
-                type     = footprints.FPDict,
-                default  = None,
+            translator=dict(
+                optional=True,
+                type=footprints.FPDict,
+                default=None,
             ),
-        )
+        ),
     )
 
     @property
     def realkind(self):
-        return 'tableitem'
+        return "tableitem"
 
     def _translated_items(self, mkshort=True):
         """Returns a list of 3-elements tuples describing the item attributes.
@@ -1021,13 +1190,22 @@ class TableItem(footprints.FootprintBase):
         """
         output_stack = list()
         if self.translator:
-            for k in self.translator.get('ordered_dump', '').split(','):
+            for k in self.translator.get("ordered_dump", "").split(","):
                 if not mkshort or self.footprint_getattr(k) is not None:
-                    output_stack.append((self.translator.get(k, k.replace('_', ' ').title()),
-                                         str(self.footprint_getattr(k)), k))
+                    output_stack.append(
+                        (
+                            self.translator.get(
+                                k, k.replace("_", " ").title()
+                            ),
+                            str(self.footprint_getattr(k)),
+                            k,
+                        )
+                    )
         else:
             for k in self.footprint_attributes:
-                if ((not mkshort or self.footprint_getattr(k) is not None) and k != 'translator'):
+                if (
+                    not mkshort or self.footprint_getattr(k) is not None
+                ) and k != "translator":
                     output_stack.append((k, str(self.footprint_getattr(k)), k))
         return output_stack
 
@@ -1037,10 +1215,10 @@ class TableItem(footprints.FootprintBase):
         output_list = []
         if output_stack:
             max_keylen = max([len(i[0]) for i in output_stack])
-            print_fmt = '{0:' + str(max_keylen) + 's} : {1:s}'
+            print_fmt = "{0:" + str(max_keylen) + "s} : {1:s}"
             for item in output_stack:
                 output_list.append(print_fmt.format(*item))
-        return '\n'.join(output_list)
+        return "\n".join(output_list)
 
     def __str__(self):
         return self.nice_str()
@@ -1053,7 +1231,7 @@ class TableItem(footprints.FootprintBase):
         """Produces a nice ordered RST output of the item attributes."""
         assert self._RST_NAME, "Please override _RST_NAME"
         output_stack = self._translated_items(mkshort=mkshort)
-        i_name = '????'
+        i_name = "????"
         i_hot = []
         i_other = []
         for item in output_stack:
@@ -1063,9 +1241,8 @@ class TableItem(footprints.FootprintBase):
                 i_hot.append(item)
             else:
                 i_other.append(item)
-        return '**{}** : `{}`\n\n{}\n\n'.format(i_name[1],
-                                                ', '.join(['{:s}={:s}'.format(*i)
-                                                           for i in i_hot]),
-                                                '\n'.join(['    * {:s}: {:s}'.format(*i)
-                                                           for i in i_other])
-                                                )
+        return "**{}** : `{}`\n\n{}\n\n".format(
+            i_name[1],
+            ", ".join(["{:s}={:s}".format(*i) for i in i_hot]),
+            "\n".join(["    * {:s}: {:s}".format(*i) for i in i_other]),
+        )

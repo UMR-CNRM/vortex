@@ -15,7 +15,12 @@ import footprints
 
 from vortex import sessions
 from vortex import config
-from vortex.data.abstractstores import Store, ArchiveStore, ConfigurableArchiveStore, CacheStore
+from vortex.data.abstractstores import (
+    Store,
+    ArchiveStore,
+    ConfigurableArchiveStore,
+    CacheStore,
+)
 from vortex.data.abstractstores import MultiStore, PromiseStore
 from vortex.data.abstractstores import ARCHIVE_GET_INTENT_DEFAULT
 from vortex.layout import dataflow
@@ -34,20 +39,20 @@ class MagicPlace(Store):
     """Somewhere, over the rainbow!"""
 
     _footprint = dict(
-        info = 'Evanescent physical store',
-        attr = dict(
-            scheme = dict(
-                values   = ['magic'],
+        info="Evanescent physical store",
+        attr=dict(
+            scheme=dict(
+                values=["magic"],
             ),
         ),
-        priority = dict(
-            level = footprints.priorities.top.DEFAULT  # @UndefinedVariable
-        )
+        priority=dict(
+            level=footprints.priorities.top.DEFAULT  # @UndefinedVariable
+        ),
     )
 
     @property
     def realkind(self):
-        return 'magicstore'
+        return "magicstore"
 
     def has_fast_check(self):
         """A void check is very fast !"""
@@ -59,7 +64,7 @@ class MagicPlace(Store):
 
     def magiclocate(self, remote, options):
         """Void - Empty string returned."""
-        return ''
+        return ""
 
     def magicget(self, remote, local, options):
         """Void - Always True."""
@@ -108,23 +113,23 @@ class FunctionStore(Store):
     """
 
     _footprint = dict(
-        info = 'Dummy store that calls a function',
-        attr = dict(
-            scheme = dict(
-                values   = ['function'],
+        info="Dummy store that calls a function",
+        attr=dict(
+            scheme=dict(
+                values=["function"],
             ),
-            netloc = dict(
-                values   = [''],
-            )
+            netloc=dict(
+                values=[""],
+            ),
         ),
-        priority = dict(
-            level = footprints.priorities.top.DEFAULT  # @UndefinedVariable
-        )
+        priority=dict(
+            level=footprints.priorities.top.DEFAULT  # @UndefinedVariable
+        ),
     )
 
     @property
     def realkind(self):
-        return 'functionstore'
+        return "functionstore"
 
     def has_fast_check(self):
         """A void check is very fast !"""
@@ -136,20 +141,21 @@ class FunctionStore(Store):
 
     def functionlocate(self, remote, options):
         """The name of the function that will be called."""
-        cleanname = remote['path'][1:]
-        if cleanname.endswith('/'):
+        cleanname = remote["path"][1:]
+        if cleanname.endswith("/"):
             cleanname = cleanname[:-1]
         return cleanname
 
     def functionget(self, remote, local, options):
         """Calls the appropriate function and writes the result."""
         # Find the appropriate function
-        cbfunc = self.system.import_function(self.functionlocate(remote,
-                                                                 options))
+        cbfunc = self.system.import_function(
+            self.functionlocate(remote, options)
+        )
         # ... and call it
         opts = dict()
         opts.update(options)
-        opts.update(remote['query'])
+        opts.update(remote["query"])
         try:
             fres = cbfunc(opts)
         except FunctionStoreCallbackError as e:
@@ -157,15 +163,15 @@ class FunctionStore(Store):
             logger.error("Here is the exception: %s", str(e))
             fres = None
         if fres is not None:
-            if 'intent' in options and options['intent'] == dataflow.intent.IN:
-                logger.info('Ignore intent <in> for function input.')
+            if "intent" in options and options["intent"] == dataflow.intent.IN:
+                logger.info("Ignore intent <in> for function input.")
             # Handle StringIO objects, by changing them to ByteIOs...
             if isinstance(fres, io.StringIO):
                 s_fres = fres
                 s_fres.seek(0)
                 fres = io.BytesIO()
                 for l in s_fres:
-                    fres.write(l.encode(encoding='utf-8'))
+                    fres.write(l.encode(encoding="utf-8"))
                 fres.seek(0)
             # NB: fres should be a file like object (BytesIO will do the trick)
             return self.system.cp(fres, local)
@@ -187,30 +193,30 @@ class Finder(Store):
     """The most usual store: your current filesystem!"""
 
     _footprint = dict(
-        info = 'Miscellaneous file access',
-        attr = dict(
-            scheme = dict(
-                values  = ['file', 'ftp', 'symlink', 'rcp', 'scp'],
+        info="Miscellaneous file access",
+        attr=dict(
+            scheme=dict(
+                values=["file", "ftp", "symlink", "rcp", "scp"],
             ),
-            netloc = dict(
-                outcast = ['oper.inline.fr'],
+            netloc=dict(
+                outcast=["oper.inline.fr"],
             ),
-            storehash = dict(
-                values = hashalgo_avail_list,
+            storehash=dict(
+                values=hashalgo_avail_list,
             ),
         ),
-        priority = dict(
-            level = footprints.priorities.top.DEFAULT  # @UndefinedVariable
-        )
+        priority=dict(
+            level=footprints.priorities.top.DEFAULT  # @UndefinedVariable
+        ),
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Finder store init %s', self.__class__)
+        logger.debug("Finder store init %s", self.__class__)
         super().__init__(*args, **kw)
 
     @property
     def realkind(self):
-        return 'finder'
+        return "finder"
 
     def hostname(self):
         """Returns the current :attr:`netloc`."""
@@ -218,21 +224,28 @@ class Finder(Store):
 
     def fullpath(self, remote):
         """Return actual path unless explicitly defined as relative path."""
-        if remote['query'].get('relative', False):
-            return remote['path'].lstrip('/')
+        if remote["query"].get("relative", False):
+            return remote["path"].lstrip("/")
         else:
-            return remote['path']
+            return remote["path"]
 
     def _localtarfix(self, local):
-        if (isinstance(local, str) and self.system.path.isfile(local) and
-                self.system.is_tarfile(local)):
-            destdir = self.system.path.dirname(self.system.path.realpath(local))
+        if (
+            isinstance(local, str)
+            and self.system.path.isfile(local)
+            and self.system.is_tarfile(local)
+        ):
+            destdir = self.system.path.dirname(
+                self.system.path.realpath(local)
+            )
             try:
                 self.system.smartuntar(local, destdir)
             except ExecutionError:
                 if not self.system.is_tarname(local):
-                    logger.warning("An automatic untar was attempted but it failed. " +
-                                   "Maybe the system's is_tarfile got it wrong ?")
+                    logger.warning(
+                        "An automatic untar was attempted but it failed. "
+                        + "Maybe the system's is_tarfile got it wrong ?"
+                    )
                 else:
                     raise
 
@@ -251,10 +264,12 @@ class Finder(Store):
     def fileget(self, remote, local, options):
         """Delegates to ``system`` the copy of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
-        logger.info('fileget on %s (to: %s)', rpath, local)
-        if 'intent' in options and options['intent'] == dataflow.intent.IN:
-            logger.info('Ignore intent <in> for remote input %s', rpath)
-        rc = self.system.cp(rpath, local, fmt=options.get('fmt'), intent=dataflow.intent.INOUT)
+        logger.info("fileget on %s (to: %s)", rpath, local)
+        if "intent" in options and options["intent"] == dataflow.intent.IN:
+            logger.info("Ignore intent <in> for remote input %s", rpath)
+        rc = self.system.cp(
+            rpath, local, fmt=options.get("fmt"), intent=dataflow.intent.INOUT
+        )
         rc = rc and self._hash_get_check(self.fileget, remote, local, options)
         if rc:
             self._localtarfix(local)
@@ -263,8 +278,8 @@ class Finder(Store):
     def fileput(self, local, remote, options):
         """Delegates to ``system`` the copy of ``local`` to ``remote``."""
         rpath = self.fullpath(remote)
-        logger.info('fileput to %s (from: %s)', rpath, local)
-        rc = self.system.cp(local, rpath, fmt=options.get('fmt'))
+        logger.info("fileput to %s (from: %s)", rpath, local)
+        rc = self.system.cp(local, rpath, fmt=options.get("fmt"))
         return rc and self._hash_put(self.fileput, local, remote, options)
 
     def filedelete(self, remote, options):
@@ -272,10 +287,13 @@ class Finder(Store):
         rc = None
         if self.filecheck(remote, options):
             rpath = self.fullpath(remote)
-            logger.info('filedelete on %s', rpath)
-            rc = self.system.remove(rpath, fmt=options.get('fmt'))
+            logger.info("filedelete on %s", rpath)
+            rc = self.system.remove(rpath, fmt=options.get("fmt"))
         else:
-            logger.error('Try to remove a non-existing resource <%s>', self.fullpath(remote))
+            logger.error(
+                "Try to remove a non-existing resource <%s>",
+                self.fullpath(remote),
+            )
         return rc
 
     symlinkcheck = filecheck
@@ -283,34 +301,40 @@ class Finder(Store):
 
     def symlinkget(self, remote, local, options):
         rpath = self.fullpath(remote)
-        if 'intent' in options and options['intent'] == dataflow.intent.INOUT:
-            logger.error('It is unsafe to have a symlink with intent=inout: %s', rpath)
+        if "intent" in options and options["intent"] == dataflow.intent.INOUT:
+            logger.error(
+                "It is unsafe to have a symlink with intent=inout: %s", rpath
+            )
             return False
         rc = self.system.remove(local)
         self.system.symlink(rpath, local)
         return rc and self.system.path.exists(local)
 
     def symlinkput(self, local, remote, options):
-        logger.error("The Finder store with scheme:symlink is not able to perform Puts.")
+        logger.error(
+            "The Finder store with scheme:symlink is not able to perform Puts."
+        )
         return False
 
     def symlinkdelete(self, remote, options):
-        logger.error("The Finder store with scheme:symlink is not able to perform Deletes.")
+        logger.error(
+            "The Finder store with scheme:symlink is not able to perform Deletes."
+        )
         return False
 
     def _ftpinfos(self, remote, **kwargs):
         args = kwargs.copy()
-        args['hostname'] = self.hostname()
-        args['logname'] = remote['username']
+        args["hostname"] = self.hostname()
+        args["logname"] = remote["username"]
         port = self.hostname().netport
         if port is not None:
-            args['port'] = port
+            args["port"] = port
         return args
 
     def ftpcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
         rc = None
-        ftp = self.system.ftp(** self._ftpinfos(remote))
+        ftp = self.system.ftp(**self._ftpinfos(remote))
         if ftp:
             try:
                 rc = ftp.size(self.fullpath(remote))
@@ -324,7 +348,7 @@ class Finder(Store):
 
     def ftplocate(self, remote, options):
         """Delegates to ``system`` qualified name creation."""
-        ftp = self.system.ftp(** self._ftpinfos(remote, delayed=True))
+        ftp = self.system.ftp(**self._ftpinfos(remote, delayed=True))
         if ftp:
             rloc = ftp.netpath(self.fullpath(remote))
             ftp.close()
@@ -335,13 +359,15 @@ class Finder(Store):
     def ftpget(self, remote, local, options):
         """Delegates to ``system`` the file transfer of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
-        logger.info('ftpget on ftp://%s/%s (to: %s)', self.hostname(), rpath, local)
+        logger.info(
+            "ftpget on ftp://%s/%s (to: %s)", self.hostname(), rpath, local
+        )
         rc = self.system.smartftget(
             rpath,
             local,
-            fmt=options.get('fmt'),
+            fmt=options.get("fmt"),
             # ftp control
-            ** self._ftpinfos(remote)
+            **self._ftpinfos(remote),
         )
         rc = rc and self._hash_get_check(self.ftpget, remote, local, options)
         if rc:
@@ -352,14 +378,16 @@ class Finder(Store):
         """Delegates to ``system`` the file transfer of ``local`` to ``remote``."""
         rpath = self.fullpath(remote)
         put_opts = dict()
-        put_opts['fmt'] = options.get('fmt')
-        put_opts['sync'] = options.get('enforcesync', False)
-        logger.info('ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
+        put_opts["fmt"] = options.get("fmt")
+        put_opts["sync"] = options.get("enforcesync", False)
+        logger.info(
+            "ftpput to ftp://%s/%s (from: %s)", self.hostname(), rpath, local
+        )
         rc = self.system.smartftput(
             local,
             rpath,
             # ftp control
-            ** self._ftpinfos(remote, ** put_opts)
+            **self._ftpinfos(remote, **put_opts),
         )
         return rc and self._hash_put(self.ftpput, local, remote, options)
 
@@ -368,7 +396,9 @@ class Finder(Store):
         rc = None
         actualpath = self.fullpath(remote)
         if self.ftpcheck(remote, options):
-            logger.info('ftpdelete on ftp://%s/%s', self.hostname(), actualpath)
+            logger.info(
+                "ftpdelete on ftp://%s/%s", self.hostname(), actualpath
+            )
             ftp = self.system.ftp(**self._ftpinfos(remote))
             if ftp:
                 try:
@@ -376,14 +406,16 @@ class Finder(Store):
                 finally:
                     ftp.close()
         else:
-            logger.error('Try to remove a non-existing resource <%s>', actualpath)
+            logger.error(
+                "Try to remove a non-existing resource <%s>", actualpath
+            )
         return rc
 
 
 class _VortexStackedStorageMixin:
     """Mixin class that adds utility functions to work with stacked data."""
 
-    _STACKED_RE = re.compile('stacked-')
+    _STACKED_RE = re.compile("stacked-")
 
     @property
     def stackedstore(self):
@@ -391,25 +423,31 @@ class _VortexStackedStorageMixin:
         return self._STACKED_RE.search(self.netloc)
 
     def _stacked_remainder(self, remote, stackpath):
-        path_remainder = remote['path'].strip('/').split('/')
-        for a_spath in stackpath.split('/'):
+        path_remainder = remote["path"].strip("/").split("/")
+        for a_spath in stackpath.split("/"):
             if path_remainder and path_remainder[0] == a_spath:
                 del path_remainder[0]
             else:
                 break
-        return '/'.join(path_remainder)
+        return "/".join(path_remainder)
 
     def _stacked_xremote(self, remote):
         """The path to **remote** with its stack."""
         if self.stackedstore:
             remote = remote.copy()
-            remote['query'] = remote['query'].copy()
-            stackpath = remote['query'].pop('stackpath', (None, ))[0]
-            stackfmt = remote['query'].pop('stackfmt', (None, ))[0]
+            remote["query"] = remote["query"].copy()
+            stackpath = remote["query"].pop("stackpath", (None,))[0]
+            stackfmt = remote["query"].pop("stackfmt", (None,))[0]
             if stackpath is None or stackfmt is None:
-                raise ValueError('"stackpath" and "stackfmt" are not available in the query.')
+                raise ValueError(
+                    '"stackpath" and "stackfmt" are not available in the query.'
+                )
             else:
-                remote['path'] = stackpath + '/' + self._stacked_remainder(remote, stackpath)
+                remote["path"] = (
+                    stackpath
+                    + "/"
+                    + self._stacked_remainder(remote, stackpath)
+                )
         return remote
 
     def _stacked_xegglocate(self, remote):
@@ -423,14 +461,16 @@ class _VortexStackedStorageMixin:
 
         """
         remote = remote.copy()
-        remote['query'] = remote['query'].copy()
-        stackpath = remote['query'].pop('stackpath', (None, ))[0].strip('/')
-        stackfmt = remote['query'].pop('stackfmt', (None, ))[0]
+        remote["query"] = remote["query"].copy()
+        stackpath = remote["query"].pop("stackpath", (None,))[0].strip("/")
+        stackfmt = remote["query"].pop("stackfmt", (None,))[0]
         if stackpath is None or stackfmt is None:
-            raise ValueError('"stackpath" and "stackfmt" are not available in the query.')
+            raise ValueError(
+                '"stackpath" and "stackfmt" are not available in the query.'
+            )
         else:
             resource_remainder = self._stacked_remainder(remote, stackpath)
-            remote['path'] = '/' + stackpath
+            remote["path"] = "/" + stackpath
         return remote, stackfmt, resource_remainder
 
 
@@ -438,11 +478,13 @@ _vortex_readonly_store = footprints.Footprint(
     info="Abstract store' readonly=True attribute",
     attr=dict(
         readonly=dict(
-            values=[True, ],
+            values=[
+                True,
+            ],
             optional=True,
-            default=True
+            default=True,
         )
-    )
+    ),
 )
 
 
@@ -451,25 +493,24 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
 
     _abstract = True
     _footprint = dict(
-        info = 'VORTEX archive access',
-        attr = dict(
-            scheme = dict(
-                values   = ['vortex'],
+        info="VORTEX archive access",
+        attr=dict(
+            scheme=dict(
+                values=["vortex"],
             ),
-            netloc = dict(
+            netloc=dict(),
+            storehead=dict(
+                optional=True,
+                default="vortex",
+                outcast=["xp"],
             ),
-            storehead = dict(
-                optional = True,
-                default  = 'vortex',
-                outcast  = ['xp'],
-            ),
-        )
+        ),
     )
 
-    _STACKS_AUTOREFILL_CRIT = 'stacked-archive-smart'
+    _STACKS_AUTOREFILL_CRIT = "stacked-archive-smart"
 
     def __init__(self, *args, **kw):
-        logger.debug('Vortex archive store init %s', self.__class__)
+        logger.debug("Vortex archive store init %s", self.__class__)
         super().__init__(*args, **kw)
 
     def remap_read(self, remote, options):
@@ -478,10 +519,12 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
 
     def remap_list(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
-        if len(remote['path'].split('/')) >= 4:
+        if len(remote["path"].split("/")) >= 4:
             return self.remap_read(remote, options)
         else:
-            logger.critical('The << %s >> path is not listable.', remote['path'])
+            logger.critical(
+                "The << %s >> path is not listable.", remote["path"]
+            )
             return None
 
     remap_write = remap_read
@@ -490,7 +533,7 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
     def stacks_autorefill(self):
         """Where to refill a stack retrieved from the archive."""
         if self._STACKS_AUTOREFILL_CRIT in self.netloc:
-            return self.netloc.replace(self._STACKS_AUTOREFILL_CRIT, 'cache')
+            return self.netloc.replace(self._STACKS_AUTOREFILL_CRIT, "cache")
         else:
             return None
 
@@ -500,24 +543,34 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
         rundir = sessions.current().context.rundir
         if not rundir:
             rundir = self.system.pwd()
-        rundir = self.system.path.join(rundir, 'vortex_stacks_xeggs')
-        target = self.system.path.join(rundir, * remote['path'].strip('/').split('/'))
+        rundir = self.system.path.join(rundir, "vortex_stacks_xeggs")
+        target = self.system.path.join(
+            rundir, *remote["path"].strip("/").split("/")
+        )
         targetopts = dict(fmt=remotefmt, intent=dataflow.intent.IN)
         if self.system.path.exists(target):
-            logger.info("Stack previously retrieved (in %s). Using it.", target)
+            logger.info(
+                "Stack previously retrieved (in %s). Using it.", target
+            )
             rc = True
         else:
             if result_id:
-                rc = self._vortexfinaliseget(result_id, remote, target, targetopts)
+                rc = self._vortexfinaliseget(
+                    result_id, remote, target, targetopts
+                )
             else:
                 rc = self._vortexget(remote, target, targetopts)
         if rc and self.stacks_autorefill:
-            rstore = footprints.proxy.store(scheme=self.scheme, netloc=self.stacks_autorefill)
+            rstore = footprints.proxy.store(
+                scheme=self.scheme, netloc=self.stacks_autorefill
+            )
             logger.info("Refilling the stack egg to [%s]", rstore)
             try:
                 rstore.put(target, remote.copy(), targetopts)
             except (ExecutionError, OSError) as e:
-                logger.error("An ExecutionError happened during the refill: %s", str(e))
+                logger.error(
+                    "An ExecutionError happened during the refill: %s", str(e)
+                )
                 logger.error("This error is ignored... but that's ugly !")
         return rc, target, remainder
 
@@ -526,11 +579,15 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
         if self.stackedstore:
             s_remote, s_remotefmt, _ = self._stacked_xegglocate(remote)
             options = options.copy()
-            options['fmt'] = s_remotefmt
+            options["fmt"] = s_remotefmt
             rc = self._vortexcheck(s_remote, options)
             if rc:
-                rc, target, remainder = self._vortex_stacked_egg_retrieve(remote)
-                rc = rc and self.system.path.exists(self.system.path.join(target, remainder))
+                rc, target, remainder = self._vortex_stacked_egg_retrieve(
+                    remote
+                )
+                rc = rc and self.system.path.exists(
+                    self.system.path.join(target, remainder)
+                )
             return rc
         else:
             return self._vortexcheck(remote, options)
@@ -545,7 +602,7 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
         if self.stackedstore:
             remote, s_remotefmt, _ = self._stacked_xegglocate(remote)
             options = options.copy()
-            options['fmt'] = s_remotefmt
+            options["fmt"] = s_remotefmt
         return self._vortexlocate(remote, options)
 
     def _vortexlocate(self, remote, options):
@@ -573,7 +630,7 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
         if self.stackedstore:
             remote, s_remotefmt, _ = self._stacked_xegglocate(remote)
             options = options.copy()
-            options['fmt'] = s_remotefmt
+            options["fmt"] = s_remotefmt
         return self._vortexprestageinfo(remote, options)
 
     def _vortexprestageinfo(self, remote, options):
@@ -585,10 +642,12 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
         """Vortex' archive get sequence."""
         if self.stackedstore:
             rc, target, remainder = self._vortex_stacked_egg_retrieve(remote)
-            rc = rc and self.system.cp(self.system.path.join(target, remainder), local,
-                                       fmt=options.get('fmt'),
-                                       intent=options.get('intent',
-                                                          ARCHIVE_GET_INTENT_DEFAULT))
+            rc = rc and self.system.cp(
+                self.system.path.join(target, remainder),
+                local,
+                fmt=options.get("fmt"),
+                intent=options.get("intent", ARCHIVE_GET_INTENT_DEFAULT),
+            )
             return rc
         else:
             return self._vortexget(remote, local, options)
@@ -603,7 +662,7 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
         if self.stackedstore:
             s_remote, s_remotefmt, _ = self._stacked_xegglocate(remote)
             targetopts = dict(fmt=s_remotefmt, intent=dataflow.intent.IN)
-            return self._vortexearlyget(s_remote, 'somelocalfile', targetopts)
+            return self._vortexearlyget(s_remote, "somelocalfile", targetopts)
         else:
             return self._vortexearlyget(remote, local, options)
 
@@ -615,11 +674,15 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
     def vortexfinaliseget(self, result_id, remote, local, options):
         """Vortex' archive finaliseget sequence."""
         if self.stackedstore:
-            rc, target, remainder = self._vortex_stacked_egg_retrieve(remote, result_id=result_id)
-            rc = rc and self.system.cp(self.system.path.join(target, remainder), local,
-                                       fmt=options.get('fmt'),
-                                       intent=options.get('intent',
-                                                          ARCHIVE_GET_INTENT_DEFAULT))
+            rc, target, remainder = self._vortex_stacked_egg_retrieve(
+                remote, result_id=result_id
+            )
+            rc = rc and self.system.cp(
+                self.system.path.join(target, remainder),
+                local,
+                fmt=options.get("fmt"),
+                intent=options.get("intent", ARCHIVE_GET_INTENT_DEFAULT),
+            )
             return rc
         else:
             return self._vortexfinaliseget(result_id, remote, local, options)
@@ -655,30 +718,31 @@ class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
     """
 
     _footprint = dict(
-        info = 'VORTEX archive access for casual experiments',
-        attr = dict(
-            netloc = dict(
-                values   = ['vortex.archive-legacy.fr'],
+        info="VORTEX archive access for casual experiments",
+        attr=dict(
+            netloc=dict(
+                values=["vortex.archive-legacy.fr"],
             ),
-        )
+        ),
     )
 
     @property
     def _actual_mappingroot(self):
         """Read the get entry point form configuration."""
         return config.from_config(
-            section="storage", key="rootdir",
+            section="storage",
+            key="rootdir",
         )
 
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
-        xpath = remote['path'].split('/')
+        xpath = remote["path"].split("/")
         actual_mappingroot = self._actual_mappingroot
         if not self.storeroot and actual_mappingroot:
-            remote['root'] = actual_mappingroot
+            remote["root"] = actual_mappingroot
             xpath[3:4] = list(xpath[3])
-        remote['path'] = self.system.path.join(*xpath)
+        remote["path"] = self.system.path.join(*xpath)
         return remote
 
 
@@ -693,17 +757,21 @@ class VortexStdStackedArchiveStore(VortexStdBaseArchiveStore):
     _footprint = [
         _vortex_readonly_store,
         dict(
-            attr = dict(
-                netloc = dict(
-                    values   = ['vortex.stacked-archive-legacy.fr',
-                                'vortex.stacked-archive-smart.fr'],
+            attr=dict(
+                netloc=dict(
+                    values=[
+                        "vortex.stacked-archive-legacy.fr",
+                        "vortex.stacked-archive-smart.fr",
+                    ],
                 ),
             )
-        )
+        ),
     ]
 
 
-class VortexFreeStdBaseArchiveStore(_VortexBaseArchiveStore, ConfigurableArchiveStore):
+class VortexFreeStdBaseArchiveStore(
+    _VortexBaseArchiveStore, ConfigurableArchiveStore
+):
     """Archive for casual VORTEX experiments: Support for Free XPIDs.
 
     This 'archive-legacy' store looks into the resource 'main' location not
@@ -711,27 +779,27 @@ class VortexFreeStdBaseArchiveStore(_VortexBaseArchiveStore, ConfigurableArchive
     """
 
     #: Path to the vortex-free Store configuration file
-    _store_global_config = '@store-vortex-free.ini'
-    _datastore_id = 'store-vortex-free-conf'
+    _store_global_config = "@store-vortex-free.ini"
+    _datastore_id = "store-vortex-free-conf"
 
     _footprint = dict(
-        info = 'VORTEX archive access for casual experiments',
-        attr = dict(
-            netloc = dict(
-                values   = ['vortex-free.archive-legacy.fr'],
+        info="VORTEX archive access for casual experiments",
+        attr=dict(
+            netloc=dict(
+                values=["vortex-free.archive-legacy.fr"],
             ),
-        )
+        ),
     )
 
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
-        xpath = remote['path'].strip('/').split('/')
+        xpath = remote["path"].strip("/").split("/")
         f_xpid = FreeXPid(xpath[2])
         xpath[2] = f_xpid.id
-        if 'root' not in remote:
-            remote['root'] = self._actual_storeroot(f_xpid)
-        remote['path'] = self.system.path.join(*xpath)
+        if "root" not in remote:
+            remote["root"] = self._actual_storeroot(f_xpid)
+        remote["path"] = self.system.path.join(*xpath)
         return remote
 
     remap_write = remap_read
@@ -748,13 +816,16 @@ class VortexFreeStdStackedArchiveStore(VortexFreeStdBaseArchiveStore):
     _footprint = [
         _vortex_readonly_store,
         dict(
-            attr = dict(
-                netloc = dict(
-                    values   = ['vortex-free.stacked-archive-legacy.fr',
-                                'vortex-free.stacked-archive-smart.fr'],
+            attr=dict(
+                netloc=dict(
+                    values=[
+                        "vortex-free.stacked-archive-legacy.fr",
+                        "vortex-free.stacked-archive-smart.fr",
+                    ],
                 ),
             )
-        )]
+        ),
+    ]
 
 
 class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
@@ -765,39 +836,37 @@ class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
     """
 
     _footprint = dict(
-        info = 'VORTEX archive access for op experiments',
-        attr = dict(
-            netloc = dict(
-                values   = ['vsop.archive-legacy.fr'],
+        info="VORTEX archive access for op experiments",
+        attr=dict(
+            netloc=dict(
+                values=["vsop.archive-legacy.fr"],
             ),
-            storetrue = dict(
-                default = DelayedEnvValue('op_archive', True),
+            storetrue=dict(
+                default=DelayedEnvValue("op_archive", True),
             ),
-        )
+        ),
     )
 
     @property
     def _actual_storeroot(self):
-        return (
-            self.storeroot or
-            config.from_config(
-                section="storage", key="op_rootdir",
-            )
+        return self.storeroot or config.from_config(
+            section="storage",
+            key="op_rootdir",
         )
 
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
-        xpath = remote['path'].split('/')
-        remote['root'] = self._actual_storeroot
-        if len(xpath) >= 5 and re.match(r'^\d{8}T\d{2,4}', xpath[4]):
+        xpath = remote["path"].split("/")
+        remote["root"] = self._actual_storeroot
+        if len(xpath) >= 5 and re.match(r"^\d{8}T\d{2,4}", xpath[4]):
             # If a date is detected
             vxdate = list(xpath[4])
-            vxdate.insert(4, '/')
-            vxdate.insert(7, '/')
-            vxdate.insert(10, '/')
-            xpath[4] = ''.join(vxdate)
-        remote['path'] = self.system.path.join(*xpath)
+            vxdate.insert(4, "/")
+            vxdate.insert(7, "/")
+            vxdate.insert(10, "/")
+            xpath[4] = "".join(vxdate)
+        remote["path"] = self.system.path.join(*xpath)
         return remote
 
     remap_write = remap_read
@@ -814,13 +883,16 @@ class VortexOpStackedArchiveStore(VortexOpBaseArchiveStore):
     _footprint = [
         _vortex_readonly_store,
         dict(
-            attr = dict(
-                netloc = dict(
-                    values   = ['vsop.stacked-archive-legacy.fr',
-                                'vsop.stacked-archive-smart.fr'],
+            attr=dict(
+                netloc=dict(
+                    values=[
+                        "vsop.stacked-archive-legacy.fr",
+                        "vsop.stacked-archive-smart.fr",
+                    ],
                 ),
             )
-        )]
+        ),
+    ]
 
 
 class VortexArchiveStore(MultiStore):
@@ -835,42 +907,58 @@ class VortexArchiveStore(MultiStore):
     """
 
     _footprint = dict(
-        info = 'VORTEX archive access',
-        attr = dict(
-            scheme = dict(
-                values  = ['vortex'],
+        info="VORTEX archive access",
+        attr=dict(
+            scheme=dict(
+                values=["vortex"],
             ),
-            netloc = dict(
-                values  = ['vortex.archive.fr', 'vortex-free.archive.fr', 'vsop.archive.fr'],
+            netloc=dict(
+                values=[
+                    "vortex.archive.fr",
+                    "vortex-free.archive.fr",
+                    "vsop.archive.fr",
+                ],
             ),
-            refillstore = dict(
-                default = False,
+            refillstore=dict(
+                default=False,
             ),
-            storehead = dict(
-                optional = True,
+            storehead=dict(
+                optional=True,
             ),
-            storesync = dict(
-                alias    = ('archsync', 'synchro'),
-                type     = bool,
-                optional = True,
+            storesync=dict(
+                alias=("archsync", "synchro"),
+                type=bool,
+                optional=True,
             ),
-        )
+        ),
     )
 
     def filtered_readable_openedstores(self, remote):
         """Only use the stacked store if sensible."""
-        ostores = [self.openedstores[0], ]
-        ostores.extend([sto for sto in self.openedstores[1:]
-                        if not sto.stackedstore or 'stackpath' in remote['query']
-                        ])
+        ostores = [
+            self.openedstores[0],
+        ]
+        ostores.extend(
+            [
+                sto
+                for sto in self.openedstores[1:]
+                if not sto.stackedstore or "stackpath" in remote["query"]
+            ]
+        )
         return ostores
 
     def alternates_netloc(self):
         """Return netlocs describing both base and stacked archives."""
-        netloc_m = re.match(r'(?P<base>v.*)\.archive\.(?P<country>\w+)', self.netloc)
+        netloc_m = re.match(
+            r"(?P<base>v.*)\.archive\.(?P<country>\w+)", self.netloc
+        )
         return [
-            '{base:s}.archive-legacy.{country:s}'.format(** netloc_m.groupdict()),
-            '{base:s}.stacked-archive-legacy.{country:s}'.format(** netloc_m.groupdict()),
+            "{base:s}.archive-legacy.{country:s}".format(
+                **netloc_m.groupdict()
+            ),
+            "{base:s}.stacked-archive-legacy.{country:s}".format(
+                **netloc_m.groupdict()
+            ),
         ]
 
     def alternates_fpextras(self):
@@ -883,26 +971,28 @@ class _VortexCacheBaseStore(CacheStore, _VortexStackedStorageMixin):
 
     _abstract = True
     _footprint = dict(
-        info = 'VORTEX cache access',
-        attr = dict(
-            scheme = dict(
-                values  = ['vortex'],
+        info="VORTEX cache access",
+        attr=dict(
+            scheme=dict(
+                values=["vortex"],
             ),
-            headdir = dict(
-                default = "",
-                outcast = ['xp', ],
+            headdir=dict(
+                default="",
+                outcast=[
+                    "xp",
+                ],
             ),
-            rtouch = dict(
-                default = True,
+            rtouch=dict(
+                default=True,
             ),
-            rtouchskip = dict(
-                default = 3,
+            rtouchskip=dict(
+                default=3,
             ),
-        )
+        ),
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Vortex cache store init %s', self.__class__)
+        logger.debug("Vortex cache store init %s", self.__class__)
         del self.cache
         super().__init__(*args, **kw)
 
@@ -939,16 +1029,19 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
     """Some kind of MTOOL cache for VORTEX experiments."""
 
     _footprint = dict(
-        info = 'VORTEX MTOOL like Cache access',
-        attr = dict(
-            netloc = dict(
-                values  = ['{:s}.{:s}cache-mt.fr'.format(v, s)
-                           for v in ('vortex', 'vortex-free', 'vsop') for s in ('', 'stacked-')]
+        info="VORTEX MTOOL like Cache access",
+        attr=dict(
+            netloc=dict(
+                values=[
+                    "{:s}.{:s}cache-mt.fr".format(v, s)
+                    for v in ("vortex", "vortex-free", "vsop")
+                    for s in ("", "stacked-")
+                ]
             ),
-            strategy = dict(
-                default = 'mtool',
+            strategy=dict(
+                default="mtool",
             ),
-        )
+        ),
     )
 
 
@@ -957,21 +1050,21 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
     """The DSI/OP VORTEX cache where researchers can get the freshest data."""
 
     _footprint = dict(
-        info = 'VORTEX Mtool cache access',
-        attr = dict(
-            netloc = dict(
-                values  = [
-                    'vsop.{:s}cache-op2r.fr'.format(s)
-                    for s in ('', 'stacked-')
+        info="VORTEX Mtool cache access",
+        attr=dict(
+            netloc=dict(
+                values=[
+                    "vsop.{:s}cache-op2r.fr".format(s)
+                    for s in ("", "stacked-")
                 ],
             ),
-            strategy = dict(
-                default = 'op2r',
+            strategy=dict(
+                default="op2r",
             ),
-            readonly = dict(
-                default = True,
-            )
-        )
+            readonly=dict(
+                default=True,
+            ),
+        ),
     )
 
     @property
@@ -985,33 +1078,49 @@ class _AbstractVortexCacheMultiStore(MultiStore):
 
     _abstract = True
     _footprint = dict(
-        info = 'VORTEX cache access',
-        attr = dict(
-            scheme = dict(
-                values  = ['vortex'],
+        info="VORTEX cache access",
+        attr=dict(
+            scheme=dict(
+                values=["vortex"],
             ),
-            refillstore = dict(
-                default = False,
-            )
-        )
+            refillstore=dict(
+                default=False,
+            ),
+        ),
     )
 
     def filtered_readable_openedstores(self, remote):
         """Deals with stacked stores that are not always active."""
-        ostores = [self.openedstores[0], ]
+        ostores = [
+            self.openedstores[0],
+        ]
         # TODO is the call to cache.allow_reads still required without
         # marketplace stores?
-        ostores.extend([sto for sto in self.openedstores[1:]
-                        if ((not sto.stackedstore or 'stackpath' in remote['query']) and
-                            sto.cache.allow_reads(remote['path']))
-                        ])
+        ostores.extend(
+            [
+                sto
+                for sto in self.openedstores[1:]
+                if (
+                    (not sto.stackedstore or "stackpath" in remote["query"])
+                    and sto.cache.allow_reads(remote["path"])
+                )
+            ]
+        )
         return ostores
 
     def filtered_writeable_openedstores(self, remote):
         """never writes into stack stores."""
-        ostores = [self.openedstores[0], ]
-        ostores.extend([sto for sto in self.openedstores[1:]
-                        if not sto.stackedstore and sto.cache.allow_writes(remote['path'])])
+        ostores = [
+            self.openedstores[0],
+        ]
+        ostores.extend(
+            [
+                sto
+                for sto in self.openedstores[1:]
+                if not sto.stackedstore
+                and sto.cache.allow_writes(remote["path"])
+            ]
+        )
         return ostores
 
 
@@ -1019,18 +1128,27 @@ class VortexCacheStore(_AbstractVortexCacheMultiStore):
     """The go to store for data cached by VORTEX R&D experiments."""
 
     _footprint = dict(
-        attr = dict(
-            netloc = dict(
-                values  = ['vortex.cache.fr', 'vortex-free.cache.fr', ],
+        attr=dict(
+            netloc=dict(
+                values=[
+                    "vortex.cache.fr",
+                    "vortex-free.cache.fr",
+                ],
             ),
         )
     )
 
     def alternates_netloc(self):
         """For Non-Op users, Op caches may be accessed in read-only mode."""
-        netloc_m = re.match(r'(?P<base>vortex.*)\.cache\.(?P<country>\w+)', self.netloc)
-        mt_netloc = '{base:s}.cache-mt.{country:s}'.format(** netloc_m.groupdict())
-        s_mt_netloc = '{base:s}.stacked-cache-mt.{country:s}'.format(** netloc_m.groupdict())
+        netloc_m = re.match(
+            r"(?P<base>vortex.*)\.cache\.(?P<country>\w+)", self.netloc
+        )
+        mt_netloc = "{base:s}.cache-mt.{country:s}".format(
+            **netloc_m.groupdict()
+        )
+        s_mt_netloc = "{base:s}.stacked-cache-mt.{country:s}".format(
+            **netloc_m.groupdict()
+        )
         return [mt_netloc, s_mt_netloc]
 
 
@@ -1042,35 +1160,36 @@ class VortexVsopCacheStore(_AbstractVortexCacheMultiStore):
     """
 
     _footprint = dict(
-        info = 'VORTEX vsop magic cache access',
-        attr = dict(
-            netloc = dict(
-                values  = ['vsop.cache.fr', ],
+        info="VORTEX vsop magic cache access",
+        attr=dict(
+            netloc=dict(
+                values=[
+                    "vsop.cache.fr",
+                ],
             ),
-            glovekind = dict(
-                optional = True,
-                default = '[glove::realkind]',
+            glovekind=dict(
+                optional=True,
+                default="[glove::realkind]",
             ),
-        )
+        ),
     )
 
     def alternates_netloc(self):
         """For Non-Op users, Op caches may be accessed in read-only mode."""
         todo = [
-            'vsop.cache-mt.fr',
-            'vsop.stacked-cache-mt.fr',
+            "vsop.cache-mt.fr",
+            "vsop.stacked-cache-mt.fr",
         ]
 
         # Only set up op2r cache if the associated filepath
         # is configured
-        if (
-                (self.glovekind != 'opuser') and
-                config.is_defined(
-                    section="data-tree", key="op_rootdir",
-                )
+        if (self.glovekind != "opuser") and config.is_defined(
+            section="data-tree",
+            key="op_rootdir",
         ):
             todo += [
-                'vsop.cache-op2r.fr', 'vsop.stacked-cache-op2r.fr',
+                "vsop.cache-op2r.fr",
+                "vsop.stacked-cache-op2r.fr",
             ]
         return todo
 
@@ -1080,30 +1199,44 @@ class _AbstractVortexStackMultiStore(MultiStore):
 
     _abstract = True
     _footprint = dict(
-        info = 'VORTEX stack access',
-        attr = dict(
-            scheme = dict(
-                values  = ['vortex'],
+        info="VORTEX stack access",
+        attr=dict(
+            scheme=dict(
+                values=["vortex"],
             ),
-            refillstore = dict(
-                default = False,
-            )
-        )
+            refillstore=dict(
+                default=False,
+            ),
+        ),
     )
 
     # TODO is this still needed without marketplace stores?
     def filtered_readable_openedstores(self, remote):
         """Deals with marketplace stores that are not always active."""
-        ostores = [self.openedstores[0], ]
-        ostores.extend([sto for sto in self.openedstores[1:]
-                        if sto.cache.allow_reads(remote['path'])])
+        ostores = [
+            self.openedstores[0],
+        ]
+        ostores.extend(
+            [
+                sto
+                for sto in self.openedstores[1:]
+                if sto.cache.allow_reads(remote["path"])
+            ]
+        )
         return ostores
 
     def filtered_writeable_openedstores(self, remote):
         """Deals with marketplace stores that are not always active."""
-        ostores = [self.openedstores[0], ]
-        ostores.extend([sto for sto in self.openedstores[1:]
-                        if sto.cache.allow_writes(remote['path'])])
+        ostores = [
+            self.openedstores[0],
+        ]
+        ostores.extend(
+            [
+                sto
+                for sto in self.openedstores[1:]
+                if sto.cache.allow_writes(remote["path"])
+            ]
+        )
         return ostores
 
 
@@ -1111,18 +1244,22 @@ class VortexStackStore(_AbstractVortexStackMultiStore):
     """Store intended to read and write data into VORTEX R&D stacks."""
 
     _footprint = dict(
-        info = 'VORTEX stack access',
-        attr = dict(
-            netloc = dict(
-                values  = ['vortex.stack.fr', 'vortex-free.stack.fr'],
+        info="VORTEX stack access",
+        attr=dict(
+            netloc=dict(
+                values=["vortex.stack.fr", "vortex-free.stack.fr"],
             ),
-        )
+        ),
     )
 
     def alternates_netloc(self):
         """Go through the various stacked stores."""
-        netloc_m = re.match(r'(?P<base>vortex.*)\.stack\.(?P<country>\w+)', self.netloc)
-        s_mt_netloc = '{base:s}.stacked-cache-mt.{country:s}'.format(** netloc_m.groupdict())
+        netloc_m = re.match(
+            r"(?P<base>vortex.*)\.stack\.(?P<country>\w+)", self.netloc
+        )
+        s_mt_netloc = "{base:s}.stacked-cache-mt.{country:s}".format(
+            **netloc_m.groupdict()
+        )
         return [s_mt_netloc]
 
 
@@ -1130,22 +1267,24 @@ class VortexVsopStackStore(_AbstractVortexStackMultiStore):
     """Store intended to read and write data into VORTEX R&D stacks."""
 
     _footprint = dict(
-        info = 'VORTEX stack access',
-        attr = dict(
-            netloc = dict(
-                values  = ['vsop.stack.fr'],
+        info="VORTEX stack access",
+        attr=dict(
+            netloc=dict(
+                values=["vsop.stack.fr"],
             ),
-            glovekind = dict(
-                optional = True,
-                default = '[glove::realkind]',
+            glovekind=dict(
+                optional=True,
+                default="[glove::realkind]",
             ),
-        )
+        ),
     )
 
     def alternates_netloc(self):
         """For Non-Op users, Op caches may be accessed in read-only mode."""
-        todo = ['vsop.stacked-cache-mt.fr', ]
-        if self.glovekind != 'opuser':
+        todo = [
+            "vsop.stacked-cache-mt.fr",
+        ]
+        if self.glovekind != "opuser":
             todo.append("vsop.stacked-cache-op2r.fr")
         return todo
 
@@ -1157,24 +1296,30 @@ class VortexStoreLegacy(MultiStore):
     """
 
     _footprint = dict(
-        info='VORTEX multi access',
+        info="VORTEX multi access",
         attr=dict(
             scheme=dict(
-                values=['vortex'],
+                values=["vortex"],
             ),
             netloc=dict(
-                values=['vortex.multi-legacy.fr', 'vortex-free.multi-legacy.fr', 'vsop.multi-legacy.fr'],
+                values=[
+                    "vortex.multi-legacy.fr",
+                    "vortex-free.multi-legacy.fr",
+                    "vsop.multi-legacy.fr",
+                ],
             ),
             refillstore=dict(
                 default=True,
-            )
-        )
+            ),
+        ),
     )
 
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
-        return [self.netloc.firstname + d for d in ('.cache.fr',
-                                                    '.archive-legacy.fr')]
+        return [
+            self.netloc.firstname + d
+            for d in (".cache.fr", ".archive-legacy.fr")
+        ]
 
 
 class VortexStore(MultiStore):
@@ -1184,64 +1329,81 @@ class VortexStore(MultiStore):
     """
 
     _footprint = dict(
-        info = 'VORTEX multi access',
-        attr = dict(
-            scheme = dict(
-                values  = ['vortex'],
+        info="VORTEX multi access",
+        attr=dict(
+            scheme=dict(
+                values=["vortex"],
             ),
-            netloc = dict(
-                values  = ['vortex.multi.fr', 'vortex-free.multi.fr', 'vsop.multi.fr'],
+            netloc=dict(
+                values=[
+                    "vortex.multi.fr",
+                    "vortex-free.multi.fr",
+                    "vsop.multi.fr",
+                ],
             ),
-            refillstore = dict(
-                default = False
-            )
-        )
+            refillstore=dict(default=False),
+        ),
     )
 
     def filtered_readable_openedstores(self, remote):
         """Deals with stacked stores that are not always active."""
-        ostores = [self.openedstores[0], ]
-        ostores.extend([sto for sto in self.openedstores[1:]
-                        if not sto.stackedstore or 'stackpath' in remote['query']
-                        ])
+        ostores = [
+            self.openedstores[0],
+        ]
+        ostores.extend(
+            [
+                sto
+                for sto in self.openedstores[1:]
+                if not sto.stackedstore or "stackpath" in remote["query"]
+            ]
+        )
         return ostores
 
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
-        return [self.netloc.firstname + d for d in ('.multi-legacy.fr',
-                                                    '.stacked-archive-smart.fr',)]
+        return [
+            self.netloc.firstname + d
+            for d in (
+                ".multi-legacy.fr",
+                ".stacked-archive-smart.fr",
+            )
+        ]
 
 
 class PromiseCacheStore(VortexCacheMtStore):
     """Some kind of vortex cache for EXPECTED resources."""
 
     _footprint = dict(
-        info = 'EXPECTED cache access',
-        attr = dict(
-            netloc = dict(
-                values  = ['promise.cache.fr'],
+        info="EXPECTED cache access",
+        attr=dict(
+            netloc=dict(
+                values=["promise.cache.fr"],
             ),
-            headdir = dict(
-                default = 'promise',
-                outcast = ['xp', 'vortex'],
+            headdir=dict(
+                default="promise",
+                outcast=["xp", "vortex"],
             ),
-        )
+        ),
     )
 
     @staticmethod
     def _add_default_options(options):
         options_upd = options.copy()
-        options_upd['fmt'] = 'ascii'  # Promises are always JSON files
-        options_upd['intent'] = 'in'  # Promises are always read-only
+        options_upd["fmt"] = "ascii"  # Promises are always JSON files
+        options_upd["intent"] = "in"  # Promises are always read-only
         return options_upd
 
     def vortexget(self, remote, local, options):
         """Proxy to :meth:`incacheget`."""
-        return super().vortexget(remote, local, self._add_default_options(options))
+        return super().vortexget(
+            remote, local, self._add_default_options(options)
+        )
 
     def vortexput(self, local, remote, options):
         """Proxy to :meth:`incacheput`."""
-        return super().vortexput(local, remote, self._add_default_options(options))
+        return super().vortexput(
+            local, remote, self._add_default_options(options)
+        )
 
     def vortexdelete(self, remote, options):
         """Proxy to :meth:`incachedelete`."""
@@ -1252,20 +1414,24 @@ class VortexPromiseStore(PromiseStore):
     """Combine a Promise Store for expected resources and any VORTEX Store."""
 
     _footprint = dict(
-        info = 'VORTEX promise store',
-        attr = dict(
-            scheme = dict(
-                values  = ['xvortex'],
+        info="VORTEX promise store",
+        attr=dict(
+            scheme=dict(
+                values=["xvortex"],
             ),
             netloc=dict(
-                outcast = ['vortex-demo.cache.fr', 'vortex-demo.multi.fr',
-                           'vortex.testcache.fr', 'vortex.testmulti.fr'],
+                outcast=[
+                    "vortex-demo.cache.fr",
+                    "vortex-demo.multi.fr",
+                    "vortex.testcache.fr",
+                    "vortex.testmulti.fr",
+                ],
             ),
-        )
+        ),
     )
 
 
 # Activate the footprint's fasttrack on the stores collector
-fcollect = footprints.collectors.get(tag='store')
-fcollect.fasttrack = ('netloc', 'scheme')
+fcollect = footprints.collectors.get(tag="store")
+fcollect.fasttrack = ("netloc", "scheme")
 del fcollect

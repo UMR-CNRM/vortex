@@ -20,16 +20,19 @@ logger = loggers.getLogger(__name__)
 
 class BdpeError(Exception):
     """Base for Bdpe errors."""
+
     pass
 
 
 class BdpeConfigurationError(BdpeError):
     """Missing BDPE product description."""
+
     pass
 
 
 class BdpeMismatchError(BdpeError):
     """BDPE product description does not match ressource description."""
+
     pass
 
 
@@ -58,71 +61,84 @@ class BdpeProvider(Provider):
     _footprint = [
         namespacefp,
         dict(
-            info = 'BDPE provider',
-            attr = dict(
-                namespace = dict(
-                    default  = Namespace('bdpe.archive.fr'),
-                    values   = ['bdpe.archive.fr'],
+            info="BDPE provider",
+            attr=dict(
+                namespace=dict(
+                    default=Namespace("bdpe.archive.fr"),
+                    values=["bdpe.archive.fr"],
                 ),
-                bdpeid = dict(
+                bdpeid=dict(),
+                preferred_target=dict(
+                    info="The database we'd like to get the data from - See the BDPE documentation.",
+                    optional=True,
+                    default=DelayedEnvValue("BDPE_CIBLE_PREFEREE", "SEC"),
+                    values=[
+                        "OPER",
+                        "INT",
+                        "SEC",
+                        "oper",
+                        "int",
+                        "sec",
+                    ],
                 ),
-                preferred_target = dict(
-                    info     = "The database we'd like to get the data from - See the BDPE documentation.",
-                    optional = True,
-                    default  = DelayedEnvValue('BDPE_CIBLE_PREFEREE', 'SEC'),
-                    values   = ['OPER', 'INT', 'SEC',
-                                'oper', 'int', 'sec', ],
+                forbidden_target=dict(
+                    info="The database we don't want to access - See the BDPE documentation.",
+                    optional=True,
+                    default=DelayedEnvValue("BDPE_CIBLE_INTERDITE", "OPER"),
+                    values=[
+                        "OPER",
+                        "INT",
+                        "SEC",
+                        "oper",
+                        "int",
+                        "sec",
+                    ],
                 ),
-                forbidden_target = dict(
-                    info     = "The database we don't want to access - See the BDPE documentation.",
-                    optional = True,
-                    default  = DelayedEnvValue('BDPE_CIBLE_INTERDITE', 'OPER'),
-                    values   = ['OPER', 'INT', 'SEC',
-                                'oper', 'int', 'sec', ],
+                soprano_domain=dict(
+                    info="Databases priorities profile - See the BDPE documentation.",
+                    optional=True,
+                    default=DelayedEnvValue("DOMAINE_SOPRA", "dev"),
+                    values=["oper", "int", "dev"],
                 ),
-                soprano_domain = dict(
-                    info     = 'Databases priorities profile - See the BDPE documentation.',
-                    optional = True,
-                    default  = DelayedEnvValue('DOMAINE_SOPRA', 'dev'),
-                    values   = ['oper', 'int', 'dev'],
+                allow_archive=dict(
+                    info="Allow the use of the archive version of the BDPE databases.",
+                    optional=True,
+                    type=bool,
+                    default=False,
                 ),
-                allow_archive = dict(
-                    info     = 'Allow the use of the archive version of the BDPE databases.',
-                    optional = True,
-                    type     = bool,
-                    default  = False,
+                bdpe_timeout=dict(
+                    info="Seconds before abandoning a request.",
+                    optional=True,
+                    type=int,
+                    default=10,
                 ),
-                bdpe_timeout = dict(
-                    info     = 'Seconds before abandoning a request.',
-                    optional = True,
-                    type     = int,
-                    default  = 10,
+                bdpe_retries=dict(
+                    info="Number of retries when a request fails.",
+                    optional=True,
+                    type=int,
+                    default=3,
                 ),
-                bdpe_retries = dict(
-                    info     = 'Number of retries when a request fails.',
-                    optional = True,
-                    type     = int,
-                    default  = 3,
+                config=dict(
+                    info="A ready to use configuration file object for this storage place.",
+                    type=GenericConfigParser,
+                    optional=True,
+                    default=None,
                 ),
-                config = dict(
-                    info     = 'A ready to use configuration file object for this storage place.',
-                    type     = GenericConfigParser,
-                    optional = True,
-                    default  = None,
-                ),
-                inifile = dict(
-                    info     = ('The name of the configuration file that will be used (if ' +
-                                '**config** is not provided.'),
-                    optional = True,
-                    default  = '@bdpe-map-resources.ini',
+                inifile=dict(
+                    info=(
+                        "The name of the configuration file that will be used (if "
+                        + "**config** is not provided."
+                    ),
+                    optional=True,
+                    default="@bdpe-map-resources.ini",
                 ),
             ),
-            fastkeys = {'bdpeid'},
-        )
+            fastkeys={"bdpeid"},
+        ),
     ]
 
     def __init__(self, *args, **kw):
-        logger.debug('BDPE provider init %s', self.__class__)
+        logger.debug("BDPE provider init %s", self.__class__)
         super().__init__(*args, **kw)
         self._actual_config = self.config
         if self._actual_config is None:
@@ -130,11 +146,11 @@ class BdpeProvider(Provider):
 
     @property
     def realkind(self):
-        return 'bdpe'
+        return "bdpe"
 
     def scheme(self, resource):
         """A dedicated scheme."""
-        return 'bdpe'
+        return "bdpe"
 
     def netloc(self, resource):
         """The actual netloc is the ``namespace`` attribute of the current provider."""
@@ -142,20 +158,26 @@ class BdpeProvider(Provider):
 
     def basename(self, resource):
         """Something like 'BDPE_num+term'."""
-        myterm = getattr(resource, 'term', Time(0))
+        myterm = getattr(resource, "term", Time(0))
         if int(myterm) < 0:
             myterm = Time(9000) - myterm
-        return 'BDPE_{}+{!s}'.format(self.bdpeid, myterm)
+        return "BDPE_{}+{!s}".format(self.bdpeid, myterm)
 
     def pathname(self, resource):
         """Something like 'PREFERRED_FORBIDDEN_DOMAIN_ARCHIVE_TIMEOUT_RETRIES/date/'."""
         try:
             requested_date = resource.date.vortex()
         except AttributeError:
-            requested_date = 'most_recent'
-        return '{}_{}_{}_{}_{}_{}/{}'.format(
-            self.preferred_target, self.forbidden_target, self.soprano_domain,
-            self.allow_archive, self.bdpe_timeout, self.bdpe_retries, requested_date)
+            requested_date = "most_recent"
+        return "{}_{}_{}_{}_{}_{}/{}".format(
+            self.preferred_target,
+            self.forbidden_target,
+            self.soprano_domain,
+            self.allow_archive,
+            self.bdpe_timeout,
+            self.bdpe_retries,
+            requested_date,
+        )
 
     def uri(self, resource):
         """
@@ -165,16 +187,19 @@ class BdpeProvider(Provider):
         # check that the product is described in the configuration file
         if not self._actual_config.has_section(self.bdpeid):
             fmt = 'Missing product n°{} in BDPE configuration file\n"{}"'
-            raise BdpeConfigurationError(fmt.format(self.bdpeid, self.config.file))
+            raise BdpeConfigurationError(
+                fmt.format(self.bdpeid, self.config.file)
+            )
 
         # resource description: rely on the footprint_export (also used to JSONise resources).
-        rsrcdict = {k: str(v)
-                    for k, v in resource.footprint_export().items()}
+        rsrcdict = {k: str(v) for k, v in resource.footprint_export().items()}
 
         # check the BDPE pairs against the resource's
-        for (k, v) in self._actual_config.items(self.bdpeid):
+        for k, v in self._actual_config.items(self.bdpeid):
             if k not in rsrcdict:
-                raise BdpeMismatchError('Missing key "{}" in resource'.format(k))
+                raise BdpeMismatchError(
+                    'Missing key "{}" in resource'.format(k)
+                )
             if rsrcdict[k] != v:
                 fmt = 'Bad value for key "{}": rsrc="{}" bdpe="{}"'
                 raise BdpeMismatchError(fmt.format(k, rsrcdict[k], v))

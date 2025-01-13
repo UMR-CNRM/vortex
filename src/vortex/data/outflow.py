@@ -17,13 +17,12 @@ __all__ = []
 
 
 class StaticResource(Resource):
-
     _abstract = True
     _footprint = dict(
-        attr = dict(
-            kind = dict(
-                info        = "The resource's kind.",
-                doc_zorder  = 90,
+        attr=dict(
+            kind=dict(
+                info="The resource's kind.",
+                doc_zorder=90,
             ),
         )
     )
@@ -36,19 +35,20 @@ class StaticGeoResource(StaticResource):
     _footprint = [
         hgeometry_deco,
         dict(
-            attr = dict(
-                clscontents = dict(
-                    default = FormatAdapter,
+            attr=dict(
+                clscontents=dict(
+                    default=FormatAdapter,
                 ),
             )
-        )
+        ),
     ]
 
 
 class ModelResource(StaticResource):
-
     _abstract = True
-    _footprint = [model_deco, ]
+    _footprint = [
+        model_deco,
+    ]
 
 
 class ModelGeoResource(ModelResource):
@@ -58,10 +58,10 @@ class ModelGeoResource(ModelResource):
     _footprint = [
         hgeometry_deco,
         dict(
-            attr = dict(
-                clscontents = dict(
-                    default = FormatAdapter,
+            attr=dict(
+                clscontents=dict(
+                    default=FormatAdapter,
                 ),
             )
-        )
+        ),
     ]

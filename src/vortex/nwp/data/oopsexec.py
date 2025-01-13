@@ -11,7 +11,7 @@ from vortex.syntax.stddeco import namebuilding_append
 __all__ = []
 
 
-@namebuilding_append('src', lambda self: self.run)
+@namebuilding_append("src", lambda self: self.run)
 class OOPSBinary(NWPModel):
     """Yet an other OOPS Binary."""
 
@@ -21,30 +21,32 @@ class OOPSBinary(NWPModel):
         oops_run,
         executable_flavour_deco,
         dict(
-            info = 'OOPS Binary: an OOPS binary, dedicated to a task (a run in OOPS namespace).',
-            attr = dict(
-                kind = dict(
-                    values = ['oopsbinary', ],
+            info="OOPS Binary: an OOPS binary, dedicated to a task (a run in OOPS namespace).",
+            attr=dict(
+                kind=dict(
+                    values=[
+                        "oopsbinary",
+                    ],
                 ),
-                gvar = dict(
-                    default = 'master_[run]',
+                gvar=dict(
+                    default="master_[run]",
                 ),
-                run = dict(
-                    outcast = known_oops_testcomponent_runs,
+                run=dict(
+                    outcast=known_oops_testcomponent_runs,
                 ),
-            )
-        )
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'oopsbinary'
+        return "oopsbinary"
 
     def command_line(self, configfile):
         """
         Build command line for execution as a single string.
         """
-        cmdline = '{}'.format(configfile)
+        cmdline = "{}".format(configfile)
         return cmdline
 
 
@@ -52,11 +54,11 @@ class OOPSTestComponent(OOPSBinary):
     """Binary for OOPS Tests of components."""
 
     _footprint = dict(
-        info = 'OOPS Component Test: can run a sub-test or a family of sub-tests',
-        attr = dict(
-            run = dict(
-                values   = known_oops_testcomponent_runs,
-                outcast  = [],
+        info="OOPS Component Test: can run a sub-test or a family of sub-tests",
+        attr=dict(
+            run=dict(
+                values=known_oops_testcomponent_runs,
+                outcast=[],
             ),
         ),
     )
@@ -65,8 +67,8 @@ class OOPSTestComponent(OOPSBinary):
         """
         Build command line for execution as a single string.
         """
-        cmdline = ''
+        cmdline = ""
         if test_type is not None:
-            cmdline += '-t {} '.format(test_type)
+            cmdline += "-t {} ".format(test_type)
         cmdline += super().command_line(configfile)
         return cmdline
