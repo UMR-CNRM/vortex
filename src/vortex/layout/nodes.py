@@ -20,7 +20,7 @@ from bronx.syntax.iterators import izip_pcn
 from bronx.system.interrupt import SignalInterruptError
 from footprints import proxy as fpx
 from footprints.stdtypes import FPDict
-from vortex import toolbox, VortexForceComplete
+from vortex import toolbox
 from vortex.layout.appconf import ConfigSet
 from vortex.layout.subjobs import subjob_handling, SubJobLauncherError
 from vortex.syntax.stdattrs import Namespace
@@ -32,6 +32,7 @@ logger = loggers.getLogger(__name__)
 __all__ = ["Driver", "Task", "Family"]
 
 OBSERVER_TAG = "Layout-Nodes"
+
 
 #: Definition of a named tuple for Node Statuses
 _NodeStatusTuple = collections.namedtuple(
@@ -1470,7 +1471,7 @@ class Task(Node):
                     self.warmstart()
                     self.refill()
                     self.process()
-                except VortexForceComplete:
+                except toolbox.VortexForceComplete:
                     self.sh.title("Force complete")
                 finally:
                     self.complete()
