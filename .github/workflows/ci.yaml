@@ -27,3 +27,22 @@ jobs:
     - run: pip install ruff==0.9.*
     - run: ruff format --check src/
 
+  test:
+    needs: [ruff-check, ruff-format]
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - run: pip install pytest
+    - run: pip install .
+    - name: Run tests
+      # Run two example test modules
+
+      # Most tests in the tests/ directory date back to vortex 1.* and need
+      # to be ported to vortex 2.*. This is ongoing work.
+      run: python -m pytest tests/test_config.py tests/tests_algo/test_basics.py
