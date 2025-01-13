@@ -23,7 +23,7 @@ logger = loggers.getLogger(__name__)
 class CompressionPipeline:
     """Main interface to data compression algorithms."""
 
-    def __init__(self, system, compression=''):
+    def __init__(self, system, compression=""):
         """
         :param System system: The system object that will be used to carry out
             the task.
@@ -40,10 +40,10 @@ class CompressionPipeline:
         self._units = list()
         self._sh = system
         self.description_string = compression
-        for c in [c for c in compression.split('|') if c]:
-            c_raw = c.split('&')
+        for c in [c for c in compression.split("|") if c]:
+            c_raw = c.split("&")
             ckind = c_raw.pop(0)
-            cargs = dict([arg.split('=', 1) for arg in c_raw])
+            cargs = dict([arg.split("=", 1) for arg in c_raw])
             self.add_compression_unit(ckind, **cargs)
 
     def add_compression_unit(self, unit, **kwargs):
@@ -56,8 +56,9 @@ class CompressionPipeline:
         """
         c_unit = footprints.proxy.compression_unit(kind=unit, **kwargs)
         if c_unit is None:
-            raise ValueError("The {:s} compression unit could not be found.".
-                             format(unit))
+            raise ValueError(
+                "The {:s} compression unit could not be found.".format(unit)
+            )
         self._units.append(c_unit)
 
     @property
@@ -76,13 +77,15 @@ class CompressionPipeline:
     @property
     def suffix(self):
         """The suffix usualy associated with this compression pipeline."""
-        s = '.'.join([s.suffix for s in self.units])
-        return '.' + s if s else ''
+        s = ".".join([s.suffix for s in self.units])
+        return "." + s if s else ""
 
     @property
     def compression_factor(self):
         """The minimal compression factor expected with such a compression pipeline."""
-        return functools.reduce(operator.mul, [s.cfactor for s in self.units], 1.)
+        return functools.reduce(
+            operator.mul, [s.cfactor for s in self.units], 1.0
+        )
 
     @staticmethod
     def _inputstream_size(stream):
@@ -93,13 +96,13 @@ class CompressionPipeline:
             estimated_size = stream.tell()
             stream.seek(0)
         except AttributeError:
-            logger.warning('Could not rewind <source:%s>', str(stream))
+            logger.warning("Could not rewind <source:%s>", str(stream))
         except OSError:
-            logger.debug('Seek trouble <source:%s>', str(stream))
+            logger.debug("Seek trouble <source:%s>", str(stream))
         return estimated_size
 
     @contextmanager
-    def _openstream(self, local, mode='rb'):
+    def _openstream(self, local, mode="rb"):
         """If *local* is not an opened file, open it..."""
         if isinstance(local, str):
             localfh = open(local, mode)
@@ -114,7 +117,9 @@ class CompressionPipeline:
         """Close a list of Popen objects (and look for the returncode)."""
         for i, p in enumerate(processes):
             if not self._sh.pclose(p):
-                logger.error("Abnormal return code for one of the processes (#%d)", i)
+                logger.error(
+                    "Abnormal return code for one of the processes (#%d)", i
+                )
 
     @contextmanager
     def compress2stream(self, local, iosponge=False):
@@ -134,7 +139,9 @@ class CompressionPipeline:
         be properly closed
         """
         with self._openstream(local) as stream:
-            estimated_size = self._inputstream_size(stream) * self.compression_factor
+            estimated_size = (
+                self._inputstream_size(stream) * self.compression_factor
+            )
             processes = list()
             lstream = stream
             for unit in self.units:
@@ -161,7 +168,7 @@ class CompressionPipeline:
         *local* can be an opened file-like object or a filename.
         *destination* is a filename.
         """
-        with open(destination, 'wb') as fhout:
+        with open(destination, "wb") as fhout:
             with self.compress2stream(local) as fhcompressed:
                 return self._xcopyfileobj(fhcompressed, fhout)
 
@@ -189,7 +196,7 @@ class CompressionPipeline:
         When leaving the context, the gunzip process that uncompresses the data
         will be properly closed.
         """
-        with self._openstream(destination, 'wb') as dstream:
+        with self._openstream(destination, "wb") as dstream:
             processes = list()
             instream = True
             nunits = len(self.units)
@@ -208,7 +215,7 @@ class CompressionPipeline:
         *destination* can be an opened file-like object or a filename.
         """
         with self.stream2uncompress(destination) as fhuncompressed:
-            with open(local, 'rb') as fhcompressed:
+            with open(local, "rb") as fhcompressed:
                 return self._xcopyfileobj(fhcompressed, fhuncompressed)
 
 
@@ -216,22 +223,22 @@ class CompressionUnit(footprints.FootprintBase):
     """Defines compress/uncompress methods for a given compression tool."""
 
     _abstract = True
-    _collector = ('compression_unit',)
+    _collector = ("compression_unit",)
     _footprint = dict(
-        info = 'Abstract Compression Unit',
-        attr = dict(
-            kind = dict(
-                info = "The name of the compression tool.",
+        info="Abstract Compression Unit",
+        attr=dict(
+            kind=dict(
+                info="The name of the compression tool.",
             ),
-            suffix = dict(
-                info = "The usual file extension for this compression tool.",
-                optional = True,
+            suffix=dict(
+                info="The usual file extension for this compression tool.",
+                optional=True,
             ),
-            cfactor = dict(
-                info = "The usual compression factor for this compression tool.",
-                type = float,
-                default = 1.,
-                optional =True,
+            cfactor=dict(
+                info="The usual compression factor for this compression tool.",
+                type=float,
+                default=1.0,
+                optional=True,
             ),
         ),
     )
@@ -255,68 +262,64 @@ class CompressionUnit(footprints.FootprintBase):
 
 
 class GzipCompressionUnit(CompressionUnit):
-
     _footprint = dict(
-        info = 'Compress/Uncompress a stream using gzip',
-        attr = dict(
-            kind = dict(
-                values = ['gzip', 'gz']
+        info="Compress/Uncompress a stream using gzip",
+        attr=dict(
+            kind=dict(values=["gzip", "gz"]),
+            suffix=dict(
+                default="gz",
             ),
-            suffix = dict(
-                default = 'gz',
+            complevel=dict(
+                info="The gzip algorithm compression level (see 'man gzip')",
+                type=int,
+                values=range(1, 10),
+                default=6,
+                optional=True,
             ),
-            complevel = dict(
-                info = "The gzip algorithm compression level (see 'man gzip')",
-                type = int,
-                values = range(1, 10),
-                default = 6,
-                optional = True
-            ),
-            cfactor = dict(
-                default = 0.9
-            ),
+            cfactor=dict(default=0.9),
         ),
     )
 
     def compress(self, sh, stream):
         """Compress the input *stream*. Returns a Popen object."""
-        return self._run_in_pipe(sh, ['gzip', '--stdout', '-{!s}'.format(self.complevel)],
-                                 stream)
+        return self._run_in_pipe(
+            sh, ["gzip", "--stdout", "-{!s}".format(self.complevel)], stream
+        )
 
     def uncompress(self, sh, stream, outstream=True):
         """Uncompress the input *stream*. Returns a Popen object."""
-        return self._run_in_pipe(sh, ['gunzip', '--stdout'], stream, outstream)
+        return self._run_in_pipe(sh, ["gunzip", "--stdout"], stream, outstream)
 
 
 class Bzip2CompressionUnit(CompressionUnit):
-
     _footprint = dict(
-        info = 'Compress/Uncompress a stream using bzip2',
-        attr = dict(
-            kind = dict(
-                values = ['bzip2', 'bz2']
+        info="Compress/Uncompress a stream using bzip2",
+        attr=dict(
+            kind=dict(values=["bzip2", "bz2"]),
+            suffix=dict(
+                default="bz2",
             ),
-            suffix = dict(
-                default = 'bz2',
+            complevel=dict(
+                info="The bzip2 algorithm compression level (see 'man bzip2')",
+                type=int,
+                values=range(1, 10),
+                default=9,
+                optional=True,
             ),
-            complevel = dict(
-                info = "The bzip2 algorithm compression level (see 'man bzip2')",
-                type = int,
-                values = range(1, 10),
-                default = 9,
-                optional = True
-            ),
-            cfactor = dict(
-                default = 0.85,
+            cfactor=dict(
+                default=0.85,
             ),
         ),
     )
 
     def compress(self, sh, stream):
         """Compress the input *stream*. Returns a Popen object."""
-        return self._run_in_pipe(sh, ['bzip2', '--stdout', '-{!s}'.format(self.complevel)],
-                                 stream)
+        return self._run_in_pipe(
+            sh, ["bzip2", "--stdout", "-{!s}".format(self.complevel)], stream
+        )
 
     def uncompress(self, sh, stream, outstream=True):
         """Uncompress the input *stream*. Returns a Popen object."""
-        return self._run_in_pipe(sh, ['bunzip2', '--stdout'], stream, outstream)
+        return self._run_in_pipe(
+            sh, ["bunzip2", "--stdout"], stream, outstream
+        )

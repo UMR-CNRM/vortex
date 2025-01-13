@@ -24,4 +24,4 @@ It also provides modules that allows to create "standard" VORTEX's jobs:
 #: No automatic export
 __all__ = []
 
-__tocinfoline__ = 'Package that helps organising a VORTEX session.'
+__tocinfoline__ = "Package that helps organising a VORTEX session."

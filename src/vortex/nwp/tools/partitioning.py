@@ -16,13 +16,16 @@ from bronx.fancies import loggers
 
 logger = loggers.getLogger(__name__)
 
-__all__ = ['PartitioningError',
-           'Rectangular2DPartitioner',
-           'setup_partitioning_in_namelist']
+__all__ = [
+    "PartitioningError",
+    "Rectangular2DPartitioner",
+    "setup_partitioning_in_namelist",
+]
 
 
 class PartitioningError(ValueError):
     """Any error raised during domain partitionings."""
+
     pass
 
 
@@ -40,24 +43,33 @@ class AbstratctPartitioner:
         :param p_method_specification: The partitioning method definition
         """
         # Process the partitioning method specification string
-        p_method_parts = p_method_specification.lower().split('_')
+        p_method_parts = p_method_specification.lower().split("_")
         self.p_method_name = None
         self.p_method_args = ()
         for a_method, a_method_n_args in self._REGISTERED_METHODS:
             if p_method_parts[0] == a_method:
                 self.p_method_name = p_method_parts[0]
                 if len(p_method_parts) - 1 != a_method_n_args:
-                    raise ValueError('Erroneous number of interger args ' +
-                                     'for the {:s} p_method ({:d} required)'
-                                     .format(a_method, a_method_n_args))
-                self.p_method_args = tuple([int(s) for s in p_method_parts[1:]])
+                    raise ValueError(
+                        "Erroneous number of interger args "
+                        + "for the {:s} p_method ({:d} required)".format(
+                            a_method, a_method_n_args
+                        )
+                    )
+                self.p_method_args = tuple(
+                    [int(s) for s in p_method_parts[1:]]
+                )
         # Unknown method -> crash
         if self.p_method_name is None:
-            raise PartitioningError("Unknown partitioning method ({:s})."
-                                    .format(p_method_specification))
+            raise PartitioningError(
+                "Unknown partitioning method ({:s}).".format(
+                    p_method_specification
+                )
+            )
         # The actual class' method that will be used to compute a and b
-        self.p_method = functools.partial(getattr(self, '_' + self.p_method_name),
-                                          * self.p_method_args)
+        self.p_method = functools.partial(
+            getattr(self, "_" + self.p_method_name), *self.p_method_args
+        )
         # Implement a caching mechanism
         self._p_cache = dict()
 
@@ -124,10 +136,10 @@ class Rectangular2DPartitioner(AbstratctPartitioner):
     """
 
     _REGISTERED_METHODS = (
-        ('xcloseto', 1),
-        ('ycloseto', 1),
-        ('square', 0),
-        ('aspect', 2)
+        ("xcloseto", 1),
+        ("ycloseto", 1),
+        ("square", 0),
+        ("aspect", 2),
     )
 
     @staticmethod
@@ -143,8 +155,7 @@ class Rectangular2DPartitioner(AbstratctPartitioner):
         """Find ``x`` as the closest possible value to **close_to_what**."""
         guesses = b_iter.interleave(
             range(close_to_what, 0, -1),
-            range(close_to_what + 1, min(close_to_what * 2,
-                                         ntasks))
+            range(close_to_what + 1, min(close_to_what * 2, ntasks)),
         )
         return self._test_and_return(ntasks, guesses)
 
@@ -164,17 +175,15 @@ class Rectangular2DPartitioner(AbstratctPartitioner):
     def _aspect(self, x_spec, y_spec, ntasks):
         """Find ``x`` and ``y`` so that ``x / y =~ x_spec / y_spec``."""
         aspect_ratio = x_spec / y_spec
-        return self._xcloseto(int(math.sqrt(ntasks * aspect_ratio)),
-                              ntasks)
+        return self._xcloseto(int(math.sqrt(ntasks * aspect_ratio)), ntasks)
 
 
 _PARTITIONERS_CACHE = dict()
 
 
-def setup_partitioning_in_namelist(namcontents,
-                                   effective_tasks,
-                                   effective_threads,
-                                   namlocal=None):
+def setup_partitioning_in_namelist(
+    namcontents, effective_tasks, effective_threads, namlocal=None
+):
     """Look in a namelist Content object and replace the macros related to partitioning.
 
     :param nwp.data.namelists.NamelistContent namcontents: The namelist's Content
@@ -199,10 +208,12 @@ def setup_partitioning_in_namelist(namcontents,
       partitioning class. Any value that is accepted by the partitioning class is
       fine.
     """
-    macrovalid = re.compile('PART_' +
-                            '(?P<what>TASKS|THREADS)(?P<cls>2D)_' +
-                            '(?P<dim>[XY])_(?P<def>.*)$')
-    partitioning_classes = {'2D': Rectangular2DPartitioner}
+    macrovalid = re.compile(
+        "PART_"
+        + "(?P<what>TASKS|THREADS)(?P<cls>2D)_"
+        + "(?P<dim>[XY])_(?P<def>.*)$"
+    )
+    partitioning_classes = {"2D": Rectangular2DPartitioner}
     namw = False
     # Find the list of existing macros
     all_macros = set()
@@ -212,23 +223,36 @@ def setup_partitioning_in_namelist(namcontents,
     for macroname in all_macros:
         macroname_re = macrovalid.match(macroname)
         if macroname_re:
-            cache_key = (macroname_re.group('cls'), macroname_re.group('def'))
+            cache_key = (macroname_re.group("cls"), macroname_re.group("def"))
             if cache_key not in _PARTITIONERS_CACHE:
-                partitioning_class = partitioning_classes[macroname_re.group('cls')]
-                _PARTITIONERS_CACHE[cache_key] = partitioning_class(macroname_re.group('def'))
-            effective_n = dict(TASKS=effective_tasks,
-                               THREADS=effective_threads)[macroname_re.group('what')]
+                partitioning_class = partitioning_classes[
+                    macroname_re.group("cls")
+                ]
+                _PARTITIONERS_CACHE[cache_key] = partitioning_class(
+                    macroname_re.group("def")
+                )
+            effective_n = dict(
+                TASKS=effective_tasks, THREADS=effective_threads
+            )[macroname_re.group("what")]
             part_x, part_y = _PARTITIONERS_CACHE[cache_key](effective_n)
-            final_result = part_x if macroname_re.group('dim') == 'X' else part_y
+            final_result = (
+                part_x if macroname_re.group("dim") == "X" else part_y
+            )
             if namlocal:
-                logger.info('Setup macro %s=%s in %s', macroname, final_result, namlocal)
+                logger.info(
+                    "Setup macro %s=%s in %s",
+                    macroname,
+                    final_result,
+                    namlocal,
+                )
             else:
-                logger.info('Setup macro %s=%s', macroname, final_result)
+                logger.info("Setup macro %s=%s", macroname, final_result)
             namcontents.setmacro(macroname, final_result)
             namw = True
     return namw
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
+
     doctest.testmod()

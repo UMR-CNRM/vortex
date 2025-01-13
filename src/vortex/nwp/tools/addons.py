@@ -19,17 +19,22 @@ class NWPAddonsGroup(AddonGroup):
     """A set of usual NWP Addons."""
 
     _footprint = dict(
-        info = 'Default NWP Addons',
-        attr = dict(
-            kind = dict(
-                values = ['nwp', ],
+        info="Default NWP Addons",
+        attr=dict(
+            kind=dict(
+                values=[
+                    "nwp",
+                ],
             ),
-        )
+        ),
     )
 
-    _addonslist = ('allfolders',  # Folder like...
-                   'lfi', 'iopoll',  # Wonderful FA/LFI world...
-                   'grib', 'gribapi',  # GRIB stuff...
-                   'arpifs_listings',  # Obscure IFS/Arpege listings...
-                   'sfx',  # Surfex...
-                   )
+    _addonslist = (
+        "allfolders",  # Folder like...
+        "lfi",
+        "iopoll",  # Wonderful FA/LFI world...
+        "grib",
+        "gribapi",  # GRIB stuff...
+        "arpifs_listings",  # Obscure IFS/Arpege listings...
+        "sfx",  # Surfex...
+    )

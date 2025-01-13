@@ -27,6 +27,7 @@ aspects. Using the :mod:`footprints` package, for a given execution target, it
 allows to customise the way data are accessed leaving the :class:`Store` objects
 unchanged.
 """
+
 import contextlib
 import ftplib
 import re
@@ -43,6 +44,7 @@ from vortex import sessions
 from vortex.tools.actions import actiond as ad
 from vortex.tools.delayedactions import d_action_status
 from vortex.tools.systems import istruedef
+
 # TODO clean instances of GenericConfigParser
 from vortex.util.config import GenericConfigParser
 from vortex import config
@@ -59,6 +61,7 @@ HARDLINK_THRESHOLD = 1048576
 
 # Decorators: for internal use in the Storage class
 # -------------------------------------------------
+
 
 def do_recording(flag):
     """Add a record line in the History object (if sensible)."""
@@ -92,6 +95,7 @@ def enforce_readonly(f):
 # Main Storage abstract class
 # ---------------------------
 
+
 class Storage(footprints.FootprintBase):
     """Root class for any Storage class, ex: Cache, Archive, ...
 
@@ -111,13 +115,13 @@ class Storage(footprints.FootprintBase):
     dictionary whose items will be written in the object's record.
     """
 
-    _abstract = True,
+    _abstract = (True,)
     _footprint = dict(
-        info = 'Default/Abstract storage place description.',
-        attr = dict(
+        info="Default/Abstract storage place description.",
+        attr=dict(
             kind=dict(
                 info="The storage place's kind.",
-                values=['std'],
+                values=["std"],
             ),
             storage=dict(
                 info="The storage target.",
@@ -127,7 +131,7 @@ class Storage(footprints.FootprintBase):
                 type=bool,
                 optional=True,
                 default=False,
-                access='rwx',
+                access="rwx",
             ),
             readonly=dict(
                 info="Disallow insert and delete action for this storage place.",
@@ -135,11 +139,11 @@ class Storage(footprints.FootprintBase):
                 optional=True,
                 default=False,
             ),
-        )
+        ),
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Abstract storage init %s', self.__class__)
+        logger.debug("Abstract storage init %s", self.__class__)
         super().__init__(*args, **kw)
         self._history = History(tag=self.tag)
 
@@ -150,10 +154,10 @@ class Storage(footprints.FootprintBase):
 
     @property
     def realkind(self):
-        return 'storage'
+        return "storage"
 
     def _str_more(self):
-        return 'tag={:s}'.format(self.tag)
+        return "tag={:s}".format(self.tag)
 
     @property
     def context(self):
@@ -239,7 +243,7 @@ class Storage(footprints.FootprintBase):
         return rc
 
     @enforce_readonly
-    @do_recording('INSERT')
+    @do_recording("INSERT")
     def insert(self, item, local, **kwargs):
         """Insert an **item** in the current storage place.
 
@@ -247,7 +251,7 @@ class Storage(footprints.FootprintBase):
         """
         return self._actual_insert(item, local, **kwargs)
 
-    @do_recording('RETRIEVE')
+    @do_recording("RETRIEVE")
     def retrieve(self, item, local, **kwargs):
         """Retrieve an **item** from the current storage place.
 
@@ -271,19 +275,23 @@ class Storage(footprints.FootprintBase):
 
         :note: **local** may be a path to a file or any kind of file like objects.
         """
-        rc, idict = self._actual_finaliseretrieve(retrieve_id, item, local, **kwargs)
+        rc, idict = self._actual_finaliseretrieve(
+            retrieve_id, item, local, **kwargs
+        )
         if rc is not None:
             infos = self._findout_record_infos(kwargs)
             infos.update(idict)
-            self.addrecord('RETRIEVE', item, status=rc, **infos)
+            self.addrecord("RETRIEVE", item, status=rc, **infos)
         return rc
 
-    def _actual_finaliseretrieve(self, retrieve_id, item, local, **kwargs):  # @UnusedVariable
+    def _actual_finaliseretrieve(
+        self, retrieve_id, item, local, **kwargs
+    ):  # @UnusedVariable
         """No delayedretrieve implemented by default."""
         return None, dict()
 
     @enforce_readonly
-    @do_recording('DELETE')
+    @do_recording("DELETE")
     def delete(self, item, **kwargs):
         """Delete an **item** from the current storage place."""
         return self._actual_delete(item, **kwargs)
@@ -292,44 +300,47 @@ class Storage(footprints.FootprintBase):
 # Defining the two main flavours of storage places
 # -----------------------------------------------
 
+
 class Cache(Storage):
     """Root class for any :class:Cache subclasses."""
 
     _abstract = True
-    _collector = ('cache',)
+    _collector = ("cache",)
     _footprint = dict(
-        info = 'Default cache description',
-        attr = dict(
-            headdir = dict(
-                info     = "The cache's subdirectory (within **rootdir**).",
-                optional = True,
-                default  = 'cache',
+        info="Default cache description",
+        attr=dict(
+            headdir=dict(
+                info="The cache's subdirectory (within **rootdir**).",
+                optional=True,
+                default="cache",
             ),
             # TODO is 'storage' used in any way?
-            storage = dict(
-                optional = True,
-                default  = 'localhost',
+            storage=dict(
+                optional=True,
+                default="localhost",
             ),
-            rtouch = dict(
-                info     = "Perform the recursive touch command on the directory structure.",
-                type     = bool,
-                optional = True,
-                default  = False,
+            rtouch=dict(
+                info="Perform the recursive touch command on the directory structure.",
+                type=bool,
+                optional=True,
+                default=False,
             ),
-            rtouchskip = dict(
-                info     = "Do not 'touch' the first **rtouchskip** directories.",
-                type     = int,
-                optional = True,
-                default  = 0,
+            rtouchskip=dict(
+                info="Do not 'touch' the first **rtouchskip** directories.",
+                type=int,
+                optional=True,
+                default=0,
             ),
-            rtouchdelay = dict(
-                info     = ("Do not perfom a touch if it has already been done in " +
-                            "the last X seconds."),
-                type     = float,
-                optional = True,
-                default  = 600.,  # 10 minutes
+            rtouchdelay=dict(
+                info=(
+                    "Do not perfom a touch if it has already been done in "
+                    + "the last X seconds."
+                ),
+                type=float,
+                optional=True,
+                default=600.0,  # 10 minutes
             ),
-        )
+        ),
     )
 
     def __init__(self, *kargs, **kwargs):
@@ -338,12 +349,12 @@ class Cache(Storage):
 
     @property
     def realkind(self):
-        return 'cache'
+        return "cache"
 
     @property
     def tag(self):
         """The identifier of this cache place."""
-        return '{:s}_{:s}_{:s}'.format(self.realkind, self.kind, self.headdir)
+        return "{:s}_{:s}_{:s}".format(self.realkind, self.kind, self.headdir)
 
     def _formatted_path(self, subpath, **kwargs):  # @UnusedVariable
         raise NotImplementedError()
@@ -363,11 +374,11 @@ class Cache(Storage):
         ts = time.time()
         ts_delay = ts - self._touch_tracker.get(path, 0)
         if ts_delay > self.rtouchdelay:
-            logger.debug('Touching: %s (delay was %.2f)', path, ts_delay)
+            logger.debug("Touching: %s (delay was %.2f)", path, ts_delay)
             self.sh.touch(path)
             self._touch_tracker[path] = ts
         else:
-            logger.debug('Skipping touch: %s (delay was %.2f)', path, ts_delay)
+            logger.debug("Skipping touch: %s (delay was %.2f)", path, ts_delay)
 
     def _recursive_touch(self, rc, item, writing=False):
         """Make recursive touches on parent directories.
@@ -375,13 +386,15 @@ class Cache(Storage):
         It might be useful for cleaning scripts.
         """
         if self.rtouch and (not self.readonly) and rc:
-            items = item.lstrip('/').split('/')
+            items = item.lstrip("/").split("/")
             items = items[:-1]
             if writing:
                 # It's useless to touch the rightmost directory
                 items = items[:-1] if len(items) > 1 else []
             for index in range(len(items), self.rtouchskip, -1):
-                self._xtouch(self._formatted_path(self.sh.path.join(*items[:index])))
+                self._xtouch(
+                    self._formatted_path(self.sh.path.join(*items[:index]))
+                )
 
     def _actual_fullpath(self, item, **kwargs):
         """Return the path/URI to the **item**'s storage location."""
@@ -389,8 +402,9 @@ class Cache(Storage):
 
     def _actual_prestageinfo(self, item, **kwargs):
         """Returns pre-staging informations."""
-        return dict(strategy=self.kind,
-                    location=self.fullpath(item, **kwargs)), dict()
+        return dict(
+            strategy=self.kind, location=self.fullpath(item, **kwargs)
+        ), dict()
 
     def _actual_check(self, item, **kwargs):
         """Check/Stat an **item** from the current storage place."""
@@ -422,10 +436,15 @@ class Cache(Storage):
         # Insert the element
         tpath = self._formatted_path(item)
         if tpath is not None:
-            rc = self.sh.cp(local, tpath, intent=intent, fmt=fmt,
-                            smartcp_threshold=HARDLINK_THRESHOLD)
+            rc = self.sh.cp(
+                local,
+                tpath,
+                intent=intent,
+                fmt=fmt,
+                smartcp_threshold=HARDLINK_THRESHOLD,
+            )
         else:
-            logger.warning('No target location for < %s >', item)
+            logger.warning("No target location for < %s >", item)
             rc = False
         self._recursive_touch(rc, item, writing=True)
         return rc, dict(intent=intent, fmt=fmt)
@@ -442,30 +461,55 @@ class Cache(Storage):
         source = self._formatted_path(item)
         if source is not None:
             # If auto_dirextract, copy recursively each file contained in source
-            if dirextract and self.sh.path.isdir(source) and self.sh.is_tarname(local):
+            if (
+                dirextract
+                and self.sh.path.isdir(source)
+                and self.sh.is_tarname(local)
+            ):
                 rc = True
                 destdir = self.sh.path.dirname(self.sh.path.realpath(local))
-                logger.info('Automatic directory extract to: %s', destdir)
-                for subpath in self.sh.glob(source + '/*'):
-                    rc = rc and self.sh.cp(subpath,
-                                           self.sh.path.join(destdir, self.sh.path.basename(subpath)),
-                                           intent=intent, fmt=fmt,
-                                           smartcp_threshold=HARDLINK_THRESHOLD)
+                logger.info("Automatic directory extract to: %s", destdir)
+                for subpath in self.sh.glob(source + "/*"):
+                    rc = rc and self.sh.cp(
+                        subpath,
+                        self.sh.path.join(
+                            destdir, self.sh.path.basename(subpath)
+                        ),
+                        intent=intent,
+                        fmt=fmt,
+                        smartcp_threshold=HARDLINK_THRESHOLD,
+                    )
                     # For the insitu feature to work...
                     rc = rc and self.sh.touch(local)
             # The usual case: just copy source
             else:
-                rc = self.sh.cp(source, local, intent=intent, fmt=fmt, silent=silent,
-                                smartcp_threshold=HARDLINK_THRESHOLD)
+                rc = self.sh.cp(
+                    source,
+                    local,
+                    intent=intent,
+                    fmt=fmt,
+                    silent=silent,
+                    smartcp_threshold=HARDLINK_THRESHOLD,
+                )
                 # If auto_tarextract, a potential tar file is extracted
-                if (rc and tarextract and not self.sh.path.isdir(local) and
-                        self.sh.is_tarname(local) and self.sh.is_tarfile(local)):
-                    destdir = self.sh.path.dirname(self.sh.path.realpath(local))
-                    logger.info('Automatic Tar extract to: %s', destdir)
-                    rc = rc and self.sh.smartuntar(local, destdir,
-                                                   uniquelevel_ignore=uniquelevel_ignore)
+                if (
+                    rc
+                    and tarextract
+                    and not self.sh.path.isdir(local)
+                    and self.sh.is_tarname(local)
+                    and self.sh.is_tarfile(local)
+                ):
+                    destdir = self.sh.path.dirname(
+                        self.sh.path.realpath(local)
+                    )
+                    logger.info("Automatic Tar extract to: %s", destdir)
+                    rc = rc and self.sh.smartuntar(
+                        local, destdir, uniquelevel_ignore=uniquelevel_ignore
+                    )
         else:
-            getattr(logger, 'info' if silent else 'warning')('No readable source for < %s >', item)
+            getattr(logger, "info" if silent else "warning")(
+                "No readable source for < %s >", item
+            )
             rc = False
         self._recursive_touch(rc, item)
         return rc, dict(intent=intent, fmt=fmt)
@@ -479,7 +523,7 @@ class Cache(Storage):
         if tpath is not None:
             rc = self.sh.remove(tpath, fmt=fmt)
         else:
-            logger.warning('No target location for < %s >', item)
+            logger.warning("No target location for < %s >", item)
             rc = False
         return rc, dict(fmt=fmt)
 
@@ -488,34 +532,36 @@ class AbstractArchive(Storage):
     """The default class to handle storage to some kind if Archive."""
 
     _abstract = True
-    _collector = ('archive',)
+    _collector = ("archive",)
     _footprint = dict(
-        info = 'Default archive description',
-        attr = dict(
-            tube = dict(
-                info     = "How to communicate with the archive ?",
+        info="Default archive description",
+        attr=dict(
+            tube=dict(
+                info="How to communicate with the archive ?",
             ),
-        )
+        ),
     )
 
     @property
     def tag(self):
         """The identifier of this cache place."""
-        return '{:s}_{:s}_{:s}'.format(self.realkind, self.storage, self.kind)
+        return "{:s}_{:s}_{:s}".format(self.realkind, self.storage, self.kind)
 
     @property
     def realkind(self):
-        return 'archive'
+        return "archive"
 
     def _formatted_path(self, rawpath, **kwargs):
-        root = kwargs.get('root', None)
+        root = kwargs.get("root", None)
         if root is not None:
-            rawpath = self.sh.path.join(root, rawpath.lstrip('/'))
+            rawpath = self.sh.path.join(root, rawpath.lstrip("/"))
         # Deal with compression
-        compressionpipeline = kwargs.get('compressionpipeline', None)
+        compressionpipeline = kwargs.get("compressionpipeline", None)
         if compressionpipeline is not None:
             rawpath += compressionpipeline.suffix
-        return self.sh.anyft_remote_rewrite(rawpath, fmt=kwargs.get('fmt', 'foo'))
+        return self.sh.anyft_remote_rewrite(
+            rawpath, fmt=kwargs.get("fmt", "foo")
+        )
 
     def _actual_proxy_method(self, pmethod):
         """Create a proxy method based on the **pmethod** actual method."""
@@ -532,18 +578,23 @@ class AbstractArchive(Storage):
 
     def __getattr__(self, attr):
         """Provides proxy methods for _actual_* methods."""
-        methods = r'fullpath|prestageinfo|check|list|insert|retrieve|delete'
-        mattr = re.match(r'_actual_(?P<action>' + methods + r')', attr)
+        methods = r"fullpath|prestageinfo|check|list|insert|retrieve|delete"
+        mattr = re.match(r"_actual_(?P<action>" + methods + r")", attr)
         if mattr:
-            pmethod = getattr(self, '_{:s}{:s}'.format(self.tube, mattr.group('action')))
+            pmethod = getattr(
+                self, "_{:s}{:s}".format(self.tube, mattr.group("action"))
+            )
             return self._actual_proxy_method(pmethod)
         else:
-            raise AttributeError("The {:s} attribute was not found in this object"
-                                 .format(attr))
+            raise AttributeError(
+                "The {:s} attribute was not found in this object".format(attr)
+            )
 
     def _actual_earlyretrieve(self, item, local, **kwargs):
         """Proxy to the appropriate tube dependent earlyretrieve method (if available)."""
-        pmethod = getattr(self, '_{:s}{:s}'.format(self.tube, 'earlyretrieve'), None)
+        pmethod = getattr(
+            self, "_{:s}{:s}".format(self.tube, "earlyretrieve"), None
+        )
         if pmethod:
             return self._actual_proxy_method(pmethod)(item, local, **kwargs)
         else:
@@ -551,9 +602,13 @@ class AbstractArchive(Storage):
 
     def _actual_finaliseretrieve(self, retrieve_id, item, local, **kwargs):
         """Proxy to the appropriate tube dependent finaliseretrieve method (if available)."""
-        pmethod = getattr(self, '_{:s}{:s}'.format(self.tube, 'finaliseretrieve'), None)
+        pmethod = getattr(
+            self, "_{:s}{:s}".format(self.tube, "finaliseretrieve"), None
+        )
         if pmethod:
-            return self._actual_proxy_method(pmethod)(item, local, retrieve_id, **kwargs)
+            return self._actual_proxy_method(pmethod)(
+                item, local, retrieve_id, **kwargs
+            )
         else:
             return None, dict()
 
@@ -562,41 +617,46 @@ class Archive(AbstractArchive):
     """The default class to handle storage to a remote location."""
 
     _footprint = dict(
-        info = 'Default archive description',
-        attr = dict(
-            tube = dict(
-                values   = ['ftp'],
+        info="Default archive description",
+        attr=dict(
+            tube=dict(
+                values=["ftp"],
             ),
-        )
+        ),
     )
 
     def __init__(self, *kargs, **kwargs):
         super().__init__(*kargs, **kwargs)
         self.default_usejeeves = config.from_config(
-            section="storage", key="usejeeves",
+            section="storage",
+            key="usejeeves",
         )
 
     @property
     def _ftp_hostinfos(self):
         """Return the FTP hostname end port number."""
-        s_storage = self.storage.split(':', 1)
+        s_storage = self.storage.split(":", 1)
         hostname = s_storage[0]
         port = None
         if len(s_storage) > 1:
             try:
                 port = int(s_storage[1])
             except ValueError:
-                logger.error('Invalid port number < %s >. Ignoring it', s_storage[1])
+                logger.error(
+                    "Invalid port number < %s >. Ignoring it", s_storage[1]
+                )
         return hostname, port
 
     def _ftp_client(self, logname=None, delayed=False):
         """Return a FTP client object."""
         hostname, port = self._ftp_hostinfos
-        return self.sh.ftp(hostname, logname=logname, delayed=delayed, port=port)
+        return self.sh.ftp(
+            hostname, logname=logname, delayed=delayed, port=port
+        )
 
     def _ftpfullpath(self, item, **kwargs):
         """Actual _fullpath using ftp."""
-        username = kwargs.get('username', None)
+        username = kwargs.get("username", None)
         rc = None
         ftp = self._ftp_client(logname=username, delayed=True)
         if ftp:
@@ -608,7 +668,7 @@ class Archive(AbstractArchive):
 
     def _ftpprestageinfo(self, item, **kwargs):
         """Actual _prestageinfo using ftp."""
-        username = kwargs.get('username', None)
+        username = kwargs.get("username", None)
         if username is None:
             ftp = self._ftp_client(logname=username, delayed=True)
             if ftp:
@@ -616,15 +676,17 @@ class Archive(AbstractArchive):
                     username = ftp.logname
                 finally:
                     ftp.close()
-        baseinfo = dict(storage=self.storage,
-                        logname=username,
-                        location=item, )
+        baseinfo = dict(
+            storage=self.storage,
+            logname=username,
+            location=item,
+        )
         return baseinfo, dict()
 
     def _ftpcheck(self, item, **kwargs):
         """Actual _check using ftp."""
         rc = None
-        ftp = self._ftp_client(logname=kwargs.get('username', None))
+        ftp = self._ftp_client(logname=kwargs.get("username", None))
         if ftp:
             try:
                 rc = ftp.size(item)
@@ -638,7 +700,7 @@ class Archive(AbstractArchive):
 
     def _ftplist(self, item, **kwargs):
         """Actual _list using ftp."""
-        ftp = self._ftp_client(logname=kwargs.get('username', None))
+        ftp = self._ftp_client(logname=kwargs.get("username", None))
         rc = None
         if ftp:
             try:
@@ -657,26 +719,30 @@ class Archive(AbstractArchive):
             else:
                 # Content of the directory...
                 if rc:
-                    rc = ftp.nlst('.')
+                    rc = ftp.nlst(".")
             finally:
                 ftp.close()
         return rc, dict()
 
     def _ftpretrieve(self, item, local, **kwargs):
         """Actual _retrieve using ftp."""
-        logger.info('ftpget on ftp://%s/%s (to: %s)', self.storage, item, local)
-        extras = dict(fmt=kwargs.get('fmt', 'foo'),
-                      cpipeline=kwargs.get('compressionpipeline', None))
+        logger.info(
+            "ftpget on ftp://%s/%s (to: %s)", self.storage, item, local
+        )
+        extras = dict(
+            fmt=kwargs.get("fmt", "foo"),
+            cpipeline=kwargs.get("compressionpipeline", None),
+        )
         hostname, port = self._ftp_hostinfos
         if port is not None:
-            extras['port'] = port
+            extras["port"] = port
         rc = self.sh.smartftget(
             item,
             local,
             # Ftp control
             hostname=hostname,
-            logname=kwargs.get('username', None),
-            **extras
+            logname=kwargs.get("username", None),
+            **extras,
         )
         return rc, extras
 
@@ -685,32 +751,42 @@ class Archive(AbstractArchive):
         If FtServ/ftraw is used, trigger a delayed action in order to fetch
         several files at once.
         """
-        cpipeline = kwargs.get('compressionpipeline', None)
+        cpipeline = kwargs.get("compressionpipeline", None)
         if self.sh.rawftget_worthy(item, local, cpipeline):
-            return self.context.delayedactions_hub.register((item, kwargs.get('fmt', 'foo')),
-                                                            kind='archive',
-                                                            storage=self.storage,
-                                                            goal='get',
-                                                            tube='ftp',
-                                                            raw=True,
-                                                            logname=kwargs.get('username', None))
+            return self.context.delayedactions_hub.register(
+                (item, kwargs.get("fmt", "foo")),
+                kind="archive",
+                storage=self.storage,
+                goal="get",
+                tube="ftp",
+                raw=True,
+                logname=kwargs.get("username", None),
+            )
         else:
             return None
 
-    def _ftpfinaliseretrieve(self, item, local, retrieve_id, **kwargs):  # @UnusedVariable
+    def _ftpfinaliseretrieve(
+        self, item, local, retrieve_id, **kwargs
+    ):  # @UnusedVariable
         """
         Get the resource given the **retrieve_id** identifier returned by the
         :meth:`_ftpearlyretrieve` method.
         """
-        extras = dict(fmt=kwargs.get('fmt', 'foo'), )
-        d_action = self.context.delayedactions_hub.retrieve(retrieve_id, bareobject=True)
+        extras = dict(
+            fmt=kwargs.get("fmt", "foo"),
+        )
+        d_action = self.context.delayedactions_hub.retrieve(
+            retrieve_id, bareobject=True
+        )
         if d_action.status == d_action_status.done:
             if self.sh.filecocoon(local):
                 rc = self.sh.mv(d_action.result, local, **extras)
             else:
-                raise OSError('Could not cocoon: {!s}'.format(local))
+                raise OSError("Could not cocoon: {!s}".format(local))
         elif d_action.status == d_action_status.failed:
-            logger.info('The earlyretrieve failed (retrieve_id=%s)', retrieve_id)
+            logger.info(
+                "The earlyretrieve failed (retrieve_id=%s)", retrieve_id
+            )
             rc = False
         else:
             rc = None
@@ -718,64 +794,78 @@ class Archive(AbstractArchive):
 
     def _ftpinsert(self, item, local, **kwargs):
         """Actual _insert using ftp."""
-        usejeeves = kwargs.get('usejeeves', None)
+        usejeeves = kwargs.get("usejeeves", None)
         if usejeeves is None:
             usejeeves = self.default_usejeeves
         hostname, port = self._ftp_hostinfos
         if not usejeeves:
-            logger.info('ftpput to ftp://%s/%s (from: %s)', self.storage, item, local)
-            extras = dict(fmt=kwargs.get('fmt', 'foo'),
-                          cpipeline=kwargs.get('compressionpipeline', None))
+            logger.info(
+                "ftpput to ftp://%s/%s (from: %s)", self.storage, item, local
+            )
+            extras = dict(
+                fmt=kwargs.get("fmt", "foo"),
+                cpipeline=kwargs.get("compressionpipeline", None),
+            )
             if port is not None:
-                extras['port'] = port
+                extras["port"] = port
             rc = self.sh.smartftput(
                 local,
                 item,
                 # Ftp control
                 hostname=hostname,
-                logname=kwargs.get('username', None),
-                sync=kwargs.get('enforcesync', False),
-                **extras
+                logname=kwargs.get("username", None),
+                sync=kwargs.get("enforcesync", False),
+                **extras,
             )
         else:
-            logger.info('delayed ftpput to ftp://%s/%s (from: %s)', self.storage, item, local)
-            tempo = footprints.proxy.service(kind='hiddencache',
-                                             asfmt=kwargs.get('fmt'))
-            compressionpipeline = kwargs.get('compressionpipeline', '')
+            logger.info(
+                "delayed ftpput to ftp://%s/%s (from: %s)",
+                self.storage,
+                item,
+                local,
+            )
+            tempo = footprints.proxy.service(
+                kind="hiddencache", asfmt=kwargs.get("fmt")
+            )
+            compressionpipeline = kwargs.get("compressionpipeline", "")
             if compressionpipeline:
                 compressionpipeline = compressionpipeline.description_string
-            extras = dict(fmt=kwargs.get('fmt', 'foo'),
-                          cpipeline=compressionpipeline)
+            extras = dict(
+                fmt=kwargs.get("fmt", "foo"), cpipeline=compressionpipeline
+            )
             if port is not None:
-                extras['port'] = port
+                extras["port"] = port
 
             rc = ad.jeeves(
                 hostname=hostname,
                 # Explicitly resolve the logname (because jeeves FTP client is not
                 # running with the same glove (i.e. Jeeves ftuser configuration may
                 # be different).
-                logname=self.sh.fix_ftuser(hostname,
-                                           kwargs.get('username', None)),
-                todo='ftput',
-                rhandler=kwargs.get('info', None),
+                logname=self.sh.fix_ftuser(
+                    hostname, kwargs.get("username", None)
+                ),
+                todo="ftput",
+                rhandler=kwargs.get("info", None),
                 source=tempo(local),
                 destination=item,
                 original=self.sh.path.abspath(local),
-                **extras
+                **extras,
             )
         return rc, extras
 
     def _ftpdelete(self, item, **kwargs):
         """Actual _delete using ftp."""
         rc = None
-        ftp = self._ftp_client(logname=kwargs.get('username', None))
+        ftp = self._ftp_client(logname=kwargs.get("username", None))
         if ftp:
             if self._ftpcheck(item, **kwargs)[0]:
-                logger.info('ftpdelete on ftp://%s/%s', self.storage, item)
+                logger.info("ftpdelete on ftp://%s/%s", self.storage, item)
                 rc = ftp.delete(item)
                 ftp.close()
             else:
-                logger.error('Try to remove a non-existing resource <%s>', item)
+                logger.error(
+                    "Try to remove a non-existing resource <%s>", item
+                )
         return rc, dict()
 
 
@@ -784,12 +874,14 @@ class AbstractLocalArchive(AbstractArchive):
 
     _abstract = True
     _footprint = dict(
-        info = 'Generic local archive description',
-        attr = dict(
-            tube = dict(
-                values   = ['inplace', ],
+        info="Generic local archive description",
+        attr=dict(
+            tube=dict(
+                values=[
+                    "inplace",
+                ],
             ),
-        )
+        ),
     )
 
     def _inplacefullpath(self, item, **kwargs):
@@ -818,14 +910,14 @@ class AbstractLocalArchive(AbstractArchive):
 
     def _inplaceretrieve(self, item, local, **kwargs):
         """Actual _retrieve using ftp."""
-        logger.info('inplaceget on file:///%s (to: %s)', item, local)
-        fmt = kwargs.get('fmt', 'foo')
-        cpipeline = kwargs.get('compressionpipeline', None)
+        logger.info("inplaceget on file:///%s (to: %s)", item, local)
+        fmt = kwargs.get("fmt", "foo")
+        cpipeline = kwargs.get("compressionpipeline", None)
         if cpipeline:
             rc = cpipeline.file2uncompress(item, local)
         else:
             # Do not use fmt=... on purpose (otherwise "forceunpack" may be called twice)
-            rc = self.sh.cp(item, local, intent='in')
+            rc = self.sh.cp(item, local, intent="in")
         rc = rc and self.sh.forceunpack(local, fmt=fmt)
         return rc, dict(fmt=fmt, cpipeline=cpipeline)
 
@@ -842,20 +934,20 @@ class AbstractLocalArchive(AbstractArchive):
 
     def _inplaceinsert(self, item, local, **kwargs):
         """Actual _insert using ftp."""
-        logger.info('inplaceput to file:///%s (from: %s)', item, local)
-        cpipeline = kwargs.get('compressionpipeline', None)
-        fmt = kwargs.get('fmt', 'foo')
+        logger.info("inplaceput to file:///%s (from: %s)", item, local)
+        cpipeline = kwargs.get("compressionpipeline", None)
+        fmt = kwargs.get("fmt", "foo")
         with self._inplaceinsert_pack(local, fmt) as local_packed:
             if cpipeline:
                 rc = cpipeline.compress2file(local_packed, item)
             else:
                 # Do not use fmt=... on purpose (otherwise "forcepack" may be called twice)
-                rc = self.sh.cp(local_packed, item, intent='in')
+                rc = self.sh.cp(local_packed, item, intent="in")
         return rc, dict(fmt=fmt, cpipeline=cpipeline)
 
     def _inplacedelete(self, item, **kwargs):
         """Actual _delete using ftp."""
-        fmt = kwargs.get('fmt', 'foo')
+        fmt = kwargs.get("fmt", "foo")
         rc = None
         if self._inplacecheck(item, **kwargs)[0]:
             rc = self.sh.rm(item, fmt=fmt)
@@ -866,28 +958,32 @@ class LocalArchive(AbstractLocalArchive):
     """The default class to handle storage to the same host."""
 
     _footprint = dict(
-        info = 'Default local archive description',
-        attr = dict(
-            storage = dict(
-                values   = ['localhost', ],
+        info="Default local archive description",
+        attr=dict(
+            storage=dict(
+                values=[
+                    "localhost",
+                ],
             ),
-            auto_self_expand = dict(
-                info     = ('Automatically expand the current user home if ' +
-                            'a relative path is given (should always be True ' +
-                            'except during unit-testing)'),
-                type     = bool,
-                default  = True,
-                optional = True,
+            auto_self_expand=dict(
+                info=(
+                    "Automatically expand the current user home if "
+                    + "a relative path is given (should always be True "
+                    + "except during unit-testing)"
+                ),
+                type=bool,
+                default=True,
+                optional=True,
             ),
-        )
+        ),
     )
 
     def _formatted_path(self, rawpath, **kwargs):
         rawpath = self.sh.path.expanduser(rawpath)
-        if '~' in rawpath:
+        if "~" in rawpath:
             raise OSError('User expansion failed for "{:s}"'.format(rawpath))
         if self.auto_self_expand and not self.sh.path.isabs(rawpath):
-            rawpath = self.sh.path.expanduser(self.sh.path.join('~', rawpath))
+            rawpath = self.sh.path.expanduser(self.sh.path.join("~", rawpath))
         return super()._formatted_path(rawpath, **kwargs)
 
 
@@ -898,14 +994,14 @@ class LocalArchive(AbstractLocalArchive):
 class FixedEntryCache(Cache):
     _abstract = True
     _footprint = dict(
-        info = 'Default cache description (with a fixed entry point)',
-        attr = dict(
-            rootdir = dict(
-                info     = "The cache's location (usually on a filesystem).",
-                optional = True,
-                default  = None,
+        info="Default cache description (with a fixed entry point)",
+        attr=dict(
+            rootdir=dict(
+                info="The cache's location (usually on a filesystem).",
+                optional=True,
+                default=None,
             ),
-        )
+        ),
     )
 
     @property
@@ -918,10 +1014,10 @@ class FixedEntryCache(Cache):
     @property
     def tag(self):
         """The identifier of this cache place."""
-        return '{:s}_{:s}'.format(self.realkind, self.entry)
+        return "{:s}_{:s}".format(self.realkind, self.entry)
 
     def _formatted_path(self, subpath, **kwargs):  # @UnusedVariable
-        return self.sh.path.join(self.entry, subpath.lstrip('/'))
+        return self.sh.path.join(self.entry, subpath.lstrip("/"))
 
     def catalog(self):
         """List all files present in this cache.
@@ -930,18 +1026,20 @@ class FixedEntryCache(Cache):
         """
         entry = self.sh.path.expanduser(self.entry)
         files = self.sh.ffind(entry)
-        return [f[len(entry):] for f in files]
+        return [f[len(entry) :] for f in files]
 
     def flush(self, dumpfile=None):
         """Flush actual history to the specified ``dumpfile`` if record is on."""
         if dumpfile is None:
-            logfile = '.'.join((
-                'HISTORY',
-                datetime.now().strftime('%Y%m%d%H%M%S.%f'),
-                'P{:06d}'.format(self.sh.getpid()),
-                self.sh.getlogname()
-            ))
-            dumpfile = self.sh.path.join(self.entry, '.history', logfile)
+            logfile = ".".join(
+                (
+                    "HISTORY",
+                    datetime.now().strftime("%Y%m%d%H%M%S.%f"),
+                    "P{:06d}".format(self.sh.getpid()),
+                    self.sh.getlogname(),
+                )
+            )
+            dumpfile = self.sh.path.join(self.entry, ".history", logfile)
         if self.record:
             self.sh.pickle_dump(self.history, dumpfile)
 
@@ -950,17 +1048,17 @@ class MtoolCache(FixedEntryCache):
     """Cache items for the MTOOL jobs (or any job that acts like it)."""
 
     _footprint = dict(
-        info = 'MTOOL like Cache',
-        attr = dict(
-            kind = dict(
-                values   = ['mtool', 'swapp'],
-                remap    = dict(swapp = 'mtool'),
+        info="MTOOL like Cache",
+        attr=dict(
+            kind=dict(
+                values=["mtool", "swapp"],
+                remap=dict(swapp="mtool"),
             ),
-            headdir = dict(
-                optional = True,
-                default  = "",
+            headdir=dict(
+                optional=True,
+                default="",
             ),
-        )
+        ),
     )
 
     @property
@@ -974,7 +1072,8 @@ class MtoolCache(FixedEntryCache):
 
         if config.is_defined(section="data-tree", key="rootdir"):
             rootdir = config.from_config(
-                section="data-tree", key="rootdir",
+                section="data-tree",
+                key="rootdir",
             )
         else:
             rootdir = self.sh.path.join(os.environ["HOME"], ".vortex.d")
@@ -986,16 +1085,18 @@ class FtStashCache(MtoolCache):
     """A place to store file to be sent with ftserv."""
 
     _footprint = dict(
-        info = 'A place to store file to be sent with ftserv',
-        attr = dict(
-            kind = dict(
-                values   = ['ftstash', ],
+        info="A place to store file to be sent with ftserv",
+        attr=dict(
+            kind=dict(
+                values=[
+                    "ftstash",
+                ],
             ),
-            headdir = dict(
-                optional = True,
-                default  = 'ftspool',
+            headdir=dict(
+                optional=True,
+                default="ftspool",
             ),
-        )
+        ),
     )
 
 
@@ -1003,27 +1104,28 @@ class Op2ResearchCache(FixedEntryCache):
     """Cache of the operational suite (read-only)."""
 
     _footprint = dict(
-        info = 'MTOOL like Operations Cache (read-only)',
-        attr = dict(
-            kind = dict(
-                values   = ['op2r'],
+        info="MTOOL like Operations Cache (read-only)",
+        attr=dict(
+            kind=dict(
+                values=["op2r"],
             ),
-            headdir = dict(
-                optional = True,
-                default  = 'vortex',
+            headdir=dict(
+                optional=True,
+                default="vortex",
             ),
-            readonly = dict(
-                values  = [True, ],
-                default = True,
-            )
-        )
+            readonly=dict(
+                values=[
+                    True,
+                ],
+                default=True,
+            ),
+        ),
     )
 
     @property
     def entry(self):
-        cache = (
-            self.rootdir or
-            config.from_config(section="data-tree", key="op_rootdir")
+        cache = self.rootdir or config.from_config(
+            section="data-tree", key="op_rootdir"
         )
         return self.sh.path.join(cache, self.headdir)
 
@@ -1032,30 +1134,27 @@ class HackerCache(FixedEntryCache):
     """A dirty cache where users can hack things."""
 
     _footprint = dict(
-        info = 'A place to hack things...',
-        attr = dict(
-            kind = dict(
-                values   = ['hack'],
+        info="A place to hack things...",
+        attr=dict(
+            kind=dict(
+                values=["hack"],
             ),
-            rootdir = dict(
-                optional = True,
-                default  = 'auto'
+            rootdir=dict(optional=True, default="auto"),
+            readonly=dict(
+                default=True,
             ),
-            readonly = dict(
-                default = True,
-            ),
-        )
+        ),
     )
 
     @property
     def entry(self):
         """Tries to figure out what could be the actual entry point for cache space."""
         sh = self.sh
-        if self.rootdir == 'auto':
+        if self.rootdir == "auto":
             gl = sessions.current().glove
-            sweethome = sh.path.join(gl.configrc, 'hack')
+            sweethome = sh.path.join(gl.configrc, "hack")
             sh.mkdir(sweethome)
-            logger.debug('Using %s hack cache: %s', self.__class__, sweethome)
+            logger.debug("Using %s hack cache: %s", self.__class__, sweethome)
         else:
             sweethome = self.rootdir
         return sh.path.join(sweethome, self.headdir)

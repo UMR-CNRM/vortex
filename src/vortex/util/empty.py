@@ -15,10 +15,10 @@ class DataConst:
 
     def __init__(self, **kw):
         self.__dict__.update(kw)
-        logger.debug('DataConst init %s', self)
+        logger.debug("DataConst init %s", self)
 
     def __str__(self):
-        return super().__str__() + ' : ' + str(sorted(self.__dict__.keys()))
+        return super().__str__() + " : " + str(sorted(self.__dict__.keys()))
 
     def __contains__(self, item):
         return item in self.__dict__

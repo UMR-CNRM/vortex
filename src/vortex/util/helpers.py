@@ -18,6 +18,7 @@ logger = loggers.getLogger(__name__)
 
 class InputCheckerError(Exception):
     """Exception raised when the Input checking process fails."""
+
     pass
 
 
@@ -38,15 +39,17 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
     """
 
     if len(rhandlers) == 0:
-        raise ValueError('At least one resource handler have to be provided')
+        raise ValueError("At least one resource handler have to be provided")
     # Just in case min_items is not an int...
     min_items = int(min_items)
 
     # Create a flat ResourceHandlers list (rhandlers may consists of lists)
     flat_rhlist = []
     flat_rhmandatory = []
-    for inlist, outlist in ((rhandlers, flat_rhlist),
-                            (kwargs.pop('mandatory', []), flat_rhmandatory),):
+    for inlist, outlist in (
+        (rhandlers, flat_rhlist),
+        (kwargs.pop("mandatory", []), flat_rhmandatory),
+    ):
         for rh in inlist:
             if isinstance(rh, list) or isinstance(rh, tuple):
                 outlist.extend(rh)
@@ -63,46 +66,61 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
         rhgroups[tuple(keylist)].append(rh)
 
     candidateslist = [
-        fp.stdtypes.FPDict({k: v
-                            for k, v in zip(grouping_keys, group)
-                            if v is not None})
+        fp.stdtypes.FPDict(
+            {k: v for k, v in zip(grouping_keys, group) if v is not None}
+        )
         for group in rhgroups.keys()
     ]
 
     # Activate FTP connections pooling (for enhanced performances)
     t = sessions.current()
     with t.sh.ftppool():
-
         # Check mandatory stuff
         mychecks = [(rh, rh.check()) for rh in flat_rhmandatory]
         if not all([acheck[1] for acheck in mychecks]):
             for rh in [acheck[0] for acheck in mychecks if not acheck[1]]:
                 logger.error("  Missing location: %s", str(rh.locate()))
-            raise InputCheckerError("Some of the mandatory resources are missing.")
+            raise InputCheckerError(
+                "Some of the mandatory resources are missing."
+            )
 
         # Check call for non-mandatory stuff
         outputlist = list()
         # Is the check real or a delusion ?
-        fakecheck = kwargs.pop('fakecheck', False)
+        fakecheck = kwargs.pop("fakecheck", False)
         #  The keys are sorted so that results remains reproducible
         for grouping_values in sorted(rhgroups.keys()):
-            mychecks = [(rh, fakecheck or rh.check()) for rh in rhgroups[grouping_values]]
-            groupid = fp.stdtypes.FPDict({k: v
-                                          for k, v in zip(grouping_keys, grouping_values)
-                                          if v is not None})
+            mychecks = [
+                (rh, fakecheck or rh.check())
+                for rh in rhgroups[grouping_values]
+            ]
+            groupid = fp.stdtypes.FPDict(
+                {
+                    k: v
+                    for k, v in zip(grouping_keys, grouping_values)
+                    if v is not None
+                }
+            )
             if all([acheck[1] for acheck in mychecks]):
                 outputlist.append(groupid)
-                logger.info("Group (%s): All the input files are accounted for.", str(groupid))
+                logger.info(
+                    "Group (%s): All the input files are accounted for.",
+                    str(groupid),
+                )
             else:
-                logger.warning("Group (%s): Discarded because some of the input files are missing (see below).",
-                               str(groupid))
+                logger.warning(
+                    "Group (%s): Discarded because some of the input files are missing (see below).",
+                    str(groupid),
+                )
                 for rh in [acheck[0] for acheck in mychecks if not acheck[1]]:
                     logger.warning("  Missing location: %s", str(rh.locate()))
 
     # Enforce min_items
     if len(outputlist) < min_items:
-        raise InputCheckerError("The number of input groups is too small " +
-                                "({:d} < {:d})".format(len(outputlist), min_items))
+        raise InputCheckerError(
+            "The number of input groups is too small "
+            + "({:d} < {:d})".format(len(outputlist), min_items)
+        )
 
     return fp.stdtypes.FPList(outputlist), fp.stdtypes.FPList(candidateslist)
 
@@ -112,8 +130,12 @@ def members_input_checker(min_items, *rhandlers, **kwargs):
     This is a shortcut for the generic_input_checher: only the member number is
     considered and the return values corresponds to a list of members.
     """
-    mlist = [desc['member'] for desc in generic_input_checker(('member', ), min_items,
-                                                              *rhandlers, **kwargs)[0]]
+    mlist = [
+        desc["member"]
+        for desc in generic_input_checker(
+            ("member",), min_items, *rhandlers, **kwargs
+        )[0]
+    ]
     return fp.stdtypes.FPList(sorted(mlist))
 
 
@@ -122,8 +144,12 @@ def colorfull_input_checker(min_items, *rhandlers, **kwargs):
     This is a shortcut for the generic_input_checher: it returns a list of
     dictionaries that described the available data.
     """
-    return generic_input_checker(('vapp', 'vconf', 'experiment', 'cutoff', 'date', 'member'),
-                                 min_items, *rhandlers, **kwargs)
+    return generic_input_checker(
+        ("vapp", "vconf", "experiment", "cutoff", "date", "member"),
+        min_items,
+        *rhandlers,
+        **kwargs,
+    )
 
 
 def merge_contents(*kargs):
@@ -176,9 +202,15 @@ def mix_list(list_elements, date=None, member=None):
         rgen.seed(seed)
     else:
         logger.info("The random seed not initialised")
-    logger.debug("The list of elements is %s.", " ".join([str(x) for x in list_elements]))
+    logger.debug(
+        "The list of elements is %s.",
+        " ".join([str(x) for x in list_elements]),
+    )
     result_list_elements = list_elements
     result_list_elements.sort()
     rgen.shuffle(result_list_elements)
-    logger.debug("The mixed list of elements is %s.", " ".join([str(x) for x in result_list_elements]))
+    logger.debug(
+        "The mixed list of elements is %s.",
+        " ".join([str(x) for x in result_list_elements]),
+    )
     return result_list_elements

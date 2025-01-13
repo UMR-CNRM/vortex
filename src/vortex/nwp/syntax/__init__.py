@@ -6,4 +6,4 @@ The most important usage is done by :class:`FootprintBase` derivated objects.
 #: No automatic export
 __all__ = []
 
-__tocinfoline__ = 'nwp module where standard attributes are defined.'
+__tocinfoline__ = "nwp module where standard attributes are defined."

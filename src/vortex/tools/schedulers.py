@@ -20,18 +20,18 @@ class Scheduler(Service):
 
     _abstract = True
     _footprint = dict(
-        info = 'Scheduling service class',
-        attr = dict(
-            muteset = dict(
-                optional = True,
-                default  = footprints.FPSet(),
-                type     = footprints.FPSet,
+        info="Scheduling service class",
+        attr=dict(
+            muteset=dict(
+                optional=True,
+                default=footprints.FPSet(),
+                type=footprints.FPSet,
             )
-        )
+        ),
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Scheduler init %s', self.__class__)
+        logger.debug("Scheduler init %s", self.__class__)
         super().__init__(*args, **kw)
 
     @property
@@ -61,15 +61,15 @@ class EcmwfLikeScheduler(Scheduler):
 
     _abstract = True
     _footprint = dict(
-        attr = dict(
-            env_pattern = dict(
-                info = 'Scheduler configuration variables start with...',
+        attr=dict(
+            env_pattern=dict(
+                info="Scheduler configuration variables start with...",
             ),
-            non_critical_timeout = dict(
-                info = 'Timeout in seconds for non-critical commands',
-                type = int,
-                default = 5,
-                optional = True,
+            non_critical_timeout=dict(
+                info="Timeout in seconds for non-critical commands",
+                type=int,
+                default=5,
+                optional=True,
             ),
         )
     )
@@ -77,17 +77,23 @@ class EcmwfLikeScheduler(Scheduler):
     _KNOWN_CMD = ()
 
     def __init__(self, *args, **kw):
-        logger.debug('Scheduler init %s', self.__class__)
+        logger.debug("Scheduler init %s", self.__class__)
         super(Scheduler, self).__init__(*args, **kw)
         self._inside_child_session = False
 
     def conf(self, kwenv):
         """Possibly export the provided variables and return a dictionary of positioned variables."""
         if kwenv:
-            for schedvar in [x.upper() for x in kwenv.keys() if x.upper().startswith(self.env_pattern)]:
+            for schedvar in [
+                x.upper()
+                for x in kwenv.keys()
+                if x.upper().startswith(self.env_pattern)
+            ]:
                 self.env[schedvar] = str(kwenv[schedvar])
         subenv = dict()
-        for schedvar in [x for x in self.env.keys() if x.startswith(self.env_pattern)]:
+        for schedvar in [
+            x for x in self.env.keys() if x.startswith(self.env_pattern)
+        ]:
             subenv[schedvar] = self.env.get(schedvar)
         return subenv
 
@@ -141,27 +147,45 @@ class EcmwfLikeScheduler(Scheduler):
         rc = None
         cmd = self.cmd_rename(cmd)
         if cmd in self.muteset:
-            logger.warning('%s mute command [%s]', self.kind, cmd)
+            logger.warning("%s mute command [%s]", self.kind, cmd)
         else:
             with self.child_session() as session_rc:
                 if session_rc:
-                    if getattr(self, 'setup_' + cmd, self.setup_default)(*options):
+                    if getattr(self, "setup_" + cmd, self.setup_default)(
+                        *options
+                    ):
                         wrapp_rc = False
                         try:
-                            with self.wrap_actual_child_command(kwoptions) as wrapp_rc:
+                            with self.wrap_actual_child_command(
+                                kwoptions
+                            ) as wrapp_rc:
                                 if wrapp_rc:
-                                    rc = self._actual_child(cmd, options, **kwoptions)
+                                    rc = self._actual_child(
+                                        cmd, options, **kwoptions
+                                    )
                                 else:
-                                    logger.warning('Actual [%s %s] command wrap failed', self.kind, cmd)
+                                    logger.warning(
+                                        "Actual [%s %s] command wrap failed",
+                                        self.kind,
+                                        cmd,
+                                    )
                         finally:
                             if wrapp_rc:
-                                getattr(self, 'close_' + cmd, self.close_default)(*options)
+                                getattr(
+                                    self, "close_" + cmd, self.close_default
+                                )(*options)
                     else:
-                        logger.warning('Actual [%s %s] command skipped due to setup action',
-                                       self.kind, cmd)
+                        logger.warning(
+                            "Actual [%s %s] command skipped due to setup action",
+                            self.kind,
+                            cmd,
+                        )
                 else:
-                    logger.warning('Actual [%s %s] command skipped session setup failure',
-                                   self.kind, cmd)
+                    logger.warning(
+                        "Actual [%s %s] command skipped session setup failure",
+                        self.kind,
+                        cmd,
+                    )
         return rc
 
     def _actual_child(self, cmd, options, critical=True):
@@ -182,58 +206,66 @@ class SMS(EcmwfLikeScheduler):
     """
 
     _footprint = dict(
-        info = 'SMS client service',
-        attr = dict(
-            kind = dict(
-                values   = ['sms'],
+        info="SMS client service",
+        attr=dict(
+            kind=dict(
+                values=["sms"],
             ),
-            rootdir = dict(
-                optional = True,
-                default  = None,
-                alias    = ('install',),
+            rootdir=dict(
+                optional=True,
+                default=None,
+                alias=("install",),
             ),
-            env_pattern = dict(
-                default  = 'SMS',
-                optional = True,
-            )
-        )
+            env_pattern=dict(
+                default="SMS",
+                optional=True,
+            ),
+        ),
     )
 
-    _KNOWN_CMD = ('abort', 'complete', 'event', 'init', 'label', 'meter',
-                  'msg', 'variable', 'fix')
+    _KNOWN_CMD = (
+        "abort",
+        "complete",
+        "event",
+        "init",
+        "label",
+        "meter",
+        "msg",
+        "variable",
+        "fix",
+    )
 
     def __init__(self, *args, **kw):
-        logger.debug('SMS scheduler client init %s', self)
+        logger.debug("SMS scheduler client init %s", self)
         super().__init__(*args, **kw)
         self._actual_rootdir = self.rootdir
         if self._actual_rootdir is None:
-            self._actual_rootdir = (
-                self.env.SMS_INSTALL_ROOT or
-                from_config(section="sms", key="rootdir")
+            self._actual_rootdir = self.env.SMS_INSTALL_ROOT or from_config(
+                section="sms", key="rootdir"
             )
             if self._actual_rootdir is None:
                 logger.warning(
-                    'SMS service could not guess install location [%s]',
-                    str(guesspath)
+                    "SMS service could not guess install location [%s]",
+                    str(guesspath),
                 )
-        if self.sh.path.exists(self.cmdpath('init')):
+        if self.sh.path.exists(self.cmdpath("init")):
             self.env.setbinpath(self._actual_rootdir)
         else:
             logger.warning(
-                'No SMS client found at init time [rootdir:%s]>',
-                self._actual_rootdir
+                "No SMS client found at init time [rootdir:%s]>",
+                self._actual_rootdir,
             )
 
     def cmd_rename(self, cmd):
         """Remap command name. Strip any sms prefix."""
         cmd = super().cmd_rename(cmd)
-        while cmd.startswith('sms'):
+        while cmd.startswith("sms"):
             cmd = cmd[3:]
         return cmd
 
     def cmdpath(self, cmd):
         """Return a complete binary path to cmd."""
-        cmd = 'sms' + self.cmd_rename(cmd)
+        cmd = "sms" + self.cmd_rename(cmd)
         if self._actual_rootdir:
             return self.sh.path.join(self._actual_rootdir, cmd)
         else:
@@ -255,12 +287,12 @@ class SMS(EcmwfLikeScheduler):
         """Last minute wrap before binary child command."""
         with super().wrap_actual_child_command(kwoptions) as wrapp_rc:
             upd_env = dict()
-            if not kwoptions.get('critical', True):
-                upd_env['SMSDENIED'] = 1
+            if not kwoptions.get("critical", True):
+                upd_env["SMSDENIED"] = 1
                 if self.non_critical_timeout:
-                    upd_env['SMSTIMEOUT'] = self.non_critical_timeout
+                    upd_env["SMSTIMEOUT"] = self.non_critical_timeout
             if upd_env:
-                with self.env.delta_context(** upd_env):
+                with self.env.delta_context(**upd_env):
                     yield wrapp_rc
             else:
                 yield wrapp_rc
@@ -278,12 +310,12 @@ class SMSColor(SMS):
     """
 
     _footprint = dict(
-        info = 'SMS color client service',
-        attr = dict(
-            kind = dict(
-                values   = ['smscolor'],
+        info="SMS color client service",
+        attr=dict(
+            kind=dict(
+                values=["smscolor"],
             ),
-        )
+        ),
     )
 
     @contextlib.contextmanager
@@ -300,28 +332,39 @@ class EcFlow(EcmwfLikeScheduler):
     """
 
     _footprint = dict(
-        info = 'SMS client service',
-        attr = dict(
-            kind = dict(
-                values   = ['ecflow'],
+        info="SMS client service",
+        attr=dict(
+            kind=dict(
+                values=["ecflow"],
             ),
-            clientpath = dict(
-                info     = ("Path to the ecFlow client binary (if omitted, " +
-                            "it's read in the configuration file)"),
-                optional = True,
-                default  = None,
+            clientpath=dict(
+                info=(
+                    "Path to the ecFlow client binary (if omitted, "
+                    + "it's read in the configuration file)"
+                ),
+                optional=True,
+                default=None,
             ),
-            env_pattern = dict(
-                default  = 'ECF_',
-                optional = True,
-            )
-        )
+            env_pattern=dict(
+                default="ECF_",
+                optional=True,
+            ),
+        ),
     )
 
-    _KNOWN_CMD = ('abort', 'complete', 'event', 'init', 'label', 'meter', 'msg', 'alter')
+    _KNOWN_CMD = (
+        "abort",
+        "complete",
+        "event",
+        "init",
+        "label",
+        "meter",
+        "msg",
+        "alter",
+    )
 
     def __init__(self, *args, **kw):
-        logger.debug('EcFlow scheduler client init %s', self)
+        logger.debug("EcFlow scheduler client init %s", self)
         super().__init__(*args, **kw)
         self._actual_clientpath = self.clientpath
 
@@ -329,15 +372,23 @@ class EcFlow(EcmwfLikeScheduler):
         """Return the actual binary path to the EcFlow client."""
         if self._actual_clientpath is None:
             thistarget = self.sh.default_target
-            guesspath = self.env.ECF_CLIENT_PATH or thistarget.get('ecflow:clientpath')
-            ecfversion = self.env.get('ECF_VERSION', 'default')
+            guesspath = self.env.ECF_CLIENT_PATH or thistarget.get(
+                "ecflow:clientpath"
+            )
+            ecfversion = self.env.get("ECF_VERSION", "default")
             guesspath = guesspath.format(version=ecfversion)
             if guesspath is None:
-                logger.warning('ecFlow service could not guess the install location [%s]', str(guesspath))
+                logger.warning(
+                    "ecFlow service could not guess the install location [%s]",
+                    str(guesspath),
+                )
             else:
                 self._actual_clientpath = guesspath
         if not self.sh.path.exists(self._actual_clientpath):
-            logger.warning('No ecFlow client found at init time [path:%s]>', self._actual_clientpath)
+            logger.warning(
+                "No ecFlow client found at init time [path:%s]>",
+                self._actual_clientpath,
+            )
         return self._actual_clientpath
 
     @contextlib.contextmanager
@@ -348,24 +399,39 @@ class EcFlow(EcmwfLikeScheduler):
                 tunnel = None
                 # wait and retries from config
                 thistarget = self.sh.default_target
-                sshwait = float(thistarget.get('ecflow:sshproxy_wait', 6))
-                sshretries = float(thistarget.get('ecflow:sshproxy_retries', 2))
-                sshretrydelay = float(thistarget.get('ecflow:sshproxy_retrydelay', 1))
+                sshwait = float(thistarget.get("ecflow:sshproxy_wait", 6))
+                sshretries = float(
+                    thistarget.get("ecflow:sshproxy_retries", 2)
+                )
+                sshretrydelay = float(
+                    thistarget.get("ecflow:sshproxy_retrydelay", 1)
+                )
                 # Build up an SSH tunnel to convey the EcFlow command
                 ecconf = self.conf(dict())
-                echost = ecconf.get('{:s}HOST'.format(self.env_pattern), None)
-                ecport = ecconf.get('{:s}PORT'.format(self.env_pattern), None)
+                echost = ecconf.get("{:s}HOST".format(self.env_pattern), None)
+                ecport = ecconf.get("{:s}PORT".format(self.env_pattern), None)
                 if not (echost and ecport):
                     setup_rc = False
                 else:
-                    sshobj = self.sh.ssh('network', virtualnode=True, mandatory_hostcheck=False,
-                                         maxtries=sshretries, triesdelay=sshretrydelay)
-                    tunnel = sshobj.tunnel(echost, int(ecport), maxwait=sshwait)
+                    sshobj = self.sh.ssh(
+                        "network",
+                        virtualnode=True,
+                        mandatory_hostcheck=False,
+                        maxtries=sshretries,
+                        triesdelay=sshretrydelay,
+                    )
+                    tunnel = sshobj.tunnel(
+                        echost, int(ecport), maxwait=sshwait
+                    )
                     if not tunnel:
                         setup_rc = False
                     else:
-                        newvars = {'{:s}HOST'.format(self.env_pattern): 'localhost',
-                                   '{:s}PORT'.format(self.env_pattern): tunnel.entranceport}
+                        newvars = {
+                            "{:s}HOST".format(self.env_pattern): "localhost",
+                            "{:s}PORT".format(
+                                self.env_pattern
+                            ): tunnel.entranceport,
+                        }
                         self.env.update(**newvars)
                 try:
                     yield setup_rc
@@ -381,27 +447,31 @@ class EcFlow(EcmwfLikeScheduler):
         """Last minute wrap before binary child command."""
         with super().wrap_actual_child_command(kwoptions) as wrapp_rc:
             upd_env = dict()
-            if not kwoptions.get('critical', True):
-                upd_env['{:s}DENIED'.format(self.env_pattern)] = 1
+            if not kwoptions.get("critical", True):
+                upd_env["{:s}DENIED".format(self.env_pattern)] = 1
                 if self.non_critical_timeout:
-                    upd_env['{:s}TIMEOUT'.format(self.env_pattern)] = self.non_critical_timeout
+                    upd_env["{:s}TIMEOUT".format(self.env_pattern)] = (
+                        self.non_critical_timeout
+                    )
             if upd_env:
-                with self.env.delta_context(** upd_env):
+                with self.env.delta_context(**upd_env):
                     yield wrapp_rc
             else:
                 yield wrapp_rc
 
     def _actual_child(self, cmd, options, critical=True):
         """Miscellaneous ecFlow sub-command."""
-        args = [self.path(), ]
+        args = [
+            self.path(),
+        ]
         if options:
-            args.append('--{:s}={!s}'.format(cmd, options[0]))
+            args.append("--{:s}={!s}".format(cmd, options[0]))
             if len(options) > 1:
                 args.extend(options[1:])
         else:
-            args.append('--{:s}'.format(cmd))
+            args.append("--{:s}".format(cmd))
         args = [str(a) for a in args]
-        logger.info('Issuing the ecFlow command: %s', ' '.join(args[1:]))
+        logger.info("Issuing the ecFlow command: %s", " ".join(args[1:]))
         return self.sh.spawn(args, output=False, fatal=critical)
 
     def abort(self, *opts):
@@ -410,4 +480,4 @@ class EcFlow(EcmwfLikeScheduler):
         if not actual_opts:
             # For backward compatibility with SMS
             actual_opts.append("No abort reason provided")
-        return self.child('abort', *actual_opts)
+        return self.child("abort", *actual_opts)

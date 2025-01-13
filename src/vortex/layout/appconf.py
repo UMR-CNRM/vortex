@@ -37,8 +37,10 @@ class ConfigSet(collections.abc.MutableMapping):
 
     def __init__(self, *kargs, **kwargs):
         super().__init__(*kargs, **kwargs)
-        self.__dict__['_internal'] = dict()
-        self.__dict__['_confdecoder'] = AppConfigStringDecoder(substitution_cb=self._internal.get)
+        self.__dict__["_internal"] = dict()
+        self.__dict__["_confdecoder"] = AppConfigStringDecoder(
+            substitution_cb=self._internal.get
+        )
 
     @staticmethod
     def _remap_key(key):
@@ -54,25 +56,34 @@ class ConfigSet(collections.abc.MutableMapping):
     def __setitem__(self, key, value):
         if value is not None and isinstance(value, str):
             # Support for old style dictionaries (compatibility)
-            if (key.endswith('_map') and not re.match(r'^dict\(.*\)$', value) and
-                    not re.match(r'^\w+\(dict\(.*\)\)$', value)):
+            if (
+                key.endswith("_map")
+                and not re.match(r"^dict\(.*\)$", value)
+                and not re.match(r"^\w+\(dict\(.*\)\)$", value)
+            ):
                 key = key[:-4]
-                if re.match(r'^\w+\(.*\)$', value):
-                    value = re.sub(r'^(\w+)\((.*)\)$', r'\1(dict(\2))', value)
+                if re.match(r"^\w+\(.*\)$", value):
+                    value = re.sub(r"^(\w+)\((.*)\)$", r"\1(dict(\2))", value)
                 else:
-                    value = 'dict(' + value + ')'
+                    value = "dict(" + value + ")"
             # Support for geometries (compatibility)
-            if (('geometry' in key or 'geometries' in key) and
-                    (not re.match(r'^geometry\(.*\)$', value, flags=re.IGNORECASE))):
-                value = 'geometry(' + value + ')'
+            if ("geometry" in key or "geometries" in key) and (
+                not re.match(r"^geometry\(.*\)$", value, flags=re.IGNORECASE)
+            ):
+                value = "geometry(" + value + ")"
             # Support for oldstyle range (compatibility)
-            if (key.endswith('_range') and not re.match(r'^rangex\(.*\)$', value) and
-                    not re.match(r'^\w+\(rangex\(.*\)\)$', value)):
+            if (
+                key.endswith("_range")
+                and not re.match(r"^rangex\(.*\)$", value)
+                and not re.match(r"^\w+\(rangex\(.*\)\)$", value)
+            ):
                 key = key[:-6]
-                if re.match(r'^\w+\(.*\)$', value):
-                    value = re.sub(r'^(\w+)\((.*)\)$', r'\1(rangex(\2))', value)
+                if re.match(r"^\w+\(.*\)$", value):
+                    value = re.sub(
+                        r"^(\w+)\((.*)\)$", r"\1(rangex(\2))", value
+                    )
                 else:
-                    value = 'rangex(' + value + ')'
+                    value = "rangex(" + value + ")"
         self._internal[self._remap_key(key)] = value
 
     def __delitem__(self, key):
@@ -92,7 +103,7 @@ class ConfigSet(collections.abc.MutableMapping):
         if key in self:
             return self[key]
         else:
-            raise AttributeError('No such parameter <' + key + '>')
+            raise AttributeError("No such parameter <" + key + ">")
 
     def __setattr__(self, attr, value):
         self[attr] = value
@@ -101,7 +112,7 @@ class ConfigSet(collections.abc.MutableMapping):
         if key in self:
             del self[key]
         else:
-            raise AttributeError('No such parameter <' + key + '>')
+            raise AttributeError("No such parameter <" + key + ">")
 
     def copy(self):
         newobj = self.__class__()

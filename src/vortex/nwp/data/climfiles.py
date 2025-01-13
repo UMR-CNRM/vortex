@@ -12,32 +12,31 @@ from ..syntax.stdattrs import gvar, gdomain
 __all__ = []
 
 
-@namebuilding_insert('radical', lambda s: 'clim')
+@namebuilding_insert("radical", lambda s: "clim")
 class GenericClim(ModelGeoResource):
     """Abstract class for a model climatology.
 
     An HorizontalGeometry object is needed. A Genvkey can be given.
     """
+
     _abstract = True
     _footprint = [
         gvar,
         dict(
-            info = 'Model climatology',
-            attr = dict(
-                kind = dict(
-                    values = ['clim_model']
+            info="Model climatology",
+            attr=dict(
+                kind=dict(values=["clim_model"]),
+                nativefmt=dict(
+                    values=["fa"],
+                    default="fa",
                 ),
-                nativefmt = dict(
-                    values = ['fa'],
-                    default = 'fa',
-                ),
-            )
-        )
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'clim_model'
+        return "clim_model"
 
     @property
     def truncation(self):
@@ -46,7 +45,7 @@ class GenericClim(ModelGeoResource):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'Const.Clim'
+        return "Const.Clim"
 
 
 class GlobalClim(GenericClim):
@@ -54,16 +53,13 @@ class GlobalClim(GenericClim):
 
     A SpectralGeometry object is needed. A Genvkey can be given.
     """
+
     _footprint = dict(
-        info = 'Model climatology for Global Models',
-        attr = dict(
-            model = dict(
-                values = ['arpege']
-            ),
-            gvar = dict(
-                default = 'clim_[model]_[geometry::gco_grid_def]'
-            ),
-        )
+        info="Model climatology for Global Models",
+        attr=dict(
+            model=dict(values=["arpege"]),
+            gvar=dict(default="clim_[model]_[geometry::gco_grid_def]"),
+        ),
     )
 
 
@@ -76,8 +72,8 @@ class MonthlyGlobalClim(GlobalClim):
     _footprint = [
         month_deco,
         dict(
-            info = 'Monthly model climatology for Global Models',
-        )
+            info="Monthly model climatology for Global Models",
+        ),
     ]
 
 
@@ -87,19 +83,18 @@ class ClimLAM(GenericClim):
     A SpectralGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
+
     _footprint = [
         gdomain,
         dict(
-            info = 'Model climatology for Local Area Models',
-            attr = dict(
-                model = dict(
-                    values = ['aladin', 'arome', 'alaro', 'harmoniearome']
+            info="Model climatology for Local Area Models",
+            attr=dict(
+                model=dict(
+                    values=["aladin", "arome", "alaro", "harmoniearome"]
                 ),
-                gvar = dict(
-                    default = 'clim_[geometry::gco_grid_def]'
-                ),
-            )
-        )
+                gvar=dict(default="clim_[geometry::gco_grid_def]"),
+            ),
+        ),
     ]
 
 
@@ -113,8 +108,8 @@ class MonthlyClimLAM(ClimLAM):
     _footprint = [
         month_deco,
         dict(
-            info = 'Monthly model climatology for Local Area Models',
-        )
+            info="Monthly model climatology for Local Area Models",
+        ),
     ]
 
 
@@ -124,27 +119,24 @@ class ClimBDAP(GenericClim):
     A LonlatGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
+
     _footprint = [
         gdomain,
         dict(
-            info = 'Bdap climatology',
-            attr = dict(
-                kind = dict(
-                    values = ['clim_bdap']
+            info="Bdap climatology",
+            attr=dict(
+                kind=dict(values=["clim_bdap"]),
+                geometry=dict(
+                    type=LonlatGeometry,
                 ),
-                geometry = dict(
-                    type = LonlatGeometry,
-                ),
-                gvar = dict(
-                    default = 'clim_dap_[gdomain]'
-                ),
-            )
-        )
+                gvar=dict(default="clim_dap_[gdomain]"),
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'clim_bdap'
+        return "clim_bdap"
 
 
 class MonthlyClimBDAP(ClimBDAP):
@@ -157,8 +149,8 @@ class MonthlyClimBDAP(ClimBDAP):
     _footprint = [
         month_deco,
         dict(
-            info = 'Monthly Bdap climatology',
-        )
+            info="Monthly Bdap climatology",
+        ),
     ]
 
 
@@ -170,30 +162,29 @@ class GTOPO30DerivedDB(StaticGeoResource):
 
     A Genvkey can be given.
     """
+
     _footprint = [
         gvar,
         dict(
-            info = 'Database for GTOPO30-derived parameters.',
-            attr = dict(
-                kind = dict(
-                    values = ['misc_orography'],
+            info="Database for GTOPO30-derived parameters.",
+            attr=dict(
+                kind=dict(
+                    values=["misc_orography"],
                 ),
-                source = dict(
-                    values = ['GTOPO30'],
+                source=dict(
+                    values=["GTOPO30"],
                 ),
-                geometry = dict(
-                    values = ['global2m5'],
+                geometry=dict(
+                    values=["global2m5"],
                 ),
-                gvar = dict(
-                    default = '[source]_[kind]'
-                ),
-            )
-        )
+                gvar=dict(default="[source]_[kind]"),
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'misc_orography'
+        return "misc_orography"
 
 
 class UrbanisationDB(StaticGeoResource):
@@ -201,30 +192,29 @@ class UrbanisationDB(StaticGeoResource):
 
     A Genvkey can be given.
     """
+
     _footprint = [
         gvar,
         dict(
-            info = 'Database for urbanisation.',
-            attr = dict(
-                kind = dict(
-                    values   = ['urbanisation'],
+            info="Database for urbanisation.",
+            attr=dict(
+                kind=dict(
+                    values=["urbanisation"],
                 ),
-                source = dict(
-                    type = str,
+                source=dict(
+                    type=str,
                 ),
-                geometry = dict(
-                    values = ['global2m5'],
+                geometry=dict(
+                    values=["global2m5"],
                 ),
-                gvar = dict(
-                    default  = '[source]_[kind]'
-                ),
-            )
-        )
+                gvar=dict(default="[source]_[kind]"),
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'urbanisation'
+        return "urbanisation"
 
 
 class WaterPercentageDB(StaticGeoResource):
@@ -232,30 +222,29 @@ class WaterPercentageDB(StaticGeoResource):
 
     A Genvkey can be given.
     """
+
     _footprint = [
         gvar,
         dict(
-            info = 'Database for water percentage.',
-            attr = dict(
-                kind = dict(
-                    values   = ['water_percentage'],
+            info="Database for water percentage.",
+            attr=dict(
+                kind=dict(
+                    values=["water_percentage"],
                 ),
-                source = dict(
-                    type = str,
+                source=dict(
+                    type=str,
                 ),
-                geometry = dict(
-                    values = ['global2m5'],
+                geometry=dict(
+                    values=["global2m5"],
                 ),
-                gvar = dict(
-                    default  = '[source]_[kind]'
-                ),
-            )
-        )
+                gvar=dict(default="[source]_[kind]"),
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'water_percentage'
+        return "water_percentage"
 
 
 class SoilANdVegDB(StaticGeoResource):
@@ -263,30 +252,29 @@ class SoilANdVegDB(StaticGeoResource):
 
     A Genvkey can be given.
     """
+
     _footprint = [
         gvar,
         dict(
-            info = 'Database for Soil and Vegetation.',
-            attr = dict(
-                kind = dict(
-                    values   = ['soil_and_veg'],
+            info="Database for Soil and Vegetation.",
+            attr=dict(
+                kind=dict(
+                    values=["soil_and_veg"],
                 ),
-                source = dict(
-                    type = str,
+                source=dict(
+                    type=str,
                 ),
-                geometry = dict(
-                    values = ['global1dg', 'europeb01'],
+                geometry=dict(
+                    values=["global1dg", "europeb01"],
                 ),
-                gvar = dict(
-                    default  = '[source]_[kind]'
-                ),
-            )
-        )
+                gvar=dict(default="[source]_[kind]"),
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'soil_and_veg'
+        return "soil_and_veg"
 
 
 class MonthlyLAIDB(StaticGeoResource):
@@ -294,31 +282,30 @@ class MonthlyLAIDB(StaticGeoResource):
 
     A Genvkey can be given.
     """
+
     _footprint = [
         gvar,
         month_deco,
         dict(
-            info = 'Database for monthly LAI.',
-            attr = dict(
-                kind = dict(
-                    values   = ['LAI'],
+            info="Database for monthly LAI.",
+            attr=dict(
+                kind=dict(
+                    values=["LAI"],
                 ),
-                source = dict(
-                    type = str,
+                source=dict(
+                    type=str,
                 ),
-                geometry = dict(
-                    values = ['global1dg', 'europeb01'],
+                geometry=dict(
+                    values=["global1dg", "europeb01"],
                 ),
-                gvar = dict(
-                    default  = '[source]_[kind]'
-                ),
-            )
-        )
+                gvar=dict(default="[source]_[kind]"),
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'LAI'
+        return "LAI"
 
 
 class MonthlyVegDB(StaticGeoResource):
@@ -326,31 +313,30 @@ class MonthlyVegDB(StaticGeoResource):
 
     A Genvkey can be given.
     """
+
     _footprint = [
         gvar,
         month_deco,
         dict(
-            info = 'Database for monthly vegetation.',
-            attr = dict(
-                kind = dict(
-                    values   = ['vegetation'],
+            info="Database for monthly vegetation.",
+            attr=dict(
+                kind=dict(
+                    values=["vegetation"],
                 ),
-                source = dict(
-                    type = str,
+                source=dict(
+                    type=str,
                 ),
-                geometry = dict(
-                    values = ['global1dg', 'europeb01'],
+                geometry=dict(
+                    values=["global1dg", "europeb01"],
                 ),
-                gvar = dict(
-                    default  = '[source]_[kind]'
-                ),
-            )
-        )
+                gvar=dict(default="[source]_[kind]"),
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'vegetation'
+        return "vegetation"
 
 
 class SoilClimatologyDB(StaticGeoResource):
@@ -360,30 +346,29 @@ class SoilClimatologyDB(StaticGeoResource):
 
     A Genvkey can be given.
     """
+
     _footprint = [
         gvar,
         dict(
-            info = 'Database for soil climatology parameters.',
-            attr = dict(
-                kind = dict(
-                    values   = ['soil_clim'],
+            info="Database for soil climatology parameters.",
+            attr=dict(
+                kind=dict(
+                    values=["soil_clim"],
                 ),
-                source = dict(
-                    type = str,
+                source=dict(
+                    type=str,
                 ),
-                geometry = dict(
-                    values = ['globaln108', 'global1dg'],
+                geometry=dict(
+                    values=["globaln108", "global1dg"],
                 ),
-                gvar = dict(
-                    default  = '[source]_[kind]'
-                ),
-            )
-        )
+                gvar=dict(default="[source]_[kind]"),
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'soil_clim'
+        return "soil_clim"
 
 
 class SurfGeopotentialDB(StaticGeoResource):
@@ -393,30 +378,29 @@ class SurfGeopotentialDB(StaticGeoResource):
 
     A Genvkey can be given.
     """
+
     _footprint = [
         gvar,
         dict(
-            info = 'Database for surface geopotential.',
-            attr = dict(
-                kind = dict(
-                    values   = ['surfgeopotential'],
+            info="Database for surface geopotential.",
+            attr=dict(
+                kind=dict(
+                    values=["surfgeopotential"],
                 ),
-                source = dict(
-                    type = str,
+                source=dict(
+                    type=str,
                 ),
-                geometry = dict(
-                    values = ['global1dg'],
+                geometry=dict(
+                    values=["global1dg"],
                 ),
-                gvar = dict(
-                    default  = '[source]_[kind]'
-                ),
-            )
-        )
+                gvar=dict(default="[source]_[kind]"),
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'surfgeopotential'
+        return "surfgeopotential"
 
 
 class MonthlySoilClimatologyDB(SoilClimatologyDB):
@@ -426,11 +410,12 @@ class MonthlySoilClimatologyDB(SoilClimatologyDB):
 
     A Genvkey can be given.
     """
+
     _footprint = [
         month_deco,
         dict(
-            info = 'Database for monthly soil climatology parameters.',
-        )
+            info="Database for monthly soil climatology parameters.",
+        ),
     ]
 
 
@@ -441,26 +426,25 @@ class MonthlyChemicalDB(StaticGeoResource):
 
     A Genvkey can be given.
     """
+
     _footprint = [
         gvar,
         month_deco,
         dict(
-            info = 'Database for monthly chemicals.',
-            attr = dict(
-                kind = dict(
-                    values   = ['ozone', 'aerosols'],
+            info="Database for monthly chemicals.",
+            attr=dict(
+                kind=dict(
+                    values=["ozone", "aerosols"],
                 ),
-                source = dict(
-                    type = str,
+                source=dict(
+                    type=str,
                 ),
-                geometry = dict(
-                    values = ['global2dg5', 'global5x4'],
+                geometry=dict(
+                    values=["global2dg5", "global5x4"],
                 ),
-                gvar = dict(
-                    default  = '[source]_[kind]'
-                ),
-            )
-        )
+                gvar=dict(default="[source]_[kind]"),
+            ),
+        ),
     ]
 
     @property
@@ -472,23 +456,23 @@ class GeometryIllustration(StaticGeoResource):
     """Illustration of a domain geographic coverage."""
 
     _footprint = dict(
-        info = 'Illustration of a domain geographic coverage.',
-        attr = dict(
-            kind = dict(
-                values   = ['geometry_plot'],
+        info="Illustration of a domain geographic coverage.",
+        attr=dict(
+            kind=dict(
+                values=["geometry_plot"],
             ),
-            nativefmt = dict(
-                values = ['png', 'pdf'],
+            nativefmt=dict(
+                values=["png", "pdf"],
             ),
-        )
+        ),
     )
 
     @property
     def realkind(self):
-        return 'geometry_plot'
+        return "geometry_plot"
 
 
-@namebuilding_append('src', lambda s: [s.stat, s.level, s.nbfiles])
+@namebuilding_append("src", lambda s: [s.stat, s.level, s.nbfiles])
 class Stabal(ModelGeoResource):
     """Spectral covariance operators.
 
@@ -503,35 +487,33 @@ class Stabal(ModelGeoResource):
     _footprint = [
         gvar,
         dict(
-            info = 'Spectral covariance operators',
-            attr = dict(
-                kind = dict(
-                    values = ['stabal'],
+            info="Spectral covariance operators",
+            attr=dict(
+                kind=dict(
+                    values=["stabal"],
                 ),
-                stat = dict(
-                    values = ['bal', 'cv', 'cvt'],
+                stat=dict(
+                    values=["bal", "cv", "cvt"],
                 ),
-                level = dict(
-                    type     = int,
-                    optional = True,
-                    default  = 96,
-                    values   = [41, 96],
+                level=dict(
+                    type=int,
+                    optional=True,
+                    default=96,
+                    values=[41, 96],
                 ),
-                nbfiles = dict(
-                    default = 0,
-                    optional = True,
-                    type = int,
+                nbfiles=dict(
+                    default=0,
+                    optional=True,
+                    type=int,
                 ),
-                gvar = dict(
-                    default  = 'stabal[level]_[stat]'
-                ),
-            )
-        )
+                gvar=dict(default="stabal[level]_[stat]"),
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'stabal'
+        return "stabal"
 
     @property
     def truncation(self):

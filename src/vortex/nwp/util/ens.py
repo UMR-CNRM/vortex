@@ -43,35 +43,44 @@ def drawingfunction(options):
 
     :rtype: A file like object
     """
-    rhdict = options.get('rhandler', None)
+    rhdict = options.get("rhandler", None)
     if rhdict:
-        date = rhdict['resource']['date']
+        date = rhdict["resource"]["date"]
         rgen = random.Random()
         rgen.seed(int(date[:-2]))
-        nbsample = rhdict['resource'].get('nbsample', 0)
+        nbsample = rhdict["resource"].get("nbsample", 0)
         if not nbsample:
-            raise FunctionStoreCallbackError('The resource must hold a non-null nbsample attribute')
-        population = rhdict['resource'].get('population', [])
+            raise FunctionStoreCallbackError(
+                "The resource must hold a non-null nbsample attribute"
+            )
+        population = rhdict["resource"].get("population", [])
         if not population:
-            raise FunctionStoreCallbackError('The resource must hold a non-empty population attribute')
+            raise FunctionStoreCallbackError(
+                "The resource must hold a non-empty population attribute"
+            )
         nbset = len(population)
 
-        tirage = (rgen.sample(population * (nbsample // nbset), (nbsample // nbset) * nbset) +
-                  rgen.sample(population, nbsample % nbset))
-        logger.info('List of random elements: %s', ', '.join([str(x) for x in tirage]))
+        tirage = rgen.sample(
+            population * (nbsample // nbset), (nbsample // nbset) * nbset
+        ) + rgen.sample(population, nbsample % nbset)
+        logger.info(
+            "List of random elements: %s", ", ".join([str(x) for x in tirage])
+        )
     else:
         raise FunctionStoreCallbackError("no resource handler here :-(")
     # NB: The result have to be a file like object !
-    outdict = dict(vapp=rhdict['provider'].get('vapp', None),
-                   vconf=rhdict['provider'].get('vconf', None),
-                   cutoff=rhdict['resource'].get('cutoff', None),
-                   date=rhdict['resource'].get('date', None),
-                   resource_kind=rhdict['resource'].get('kind', None),
-                   drawing=tirage,
-                   population=population)
-    if rhdict['provider'].get('experiment', None) is not None:
-        outdict['experiment'] = rhdict['provider']['experiment']
-    return io.BytesIO(json.dumps(outdict, indent=4).encode(encoding='utf_8'))
+    outdict = dict(
+        vapp=rhdict["provider"].get("vapp", None),
+        vconf=rhdict["provider"].get("vconf", None),
+        cutoff=rhdict["resource"].get("cutoff", None),
+        date=rhdict["resource"].get("date", None),
+        resource_kind=rhdict["resource"].get("kind", None),
+        drawing=tirage,
+        population=population,
+    )
+    if rhdict["provider"].get("experiment", None) is not None:
+        outdict["experiment"] = rhdict["provider"]["experiment"]
+    return io.BytesIO(json.dumps(outdict, indent=4).encode(encoding="utf_8"))
 
 
 def _checkingfunction_dict(options):
@@ -79,38 +88,95 @@ def _checkingfunction_dict(options):
     Internal function that returns a dictionnary that describes the available
     inputs.
     """
-    rhdict = options.get('rhandler', None)
+    rhdict = options.get("rhandler", None)
     if rhdict:
         # If no nbsample is provided, easy to achieve...
-        nbsample = rhdict['resource'].get('nbsample', None)
+        nbsample = rhdict["resource"].get("nbsample", None)
         # ...and if no explicit minimum of resources, nbsample is the minimum
-        nbmin = int(options.get('min', [(0 if nbsample is None else nbsample), ]).pop())
+        nbmin = int(
+            options.get(
+                "min",
+                [
+                    (0 if nbsample is None else nbsample),
+                ],
+            ).pop()
+        )
         if nbsample is not None and nbsample < nbmin:
-            logger.warning('%d resources needed, %d required: sin of gluttony ?', nbsample, nbmin)
+            logger.warning(
+                "%d resources needed, %d required: sin of gluttony ?",
+                nbsample,
+                nbmin,
+            )
         # What to look for ?
-        checkrole = rhdict['resource'].get('checkrole', None)
+        checkrole = rhdict["resource"].get("checkrole", None)
         if not checkrole:
-            raise FunctionStoreCallbackError('The resource must hold a non-empty checkrole attribute')
-        rolematch = re.match(r'(\w+)(?:\+(\w+))?$', checkrole)
+            raise FunctionStoreCallbackError(
+                "The resource must hold a non-empty checkrole attribute"
+            )
+        rolematch = re.match(r"(\w+)(?:\+(\w+))?$", checkrole)
         cur_t = sessions.current()
         if rolematch:
             ctx = cur_t.context
-            checklist = [sec.rh for sec in ctx.sequence.filtered_inputs(role=rolematch.group(1))]
-            mandatorylist = ([sec.rh for sec in ctx.sequence.filtered_inputs(role=rolematch.group(2))]
-                             if rolematch.group(2) else [])
+            checklist = [
+                sec.rh
+                for sec in ctx.sequence.filtered_inputs(
+                    role=rolematch.group(1)
+                )
+            ]
+            mandatorylist = (
+                [
+                    sec.rh
+                    for sec in ctx.sequence.filtered_inputs(
+                        role=rolematch.group(2)
+                    )
+                ]
+                if rolematch.group(2)
+                else []
+            )
         else:
-            raise FunctionStoreCallbackError('checkrole is not properly formatted')
+            raise FunctionStoreCallbackError(
+                "checkrole is not properly formatted"
+            )
         # Other options
-        nretries = int(options.get('nretries', [0, ]).pop())
-        retry_wait = Period(options.get('retry_wait', ['PT5M', ]).pop())
-        comp_delay = Period(options.get('comp_delay', [0, ]).pop())
-        fakecheck = options.get('fakecheck', [False, ]).pop()
+        nretries = int(
+            options.get(
+                "nretries",
+                [
+                    0,
+                ],
+            ).pop()
+        )
+        retry_wait = Period(
+            options.get(
+                "retry_wait",
+                [
+                    "PT5M",
+                ],
+            ).pop()
+        )
+        comp_delay = Period(
+            options.get(
+                "comp_delay",
+                [
+                    0,
+                ],
+            ).pop()
+        )
+        fakecheck = options.get(
+            "fakecheck",
+            [
+                False,
+            ],
+        ).pop()
 
         def _retry_cond(the_ntries, the_acceptable_time):
-            return ((the_acceptable_time is None and
-                     the_ntries <= nretries) or
-                    (the_acceptable_time and
-                     (time.time() - the_acceptable_time) < comp_delay.total_seconds()))
+            return (
+                the_acceptable_time is None and the_ntries <= nretries
+            ) or (
+                the_acceptable_time
+                and (time.time() - the_acceptable_time)
+                < comp_delay.total_seconds()
+            )
 
         # Ok let's work...
         ntries = 0
@@ -118,30 +184,41 @@ def _checkingfunction_dict(options):
         found = []
         while _retry_cond(ntries, acceptable_time):
             if ntries:
-                logger.info("Let's sleep %d sec. before the next check round...",
-                            retry_wait.total_seconds())
+                logger.info(
+                    "Let's sleep %d sec. before the next check round...",
+                    retry_wait.total_seconds(),
+                )
                 cur_t.sh.sleep(retry_wait.total_seconds())
             ntries += 1
             try:
                 logger.info("Starting an input check...")
-                found, candidates = helpers.colorfull_input_checker(nbmin,
-                                                                    checklist,
-                                                                    mandatory=mandatorylist,
-                                                                    fakecheck=fakecheck)
+                found, candidates = helpers.colorfull_input_checker(
+                    nbmin,
+                    checklist,
+                    mandatory=mandatorylist,
+                    fakecheck=fakecheck,
+                )
                 if acceptable_time is None and (found or nbmin == 0):
                     acceptable_time = time.time()
-                    if comp_delay.total_seconds() and len(found) != len(candidates):
-                        logger.info("The minimum required size was reached (nbmin=%d). " +
-                                    "That's great but we are waiting a little longer " +
-                                    "(for at most %d sec.)",
-                                    nbmin, comp_delay.total_seconds())
+                    if comp_delay.total_seconds() and len(found) != len(
+                        candidates
+                    ):
+                        logger.info(
+                            "The minimum required size was reached (nbmin=%d). "
+                            + "That's great but we are waiting a little longer "
+                            + "(for at most %d sec.)",
+                            nbmin,
+                            comp_delay.total_seconds(),
+                        )
 
                 if len(found) == len(candidates):
                     # No need to wait any longer...
                     break
             except helpers.InputCheckerError as e:
                 if not _retry_cond(ntries, acceptable_time):
-                    raise FunctionStoreCallbackError('The input checher failed ({!s})'.format(e))
+                    raise FunctionStoreCallbackError(
+                        "The input checher failed ({!s})".format(e)
+                    )
         return found
     else:
         raise FunctionStoreCallbackError("no resource handler here :-(\n")
@@ -163,17 +240,19 @@ def checkingfunction(options):
 
     :rtype: A file like object
     """
-    rhdict = options.get('rhandler', None)
+    rhdict = options.get("rhandler", None)
     avail_list = _checkingfunction_dict(options)
-    outdict = dict(vapp=rhdict['provider'].get('vapp', None),
-                   vconf=rhdict['provider'].get('vconf', None),
-                   cutoff=rhdict['resource'].get('cutoff', None),
-                   date=rhdict['resource'].get('date', None),
-                   resource_kind=rhdict['resource'].get('kind', None),
-                   population=avail_list)
-    if rhdict['provider'].get('experiment', None) is not None:
-        outdict['experiment'] = rhdict['provider']['experiment']
-    return io.BytesIO(json.dumps(outdict, indent=4).encode(encoding='utf_8'))
+    outdict = dict(
+        vapp=rhdict["provider"].get("vapp", None),
+        vconf=rhdict["provider"].get("vconf", None),
+        cutoff=rhdict["resource"].get("cutoff", None),
+        date=rhdict["resource"].get("date", None),
+        resource_kind=rhdict["resource"].get("kind", None),
+        population=avail_list,
+    )
+    if rhdict["provider"].get("experiment", None) is not None:
+        outdict["experiment"] = rhdict["provider"]["experiment"]
+    return io.BytesIO(json.dumps(outdict, indent=4).encode(encoding="utf_8"))
 
 
 def safedrawingfunction(options):
@@ -182,7 +261,7 @@ def safedrawingfunction(options):
     See the documentation of these two functions for more details.
     """
     checkedlist = _checkingfunction_dict(options)
-    options['rhandler']['resource']['population'] = checkedlist
+    options["rhandler"]["resource"]["population"] = checkedlist
     return drawingfunction(options)
 
 
@@ -192,7 +271,9 @@ def unsafedrawingfunction(options):
 
     See the documentation of these two functions for more details.
     """
-    options['fakecheck'] = [True, ]
+    options["fakecheck"] = [
+        True,
+    ]
     checkedlist = _checkingfunction_dict(options)
-    options['rhandler']['resource']['population'] = checkedlist
+    options["rhandler"]["resource"]["population"] = checkedlist
     return drawingfunction(options)

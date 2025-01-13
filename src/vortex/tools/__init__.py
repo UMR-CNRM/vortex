@@ -8,4 +8,6 @@ from . import storage, schedulers, services, systems, targets, date, env, names
 #: No automatic export
 __all__ = []
 
-__tocinfoline__ = 'VORTEX generic tools (system interfaces, format handling, ...)'
+__tocinfoline__ = (
+    "VORTEX generic tools (system interfaces, format handling, ...)"
+)

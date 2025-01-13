@@ -29,28 +29,43 @@ class SatRadDecoMixin(AlgoComponentDecoMixin):
 
     def _satrad_coeffdir_setup(self, rh, opts):  # @UnusedVariable
         """Look for RTTOV coefficient files and act on it."""
-        rtcoefs = self.context.sequence.effective_inputs(role='RtCoef', kind='rtcoef')
+        rtcoefs = self.context.sequence.effective_inputs(
+            role="RtCoef", kind="rtcoef"
+        )
         if rtcoefs:
             sh = self.system
-            rtpaths = {sh.path.dirname(sh.path.realpath(rtcoef.rh.container.localpath()))
-                       for rtcoef in rtcoefs}
+            rtpaths = {
+                sh.path.dirname(
+                    sh.path.realpath(rtcoef.rh.container.localpath())
+                )
+                for rtcoef in rtcoefs
+            }
             if len(rtpaths) != 1:
-                raise AlgoComponentError('The Radiative Transfer Coefficients are scattered in' +
-                                         'several directories: {!s}'.format(rtpaths))
+                raise AlgoComponentError(
+                    "The Radiative Transfer Coefficients are scattered in"
+                    + "several directories: {!s}".format(rtpaths)
+                )
             rtpath = rtpaths.pop()
-            logger.info('Setting %s = %s', 'RTTOV_COEFDIR', rtpath)
-            self.env['RTTOV_COEFDIR'] = rtpath
+            logger.info("Setting %s = %s", "RTTOV_COEFDIR", rtpath)
+            self.env["RTTOV_COEFDIR"] = rtpath
 
-    _MIXIN_PREPARE_HOOKS = (_satrad_coeffdir_setup, )
+    _MIXIN_PREPARE_HOOKS = (_satrad_coeffdir_setup,)
 
     def setchannels(self):
         """Look up for channels namelists in effective inputs."""
         namchan = [
-            x.rh for x in self.context.sequence.effective_inputs(kind='namelist')
-            if 'channel' in x.rh.options
+            x.rh
+            for x in self.context.sequence.effective_inputs(kind="namelist")
+            if "channel" in x.rh.options
         ]
         for thisnam in namchan:
-            thisloc = re.sub(r'\d+$', '', thisnam.options['channel']) + 'channels'
+            thisloc = (
+                re.sub(r"\d+$", "", thisnam.options["channel"]) + "channels"
+            )
             if thisloc != thisnam.container.localpath():
-                logger.info('Linking < %s > to < %s >', thisnam.container.localpath(), thisloc)
+                logger.info(
+                    "Linking < %s > to < %s >",
+                    thisnam.container.localpath(),
+                    thisloc,
+                )
                 self.system.softlink(thisnam.container.localpath(), thisloc)

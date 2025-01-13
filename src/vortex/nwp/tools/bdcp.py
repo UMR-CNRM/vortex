@@ -8,16 +8,19 @@ __all__ = []
 
 class BDCPError(Exception):
     """General BDMP error."""
+
     pass
 
 
 class BDCPRequestConfigurationError(BDCPError):
     """Specific Transfer Agent configuration error."""
+
     pass
 
 
 class BDCPGetError(BDCPError):
     """Generic BDCP get error."""
+
     pass
 
 
@@ -35,4 +38,4 @@ def BDCPrequest_actual_command(command, query_file, output_file):
     """
 
     # Return the command to be launched
-    return '{} -D {} -f {}'.format(command, query_file, output_file)
+    return "{} -D {} -f {}".format(command, query_file, output_file)

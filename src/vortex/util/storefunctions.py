@@ -31,28 +31,39 @@ def mergecontents(options):
 
     :rtype: A file like object
     """
-    todo = options.get('role', None)
-    sort = vartrue.match(options.get('sort', ['false', ]).pop())
+    todo = options.get("role", None)
+    sort = vartrue.match(
+        options.get(
+            "sort",
+            [
+                "false",
+            ],
+        ).pop()
+    )
     if todo is not None:
         ctx = sessions.current().context
         sections = list()
         for a_role in todo:
             sections.extend(ctx.sequence.effective_inputs(role=a_role))
         if len(sections) == 0:
-            raise FunctionStoreCallbackError("Nothing to store: the effective inputs sequence is void.")
+            raise FunctionStoreCallbackError(
+                "Nothing to store: the effective inputs sequence is void."
+            )
         newcontent = helpers.merge_contents(sections)
         if sort:
             newcontent.sort()
     else:
-        raise FunctionStoreCallbackError('At least one *role* option must be provided')
+        raise FunctionStoreCallbackError(
+            "At least one *role* option must be provided"
+        )
     # Create a Virtual container and dump the new content inside it
     virtualcont = fpx.container(incore=True)
     newcontent.rewrite(virtualcont)
     virtualcont.rewind()
     # Force the new container to be in bytes mode
-    if virtualcont.actualmode and 'b' not in virtualcont.actualmode:
-        virtualcont_b = fpx.container(incore=True, mode='w+b')
-        virtualcont_b.write(virtualcont.read().encode(encoding='utf-8'))
+    if virtualcont.actualmode and "b" not in virtualcont.actualmode:
+        virtualcont_b = fpx.container(incore=True, mode="w+b")
+        virtualcont_b.write(virtualcont.read().encode(encoding="utf-8"))
         virtualcont = virtualcont_b
     return virtualcont
 
@@ -68,12 +79,21 @@ def dumpinputs(options):
     """
     t = sessions.current()
     ctx = t.context
-    if vartrue.match(options.get('effective', ['true', ]).pop()):
+    if vartrue.match(
+        options.get(
+            "effective",
+            [
+                "true",
+            ],
+        ).pop()
+    ):
         sequence = ctx.sequence.effective_inputs()
     else:
         sequence = list(ctx.sequence.inputs())
     if len(sequence) == 0:
-        raise FunctionStoreCallbackError("Nothing to store: the effective inputs sequence is void.")
+        raise FunctionStoreCallbackError(
+            "Nothing to store: the effective inputs sequence is void."
+        )
     fileout = io.StringIO()
     t.sh.json_dump([s.as_dict() for s in sequence], fileout, indent=4)
     return fileout
@@ -87,17 +107,23 @@ def defaultinput(options):
     content = dict()
 
     def export_value(v):
-        if hasattr(v, 'footprint_export'):
+        if hasattr(v, "footprint_export"):
             return v.footprint_export()
-        elif hasattr(v, 'export_dict'):
+        elif hasattr(v, "export_dict"):
             return v.export_dict()
         else:
             return v
 
     for k, v in options.items():
         if isinstance(k, str) and k.startswith(prefix):
-            content[k[len(prefix):]] = export_value(v)
+            content[k[len(prefix) :]] = export_value(v)
     t = sessions.current()
     fileout = io.StringIO()
-    t.sh.json_dump([content, ], fileout, indent=4)
+    t.sh.json_dump(
+        [
+            content,
+        ],
+        fileout,
+        indent=4,
+    )
     return fileout

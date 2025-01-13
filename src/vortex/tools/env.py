@@ -19,10 +19,12 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 #: Pre-compiled evaluation mostly used by :class:`Environment` method (true).
-vartrue = re.compile(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', flags=re.IGNORECASE)
+vartrue = re.compile(
+    r"^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$", flags=re.IGNORECASE
+)
 
 #: Pre-compiled evaluation mostly used by :class:`Environment` method (false).
-varfalse = re.compile(r'^\s*(?:0|ko|off|false|no|n)\s*$', flags=re.IGNORECASE)
+varfalse = re.compile(r"^\s*(?:0|ko|off|false|no|n)\s*$", flags=re.IGNORECASE)
 
 
 def current():
@@ -51,8 +53,16 @@ class Environment:
 
     _current_active = None
 
-    def __init__(self, env=None, active=False, clear=False, verbose=False,
-                 noexport=[], contextlock=None, history=True):
+    def __init__(
+        self,
+        env=None,
+        active=False,
+        clear=False,
+        verbose=False,
+        noexport=[],
+        contextlock=None,
+        history=True,
+    ):
         """
         :param Environment env: An existing Environment used to initialise this object.
         :param bool active: Is this new environment activated when created.
@@ -69,18 +79,18 @@ class Environment:
             :class:`~bronx.stdtypes.history.PrivateHistory` object that will be
             accessible through the :attr:`history` property.
         """
-        self.__dict__['_history'] = PrivateHistory() if history else None
-        self.__dict__['_verbose'] = verbose
-        self.__dict__['_frozen'] = collections.deque()
-        self.__dict__['_pool'] = dict()
-        self.__dict__['_mods'] = set()
-        self.__dict__['_sh'] = None
-        self.__dict__['_os'] = list()
+        self.__dict__["_history"] = PrivateHistory() if history else None
+        self.__dict__["_verbose"] = verbose
+        self.__dict__["_frozen"] = collections.deque()
+        self.__dict__["_pool"] = dict()
+        self.__dict__["_mods"] = set()
+        self.__dict__["_sh"] = None
+        self.__dict__["_os"] = list()
         if env is not None and isinstance(env, Environment):
             self._env_clone_internals(env, contextlock)
             if verbose:
                 try:
-                    self.__dict__['_sh'] = env._sh
+                    self.__dict__["_sh"] = env._sh
                 except AttributeError:
                     pass
         else:
@@ -88,20 +98,22 @@ class Environment:
                 active = False
             else:
                 if self._current_active is not None:
-                    self._env_clone_internals(self._current_active, contextlock)
+                    self._env_clone_internals(
+                        self._current_active, contextlock
+                    )
                 else:
                     self._pool.update(os.environ)
-        self.__dict__['_noexport'] = [x.upper() for x in noexport]
+        self.__dict__["_noexport"] = [x.upper() for x in noexport]
         self.active(active)
 
     def _env_clone_internals(self, env, contextlock):
-        self.__dict__['_os'] = env.osstack()
-        self.__dict__['_os'].append(env)
+        self.__dict__["_os"] = env.osstack()
+        self.__dict__["_os"].append(env)
         self._pool.update(env.items())
         if contextlock is not None:
-            self.__dict__['_contextlock'] = contextlock
+            self.__dict__["_contextlock"] = contextlock
         else:
-            self.__dict__['_contextlock'] = env.contextlock
+            self.__dict__["_contextlock"] = env.contextlock
 
     @property
     def history(self):
@@ -116,7 +128,9 @@ class Environment:
             self.history.append(var, value, traceback.format_stack()[:-1])
 
     def __str__(self):
-        return '{:s} | including {:d} variables>'.format(repr(self).rstrip('>'), len(self))
+        return "{:s} | including {:d} variables>".format(
+            repr(self).rstrip(">"), len(self)
+        )
 
     @classmethod
     def current(cls):
@@ -139,11 +153,11 @@ class Environment:
         """Dump the specified ``value`` as a string (utility function)."""
         if isinstance(value, str):
             obj = str(value)
-        elif hasattr(value, 'export_dict'):
+        elif hasattr(value, "export_dict"):
             obj = value.export_dict()
-        elif hasattr(value, 'footprint_export'):
+        elif hasattr(value, "footprint_export"):
             obj = value.footprint_export()
-        elif hasattr(value, '__dict__'):
+        elif hasattr(value, "__dict__"):
             obj = vars(value)
         else:
             obj = value
@@ -169,7 +183,9 @@ class Environment:
             os.environ[upvar] = actualvalue
             if self.verbose():
                 if self.osbound() and self._sh:
-                    self._sh.stderr('export', '{:s}={:s}'.format(upvar, actualvalue))
+                    self._sh.stderr(
+                        "export", "{:s}={:s}".format(upvar, actualvalue)
+                    )
                 logger.debug('Env export %s="%s"', upvar, actualvalue)
 
     def __setitem__(self, varname, value):
@@ -195,7 +211,7 @@ class Environment:
         return self.getvar(varname)
 
     def __getattr__(self, varname):
-        if varname.startswith('_'):
+        if varname.startswith("_"):
             raise AttributeError
         else:
             return self.getvar(varname)
@@ -217,9 +233,9 @@ class Environment:
         if seen and self.osbound():
             del os.environ[varname.upper()]
             if self.verbose() and self._sh:
-                self._sh.stderr('unset', '{:s}'.format(varname.upper()))
+                self._sh.stderr("unset", "{:s}".format(varname.upper()))
         if seen:
-            self._record(varname.upper(), '!!deleted!!')
+            self._record(varname.upper(), "!!deleted!!")
 
     def __delitem__(self, varname):
         self.delvar(varname)
@@ -268,9 +284,11 @@ class Environment:
         return self._pool.items()
 
     def __eq__(self, other):
-        return (isinstance(other, type(self)) and
-                set(self.keys()) == set(other.keys) and
-                all([self[k] == other[k] for k in self.keys]))
+        return (
+            isinstance(other, type(self))
+            and set(self.keys()) == set(other.keys)
+            and all([self[k] == other[k] for k in self.keys])
+        )
 
     def __ne__(self, other):
         return not self == other
@@ -342,7 +360,9 @@ class Environment:
         try:
             eclone.verbose(self._verbose, self._sh)
         except AttributeError:
-            logger.debug('Could not find verbose attributes while cloning env...')
+            logger.debug(
+                "Could not find verbose attributes while cloning env..."
+            )
         return eclone
 
     def __enter__(self):
@@ -365,10 +385,10 @@ class Environment:
     def verbose(self, switch=None, sh=None, fromenv=None):
         """Switch on or off the verbose mode. Returns actual value."""
         if switch is not None:
-            self.__dict__['_verbose'] = bool(switch)
+            self.__dict__["_verbose"] = bool(switch)
         if sh is not None:
-            self.__dict__['_sh'] = sh
-        return self.__dict__['_verbose']
+            self.__dict__["_sh"] = sh
+        return self.__dict__["_verbose"]
 
     def active(self, *args):
         """
@@ -383,19 +403,23 @@ class Environment:
         if args and type(args[0]) is bool:
             active = args[0]
         if previous_act and not active and self._os:
-            self._record('!!OS_BINDING!!', 'Broken...')
+            self._record("!!OS_BINDING!!", "Broken...")
             self.__class__._current_active = self._os[-1]
             osrewind = self.__class__._current_active
         if not previous_act and active:
             if self.contextlock is not None and not self.contextlock.active:
-                raise RuntimeError("It's not allowed to switch to an Environment " +
-                                   "that belongs to an inactive context")
-            self._record('!!OS_BINDING!!', 'Acquiring...')
+                raise RuntimeError(
+                    "It's not allowed to switch to an Environment "
+                    + "that belongs to an inactive context"
+                )
+            self._record("!!OS_BINDING!!", "Acquiring...")
             self.__class__._current_active = self
             osrewind = self.__class__._current_active
         if osrewind:
             os.environ.clear()
-            for k in filter(lambda x: x not in osrewind._noexport, osrewind._pool.keys()):
+            for k in filter(
+                lambda x: x not in osrewind._noexport, osrewind._pool.keys()
+            ):
                 os.environ[k] = osrewind.native(k)
         return active
 
@@ -436,11 +460,15 @@ class Environment:
 
     def mkautolist(self, prefix):
         """Return a list of variable starting with the ``prefix`` string."""
-        return [var + '="' + self.get(var, '') + '"' for var in self.keys() if var.startswith(prefix)]
+        return [
+            var + '="' + self.get(var, "") + '"'
+            for var in self.keys()
+            if var.startswith(prefix)
+        ]
 
     def trueshell(self):
         """Extract the actual shell name according to env variable SHELL."""
-        return re.sub('^.*/', '', self.getvar('shell'))
+        return re.sub("^.*/", "", self.getvar("shell"))
 
     def true(self, varname):
         """Extended boolean positive test of the variable given as argument."""
@@ -461,41 +489,41 @@ class Environment:
         :param str value: The value that will be inserted in the path
         :param int pos: Where in the path, to insert ``value`` (by default, at the end)
         """
-        mypath = self.getvar(var).split(':') if self.getvar(var) else []
+        mypath = self.getvar(var).split(":") if self.getvar(var) else []
         value = str(value)
         while value in mypath:
             mypath.remove(value)
         if pos is None:
             pos = len(mypath)
         mypath.insert(pos, value)
-        self.setvar(var, ':'.join(mypath))
+        self.setvar(var, ":".join(mypath))
 
     def rmgenericpath(self, var, value):
         """Remove the specified ``value`` from a PATH like variable."""
-        mypath = self.getvar(var).split(':') if self.getvar(var) else []
+        mypath = self.getvar(var).split(":") if self.getvar(var) else []
         while value in mypath:
             mypath.remove(value)
-        self.setvar(var, ':'.join(mypath))
+        self.setvar(var, ":".join(mypath))
 
     def setbinpath(self, value, pos=None):
         """
         Insert a new path ``value`` to the bin search path (i.e. the PATH
         environment variable) at given position.
         """
-        self.setgenericpath('PATH', value, pos)
+        self.setgenericpath("PATH", value, pos)
 
     def rmbinpath(self, value):
         """
         Remove the specified ``value`` from the bin path (i.e. the PATH
         environment variable).
         """
-        self.rmgenericpath('PATH', value)
+        self.rmgenericpath("PATH", value)
 
 
 collections.abc.Mapping.register(Environment)
 
 
-class EnvironmentDeltaContext():
+class EnvironmentDeltaContext:
     """Context that will apply a delta on the Environment and rewind it on exit."""
 
     def __init__(self, env, **kw):

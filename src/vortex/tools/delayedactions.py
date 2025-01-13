@@ -74,14 +74,17 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 #: Definition of a named tuple DelayedActionStatusTuple
-DelayedActionStatusTuple = namedtuple('DelayedActionStatusTuple',
-                                      ['void', 'failed', 'done', 'unclear'])
+DelayedActionStatusTuple = namedtuple(
+    "DelayedActionStatusTuple", ["void", "failed", "done", "unclear"]
+)
 
 #: Predefined DelayedActionStatus values (void=Not ready yet,
 #                                         failed=processed but KO,
 #                                         done=processed and OK,
 #                                         unclear=processed but cannot tell whether it is KO or OK)
-d_action_status = DelayedActionStatusTuple(void=0, failed=-1, done=1, unclear=-2)
+d_action_status = DelayedActionStatusTuple(
+    void=0, failed=-1, done=1, unclear=-2
+)
 
 
 # Module Interface
@@ -120,8 +123,10 @@ class DelayedAction:
     def _set_status(self, value):
         oldres = self.statustext
         self._status = value
-        self._obsboard.notify_upd(self, info=dict(changed='status', queryproxy='statustext',
-                                                  prev=oldres))
+        self._obsboard.notify_upd(
+            self,
+            info=dict(changed="status", queryproxy="statustext", prev=oldres),
+        )
 
     @property
     def status(self):
@@ -134,10 +139,15 @@ class DelayedAction:
     def _set_result(self, result):
         oldres = self._result
         self._result = result
-        self._obsboard.notify_upd(self, info=dict(changed='result', prev=oldres))
+        self._obsboard.notify_upd(
+            self, info=dict(changed="result", prev=oldres)
+        )
 
-    result = property(_get_result, _set_result,
-                      doc="Where to find the delayed action result.")
+    result = property(
+        _get_result,
+        _set_result,
+        doc="Where to find the delayed action result.",
+    )
 
     @property
     def statustext(self):
@@ -145,51 +155,55 @@ class DelayedAction:
         for k, v in d_action_status._asdict().items():
             if self._status == v:
                 return k
-        logger.warning('What is this idiotic status (%s) ???', self.status)
+        logger.warning("What is this idiotic status (%s) ???", self.status)
         return str(self.status)
 
     def mark_as_failed(self):
         """Change the status to ``failed``."""
-        logger.info('Marking early-get %s as failed (request=%s)',
-                    self.id, self.request)
+        logger.info(
+            "Marking early-get %s as failed (request=%s)",
+            self.id,
+            self.request,
+        )
         self._set_status(d_action_status.failed)
 
     def mark_as_done(self):
         """Change the status to ``done``."""
-        logger.debug('Marking early-get %s as done (request=%s)',
-                     self.id, self.request)
+        logger.debug(
+            "Marking early-get %s as done (request=%s)", self.id, self.request
+        )
         self._set_status(d_action_status.done)
 
     def mark_as_unclear(self):
         """Change the status to ``unclear``."""
-        logger.info('Marking early-get %s as unclear/unconclusive (request=%s)',
-                    self.id, self.request)
+        logger.info(
+            "Marking early-get %s as unclear/unconclusive (request=%s)",
+            self.id,
+            self.request,
+        )
         self._set_status(d_action_status.unclear)
 
     def __str__(self):
-        return 'id={0._id}: {0.statustext:6s} result={0.result!s}'.format(self)
+        return "id={0._id}: {0.statustext:6s} result={0.result!s}".format(self)
 
 
-class AbstractDelayedActionsHandler(footprints.FootprintBase, observer.Observer):
+class AbstractDelayedActionsHandler(
+    footprints.FootprintBase, observer.Observer
+):
     """Abstract class that handles a bunch of similar delayed actions."""
 
     _abstract = True
-    _collector = ('delayedactionshandler',)
+    _collector = ("delayedactionshandler",)
     _footprint = dict(
-        info = "Abstract class that deal with delayed actions.",
-        attr = dict(
-            system = dict(
-                info = "The current system object",
-                type = OSExtended
+        info="Abstract class that deal with delayed actions.",
+        attr=dict(
+            system=dict(info="The current system object", type=OSExtended),
+            observerboard=dict(
+                info="The observer board where delayed actions updates are published.",
+                type=observer.SecludedObserverBoard,
             ),
-            observerboard = dict(
-                info = 'The observer board where delayed actions updates are published.',
-                type = observer.SecludedObserverBoard,
-            ),
-            stagedir = dict(
-                info = "The temporary directory (if need be)"
-            ),
-        )
+            stagedir=dict(info="The temporary directory (if need be)"),
+        ),
     )
 
     def __init__(self, *args, **kw):
@@ -211,17 +225,22 @@ class AbstractDelayedActionsHandler(footprints.FootprintBase, observer.Observer)
     def newobsitem(self, item, info):  # @UnusedVariable
         """To get informed when a new :class:`DelayedAction` object is created."""
         if item.id in self._resultsmap:
-            self._history.append('NEW ', 'id={0.id!s}: request={0.request!s}'.format(item))
+            self._history.append(
+                "NEW ", "id={0.id!s}: request={0.request!s}".format(item)
+            )
 
     def updobsitem(self, item, info):
         """To get informed when a new :class:`DelayedAction` object is updates."""
         if item.id in self._resultsmap:
-            what = info['changed']
-            newval = getattr(item, info.get('queryproxy', what))
-            oldval = info['prev']
-            self._history.append('UPD ',
-                                 'id={0.id!s}: {1:s}={2!s} (instead of: {3!s})'
-                                 .format(item, what, newval, oldval))
+            what = info["changed"]
+            newval = getattr(item, info.get("queryproxy", what))
+            oldval = info["prev"]
+            self._history.append(
+                "UPD ",
+                "id={0.id!s}: {1:s}={2!s} (instead of: {3!s})".format(
+                    item, what, newval, oldval
+                ),
+            )
 
     @property
     def history(self):
@@ -230,11 +249,11 @@ class AbstractDelayedActionsHandler(footprints.FootprintBase, observer.Observer)
 
     def grephistory(self, r_id):
         """Return the log lines matching the **r_id** delayed action ID."""
-        return self.history.grep('id={!s}'.format(r_id))
+        return self.history.grep("id={!s}".format(r_id))
 
     def showhistory(self, r_id):
         """Print the log lines matching the **r_id** delayed action ID."""
-        return self.history.showgrep('id={!s}'.format(r_id))
+        return self.history.showgrep("id={!s}".format(r_id))
 
     def __contains__(self, r_id):
         return r_id in self._resultsmap
@@ -263,7 +282,12 @@ class AbstractDelayedActionsHandler(footprints.FootprintBase, observer.Observer)
     @property
     def dirty(self):
         """Is there any of the object's delayed actions that needs finalising ?"""
-        return any([a.status == d_action_status.void for a in self._resultsmap.values()])
+        return any(
+            [
+                a.status == d_action_status.void
+                for a in self._resultsmap.values()
+            ]
+        )
 
     def finalise(self, *r_ids):
         """Given a **r_ids** list of delayed action IDs, wait upon actions completion."""
@@ -278,10 +302,12 @@ class AbstractDelayedActionsHandler(footprints.FootprintBase, observer.Observer)
         try:
             if action.status == d_action_status.void:
                 self.finalise(r_id)
-                assert action.status != d_action_status.void, 'Finalise does not seem to work.'
+                assert action.status != d_action_status.void, (
+                    "Finalise does not seem to work."
+                )
         finally:
             del self._resultsmap[r_id]
-            self._history.append('USED', 'id={!s}'.format(action.id))
+            self._history.append("USED", "id={!s}".format(action.id))
         if bareobject:
             return action
         else:
@@ -295,26 +321,46 @@ class AbstractDelayedActionsHandler(footprints.FootprintBase, observer.Observer)
 
     def describe(self, fulldump=False):
         """Print the object's characteristics and content."""
-        res = 'DelayedActionsHandler object of class: {:s}\n'.format(self.__class__)
+        res = "DelayedActionsHandler object of class: {:s}\n".format(
+            self.__class__
+        )
         for k, v in self.footprint_as_shallow_dict().items():
-            res += '  * {:s}: {!s}\n'.format(k, v)
+            res += "  * {:s}: {!s}\n".format(k, v)
         if fulldump:
-            res += '\n  * Todo list (i.e still to be processed):\n\n'
-            res += '\n'.join(['{:48s}:\n      request: {!s}'.format(r_id, a.request)
-                              for r_id, a in self._resultsmap.items()
-                              if a.status == d_action_status.void])
-            res += '\n  * Done (i.e the delayed action succeeded):\n\n'
-            res += '\n'.join(['{:48s}:\n      request: {!s}'.format(r_id, a.request)
-                              for r_id, a in self._resultsmap.items()
-                              if a.status == d_action_status.done])
-            res += '\n  * Failed (i.e the delayed action failed):\n\n'
-            res += '\n'.join(['{:48s}:\n      request: {!s}'.format(r_id, a.request)
-                              for r_id, a in self._resultsmap.items()
-                              if a.status == d_action_status.failed])
-            res += '\n  * Unclear (i.e processed but the result is unclear):\n\n'
-            res += '\n'.join(['{:48s}:\n      request: {!s}'.format(r_id, a.request)
-                              for r_id, a in self._resultsmap.items()
-                              if a.status == d_action_status.unclear])
+            res += "\n  * Todo list (i.e still to be processed):\n\n"
+            res += "\n".join(
+                [
+                    "{:48s}:\n      request: {!s}".format(r_id, a.request)
+                    for r_id, a in self._resultsmap.items()
+                    if a.status == d_action_status.void
+                ]
+            )
+            res += "\n  * Done (i.e the delayed action succeeded):\n\n"
+            res += "\n".join(
+                [
+                    "{:48s}:\n      request: {!s}".format(r_id, a.request)
+                    for r_id, a in self._resultsmap.items()
+                    if a.status == d_action_status.done
+                ]
+            )
+            res += "\n  * Failed (i.e the delayed action failed):\n\n"
+            res += "\n".join(
+                [
+                    "{:48s}:\n      request: {!s}".format(r_id, a.request)
+                    for r_id, a in self._resultsmap.items()
+                    if a.status == d_action_status.failed
+                ]
+            )
+            res += (
+                "\n  * Unclear (i.e processed but the result is unclear):\n\n"
+            )
+            res += "\n".join(
+                [
+                    "{:48s}:\n      request: {!s}".format(r_id, a.request)
+                    for r_id, a in self._resultsmap.items()
+                    if a.status == d_action_status.unclear
+                ]
+            )
         return res
 
 
@@ -334,9 +380,12 @@ class AbstractFileBasedDelayedActionsHandler(AbstractDelayedActionsHandler):
 
     def dispence_resultid(self):
         """Return a unique ID that will identify a new :class:`DelayedAction` object."""
-        t_temp = tempfile.mkstemp(prefix='{:s}_{:d}'.format(self.resultid_stamp,
-                                                            self.system.getpid()),
-                                  dir=self.stagedir)
+        t_temp = tempfile.mkstemp(
+            prefix="{:s}_{:d}".format(
+                self.resultid_stamp, self.system.getpid()
+            ),
+            dir=self.stagedir,
+        )
         os.close(t_temp[0])
         return self.system.path.basename(t_temp[1])
 
@@ -356,18 +405,20 @@ class DemoSleepDelayedActionHandler(AbstractDelayedActionsHandler):
     """A Sleeper delayed action handler (Demonstration purposes)."""
 
     _footprint = dict(
-        info = "Demonstration purposes (sleep for a while).",
-        attr = dict(
-            kind = dict(
-                values = ['sleep', ],
+        info="Demonstration purposes (sleep for a while).",
+        attr=dict(
+            kind=dict(
+                values=[
+                    "sleep",
+                ],
             ),
-        )
+        ),
     )
 
     def dispence_resultid(self):
         """Return a unique ID that will identify a new :class:`DelayedAction` object."""
         self._counter += 1
-        return 'sleeper_action_{:016d}'.format(self._counter)
+        return "sleeper_action_{:016d}".format(self._counter)
 
     def _custom_init(self):
         """Create the multiprocessing pool."""
@@ -384,7 +435,9 @@ class DemoSleepDelayedActionHandler(AbstractDelayedActionsHandler):
     def _create_delayed_action(self, r_id, request):
         """Start the asynchronous processing."""
         daction = DelayedAction(self.observerboard, r_id, request)
-        daction.result = self._ppool.apply_async(demo_sleeper_function, (request, ))
+        daction.result = self._ppool.apply_async(
+            demo_sleeper_function, (request,)
+        )
         return daction
 
     def finalise(self, *r_ids):
@@ -398,44 +451,52 @@ class DemoSleepDelayedActionHandler(AbstractDelayedActionsHandler):
                 action.mark_as_failed()
 
 
-class AbstractFtpArchiveDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
+class AbstractFtpArchiveDelayedGetHandler(
+    AbstractFileBasedDelayedActionsHandler
+):
     """Includes some FTP related methods"""
 
     _abstract = True
     _footprint = dict(
-        info = "Fetch multiple files using an FTP archive.",
-        attr = dict(
-            kind = dict(
-                values = ['archive', ],
+        info="Fetch multiple files using an FTP archive.",
+        attr=dict(
+            kind=dict(
+                values=[
+                    "archive",
+                ],
             ),
-            storage = dict(
+            storage=dict(),
+            goal=dict(
+                values=[
+                    "get",
+                ]
             ),
-            goal = dict(
-                values = ['get', ]
+            tube=dict(
+                values=[
+                    "ftp",
+                ],
             ),
-            tube = dict(
-                values = ['ftp', ],
+            raw=dict(
+                type=bool,
+                optional=True,
+                default=False,
             ),
-            raw = dict(
-                type = bool,
-                optional = True,
-                default = False,
-            ),
-            logname = dict(
-                optional = True
-            )
-        )
+            logname=dict(optional=True),
+        ),
     )
 
     @property
     def resultid_stamp(self):
-        bangfmt = '{0.logname:s}@{0.storage:s}' if self.logname else '{0.storage:s}'
-        return ('rawftget_' + bangfmt).format(self)
+        bangfmt = (
+            "{0.logname:s}@{0.storage:s}" if self.logname else "{0.storage:s}"
+        )
+        return ("rawftget_" + bangfmt).format(self)
 
     def register(self, request):
         """Create a new :class:`DelayedAction` object from a user's **request**."""
-        assert isinstance(request, (tuple, list)) and len(request) == 2, \
-            'Request needs to be a two element tuple or list (location, format)'
+        assert isinstance(request, (tuple, list)) and len(request) == 2, (
+            "Request needs to be a two element tuple or list (location, format)"
+        )
         # Check for duplicated entries...
         target = request[0]
         for v in self._resultsmap.values():
@@ -447,14 +508,16 @@ class AbstractFtpArchiveDelayedGetHandler(AbstractFileBasedDelayedActionsHandler
     @property
     def _ftp_hostinfos(self):
         """Return the FTP hostname end port number."""
-        s_storage = self.storage.split(':', 1)
+        s_storage = self.storage.split(":", 1)
         hostname = s_storage[0]
         port = None
         if len(s_storage) > 1:
             try:
                 port = int(s_storage[1])
             except ValueError:
-                logger.error('Invalid port number < %s >. Ignoring it', s_storage[1])
+                logger.error(
+                    "Invalid port number < %s >. Ignoring it", s_storage[1]
+                )
         return hostname, port
 
 
@@ -471,13 +534,15 @@ class RawFtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
     """
 
     _footprint = dict(
-        info = "Fetch multiple files using FtServ.",
-        attr = dict(
-            raw = dict(
-                optional = False,
-                values = [True, ],
+        info="Fetch multiple files using FtServ.",
+        attr=dict(
+            raw=dict(
+                optional=False,
+                values=[
+                    True,
+                ],
             ),
-        )
+        ),
     )
 
     def finalise(self, *r_ids):  # @UnusedVariable
@@ -485,9 +550,13 @@ class RawFtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
         todo = defaultdict(list)
         for k, v in self._resultsmap.items():
             if v.status == d_action_status.void:
-                a_fmt = (v.request[1]
-                         if self.system.fmtspecific_mtd('batchrawftget', v.request[1])
-                         else None)
+                a_fmt = (
+                    v.request[1]
+                    if self.system.fmtspecific_mtd(
+                        "batchrawftget", v.request[1]
+                    )
+                    else None
+                )
                 todo[a_fmt].append(k)
         rc = True
         if todo:
@@ -496,18 +565,27 @@ class RawFtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
                 destinations = list()
                 extras = dict()
                 if a_fmt is not None:
-                    extras['fmt'] = a_fmt
+                    extras["fmt"] = a_fmt
                 for k in a_todolist:
                     sources.append(self._resultsmap[k].request[0])
                     destinations.append(self._resultsmap[k].result)
                 try:
-                    logger.info('Running the ftserv command for format=%s.', str(a_fmt))
+                    logger.info(
+                        "Running the ftserv command for format=%s.", str(a_fmt)
+                    )
                     hostname, port = self._ftp_hostinfos
-                    rc = self.system.batchrawftget(sources, destinations,
-                                                   hostname=hostname, logname=self.logname, port=port,
-                                                   ** extras)
+                    rc = self.system.batchrawftget(
+                        sources,
+                        destinations,
+                        hostname=hostname,
+                        logname=self.logname,
+                        port=port,
+                        **extras,
+                    )
                 except OSError:
-                    rc = [None, ] * len(sources)
+                    rc = [
+                        None,
+                    ] * len(sources)
                 for i, k in enumerate(a_todolist):
                     if rc[i] is True:
                         self._resultsmap[k].mark_as_done()
@@ -556,9 +634,14 @@ class PrivateDelayedActionsHub:
     def stagedir(self):
         """This Hub staging area/directory (i.e. where results can be stored)."""
         if self._stagedir is None:
-            self._stagedir = tempfile.mkdtemp(prefix='dactions_staging_area_',
-                                              dir=(self._contextrundir
-                                                   if self._contextrundir else self._sh.pwd()))
+            self._stagedir = tempfile.mkdtemp(
+                prefix="dactions_staging_area_",
+                dir=(
+                    self._contextrundir
+                    if self._contextrundir
+                    else self._sh.pwd()
+                ),
+            )
         return self._stagedir
 
     def showhistory(self):
@@ -567,7 +650,7 @@ class PrivateDelayedActionsHub:
         objects leveraged by this Hub.
         """
         for handler in self._delayedactionshandlers:
-            print('{!r} says:\n'.format(handler))
+            print("{!r} says:\n".format(handler))
             handler.history.show()
 
     def actionhistory(self, r_id):
@@ -575,7 +658,7 @@ class PrivateDelayedActionsHub:
         for handler in self._delayedactionshandlers:
             hst = handler.grephistory(r_id)
             if hst:
-                print('{!r} says:'.format(handler))
+                print("{!r} says:".format(handler))
                 handler.showhistory(r_id)
 
     def register(self, request, **kwargs):
@@ -586,25 +669,41 @@ class PrivateDelayedActionsHub:
                             :class:`AbstractDelayedActionsHandler` object
         """
         # Prestaging tool descriptions
-        myhandler_desc = dict(system=self._sh, observerboard=self._obsboard,
-                              stagedir=self.stagedir)
+        myhandler_desc = dict(
+            system=self._sh,
+            observerboard=self._obsboard,
+            stagedir=self.stagedir,
+        )
         myhandler_desc.update(kwargs)
         myhandler = None
         # Scan pre-existing prestaging tools to find a suitable one
         for ahandler in self._delayedactionshandlers:
-            if ahandler.footprint_reusable() and ahandler.footprint_compatible(myhandler_desc):
-                logger.debug("Re-usable Actions Handler found: %s", lightdump(myhandler_desc))
+            if ahandler.footprint_reusable() and ahandler.footprint_compatible(
+                myhandler_desc
+            ):
+                logger.debug(
+                    "Re-usable Actions Handler found: %s",
+                    lightdump(myhandler_desc),
+                )
                 myhandler = ahandler
                 break
         # If necessary, create a new one
         if myhandler is None:
-            myhandler = fpx.delayedactionshandler(_emptywarning=False, **myhandler_desc)
+            myhandler = fpx.delayedactionshandler(
+                _emptywarning=False, **myhandler_desc
+            )
             if myhandler is not None:
-                logger.debug("Fresh prestaging tool created: %s", lightdump(myhandler_desc))
+                logger.debug(
+                    "Fresh prestaging tool created: %s",
+                    lightdump(myhandler_desc),
+                )
                 self._delayedactionshandlers.add(myhandler)
         # Let's role
         if myhandler is None:
-            logger.debug("Unable to find a delayed actions handler with: %s", lightdump(myhandler_desc))
+            logger.debug(
+                "Unable to find a delayed actions handler with: %s",
+                lightdump(myhandler_desc),
+            )
             return None
         else:
             resultid = myhandler.register(request)
@@ -626,12 +725,14 @@ class PrivateDelayedActionsHub:
         for r_id in r_ids:
             todo[self._resultsmap[r_id]].add(r_id)
         for ahandler, r_ids in todo.items():
-            ahandler.finalise(* list(r_ids))
+            ahandler.finalise(*list(r_ids))
 
     def retrieve(self, resultid, bareobject=False):
         """Given a **resultid** delayed action ID, returns the corresponding result."""
         try:
-            res = self._resultsmap[resultid].retrieve(resultid, bareobject=bareobject)
+            res = self._resultsmap[resultid].retrieve(
+                resultid, bareobject=bareobject
+            )
         finally:
             del self._resultsmap[resultid]
         return res
@@ -646,14 +747,21 @@ class PrivateDelayedActionsHub:
         self._stagedir = None
 
     def __repr__(self):
-        return ('{:s} | n_delayedactionshandlers={:d}>'
-                .format(super().__repr__().rstrip('>'),
-                        len(self._delayedactionshandlers)))
+        return "{:s} | n_delayedactionshandlers={:d}>".format(
+            super().__repr__().rstrip(">"), len(self._delayedactionshandlers)
+        )
 
     def __str__(self):
-        return (repr(self) + "\n\n" +
-                "\n\n".join([ahandler.describe(fulldump=True)
-                             for ahandler in self._delayedactionshandlers]))
+        return (
+            repr(self)
+            + "\n\n"
+            + "\n\n".join(
+                [
+                    ahandler.describe(fulldump=True)
+                    for ahandler in self._delayedactionshandlers
+                ]
+            )
+        )
 
 
 class DelayedActionsHub(PrivateDelayedActionsHub, getbytag.GetByTag):
@@ -664,9 +772,11 @@ class DelayedActionsHub(PrivateDelayedActionsHub, getbytag.GetByTag):
     Therefore, a *tag* attribute needs to be specified when building/retrieving
     an object of this class.
     """
+
     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import doctest
+
     doctest.testmod()

@@ -17,7 +17,7 @@ __all__ = []
 
 def use_in_shell(sh, **kw):
     """Extend current shell with the arpifs_listings interface defined by optional arguments."""
-    kw['shell'] = sh
+    kw["shell"] = sh
     return footprints.proxy.addon(**kw)
 
 
@@ -30,10 +30,10 @@ class ArpIfsListingDiff_Result:
         self._jos_diff = jos_diff
 
     def __str__(self):
-        return '{:s} | NormsOk={:b} JoTablesOk={:b}>'.format(
-            repr(self).rstrip('>'),
+        return "{:s} | NormsOk={:b} JoTablesOk={:b}>".format(
+            repr(self).rstrip(">"),
             all(self._norms_eq.values()),
-            all(self._jos_eq.values())
+            all(self._jos_eq.values()),
         )
 
     def differences(self):
@@ -43,10 +43,24 @@ class ArpIfsListingDiff_Result:
             if all(self._norms_eq.values()):
                 print("Norms   check succeeded for all steps.")
             else:
-                print("Norms   check succeeded for steps:\n  {:s}".format(
-                    "\n  ".join([str(k) for k, v in self._norms_eq.items() if v])))
-                print("Norms   check FAILED    for steps:\n  {:s}".format(
-                    "\n  ".join([str(k) for k, v in self._norms_eq.items() if not v])))
+                print(
+                    "Norms   check succeeded for steps:\n  {:s}".format(
+                        "\n  ".join(
+                            [str(k) for k, v in self._norms_eq.items() if v]
+                        )
+                    )
+                )
+                print(
+                    "Norms   check FAILED    for steps:\n  {:s}".format(
+                        "\n  ".join(
+                            [
+                                str(k)
+                                for k, v in self._norms_eq.items()
+                                if not v
+                            ]
+                        )
+                    )
+                )
         else:
             print("No norms found in the new listing or no matching norms.")
         # print()  # activation breaks test_arpifs_listings_integration.py
@@ -62,14 +76,22 @@ class ArpIfsListingDiff_Result:
                         for otype_k, otype_v in todo.items():
                             for sensor_k, sensor_v in otype_v.items():
                                 for var_k, var_v in sensor_v.items():
-                                    if var_k == 'GLOBAL':
+                                    if var_k == "GLOBAL":
                                         continue
-                                    print("  > {:s} > {:s} > {:4s} : d_n={:<9d}  d_jo={:f}".format(
-                                        otype_k, sensor_k, var_k,
-                                        var_v['n']['diff'], var_v['jo']['diff']))
+                                    print(
+                                        "  > {:s} > {:s} > {:4s} : d_n={:<9d}  d_jo={:f}".format(
+                                            otype_k,
+                                            sensor_k,
+                                            var_k,
+                                            var_v["n"]["diff"],
+                                            var_v["jo"]["diff"],
+                                        )
+                                    )
                         diffprinted = True
         else:
-            print("No Jo-Tables were found or the number of Jo-Tables do not match.")
+            print(
+                "No Jo-Tables were found or the number of Jo-Tables do not match."
+            )
 
 
 class ArpIfsListingDiff_Status:
@@ -81,7 +103,7 @@ class ArpIfsListingDiff_Status:
         self._result = ArpIfsListingDiff_Result(norms_eq, jos_eq, jos_diff)
 
     def __str__(self):
-        return '{:s} | rc={:b}>'.format(repr(self).rstrip('>'), bool(self))
+        return "{:s} | rc={:b}>".format(repr(self).rstrip(">"), bool(self))
 
     @property
     def result(self):
@@ -96,12 +118,12 @@ class ArpIfsListingsTool(addons.Addon):
     """Interface to arpifs_listings (designed as a shell Addon)."""
 
     _footprint = dict(
-        info='Default arpifs_listings interface',
+        info="Default arpifs_listings interface",
         attr=dict(
             kind=dict(
-                values=['arpifs_listings'],
+                values=["arpifs_listings"],
             ),
-        )
+        ),
     )
 
     def arpifslist_diff(self, listing1, listing2):
@@ -147,17 +169,24 @@ class ArpIfsListingsTool(addons.Addon):
             if not l1_jos == l2_jos:
                 # If the JoTables list is not consistent: do nothing
                 if list(l1_jos.keys()) == list(l2_jos.keys()):
-                    for table1, table2 in zip(l1_jos.values(), l2_jos.values()):
+                    for table1, table2 in zip(
+                        l1_jos.values(), l2_jos.values()
+                    ):
                         jos_eq[table1.name] = table1 == table2
                         if not jos_eq[table1.name]:
                             jos_diff[table1.name] = OrderedDict()
                             # We only save differences when deltaN or deltaJo != 0
-                            for otype_k, otype_v in table2.compute_diff(table1).items():
+                            for otype_k, otype_v in table2.compute_diff(
+                                table1
+                            ).items():
                                 otype_tmp = OrderedDict()
                                 for sensor_k, sensor_v in otype_v.items():
                                     sensor_tmp = OrderedDict()
                                     for k, v in sensor_v.items():
-                                        if v['n']['diff'] != 0 or v['jo']['diff'] != 0:
+                                        if (
+                                            v["n"]["diff"] != 0
+                                            or v["jo"]["diff"] != 0
+                                        ):
                                             sensor_tmp[k] = v
                                     if len(sensor_tmp):
                                         otype_tmp[sensor_k] = sensor_tmp
@@ -174,7 +203,9 @@ class ArpifsListingsFormatAdapter(FormatAdapterAbstractImplementation):
     _footprint = dict(
         attr=dict(
             format=dict(
-                values=['ARPIFSLIST', ],
+                values=[
+                    "ARPIFSLIST",
+                ],
             ),
         )
     )
@@ -196,8 +227,15 @@ class ArpifsListingsFormatAdapter(FormatAdapterAbstractImplementation):
     def lines(self):
         """Return an array populated with the listing file lines."""
         if self._lines is None:
-            with open(self.filename, self.openmode, encoding='utf-8', errors='replace') as f:
-                self._lines = [l.rstrip("\n") for l in f]  # to remove trailing '\n'
+            with open(
+                self.filename,
+                self.openmode,
+                encoding="utf-8",
+                errors="replace",
+            ) as f:
+                self._lines = [
+                    l.rstrip("\n") for l in f
+                ]  # to remove trailing '\n'
         return self._lines
 
     def flush_lines(self):
@@ -210,7 +248,14 @@ class ArpifsListingsFormatAdapter(FormatAdapterAbstractImplementation):
         if self._end_is_reached is None:
             self._end_is_reached = False
             for line in self.lines:
-                if any([p in line for p in listings.OutputListing.patterns['end_is_reached']]):
+                if any(
+                    [
+                        p in line
+                        for p in listings.OutputListing.patterns[
+                            "end_is_reached"
+                        ]
+                    ]
+                ):
                     self._end_is_reached = True
                     break
         return self._end_is_reached
@@ -237,7 +282,9 @@ class ArpifsListingsFormatAdapter(FormatAdapterAbstractImplementation):
     def cost_functions(self):
         """Return a :class:`arpifs_listings.jo_tables.JoTables` object."""
         if self._costs is None:
-            self._costs = cost_functions.CostFunctions(self.filename, self.lines)
+            self._costs = cost_functions.CostFunctions(
+                self.filename, self.lines
+            )
             if not self.fmtdelayedopen:
                 self.flush_lines()
         return self._costs
@@ -266,12 +313,15 @@ class ListBasedCutoffDispenser:
             if f_dates:
                 f_cutoffs[k] = f_dates
         if f_cutoffs:
-            self._max_cutoff = max([max(dates) for dates in f_cutoffs.values()])
+            self._max_cutoff = max(
+                [max(dates) for dates in f_cutoffs.values()]
+            )
         else:
             self._max_cutoff = None
         self._default_cutoffs = defaultdict(lambda: self._max_cutoff)
-        self._default_cutoffs.update({k: max(dates)
-                                      for k, dates in f_cutoffs.items()})
+        self._default_cutoffs.update(
+            {k: max(dates) for k, dates in f_cutoffs.items()}
+        )
         self._fuse_per_obstype = fuse_per_obstype
 
     @property
@@ -300,15 +350,21 @@ class BdmBufrListingsFormatAdapter(FormatAdapterAbstractImplementation):
     _footprint = dict(
         attr=dict(
             format=dict(
-                values=['BDMBUFR_LISTING', ],
+                values=[
+                    "BDMBUFR_LISTING",
+                ],
             ),
         )
     )
 
-    _RE_OBSTYPE_GRP = re.compile(r"^.*tentative\s+(?:d')?extraction\s+pour\s+'?(?P<obstype>\w+)'?\b",
-                                 re.IGNORECASE)
-    _RE_OBSTYPE_CUT = re.compile(r"^.*cutoff\s+pour\s+'?(?P<obstype>\w+)'?\s*:\s*(?P<datetime>\d+)\b",
-                                 re.IGNORECASE)
+    _RE_OBSTYPE_GRP = re.compile(
+        r"^.*tentative\s+(?:d')?extraction\s+pour\s+'?(?P<obstype>\w+)'?\b",
+        re.IGNORECASE,
+    )
+    _RE_OBSTYPE_CUT = re.compile(
+        r"^.*cutoff\s+pour\s+'?(?P<obstype>\w+)'?\s*:\s*(?P<datetime>\d+)\b",
+        re.IGNORECASE,
+    )
 
     def __init__(self, *kargs, **kwargs):
         super().__init__(*kargs, **kwargs)
@@ -321,8 +377,15 @@ class BdmBufrListingsFormatAdapter(FormatAdapterAbstractImplementation):
     def lines(self):
         """Return an array populated with the listing file lines."""
         if self._lines is None:
-            with open(self.filename, self.openmode, encoding='utf-8', errors='replace') as f:
-                self._lines = [l.rstrip("\n") for l in f]  # to remove trailing '\n'
+            with open(
+                self.filename,
+                self.openmode,
+                encoding="utf-8",
+                errors="replace",
+            ) as f:
+                self._lines = [
+                    l.rstrip("\n") for l in f
+                ]  # to remove trailing '\n'
         return self._lines
 
     @property
@@ -338,11 +401,16 @@ class BdmBufrListingsFormatAdapter(FormatAdapterAbstractImplementation):
                 if l_match:
                     if cur_obstype is not None:
                         self._cutoffs[cur_obstype].append(None)
-                    cur_obstype = l_match.group('obstype').lower()
+                    cur_obstype = l_match.group("obstype").lower()
                 if cur_obstype:
                     l_match = self._RE_OBSTYPE_CUT.match(line)
-                    if l_match and l_match.group('obstype').lower() == cur_obstype:
-                        self._cutoffs[cur_obstype].append(Date(l_match.group('datetime')))
+                    if (
+                        l_match
+                        and l_match.group("obstype").lower() == cur_obstype
+                    ):
+                        self._cutoffs[cur_obstype].append(
+                            Date(l_match.group("datetime"))
+                        )
                         cur_obstype = None
             if cur_obstype is not None:
                 self._cutoffs[cur_obstype].append(None)
@@ -350,5 +418,6 @@ class BdmBufrListingsFormatAdapter(FormatAdapterAbstractImplementation):
 
     def cutoffs_dispenser(self, fuse_per_obstype=False):
         """Return a new :class:`CutoffDispenser` object."""
-        return ListBasedCutoffDispenser(copy.deepcopy(self.cutoffs),
-                                        fuse_per_obstype=fuse_per_obstype)
+        return ListBasedCutoffDispenser(
+            copy.deepcopy(self.cutoffs), fuse_per_obstype=fuse_per_obstype
+        )

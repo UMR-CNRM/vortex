@@ -14,7 +14,7 @@ from vortex.util.roles import setrole
 
 logger = loggers.getLogger(__name__)
 
-tnt_checker = ExternalCodeImportChecker('thenamelisttool')
+tnt_checker = ExternalCodeImportChecker("thenamelisttool")
 with tnt_checker as tnt_register:
     import thenamelisttool
 
@@ -48,40 +48,54 @@ def compose_nam(options):
 
     :rtype: A file like object
     """
-    rhdict = options.get('rhandler', None)
-    source = rhdict['resource'].get('source', None)
+    rhdict = options.get("rhandler", None)
+    source = rhdict["resource"].get("source", None)
     if source is None:
         logger.error("Inapropriate type of resource. Got:\n%s", rhdict)
-        raise FunctionStoreCallbackError('Inapropriate type of resources.')
+        raise FunctionStoreCallbackError("Inapropriate type of resources.")
 
     t = sessions.current()
 
     def _get_pack_adress(role):
         role = setrole(role)
-        packlist = [sec.rh for sec in t.context.sequence.filtered_inputs(role=role)]
+        packlist = [
+            sec.rh for sec in t.context.sequence.filtered_inputs(role=role)
+        ]
         if len(packlist) != 1:
             logger.error("The number of namelist packs with role=%s is not 1.")
-            raise FunctionStoreCallbackError('Incorrect number of namelist packs.')
+            raise FunctionStoreCallbackError(
+                "Incorrect number of namelist packs."
+            )
         packrh = packlist[0]
-        if packrh.resource.realkind != 'namelistpack':
-            logger.error("Incorrect resource type for role %s. Resource handler:\n%s",
-                         role, packrh.icdard())
-            raise FunctionStoreCallbackError('Incorrect resource type.')
+        if packrh.resource.realkind != "namelistpack":
+            logger.error(
+                "Incorrect resource type for role %s. Resource handler:\n%s",
+                role,
+                packrh.icdard(),
+            )
+            raise FunctionStoreCallbackError("Incorrect resource type.")
         if not packrh.container.filled:
-            logger.error("The resource handler's container is not filled for role %s", role)
-            raise FunctionStoreCallbackError('RH container is not filled.')
+            logger.error(
+                "The resource handler's container is not filled for role %s",
+                role,
+            )
+            raise FunctionStoreCallbackError("RH container is not filled.")
         return packrh.container.abspath
 
-    nampack_path = _get_pack_adress(options.get('nampack', 'Main Namelist Pack'))
-    dirpack_role = options.get('dirpack', None)
-    dirpack_path = _get_pack_adress(dirpack_role) if dirpack_role else nampack_path
+    nampack_path = _get_pack_adress(
+        options.get("nampack", "Main Namelist Pack")
+    )
+    dirpack_role = options.get("dirpack", None)
+    dirpack_path = (
+        _get_pack_adress(dirpack_role) if dirpack_role else nampack_path
+    )
 
     out_io = io.BytesIO()
     thenamelisttool.util.compose_namelist(
-        t.sh.path.join(dirpack_path, source + '.yaml'),
+        t.sh.path.join(dirpack_path, source + ".yaml"),
         sourcenam_directory=nampack_path,
         sorting=thenamelisttool.namadapter.FIRST_ORDER_SORTING,
         squeeze=False,
-        fhoutput=codecs.getwriter('utf-8')(out_io)
+        fhoutput=codecs.getwriter("utf-8")(out_io),
     )
     return out_io

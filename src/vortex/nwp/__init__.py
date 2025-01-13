@@ -8,4 +8,4 @@ from . import algo, data, tools, syntax
 #: No automatic export
 __all__ = []
 
-__tocinfoline__ = 'The NWP VORTEX extension'
+__tocinfoline__ = "The NWP VORTEX extension"

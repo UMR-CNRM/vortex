@@ -23,28 +23,29 @@ __all__ = []
 
 logger = loggers.getLogger(__name__)
 
-_RHANDLERS_OBSBOARD = 'Resources-Handlers'
+_RHANDLERS_OBSBOARD = "Resources-Handlers"
 
 
 class SectionFatalError(Exception):
     """Exception when fatal mode is activated."""
+
     pass
 
 
 #: Definition of a named tuple INTENT
-IntentTuple = namedtuple('IntentTuple', ['IN', 'OUT', 'INOUT'])
+IntentTuple = namedtuple("IntentTuple", ["IN", "OUT", "INOUT"])
 
 #: Predefined INTENT values IN, OUT and INOUT.
-intent = IntentTuple(IN='in', OUT='out', INOUT='inout')
+intent = IntentTuple(IN="in", OUT="out", INOUT="inout")
 
 #: Definition of a named tuple IXO sequence
-IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'])
+IXOTuple = namedtuple("IXOTuple", ["INPUT", "OUTPUT", "EXEC"])
 
 #: Predefined IXO sequence values INPUT, OUTPUT and EXEC.
 ixo = IXOTuple(INPUT=1, OUTPUT=2, EXEC=3)
 
 #: Arguments specific to a section (to be striped away from a resource handler description)
-section_args = ['role', 'alternate', 'intent', 'fatal', 'coherentgroup']
+section_args = ["role", "alternate", "intent", "fatal", "coherentgroup"]
 
 
 def stripargs_section(**kw):
@@ -64,22 +65,28 @@ class _ReplaceSectionArgs:
     Trigger the footprint's replacement mechanism on some of the section arguments.
     """
 
-    _REPL_TODO = ('coherentgroup', )
+    _REPL_TODO = ("coherentgroup",)
 
     def __init__(self):
-        self._fptmp = footprints.Footprint(attr={k: dict(optional=True)
-                                                 for k in self._REPL_TODO})
+        self._fptmp = footprints.Footprint(
+            attr={k: dict(optional=True) for k in self._REPL_TODO}
+        )
 
     def __call__(self, rh, opts):
-        if any({footprints.replattr.search(opts[k])
-                for k in self._REPL_TODO if k in opts}):
+        if any(
+            {
+                footprints.replattr.search(opts[k])
+                for k in self._REPL_TODO
+                if k in opts
+            }
+        ):
             # The "description"
             desc = opts.copy()
             if rh is not None:
                 desc.update(rh.options)
-                desc['container'] = rh.container
-                desc['provider'] = rh.provider
-                desc['resource'] = rh.resource
+                desc["container"] = rh.container
+                desc["provider"] = rh.provider
+                desc["resource"] = rh.resource
             # Resolve
             resolved, _, _ = self._fptmp.resolve(desc, fatal=False, fast=False)
             # ok, let's use the resolved values
@@ -95,25 +102,28 @@ class Section:
     """Low level unit to handle a resource."""
 
     def __init__(self, **kw):
-        logger.debug('Section initialisation %s', self)
+        logger.debug("Section initialisation %s", self)
         self.kind = ixo.INPUT
         self.intent = intent.INOUT
         self.fatal = True
         # Fetch the ResourceHandler
-        self._rh = kw.pop('rh', None)
+        self._rh = kw.pop("rh", None)
         # We realy need a ResourceHandler...
         if self.rh is None:
             raise AttributeError("A proper rh attribute have to be provided")
         # Call the footprint's replacement mechanism if needed
         _default_replace_section_args(self._rh, kw)
         # Process the remaining options
-        self._role = setrole(kw.pop('role', 'anonymous'))
-        self._alternate = setrole(kw.pop('alternate', None))
-        self._coherentgroups = kw.pop('coherentgroup', None)
-        self._coherentgroups = set(self._coherentgroups.split(',')
-                                   if self._coherentgroups else [])
+        self._role = setrole(kw.pop("role", "anonymous"))
+        self._alternate = setrole(kw.pop("alternate", None))
+        self._coherentgroups = kw.pop("coherentgroup", None)
+        self._coherentgroups = set(
+            self._coherentgroups.split(",") if self._coherentgroups else []
+        )
         self._coherentgroups_opened = {g: True for g in self._coherentgroups}
-        self.stages = [kw.pop('stage', 'load'), ]
+        self.stages = [
+            kw.pop("stage", "load"),
+        ]
         self.__dict__.update(kw)
         # If alternate is specified role have to be removed
         if self._alternate:
@@ -135,20 +145,28 @@ class Section:
     @property
     def any_coherentgroup_opened(self):
         """Is, at least, one belonging coherent group opened ?"""
-        return not self.coherentgroups or any(self._coherentgroups_opened.values())
+        return not self.coherentgroups or any(
+            self._coherentgroups_opened.values()
+        )
 
     def coherent_group_close(self, group):
         """Close the coherent group (get and put will fail from now and on)."""
         if group in self._coherentgroups_opened:
             self._coherentgroups_opened[group] = False
         # Another group's resource failed, re-checking and possibly deleting myself !
-        if self.stage in ('expected', 'get') and not self.any_coherentgroup_opened:
-            logger.info('Clearing %s because of the coherent group failure.', str(self.rh.container))
+        if (
+            self.stage in ("expected", "get")
+            and not self.any_coherentgroup_opened
+        ):
+            logger.info(
+                "Clearing %s because of the coherent group failure.",
+                str(self.rh.container),
+            )
             self.rh.clear()
 
     def check_groupstatus(self, info):
         """Given the updstage's info dict, check that a coherent group still holds"""
-        return info.get('stage') != 'void'
+        return info.get("stage") != "void"
 
     @property
     def rh(self):
@@ -161,41 +179,49 @@ class Section:
 
     def _updignore(self, info):
         """Fake function for undefined information driven updates."""
-        logger.warning('Unable to update %s with info %s', self, info)
+        logger.warning("Unable to update %s with info %s", self, info)
 
     def _updstage_void(self, info):
         """Upgrade current section to 'checked' level."""
-        if info.get('stage') == 'void' and self.kind in (ixo.INPUT, ixo.EXEC):
-            self.stages.append('void')
+        if info.get("stage") == "void" and self.kind in (ixo.INPUT, ixo.EXEC):
+            self.stages.append("void")
 
     def _updstage_checked(self, info):
         """Upgrade current section to 'checked' level."""
-        if info.get('stage') == 'checked' and self.kind in (ixo.INPUT, ixo.EXEC):
-            self.stages.append('checked')
+        if info.get("stage") == "checked" and self.kind in (
+            ixo.INPUT,
+            ixo.EXEC,
+        ):
+            self.stages.append("checked")
 
     def _updstage_get(self, info):
         """Upgrade current section to 'get' level."""
-        if info.get('stage') == 'get' and self.kind in (ixo.INPUT, ixo.EXEC):
-            self.stages.append('get')
+        if info.get("stage") == "get" and self.kind in (ixo.INPUT, ixo.EXEC):
+            self.stages.append("get")
 
     def _updstage_expected(self, info):
         """Upgrade current section to 'expected' level."""
-        if info.get('stage') == 'expected' and self.kind in (ixo.INPUT, ixo.EXEC):
-            self.stages.append('expected')
+        if info.get("stage") == "expected" and self.kind in (
+            ixo.INPUT,
+            ixo.EXEC,
+        ):
+            self.stages.append("expected")
 
     def _updstage_put(self, info):
         """Upgrade current section to 'put' level."""
-        if info.get('stage') == 'put' and self.kind == ixo.OUTPUT:
-            self.stages.append('put')
+        if info.get("stage") == "put" and self.kind == ixo.OUTPUT:
+            self.stages.append("put")
 
     def _updstage_ghost(self, info):
         """Upgrade current section to 'ghost' level."""
-        if info.get('stage') == 'ghost' and self.kind == ixo.OUTPUT:
-            self.stages.append('ghost')
+        if info.get("stage") == "ghost" and self.kind == ixo.OUTPUT:
+            self.stages.append("ghost")
 
     def updstage(self, info):
         """Upgrade current section level according to information given in dict ``info``."""
-        updmethod = getattr(self, '_updstage_' + info.get('stage'), self._updignore)
+        updmethod = getattr(
+            self, "_updstage_" + info.get("stage"), self._updignore
+        )
         updmethod(info)
 
     def _stronglocate(self, **kw):
@@ -203,60 +229,76 @@ class Section:
         try:
             loc = self.rh.locate(**kw)
         except Exception:
-            loc = '???'
+            loc = "???"
         return loc
 
     def _fatal_wrap(self, sectiontype, callback, **kw):
         """Launch **callback** and process the returncode/exceptions according to **fatal**."""
-        action = {'input': 'get', 'output': 'put'}[sectiontype]
+        action = {"input": "get", "output": "put"}[sectiontype]
         rc = False
         try:
             rc = callback(**kw)
         except Exception as e:
-            logger.error('Something wrong (%s section): %s. %s',
-                         sectiontype, str(e), traceback.format_exc())
-            logger.error('Resource %s', self._stronglocate())
+            logger.error(
+                "Something wrong (%s section): %s. %s",
+                sectiontype,
+                str(e),
+                traceback.format_exc(),
+            )
+            logger.error("Resource %s", self._stronglocate())
         if not rc and self.fatal:
-            logger.critical('Fatal error with action %s on %s', action, self._stronglocate())
-            raise SectionFatalError('Could not {:s} resource {!s}'.format(action, rc))
+            logger.critical(
+                "Fatal error with action %s on %s",
+                action,
+                self._stronglocate(),
+            )
+            raise SectionFatalError(
+                "Could not {:s} resource {!s}".format(action, rc)
+            )
         return rc
 
     def _just_fail(self, sectiontype, **kw):  # @UnusedVariable
         """Check if a resource exists but fails anyway."""
-        action = {'input': 'get', 'output': 'put'}[sectiontype]
+        action = {"input": "get", "output": "put"}[sectiontype]
         rc = False
         if self.fatal:
-            logger.critical('Fatal error with action %s on %s', action, self._stronglocate())
-            raise SectionFatalError('Could not {:s} resource {!s}'.format(action, rc))
+            logger.critical(
+                "Fatal error with action %s on %s",
+                action,
+                self._stronglocate(),
+            )
+            raise SectionFatalError(
+                "Could not {:s} resource {!s}".format(action, rc)
+            )
         return rc
 
     def get(self, **kw):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.get`."""
         if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
             if self.any_coherentgroup_opened:
-                kw['intent'] = self.intent
+                kw["intent"] = self.intent
                 if self.alternate:
-                    kw['alternate'] = self.alternate
-                rc = self._fatal_wrap('input', self.rh.get, **kw)
+                    kw["alternate"] = self.alternate
+                rc = self._fatal_wrap("input", self.rh.get, **kw)
             else:
                 logger.info("The coherent group is closed... doing nothing.")
-                rc = self._just_fail('input')
+                rc = self._just_fail("input")
         else:
             rc = False
-            logger.error('Try to get from an output section')
+            logger.error("Try to get from an output section")
         return rc
 
     def finaliseget(self):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.finaliseget`."""
         if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
             if self.any_coherentgroup_opened:
-                rc = self._fatal_wrap('input', self.rh.finaliseget)
+                rc = self._fatal_wrap("input", self.rh.finaliseget)
             else:
                 logger.info("The coherent group is closed... doing nothing.")
-                rc = self._just_fail('input')
+                rc = self._just_fail("input")
         else:
             rc = False
-            logger.error('Try to get from an output section')
+            logger.error("Try to get from an output section")
         return rc
 
     def earlyget(self, **kw):
@@ -264,10 +306,10 @@ class Section:
         rc = False
         if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
             if self.any_coherentgroup_opened:
-                kw['intent'] = self.intent
+                kw["intent"] = self.intent
                 if self.alternate:
-                    kw['alternate'] = self.alternate
-                rc = self.rh.earlyget(** kw)
+                    kw["alternate"] = self.alternate
+                rc = self.rh.earlyget(**kw)
             else:
                 rc = None
         return rc
@@ -276,24 +318,29 @@ class Section:
         """Shortcut to resource handler :meth:`~vortex.data.handlers.put`."""
         if self.kind == ixo.OUTPUT:
             if self.any_coherentgroup_opened:
-                kw['intent'] = self.intent
-                rc = self._fatal_wrap('output', self.rh.put, **kw)
+                kw["intent"] = self.intent
+                rc = self._fatal_wrap("output", self.rh.put, **kw)
             else:
                 logger.info("The coherent group is closed... failing !.")
                 rc = False
                 if self.fatal:
-                    logger.critical('Fatal error with action put on %s', self._stronglocate())
-                    raise SectionFatalError('Could not get resource {!s}'.format(rc))
+                    logger.critical(
+                        "Fatal error with action put on %s",
+                        self._stronglocate(),
+                    )
+                    raise SectionFatalError(
+                        "Could not get resource {!s}".format(rc)
+                    )
         else:
             rc = False
-            logger.error('Try to put from an input section.')
+            logger.error("Try to put from an input section.")
         return rc
 
     def show(self, **kw):
         """Nice dump of the section attributes and contents."""
         for k, v in sorted(vars(self).items()):
-            if k != 'rh':
-                print(' ', k.ljust(16), ':', v)
+            if k != "rh":
+                print(" ", k.ljust(16), ":", v)
         self.rh.quickview(indent=1)
 
     def as_dict(self):
@@ -306,12 +353,12 @@ class Section:
                 outdict["coherentgroup"] = ",".join(sorted(v))
             elif k == "_coherentgroups_opened":
                 continue
-            elif k.startswith('_'):
+            elif k.startswith("_"):
                 outdict[k[1:]] = v
             else:
                 outdict[k] = v
         # Add the latest stage
-        outdict['stage'] = self.stage
+        outdict["stage"] = self.stage
         return outdict
 
 
@@ -322,7 +369,7 @@ class Sequence(observer.Observer):
     """
 
     def __init__(self, *args, **kw):
-        logger.debug('Sequence initialisation %s', self)
+        logger.debug("Sequence initialisation %s", self)
         self.sections = list()
         # This hash table will be used to speedup the searches...
         # If one uses the remove method, a WeakSet is not usefull. However,
@@ -367,7 +414,11 @@ class Sequence(observer.Observer):
                 if not self._coherentgroups_openings[cgroup]:
                     candidate.coherent_group_close(cgroup)
         else:
-            logger.warning('Try to add a non-section object %s in sequence %s', candidate, self)
+            logger.warning(
+                "Try to add a non-section object %s in sequence %s",
+                candidate,
+                self,
+            )
 
     def remove(self, candidate):
         """
@@ -376,59 +427,71 @@ class Sequence(observer.Observer):
         """
         if isinstance(candidate, Section):
             self.sections.remove(candidate)
-            self._sections_hash[candidate.rh.simplified_hashkey].discard(candidate)
+            self._sections_hash[candidate.rh.simplified_hashkey].discard(
+                candidate
+            )
             for cgroup in candidate.coherentgroups:
                 self._coherentgroups[cgroup].discard(candidate)
         else:
-            logger.warning('Try to remove a non-section object %s in sequence %s', candidate, self)
+            logger.warning(
+                "Try to remove a non-section object %s in sequence %s",
+                candidate,
+                self,
+            )
 
     def section(self, **kw):
         """Section factory wrapping a given ``rh`` (Resource Handler)."""
-        rhset = kw.get('rh', list())
+        rhset = kw.get("rh", list())
         if not isinstance(rhset, list):
-            rhset = [rhset, ]
-        ralter = kw.get('alternate', kw.get('role', 'anonymous'))
+            rhset = [
+                rhset,
+            ]
+        ralter = kw.get("alternate", kw.get("role", "anonymous"))
         newsections = list()
         for rh in rhset:
-            kw['rh'] = rh
+            kw["rh"] = rh
             this_section = Section(**kw)
             self.add(this_section)
             newsections.append(this_section)
-            kw['alternate'] = ralter
-            if 'role' in kw:
-                del kw['role']
+            kw["alternate"] = ralter
+            if "role" in kw:
+                del kw["role"]
         return newsections
 
     def input(self, **kw):
         """Create a section with default kind equal to ``ixo.INPUT``."""
-        if 'kind' in kw:
-            del kw['kind']
-        kw.setdefault('intent', intent.IN)
+        if "kind" in kw:
+            del kw["kind"]
+        kw.setdefault("intent", intent.IN)
         return self.section(kind=ixo.INPUT, **kw)
 
     def output(self, **kw):
         """Create a section with default kind equal to ``ixo.OUTPUT`` and intent equal to ``intent.OUT``."""
-        if 'kind' in kw:
-            del kw['kind']
-        kw.setdefault('intent', intent.OUT)
+        if "kind" in kw:
+            del kw["kind"]
+        kw.setdefault("intent", intent.OUT)
         return self.section(kind=ixo.OUTPUT, **kw)
 
     def executable(self, **kw):
         """Create a section with default kind equal to to ``ixo.EXEC``."""
-        if 'kind' in kw:
-            del kw['kind']
-        kw.setdefault('intent', intent.IN)
+        if "kind" in kw:
+            del kw["kind"]
+        kw.setdefault("intent", intent.IN)
         return self.section(kind=ixo.EXEC, **kw)
 
     @staticmethod
     def _fuzzy_match(stuff, allowed):
         """Check if ``stuff`` is in ``allowed``. ``allowed`` may contain regex."""
-        if (isinstance(allowed, str) or
-                not isinstance(allowed, collections.abc.Iterable)):
-            allowed = [allowed, ]
+        if isinstance(allowed, str) or not isinstance(
+            allowed, collections.abc.Iterable
+        ):
+            allowed = [
+                allowed,
+            ]
         for pattern in allowed:
-            if ((isinstance(pattern, re.Pattern) and pattern.search(stuff)) or
-                    (pattern == stuff)):
+            if (isinstance(pattern, re.Pattern) and pattern.search(stuff)) or (
+                pattern == stuff
+            ):
                 return True
         return False
 
@@ -437,18 +500,31 @@ class Sequence(observer.Observer):
             return list(sections)
         inrole = list()
         inkind = list()
-        with_alternates = not kw.get('no_alternates', False)
-        if 'role' in kw and kw['role'] is not None:
-            selectrole = mktuple(kw['role'])
-            inrole = [x for x in sections if (
-                (x.role is not None and self._fuzzy_match(x.role, selectrole)) or
-                (with_alternates and
-                 x.alternate is not None and
-                 self._fuzzy_match(x.alternate, selectrole))
-            )]
-        if not inrole and 'kind' in kw:
-            selectkind = mktuple(kw['kind'])
-            inkind = [x for x in sections if self._fuzzy_match(x.rh.resource.realkind, selectkind)]
+        with_alternates = not kw.get("no_alternates", False)
+        if "role" in kw and kw["role"] is not None:
+            selectrole = mktuple(kw["role"])
+            inrole = [
+                x
+                for x in sections
+                if (
+                    (
+                        x.role is not None
+                        and self._fuzzy_match(x.role, selectrole)
+                    )
+                    or (
+                        with_alternates
+                        and x.alternate is not None
+                        and self._fuzzy_match(x.alternate, selectrole)
+                    )
+                )
+            ]
+        if not inrole and "kind" in kw:
+            selectkind = mktuple(kw["kind"])
+            inkind = [
+                x
+                for x in sections
+                if self._fuzzy_match(x.rh.resource.realkind, selectkind)
+            ]
         return inrole or inkind
 
     def inputs(self):
@@ -472,8 +548,12 @@ class Sequence(observer.Observer):
         Similar to :meth:`filtered_inputs` but only walk through the inputs of
         that reached the 'get' or 'expected' stage.
         """
-        return [x for x in self._section_list_filter(list(self.inputs()), **kw)
-                if (x.stage == 'get' or x.stage == 'expected') and x.rh.container.exists()]
+        return [
+            x
+            for x in self._section_list_filter(list(self.inputs()), **kw)
+            if (x.stage == "get" or x.stage == "expected")
+            and x.rh.container.exists()
+        ]
 
     def filtered_inputs(self, **kw):
         """Walk through the inputs of the current sequence.
@@ -493,15 +573,23 @@ class Sequence(observer.Observer):
     def is_somehow_viable(self, section):
         """Tells wether *section* is ok or has a viable alternate."""
         if section.role is None:
-            raise ValueError('An alternate section was given ; this is incorrect...')
-        if section.stage in ('get', 'expected') and section.rh.container.exists():
+            raise ValueError(
+                "An alternate section was given ; this is incorrect..."
+            )
+        if (
+            section.stage in ("get", "expected")
+            and section.rh.container.exists()
+        ):
             return section
         else:
             for isec in self.inputs():
-                if (isec.alternate == section.role and
-                        isec.stage in ('get', 'expected') and
-                        isec.rh.container.localpath() == section.rh.container.localpath() and
-                        isec.rh.container.exists()):
+                if (
+                    isec.alternate == section.role
+                    and isec.stage in ("get", "expected")
+                    and isec.rh.container.localpath()
+                    == section.rh.container.localpath()
+                    and isec.rh.container.exists()
+                ):
                     return isec
         return None
 
@@ -541,7 +629,9 @@ class Sequence(observer.Observer):
 
         for cgroup in a_section.coherentgroups:
             if self._coherentgroups_openings[cgroup]:
-                if not all(map(_s_group_check, self.coherentgroup_iter(cgroup))):
+                if not all(
+                    map(_s_group_check, self.coherentgroup_iter(cgroup))
+                ):
                     for c_section in self.coherentgroup_iter(cgroup):
                         c_section.coherent_group_close(cgroup)
                     self._coherentgroups_openings[cgroup] = False
@@ -551,13 +641,14 @@ class Sequence(observer.Observer):
         Resources-Handlers observing facility.
         Track hashkey alteration for the resource handler ``item``.
         """
-        if (info['observerboard'] == _RHANDLERS_OBSBOARD and
-                'oldhash' in info):
-            logger.debug('Notified %s upd item %s', self, item)
-            oldhash = info['oldhash']
+        if info["observerboard"] == _RHANDLERS_OBSBOARD and "oldhash" in info:
+            logger.debug("Notified %s upd item %s", self, item)
+            oldhash = info["oldhash"]
             # First remove the oldhash
             if oldhash in self._sections_hash:
-                for section in [s for s in self._sections_hash[oldhash] if s.rh is item]:
+                for section in [
+                    s for s in self._sections_hash[oldhash] if s.rh is item
+                ]:
                     self._sections_hash[oldhash].discard(section)
             # Then add the new hash: This is relatively slow so that it should not be used much...
             for section in [s for s in self.sections if s.rh is item]:
@@ -581,39 +672,55 @@ class Sequence(observer.Observer):
         elif trydict and isinstance(skeleton, dict):
             # We assume it is a resource handler dictionary
             try:
-                hkey = (skeleton['resource'].get('kind', None),
-                        skeleton['container'].get('filename', None))
+                hkey = (
+                    skeleton["resource"].get("kind", None),
+                    skeleton["container"].get("filename", None),
+                )
             except KeyError:
-                logger.critical("This is probably not a ResourceHandler dictionary.")
+                logger.critical(
+                    "This is probably not a ResourceHandler dictionary."
+                )
                 raise
             return self._sections_hash[hkey]
-        raise ValueError("Cannot process a {!s} type skeleton".format(type(skeleton)))
+        raise ValueError(
+            "Cannot process a {!s} type skeleton".format(type(skeleton))
+        )
 
 
 #: Class of a list of statuses
-InputsReportStatusTupple = namedtuple('InputsReportStatusTupple',
-                                      ('PRESENT', 'EXPECTED', 'CHECKED', 'MISSING', 'UNUSED'))
+InputsReportStatusTupple = namedtuple(
+    "InputsReportStatusTupple",
+    ("PRESENT", "EXPECTED", "CHECKED", "MISSING", "UNUSED"),
+)
 
 
 #: Possible statuses used in :class:`SequenceInputsReport` objects
-InputsReportStatus = InputsReportStatusTupple(PRESENT='present', EXPECTED='expected',
-                                              CHECKED='checked', MISSING='missing',
-                                              UNUSED='unused')
+InputsReportStatus = InputsReportStatusTupple(
+    PRESENT="present",
+    EXPECTED="expected",
+    CHECKED="checked",
+    MISSING="missing",
+    UNUSED="unused",
+)
 
 
 class SequenceInputsReport:
     """Summarize data about inputs (missing resources, alternates, ...)."""
 
-    _TranslateStage = dict(get=InputsReportStatus.PRESENT, expected=InputsReportStatus.EXPECTED,
-                           checked=InputsReportStatus.CHECKED, void=InputsReportStatus.MISSING,
-                           load=InputsReportStatus.UNUSED)
+    _TranslateStage = dict(
+        get=InputsReportStatus.PRESENT,
+        expected=InputsReportStatus.EXPECTED,
+        checked=InputsReportStatus.CHECKED,
+        void=InputsReportStatus.MISSING,
+        load=InputsReportStatus.UNUSED,
+    )
 
     def __init__(self, inputs):
         self._local_map = defaultdict(lambda: defaultdict(list))
         for insec in inputs:
             local = insec.rh.container.localpath()
             # Determine if the current section is an alternate or not...
-            kind = 'alternate' if insec.alternate is not None else 'nominal'
+            kind = "alternate" if insec.alternate is not None else "nominal"
             self._local_map[local][kind].append(insec)
 
     def _local_status(self, local):
@@ -627,20 +734,29 @@ class SequenceInputsReport:
         """
         desc = self._local_map[local]
         # First, check the nominal resource
-        if len(desc['nominal']) > 0:
-            nominal = desc['nominal'][-1]
+        if len(desc["nominal"]) > 0:
+            nominal = desc["nominal"][-1]
             status = self._TranslateStage[nominal.stage]
             true_rh = nominal.rh
         else:
-            logger.warning('No nominal section for < %s >. This should not happened !', local)
+            logger.warning(
+                "No nominal section for < %s >. This should not happened !",
+                local,
+            )
             nominal = None
             status = None
             true_rh = None
         # Look for alternates:
-        if status not in (InputsReportStatus.PRESENT, InputsReportStatus.EXPECTED):
-            for alter in desc['alternate']:
+        if status not in (
+            InputsReportStatus.PRESENT,
+            InputsReportStatus.EXPECTED,
+        ):
+            for alter in desc["alternate"]:
                 alter_status = self._TranslateStage[alter.stage]
-                if alter_status in (InputsReportStatus.PRESENT, InputsReportStatus.EXPECTED):
+                if alter_status in (
+                    InputsReportStatus.PRESENT,
+                    InputsReportStatus.EXPECTED,
+                ):
                     status = alter_status
                     true_rh = alter.rh
                     break
@@ -662,24 +778,30 @@ class SequenceInputsReport:
         else:
             # Convert a single string to a list
             if isinstance(only, str):
-                only = [only, ]
+                only = [
+                    only,
+                ]
             # Check that the provided statuses exist
             if not all([f in InputsReportStatus for f in only]):
                 return "* The only attribute is wrong ! ({!s})".format(only)
 
-        outstr = ''
+        outstr = ""
         for local in sorted(self._local_map):
             # For each and every local file, check alternates and find out the status
             status, true_rh, nominal_rh = self._local_status(local)
-            extrainfo = ''
+            extrainfo = ""
             # Detect alternates
-            is_alternate = status != InputsReportStatus.MISSING and (true_rh is not nominal_rh)
+            is_alternate = status != InputsReportStatus.MISSING and (
+                true_rh is not nominal_rh
+            )
             if is_alternate:
-                extrainfo = '(ALTERNATE USED)'
+                extrainfo = "(ALTERNATE USED)"
             # Alternates are always printed. Otherwise rely on **only**
             if is_alternate or status in only:
-                outstr += "* {:8s} {:16s} : {:s}\n".format(status, extrainfo, local)
-                if detailed and extrainfo != '':
+                outstr += "* {:8s} {:16s} : {:s}\n".format(
+                    status, extrainfo, local
+                )
+                if detailed and extrainfo != "":
                     outstr += "  * The following resource is used:\n"
                     outstr += true_rh.idcard(indent=4) + "\n"
                     if nominal_rh is not None:
@@ -712,7 +834,9 @@ class SequenceInputsReport:
         outstack = dict()
         for local in self._local_map:
             status, true_rh, nominal_rh = self._local_status(local)
-            if status != InputsReportStatus.MISSING and (true_rh is not nominal_rh):
+            if status != InputsReportStatus.MISSING and (
+                true_rh is not nominal_rh
+            ):
                 outstack[local] = (true_rh, nominal_rh)
         return outstack
 
@@ -720,8 +844,11 @@ class SequenceInputsReport:
         """List the missing local resources."""
         outstack = dict()
         for local in self._local_map:
-            (status, true_rh,  # @UnusedVariable
-             nominal_rh) = self._local_status(local)
+            (
+                status,
+                true_rh,  # @UnusedVariable
+                nominal_rh,
+            ) = self._local_status(local)
             if status == InputsReportStatus.MISSING:
                 outstack[local] = nominal_rh
         return outstack
@@ -729,15 +856,21 @@ class SequenceInputsReport:
 
 def _fast_clean_uri(store, remote):
     """Clean a URI so that it can be compared with a JSON load version."""
-    qsl = remote['query'].copy()
-    qsl.update({'storearg_{:s}'.format(k): v
-                for k, v in store.tracking_extraargs.items()})
-    return {'scheme': str(store.scheme),
-            'netloc': str(store.netloc),
-            'path': str(remote['path']),
-            'params': str(remote['params']),
-            'query': qsl,
-            'fragment': str(remote['fragment'])}
+    qsl = remote["query"].copy()
+    qsl.update(
+        {
+            "storearg_{:s}".format(k): v
+            for k, v in store.tracking_extraargs.items()
+        }
+    )
+    return {
+        "scheme": str(store.scheme),
+        "netloc": str(store.netloc),
+        "path": str(remote["path"]),
+        "params": str(remote["params"]),
+        "query": qsl,
+        "fragment": str(remote["fragment"]),
+    }
 
 
 class LocalTrackerEntry:
@@ -748,8 +881,11 @@ class LocalTrackerEntry:
     stores are tracked.
     """
 
-    _actions = ('get', 'put',)
-    _internals = ('rhdict', 'hook', 'uri')
+    _actions = (
+        "get",
+        "put",
+    )
+    _internals = ("rhdict", "hook", "uri")
 
     def __init__(self, master_tracker=None):
         """
@@ -771,8 +907,8 @@ class LocalTrackerEntry:
         return json.loads(json.dumps(stuff))
 
     def _clean_rhdict(self, rhdict):
-        if 'options' in rhdict:
-            del rhdict['options']
+        if "options" in rhdict:
+            del rhdict["options"]
         return self._jsonize(rhdict)
 
     def update_rh(self, rh, info):
@@ -784,13 +920,15 @@ class LocalTrackerEntry:
         :param rh: :class:`~vortex.data.handlers.Handler` object that sends the update.
         :param info: Info dictionary sent by the :class:`~vortex.data.handlers.Handler` object
         """
-        stage = info['stage']
+        stage = info["stage"]
         if self._check_action(stage):
-            if 'hook' in info:
-                self._data['hook'][stage].append(self._jsonize(info['hook']))
-            elif not info.get('insitu', False):
+            if "hook" in info:
+                self._data["hook"][stage].append(self._jsonize(info["hook"]))
+            elif not info.get("insitu", False):
                 # We are using as_dict since this may be written to a JSON file
-                self._data['rhdict'][stage].append(self._clean_rhdict(rh.as_dict()))
+                self._data["rhdict"][stage].append(
+                    self._clean_rhdict(rh.as_dict())
+                )
 
     def _update_store(self, info, uri):
         """Update the entry based on data received from the observer board.
@@ -801,10 +939,10 @@ class LocalTrackerEntry:
         :param info: Info dictionary sent by the :class:`~vortex.data.stores.Store` object
         :param uri: A cleaned (i.e. compatible with JSON) representation of the URI
         """
-        action = info['action']
+        action = info["action"]
         # Only known action and successfull attempts
-        if self._check_action(action) and info['status']:
-            self._data['uri'][action].append(uri)
+        if self._check_action(action) and info["status"]:
+            self._data["uri"][action].append(uri)
             if self._master_tracker is not None:
                 self._master_tracker.uri_map_append(self, action, uri)
 
@@ -820,22 +958,24 @@ class LocalTrackerEntry:
         """
         self._data = dumpeddict
         for action in self._actions:
-            for uri in self._data['uri'][action]:
+            for uri in self._data["uri"][action]:
                 self._master_tracker.uri_map_append(self, action, uri)
 
     def append(self, anotherentry):
         """Append the content of another LocalTrackerEntry object into this one."""
         for internal in self._internals:
             for act in self._actions:
-                self._data[internal][act].extend(anotherentry._data[internal][act])
+                self._data[internal][act].extend(
+                    anotherentry._data[internal][act]
+                )
 
     def latest_rhdict(self, action):
         """Return the dictionary that represents the latest :class:`~vortex.data.handlers.Handler` object involved.
 
         :param action: Action that is considered.
         """
-        if self._check_action(action) and self._data['rhdict'][action]:
-            return self._data['rhdict'][action][-1]
+        if self._check_action(action) and self._data["rhdict"][action]:
+            return self._data["rhdict"][action][-1]
         else:
             return dict()
 
@@ -853,9 +993,9 @@ class LocalTrackerEntry:
                 for key, item in latest.items():
                     newitem = cleaned.get(key, None)
                     if newitem != item:
-                        logger.error('Expected %s:', key)
+                        logger.error("Expected %s:", key)
                         logger.error(pprint.pformat(item))
-                        logger.error('Got:')
+                        logger.error("Got:")
                         logger.error(pprint.pformat(newitem))
             return res
         else:
@@ -869,10 +1009,10 @@ class LocalTrackerEntry:
 
         :param uri: A cleaned (i.e. compatible with JSON) representation of the URI
         """
-        while uri in self._data['uri']['put']:
-            self._data['uri']['put'].remove(uri)
+        while uri in self._data["uri"]["put"]:
+            self._data["uri"]["put"].remove(uri)
             if self._master_tracker is not None:
-                self._master_tracker.uri_map_remove(self, 'put', uri)
+                self._master_tracker.uri_map_remove(self, "put", uri)
 
     def _redundant_stuff(self, internal, action, stuff):
         if self._check_action(action):
@@ -886,7 +1026,7 @@ class LocalTrackerEntry:
         :param action: Action that is considered.
         :param hookname: Name of the Hook function that will be checked.
         """
-        return self._redundant_stuff('hook', action, self._jsonize(hookname))
+        return self._redundant_stuff("hook", action, self._jsonize(hookname))
 
     def redundant_uri(self, action, store, remote):
         """Check if an URI has already been processed.
@@ -895,7 +1035,9 @@ class LocalTrackerEntry:
         :param store: :class:`~vortex.data.stores.Store` object that will be checked.
         :param remote: Remote path that will be checked.
         """
-        return self._redundant_stuff('uri', action, _fast_clean_uri(store, remote))
+        return self._redundant_stuff(
+            "uri", action, _fast_clean_uri(store, remote)
+        )
 
     def _grep_stuff(self, internal, action, skeleton=dict()):
         stack = []
@@ -903,20 +1045,24 @@ class LocalTrackerEntry:
             if isinstance(element, collections.abc.Mapping):
                 succeed = True
                 for key, val in skeleton.items():
-                    succeed = succeed and ((key in element) and (element[key] == val))
+                    succeed = succeed and (
+                        (key in element) and (element[key] == val)
+                    )
                 if succeed:
                     stack.append(element)
         return stack
 
     def __str__(self):
-        out = ''
+        out = ""
         for action in self._actions:
             for internal in self._internals:
                 if len(self._data[internal][action]) > 0:
                     out += "+ {:4s} / {}\n{}\n".format(
                         action.upper(),
                         internal,
-                        EncodedPrettyPrinter().pformat(self._data[internal][action])
+                        EncodedPrettyPrinter().pformat(
+                            self._data[internal][action]
+                        ),
                     )
         return out
 
@@ -929,7 +1075,7 @@ class LocalTracker(defaultdict):
     object.
     """
 
-    _default_json_filename = 'local-tracker-state.json'
+    _default_json_filename = "local-tracker-state.json"
 
     def __init__(self):
         super().__init__()
@@ -972,13 +1118,14 @@ class LocalTracker(defaultdict):
         """
         lpath = rh.container.iotarget()
         if isinstance(lpath, str):
-            if info.get('clear', False):
+            if info.get("clear", False):
                 self.pop(lpath, None)
             else:
                 self[lpath].update_rh(rh, info)
         else:
-            logger.debug('The iotarget is not a str: skipped in %s',
-                         self.__class__)
+            logger.debug(
+                "The iotarget is not a str: skipped in %s", self.__class__
+            )
 
     def update_store(self, store, info):
         """Update the object based on data received from the observer board.
@@ -989,21 +1136,23 @@ class LocalTracker(defaultdict):
         :param store: :class:`~vortex.data.stores.Store` object that sends the update.
         :param info: Info dictionary sent by the :class:`~vortex.data.stores.Store` object
         """
-        lpath = info.get('local', None)
+        lpath = info.get("local", None)
         if lpath is None:
             # Check for file deleted on the remote side
-            if info['action'] == 'del' and info['status']:
-                clean_uri = _fast_clean_uri(store, info['remote'])
+            if info["action"] == "del" and info["status"]:
+                clean_uri = _fast_clean_uri(store, info["remote"])
                 huri = self._hashable_uri(clean_uri)
-                for atracker in list(self._uri_map['put'][huri]):
+                for atracker in list(self._uri_map["put"][huri]):
                     atracker._check_uri_remote_delete(clean_uri)
         else:
             if isinstance(lpath, str):
-                clean_uri = _fast_clean_uri(store, info['remote'])
+                clean_uri = _fast_clean_uri(store, info["remote"])
                 self[lpath]._update_store(info, clean_uri)
             else:
-                logger.debug("The iotarget isn't a str: It will be skipped in %s",
-                             self.__class__)
+                logger.debug(
+                    "The iotarget isn't a str: It will be skipped in %s",
+                    self.__class__,
+                )
 
     def is_tracked_input(self, local):
         """Check if the given `local` container is listed as an input and associated with
@@ -1011,9 +1160,11 @@ class LocalTracker(defaultdict):
 
         :param local: Local name of the input that will be checked
         """
-        return (isinstance(local, str) and
-                (local in self) and
-                (self[local].latest_rhdict('get')))
+        return (
+            isinstance(local, str)
+            and (local in self)
+            and (self[local].latest_rhdict("get"))
+        )
 
     def _grep_stuff(self, internal, action, skeleton=dict()):
         stack = []
@@ -1027,7 +1178,7 @@ class LocalTracker(defaultdict):
         :param action: Action that is considered.
         :param skeleton: Dictionary that will be used as a search pattern
         """
-        return self._grep_stuff('uri', action, skeleton)
+        return self._grep_stuff("uri", action, skeleton)
 
     def json_dump(self, filename=_default_json_filename):
         """Dump the object to a JSON file.
@@ -1035,7 +1186,7 @@ class LocalTracker(defaultdict):
         :param filename: Path to the JSON file.
         """
         outdict = {loc: entry.dump_as_dict() for loc, entry in self.items()}
-        with open(filename, 'w', encoding='utf-8') as fpout:
+        with open(filename, "w", encoding="utf-8") as fpout:
             json.dump(outdict, fpout, indent=2, sort_keys=True)
 
     def json_load(self, filename=_default_json_filename):
@@ -1043,7 +1194,7 @@ class LocalTracker(defaultdict):
 
         :param filename: Path to the JSON file.
         """
-        with open(filename, encoding='utf-8') as fpin:
+        with open(filename, encoding="utf-8") as fpin:
             indict = json.load(fpin)
         # Start from scratch
         self.clear()
@@ -1061,7 +1212,7 @@ class LocalTracker(defaultdict):
         self.append(other)
 
     def __str__(self):
-        out = ''
+        out = ""
         for loc, entry in self.items():
             entryout = str(entry)
             if entryout:

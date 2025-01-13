@@ -19,14 +19,14 @@ from vortex.data.handlers import Handler
 
 logger = loggers.getLogger(__name__)
 
-epygram_checker = ExternalCodeImportChecker('epygram')
+epygram_checker = ExternalCodeImportChecker("epygram")
 with epygram_checker as ec_register:
     import epygram  # @UnusedImport
 
     try:
         ec_register.update(version=epygram.__version__)
     except AttributeError:
-        raise ImportError('Improper eypgram module.')
+        raise ImportError("Improper eypgram module.")
     try:
         u_unused = epygram.formats.FA
         hasFA = True
@@ -39,15 +39,20 @@ with epygram_checker as ec_register:
     except AttributeError:
         hasGRIB = False
     ec_register.update(needGRIB=hasGRIB)
-    logger.info('Epygram %s loaded (GRIB support=%s, FA support=%s).',
-                epygram.__version__, hasGRIB, hasFA)
+    logger.info(
+        "Epygram %s loaded (GRIB support=%s, FA support=%s).",
+        epygram.__version__,
+        hasGRIB,
+        hasFA,
+    )
 
-np_checker = ExternalCodeImportChecker('numpy')
+np_checker = ExternalCodeImportChecker("numpy")
 with np_checker as npregister:
     import numpy as np
+
     npregister.update(version=np.__version__)
 
-footprints.proxy.containers.discard_package('epygram', verbose=False)
+footprints.proxy.containers.discard_package("epygram", verbose=False)
 
 __all__ = []
 
@@ -56,25 +61,39 @@ def _sources_and_names_fixup(sources, names=None):
     """Fix **sources** and **names** lists."""
     # Prepare sources names
     if not isinstance(sources, (list, tuple, set)):
-        sources = [sources, ]
+        sources = [
+            sources,
+        ]
     sources = [source.upper() for source in sources]
     # Prepare output names
     if names is None:
         names = sources
     else:
         if not isinstance(names, (list, tuple, set)):
-            names = [names, ]
-        names = [name.upper().replace(' ', '.') for name in names]
+            names = [
+                names,
+            ]
+        names = [name.upper().replace(" ", ".") for name in names]
     # Fill the sources list if necessary
     if len(sources) == 1 and len(names) > 1:
         sources *= len(names)
     if len(sources) != len(names):
-        raise ValueError('Sizes of sources and names do not fit the requirements.')
+        raise ValueError(
+            "Sizes of sources and names do not fit the requirements."
+        )
     return sources, names
 
 
 @epygram_checker.disabled_if_unavailable
-def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, overwrite=False):
+def clone_fields(
+    datain,
+    dataout,
+    sources,
+    names=None,
+    value=None,
+    pack=None,
+    overwrite=False,
+):
     """Clone any existing fields ending with``source`` to some new field."""
     datain.open()
     sources, names = _sources_and_names_fixup(sources, names)
@@ -88,9 +107,9 @@ def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, ov
         fx = None
         comprpack = None
         for fieldname in [x for x in sorted(tablein) if x.endswith(source)]:
-            newfield = fieldname.replace(source, '') + name
+            newfield = fieldname.replace(source, "") + name
             if not overwrite and newfield in tableout:
-                logger.warning('Field <%s> already in output file', newfield)
+                logger.warning("Field <%s> already in output file", newfield)
             else:
                 # If the values are to be overwritten : do not read the input
                 # field several times...
@@ -109,9 +128,9 @@ def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, ov
                 # On the first append, open the output file
                 if addedfields == 0:
                     dataout.close()
-                    dataout.open(openmode='a')
+                    dataout.open(openmode="a")
                 # Actually add the new field
-                logger.info('Add field {} pack={}'.format(fy.fid, comprpack))
+                logger.info("Add field {} pack={}".format(fy.fid, comprpack))
                 dataout.writefield(fy, compression=comprpack)
                 addedfields += 1
 
@@ -127,7 +146,7 @@ def epy_env_prepare(t):
     if localenv.OMP_NUM_THREADS is None:
         localenv.OMP_NUM_THREADS = 1
     localenv.update(
-        LFI_HNDL_SPEC=':1',
+        LFI_HNDL_SPEC=":1",
         DR_HOOK_SILENT=1,
         DR_HOOK_NOT_MPI=1,
     )
@@ -144,12 +163,19 @@ def addfield(t, rh, fieldsource, fieldtarget, constvalue, pack=None):
     """Provider hook for adding a field through cloning."""
     if rh.container.exists():
         with epy_env_prepare(t):
-            clone_fields(rh.contents.data, rh.contents.data,
-                         fieldsource, names=fieldtarget, value=constvalue,
-                         pack=pack)
+            clone_fields(
+                rh.contents.data,
+                rh.contents.data,
+                fieldsource,
+                names=fieldtarget,
+                value=constvalue,
+                pack=pack,
+            )
     else:
-        logger.warning('Try to add field on a missing resource <%s>',
-                       rh.container.localpath())
+        logger.warning(
+            "Try to add field on a missing resource <%s>",
+            rh.container.localpath(),
+        )
 
 
 @epygram_checker.disabled_if_unavailable
@@ -157,11 +183,18 @@ def copyfield(t, rh, rhsource, fieldsource, fieldtarget, pack=None):
     """Provider hook for copying fields between FA files (but do not overwrite existing fields)."""
     if rh.container.exists():
         with epy_env_prepare(t):
-            clone_fields(rhsource.contents.data, rh.contents.data,
-                         fieldsource, fieldtarget, pack=pack)
+            clone_fields(
+                rhsource.contents.data,
+                rh.contents.data,
+                fieldsource,
+                fieldtarget,
+                pack=pack,
+            )
     else:
-        logger.warning('Try to copy field on a missing resource <%s>',
-                       rh.container.localpath())
+        logger.warning(
+            "Try to copy field on a missing resource <%s>",
+            rh.container.localpath(),
+        )
 
 
 @epygram_checker.disabled_if_unavailable
@@ -169,11 +202,19 @@ def overwritefield(t, rh, rhsource, fieldsource, fieldtarget, pack=None):
     """Provider hook for copying fields between FA files (overwrite existing fields)."""
     if rh.container.exists():
         with epy_env_prepare(t):
-            clone_fields(rhsource.contents.data, rh.contents.data,
-                         fieldsource, fieldtarget, overwrite=True, pack=pack)
+            clone_fields(
+                rhsource.contents.data,
+                rh.contents.data,
+                fieldsource,
+                fieldtarget,
+                overwrite=True,
+                pack=pack,
+            )
     else:
-        logger.warning('Try to copy field on a missing resource <%s>',
-                       rh.container.localpath())
+        logger.warning(
+            "Try to copy field on a missing resource <%s>",
+            rh.container.localpath(),
+        )
 
 
 @np_checker.disabled_if_unavailable
@@ -194,23 +235,25 @@ def updatefield(t, rh, rhsource, fieldsource, fieldtarget, masktype, *kargs):
     if rh.container.exists():
         with epy_env_prepare(t):
             # Various initialisations
-            fieldsource, fieldtarget = _sources_and_names_fixup(fieldsource, fieldtarget)
+            fieldsource, fieldtarget = _sources_and_names_fixup(
+                fieldsource, fieldtarget
+            )
             datain = rhsource.contents.data
             datain.open()
             dataout = rh.contents.data
             dataout.close()
-            dataout.open(openmode='a')
+            dataout.open(openmode="a")
             tablein = datain.listfields()
             tableout = dataout.listfields()
             updatedfields = 0
 
             # Function that creates the subset of elements to update
-            if masktype == 'none':
+            if masktype == "none":
 
                 def subsetfunc(epyobj):
                     return Ellipsis
 
-            elif masktype == 'np.ma.masked':
+            elif masktype == "np.ma.masked":
 
                 def subsetfunc(epyobj):
                     if np.ma.is_masked(epyobj.data):
@@ -219,12 +262,16 @@ def updatefield(t, rh, rhsource, fieldsource, fieldtarget, masktype, *kargs):
                         return Ellipsis
 
             else:
-                raise ValueError('Unsupported masktype in the updatefield hook.')
+                raise ValueError(
+                    "Unsupported masktype in the updatefield hook."
+                )
 
             # Look for the input fields and update them
             for source, target in zip(fieldsource, fieldtarget):
-                for fieldname in [x for x in sorted(tablein) if x.endswith(source)]:
-                    targetfield = fieldname.replace(source, '') + target
+                for fieldname in [
+                    x for x in sorted(tablein) if x.endswith(source)
+                ]:
+                    targetfield = fieldname.replace(source, "") + target
                     if targetfield in tableout:
                         fx = datain.readfield(fieldname)
                         fy = dataout.readfield(targetfield)
@@ -233,21 +280,25 @@ def updatefield(t, rh, rhsource, fieldsource, fieldtarget, masktype, *kargs):
                         dataout.writefield(fy)
                         updatedfields += 1
                     else:
-                        logger.warning('Field <%s> is missing in the output file', targetfield)
+                        logger.warning(
+                            "Field <%s> is missing in the output file",
+                            targetfield,
+                        )
 
             dataout.close()
             datain.close()
             return updatedfields
     else:
-        logger.warning('Try to copy field on a missing resource <%s>',
-                       rh.container.localpath())
+        logger.warning(
+            "Try to copy field on a missing resource <%s>",
+            rh.container.localpath(),
+        )
 
 
 class EpygramMetadataReader(MetaDataReader):
-
     _abstract = True
     _footprint = dict(
-        info = 'Abstract MetaDataReader for formats handled by epygram',
+        info="Abstract MetaDataReader for formats handled by epygram",
     )
 
     def _do_delayed_init(self):
@@ -256,9 +307,11 @@ class EpygramMetadataReader(MetaDataReader):
             epyf.open()
         date_epy, term_epy = self._process_epy(epyf)
         self._datahide = {
-            'date': Date(date_epy) if date_epy else date_epy,
-            'term': Time(hour=int(term_epy.total_seconds() / 3600),
-                         minute=int(term_epy.total_seconds() / 60) % 60)
+            "date": Date(date_epy) if date_epy else date_epy,
+            "term": Time(
+                hour=int(term_epy.total_seconds() / 3600),
+                minute=int(term_epy.total_seconds() / 60) % 60,
+            ),
         }
 
     def _process_epy(self, epyf):
@@ -268,14 +321,9 @@ class EpygramMetadataReader(MetaDataReader):
 
 @epygram_checker.disabled_if_unavailable
 class FaMetadataReader(EpygramMetadataReader):
-
     _footprint = dict(
-        info = 'MetaDataReader for the FA file format',
-        attr = dict(
-            format = dict(
-                values = ('FA',)
-            )
-        )
+        info="MetaDataReader for the FA file format",
+        attr=dict(format=dict(values=("FA",))),
     )
 
     def _process_epy(self, epyf):
@@ -284,15 +332,11 @@ class FaMetadataReader(EpygramMetadataReader):
             return epyf.validity.getbasis(), epyf.validity.term()
 
 
-@epygram_checker.disabled_if_unavailable(version='1.0.0')
+@epygram_checker.disabled_if_unavailable(version="1.0.0")
 class GribMetadataReader(EpygramMetadataReader):
     _footprint = dict(
-        info = 'MetaDataReader for the GRIB file format',
-        attr = dict(
-            format = dict(
-                values = ('GRIB',)
-            )
-        )
+        info="MetaDataReader for the GRIB file format",
+        attr=dict(format=dict(values=("GRIB",))),
     )
 
     def _process_epy(self, epyf):
@@ -301,10 +345,14 @@ class GribMetadataReader(EpygramMetadataReader):
         with epy_env_prepare(sessions.current()):
             epyfld = epyf.iter_fields(getdata=False)
             while epyfld:
-                bundle.add((epyfld.validity.getbasis(), epyfld.validity.term()))
+                bundle.add(
+                    (epyfld.validity.getbasis(), epyfld.validity.term())
+                )
                 epyfld = epyf.iter_fields(getdata=False)
         if len(bundle) > 1:
-            logger.error("The GRIB file contains fileds with different date and terms.")
+            logger.error(
+                "The GRIB file contains fileds with different date and terms."
+            )
         if len(bundle) == 0:
             logger.warning("The GRIB file doesn't contains any fields")
             return None, 0
@@ -312,12 +360,16 @@ class GribMetadataReader(EpygramMetadataReader):
             return bundle.pop()
 
 
-@epygram_checker.disabled_if_unavailable(version='1.2.11')
-def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
-                            outname=None,
-                            fieldslist=None,
-                            field_prefix='S1D_',
-                            pack=None):
+@epygram_checker.disabled_if_unavailable(version="1.2.11")
+def mk_pgdfa923_from_pgdlfi(
+    t,
+    rh_pgdlfi,
+    nam923blocks,
+    outname=None,
+    fieldslist=None,
+    field_prefix="S1D_",
+    pack=None,
+):
     """
     Hook to convert fields from a PGD.lfi to well-formatted for clim923 FA format.
 
@@ -332,41 +384,49 @@ def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
     dm = epygram.geometries.domain_making
 
     def sfxlfi2fa_field(fld, geom):
-        fldout = fpx.fields.almost_clone(fld,
-                                         geometry=geom,
-                                         fid={'FA': field_prefix + fld.fid['LFI']})
+        fldout = fpx.fields.almost_clone(
+            fld, geometry=geom, fid={"FA": field_prefix + fld.fid["LFI"]}
+        )
         fldout.setdata(fld.data[1:-1, 1:-1])
         return fldout
 
     if fieldslist is None:
-        fieldslist = ['ZS', 'COVER001', 'COVER002']
+        fieldslist = ["ZS", "COVER001", "COVER002"]
     if pack is None:
-        pack = {'KNGRIB': -1}
+        pack = {"KNGRIB": -1}
     if outname is None:
-        outname = rh_pgdlfi.container.abspath + '.fa923'
+        outname = rh_pgdlfi.container.abspath + ".fa923"
     if not t.sh.path.exists(outname):
         with epy_env_prepare(t):
-            pgdin = fpx.dataformats.almost_clone(rh_pgdlfi.contents.data,
-                                                 true3d=True)
-            geom, spgeom = dm.build.build_geom_from_e923nam(nam923blocks)  # TODO: Arpege case
-            validity = epygram.base.FieldValidity(date_time=Date(1994, 5, 31, 0),  # Date of birth of ALADIN
-                                                  term=Period(0))
-            pgdout = epygram.formats.resource(filename=outname,
-                                              openmode='w',
-                                              fmt='FA',
-                                              processtype='initialization',
-                                              validity=validity,
-                                              geometry=geom,
-                                              spectral_geometry=spgeom)
+            pgdin = fpx.dataformats.almost_clone(
+                rh_pgdlfi.contents.data, true3d=True
+            )
+            geom, spgeom = dm.build.build_geom_from_e923nam(
+                nam923blocks
+            )  # TODO: Arpege case
+            validity = epygram.base.FieldValidity(
+                date_time=Date(1994, 5, 31, 0),  # Date of birth of ALADIN
+                term=Period(0),
+            )
+            pgdout = epygram.formats.resource(
+                filename=outname,
+                openmode="w",
+                fmt="FA",
+                processtype="initialization",
+                validity=validity,
+                geometry=geom,
+                spectral_geometry=spgeom,
+            )
             for f in fieldslist:
                 fldout = sfxlfi2fa_field(pgdin.readfield(f), geom)
                 pgdout.writefield(fldout, compression=pack)
     else:
-        logger.warning('Try to create an already existing resource <%s>',
-                       outname)
+        logger.warning(
+            "Try to create an already existing resource <%s>", outname
+        )
 
 
-@epygram_checker.disabled_if_unavailable(version='1.0.0')
+@epygram_checker.disabled_if_unavailable(version="1.0.0")
 def empty_fa(t, rh, empty_name):
     """
     Create an empty FA file with fieldname **empty_name**,
@@ -377,71 +437,91 @@ def empty_fa(t, rh, empty_name):
     if rh.container.exists():
         with epy_env_prepare(t):
             rh.contents.data.open()
-            assert not t.sh.path.exists(empty_name), \
-                'Empty target filename already exist: {}'.format(empty_name)
-            e = epygram.formats.resource(empty_name, 'w', fmt='FA',
-                                         headername=rh.contents.data.headername,
-                                         validity=rh.contents.data.validity,
-                                         processtype=rh.contents.data.processtype,
-                                         cdiden=rh.contents.cdiden)
+            assert not t.sh.path.exists(empty_name), (
+                "Empty target filename already exist: {}".format(empty_name)
+            )
+            e = epygram.formats.resource(
+                empty_name,
+                "w",
+                fmt="FA",
+                headername=rh.contents.data.headername,
+                validity=rh.contents.data.validity,
+                processtype=rh.contents.data.processtype,
+                cdiden=rh.contents.cdiden,
+            )
             e.close()
             rh.contents.data.close()
             return e
     else:
-        raise OSError('Try to copy header from a missing resource <{!s}>'.format(rh.container.localpath()))
+        raise OSError(
+            "Try to copy header from a missing resource <{!s}>".format(
+                rh.container.localpath()
+            )
+        )
 
 
-@epygram_checker.disabled_if_unavailable(version='1.0.0')
+@epygram_checker.disabled_if_unavailable(version="1.0.0")
 def geopotentiel2zs(t, rh, rhsource, pack=None):
     """Copy surface geopotential from clim to zs in PGD."""
     from bronx.meteo.constants import g0
+
     if rh.container.exists():
         with epy_env_prepare(t):
-            orog = rhsource.contents.data.readfield('SURFGEOPOTENTIEL')
-            orog.operation('/', g0)
-            orog.fid['FA'] = 'SFX.ZS'
+            orog = rhsource.contents.data.readfield("SURFGEOPOTENTIEL")
+            orog.operation("/", g0)
+            orog.fid["FA"] = "SFX.ZS"
             rh.contents.data.close()
-            rh.contents.data.open(openmode='a')
+            rh.contents.data.open(openmode="a")
             rh.contents.data.writefield(orog, compression=pack)
     else:
-        logger.warning('Try to copy field on a missing resource <%s>',
-                       rh.container.localpath())
+        logger.warning(
+            "Try to copy field on a missing resource <%s>",
+            rh.container.localpath(),
+        )
 
 
-@epygram_checker.disabled_if_unavailable(version='1.3.4')
+@epygram_checker.disabled_if_unavailable(version="1.3.4")
 def add_poles_to_GLOB_file(filename):
     """
     DEPRECATED: please use add_poles_to_reglonlat_file instead
     Add poles to a GLOB* regular FA Lon/Lat file that do not contain them.
     """
     import numpy
-    rin = epygram.formats.resource(filename, 'r')
-    filename_out = filename + '+poles'
-    rout = epygram.formats.resource(filename_out, 'w', fmt=rin.format,
-                                    validity=epygram.base.FieldValidity(
-                                        date_time=date.today(),
-                                        term=date.Period(0, 0, 0)),
-                                    processtype=rin.processtype,
-                                    cdiden=rin.cdiden)
-    assert rin.geometry.gimme_corners_ll()['ul'][1] < 90., \
-        'This file already contains poles.'
+
+    rin = epygram.formats.resource(filename, "r")
+    filename_out = filename + "+poles"
+    rout = epygram.formats.resource(
+        filename_out,
+        "w",
+        fmt=rin.format,
+        validity=epygram.base.FieldValidity(
+            date_time=date.today(), term=date.Period(0, 0, 0)
+        ),
+        processtype=rin.processtype,
+        cdiden=rin.cdiden,
+    )
+    assert rin.geometry.gimme_corners_ll()["ul"][1] < 90.0, (
+        "This file already contains poles."
+    )
     for f in rin.listfields():
-        if f == 'SPECSURFGEOPOTEN':
+        if f == "SPECSURFGEOPOTEN":
             continue
         fld = rin.readfield(f)
         write_args = {}
         if isinstance(fld, epygram.fields.H2DField):
             # create new geometry
             newdims = copy.deepcopy(fld.geometry.dimensions)
-            newdims['Y'] += 2
+            newdims["Y"] += 2
             newgrid = copy.deepcopy(fld.geometry.grid)
-            newgrid['input_position'] = (newgrid['input_position'][0],
-                                         newgrid['input_position'][1] + 1)
-            newgeom = fpx.geometrys.almost_clone(fld.geometry,
-                                                 dimensions=newdims,
-                                                 grid=newgrid)
+            newgrid["input_position"] = (
+                newgrid["input_position"][0],
+                newgrid["input_position"][1] + 1,
+            )
+            newgeom = fpx.geometrys.almost_clone(
+                fld.geometry, dimensions=newdims, grid=newgrid
+            )
             # compute poles data value as mean of last latitude circle
-            newdata = numpy.zeros((newdims['Y'], newdims['X']))
+            newdata = numpy.zeros((newdims["Y"], newdims["X"]))
             newdata[1:-1, :] = fld.data[...]
             newdata[0, :] = newdata[1, :].mean()
             newdata[-1, :] = newdata[-2, :].mean()
@@ -449,77 +529,94 @@ def add_poles_to_GLOB_file(filename):
             fld = fpx.fields.almost_clone(fld, geometry=newgeom)
             fld.data = newdata
             # get initial compression
-            write_args = dict(compression=rin.fieldscompression[fld.fid['FA']])
+            write_args = dict(compression=rin.fieldscompression[fld.fid["FA"]])
         rout.writefield(fld, **write_args)
 
 
-@epygram_checker.disabled_if_unavailable(version='1.3.4')
+@epygram_checker.disabled_if_unavailable(version="1.3.4")
 def add_poles_to_reglonlat_file(filename):
     """
     Add pole(s) to a regular FA Lon/Lat file that do not contain them.
     """
     import numpy
-    rin = epygram.formats.resource(filename, 'r')
-    filename_out = filename + '+poles'
-    rout = epygram.formats.resource(filename_out, 'w', fmt=rin.format,
-                                    validity=epygram.base.FieldValidity(
-                                        date_time=rin.validity.get(),
-                                        term=date.Period(0, 0, 0)
-                                    ),
-                                    processtype=rin.processtype,
-                                    cdiden=rin.cdiden)
-    assert rin.geometry.name == 'regular_lonlat', \
+
+    rin = epygram.formats.resource(filename, "r")
+    filename_out = filename + "+poles"
+    rout = epygram.formats.resource(
+        filename_out,
+        "w",
+        fmt=rin.format,
+        validity=epygram.base.FieldValidity(
+            date_time=rin.validity.get(), term=date.Period(0, 0, 0)
+        ),
+        processtype=rin.processtype,
+        cdiden=rin.cdiden,
+    )
+    assert rin.geometry.name == "regular_lonlat", (
         "This file's geometry is not regular lon/lat, cannot add pole(s)."
+    )
     # determine what is to be done
-    resolution = rin.geometry.grid['Y_resolution'].get('degrees')
-    latmin = rin.geometry.gimme_corners_ll()['ll'][1]
-    latmax = rin.geometry.gimme_corners_ll()['ul'][1]
+    resolution = rin.geometry.grid["Y_resolution"].get("degrees")
+    latmin = rin.geometry.gimme_corners_ll()["ll"][1]
+    latmax = rin.geometry.gimme_corners_ll()["ul"][1]
     # south
     south = False
-    if abs(-90. - latmin) <= epygram.config.epsilon:
+    if abs(-90.0 - latmin) <= epygram.config.epsilon:
         logger.info("This file already contains south pole")
-    elif abs((-90. + resolution) - latmin) <= epygram.config.epsilon:
+    elif abs((-90.0 + resolution) - latmin) <= epygram.config.epsilon:
         south = True
     else:
-        logger.info("This file south border is too far from south pole to add it.")
+        logger.info(
+            "This file south border is too far from south pole to add it."
+        )
     # north
     north = False
-    if abs(90. - latmax) <= epygram.config.epsilon:
+    if abs(90.0 - latmax) <= epygram.config.epsilon:
         logger.info("This file already contains north pole")
-    elif abs((90. - resolution) - latmax) <= epygram.config.epsilon:
+    elif abs((90.0 - resolution) - latmax) <= epygram.config.epsilon:
         north = True
     else:
-        logger.info("This file north border is too far from north pole to add it.")
+        logger.info(
+            "This file north border is too far from north pole to add it."
+        )
     if not north and not south:
         raise epygram.epygramError("Nothing to do")
     # prepare new geom
-    geom = rin.readfield('SURFGEOPOTENTIEL').geometry
+    geom = rin.readfield("SURFGEOPOTENTIEL").geometry
     newdims = copy.deepcopy(geom.dimensions)
     newgrid = copy.deepcopy(geom.grid)
     if north and south:
-        newdims['Y'] += 2
+        newdims["Y"] += 2
     else:
-        newdims['Y'] += 1
+        newdims["Y"] += 1
     if south:
-        newgrid['input_lon'] = epygram.util.Angle(geom.gimme_corners_ll()['ll'][0], 'degrees')
-        newgrid['input_lat'] = epygram.util.Angle(geom.gimme_corners_ll()['ll'][1] - resolution, 'degrees')
-        newgrid['input_position'] = (0, 0)
+        newgrid["input_lon"] = epygram.util.Angle(
+            geom.gimme_corners_ll()["ll"][0], "degrees"
+        )
+        newgrid["input_lat"] = epygram.util.Angle(
+            geom.gimme_corners_ll()["ll"][1] - resolution, "degrees"
+        )
+        newgrid["input_position"] = (0, 0)
     else:  # north only: 0,0 has not changed
-        newgrid['input_lon'] = epygram.util.Angle(geom.gimme_corners_ll()['ll'][0], 'degrees')
-        newgrid['input_lat'] = epygram.util.Angle(geom.gimme_corners_ll()['ll'][1], 'degrees')
-        newgrid['input_position'] = (0, 0)
-    newgeom = fpx.geometrys.almost_clone(geom,
-                                         dimensions=newdims,
-                                         grid=newgrid)
+        newgrid["input_lon"] = epygram.util.Angle(
+            geom.gimme_corners_ll()["ll"][0], "degrees"
+        )
+        newgrid["input_lat"] = epygram.util.Angle(
+            geom.gimme_corners_ll()["ll"][1], "degrees"
+        )
+        newgrid["input_position"] = (0, 0)
+    newgeom = fpx.geometrys.almost_clone(
+        geom, dimensions=newdims, grid=newgrid
+    )
     # loop on fields
     for f in rin.listfields():
-        if f == 'SPECSURFGEOPOTEN':
+        if f == "SPECSURFGEOPOTEN":
             continue  # meaningless in lonlat clims
         fld = rin.readfield(f)
         write_args = {}
         if isinstance(fld, epygram.fields.H2DField):
             # compute poles data value as mean of last latitude circle
-            newdata = numpy.zeros((newdims['Y'], newdims['X']))
+            newdata = numpy.zeros((newdims["Y"], newdims["X"]))
             if south and north:
                 newdata[1:-1, :] = fld.data[...]
                 newdata[0, :] = newdata[1, :].mean()
@@ -534,7 +631,7 @@ def add_poles_to_reglonlat_file(filename):
             fld = fpx.fields.almost_clone(fld, geometry=newgeom)
             fld.data = newdata
             # get initial compression
-            write_args = dict(compression=rin.fieldscompression[fld.fid['FA']])
+            write_args = dict(compression=rin.fieldscompression[fld.fid["FA"]])
         rout.writefield(fld, **write_args)
 
 
@@ -542,19 +639,25 @@ def add_poles_to_reglonlat_file(filename):
 def split_errgrib_on_shortname(t, rh):
     """Split a Background Error GRIB file into pieces (based on the GRIB shortName)."""
     # Sanity checks
-    if rh.resource.realkind != 'bgstderr' or getattr(rh.resource, 'variable', None) is not None:
-        raise ValueError('Incompatible resource: {!s}'.format(rh))
+    if (
+        rh.resource.realkind != "bgstderr"
+        or getattr(rh.resource, "variable", None) is not None
+    ):
+        raise ValueError("Incompatible resource: {!s}".format(rh))
 
     def create_section(sn):
         """Create a new section object for a given shortName (**sn**)."""
-        sn_r = fpx.resource(variable=sn, ** rh.resource.footprint_as_shallow_dict())
-        sn_p = fpx.provider(magic='magic:///')
-        sn_c = fpx.container(filename=rh.container.localpath() + sn,
-                             format='grib', mode='ab+')
-        secs = t.context.sequence.input(rh=Handler(dict(resource=sn_r,
-                                                        provider=sn_p,
-                                                        container=sn_c)),
-                                        role='BackgroundStdError')
+        sn_r = fpx.resource(
+            variable=sn, **rh.resource.footprint_as_shallow_dict()
+        )
+        sn_p = fpx.provider(magic="magic:///")
+        sn_c = fpx.container(
+            filename=rh.container.localpath() + sn, format="grib", mode="ab+"
+        )
+        secs = t.context.sequence.input(
+            rh=Handler(dict(resource=sn_r, provider=sn_p, container=sn_c)),
+            role="BackgroundStdError",
+        )
         secs[0].get()
         return secs[0]
 
@@ -567,11 +670,11 @@ def split_errgrib_on_shortname(t, rh):
             # Find the ShortName
             fid = grb.genfid()
             for k in sorted(fid.keys()):
-                sn = fid[k].get('shortName', None)
+                sn = fid[k].get("shortName", None)
                 if sn is not None:
                     break
             if sn is None:
-                raise OSError('No ShortName was found')
+                raise OSError("No ShortName was found")
             # Set up the appropriate section
             if sn not in sections:
                 sections[sn] = create_section(sn)
@@ -585,7 +688,10 @@ def split_errgrib_on_shortname(t, rh):
 
     # Summary
     if sections:
-        logger.info('%d new sections created. See details below:', len(sections))
-        for i, sec in enumerate(sorted(sections.values(),
-                                       key=lambda s: s.rh.resource.variable)):
+        logger.info(
+            "%d new sections created. See details below:", len(sections)
+        )
+        for i, sec in enumerate(
+            sorted(sections.values(), key=lambda s: s.rh.resource.variable)
+        ):
             sec.rh.quickview(nb=i)

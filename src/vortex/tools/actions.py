@@ -27,9 +27,11 @@ class Action:
     Such an action could be activated or not, and is basically driven by permissions settings.
     """
 
-    def __init__(self, kind='foo', service=None, active=False, permanent=False):
+    def __init__(
+        self, kind="foo", service=None, active=False, permanent=False
+    ):
         if service is None:
-            service = 'send' + kind
+            service = "send" + kind
         self._service = service
         self._kind = kind
         self._active = active
@@ -81,8 +83,8 @@ class Action:
 
     def info(self):
         """Informative string (may serve debugging purposes)."""
-        return '{} Action {} (kind={})'.format(
-            'ON ' if self.status() else 'OFF',
+        return "{} Action {} (kind={})".format(
+            "ON " if self.status() else "OFF",
             self.__class__.__name__,
             self.kind,
         )
@@ -94,7 +96,7 @@ class Action:
     def service_info(self, **kw):
         """On the fly remapping of the expected footprint."""
         info = dict(kw)
-        info.setdefault('kind', self.service_kind(**kw))
+        info.setdefault("kind", self.service_kind(**kw))
         return info
 
     def get_actual_service(self, **kw):
@@ -114,9 +116,11 @@ class Action:
         if self.active:
             a_service = self.get_actual_service(**kw)
             if a_service is None:
-                logger.warning('Could not find any service for action %s', self.kind)
+                logger.warning(
+                    "Could not find any service for action %s", self.kind
+                )
         else:
-            logger.warning('Action %s is not active', self.kind)
+            logger.warning("Action %s is not active", self.kind)
         return a_service
 
     def execute(self, *args, **kw):
@@ -162,8 +166,11 @@ class TunableAction(Action):
                     self._conf_section = self.kind
             else:
                 if self._conf_section not in self._shtarget.sections():
-                    raise KeyError('No section "{}" in "{}"'.format(self._conf_section,
-                                                                    self._shtarget.config.file))
+                    raise KeyError(
+                        'No section "{}" in "{}"'.format(
+                            self._conf_section, self._shtarget.config.file
+                        )
+                    )
             if self._conf_section is None:
                 self._conf_dict = dict()
             else:
@@ -191,19 +198,23 @@ class TunableAction(Action):
 
     def info(self):
         """Informative string (may serve debugging purposes)."""
-        s = super().info() + ' - tunable\n'
+        s = super().info() + " - tunable\n"
         mix = dict()
         mix.update(self._conf_items)
         mix.update(self._tuning)
         prt = dict()
         for k, v in mix.items():
             if k in self._tuning:
-                prt['++ ' + k] = '{} (was: {})'.format(v, str(
-                    self._conf_items[k]) if k in self._conf_items else '<not set>')
+                prt["++ " + k] = "{} (was: {})".format(
+                    v,
+                    str(self._conf_items[k])
+                    if k in self._conf_items
+                    else "<not set>",
+                )
             else:
-                prt['   ' + k] = v
+                prt["   " + k] = v
         if self._conf_section is not None:
-            s += ' ' * 4 + 'configuration: ' + self._conf_section + '\n'
+            s += " " * 4 + "configuration: " + self._conf_section + "\n"
         s += dict_as_str(prt, prefix=4)
         return s.strip()
 
@@ -213,12 +224,16 @@ class TunableAction(Action):
             return self._tuning[key]
 
         if self._conf_section is not None:
-            return self._shtarget.getx(key=self._conf_section + ':' + key, *args, **kw)
+            return self._shtarget.getx(
+                key=self._conf_section + ":" + key, *args, **kw
+            )
 
-        if 'default' in kw:
-            return kw['default']
+        if "default" in kw:
+            return kw["default"]
 
-        raise KeyError('The "{:s}" entry was not found in any configuration'.format(key))
+        raise KeyError(
+            'The "{:s}" entry was not found in any configuration'.format(key)
+        )
 
 
 class SendMail(Action):
@@ -226,11 +241,14 @@ class SendMail(Action):
     Class responsible for sending emails.
     """
 
-    def __init__(self, kind='mail', service='sendmail', active=True, quoteprintable=True):
+    def __init__(
+        self, kind="mail", service="sendmail", active=True, quoteprintable=True
+    ):
         super().__init__(kind=kind, active=active, service=service)
         if quoteprintable:
             from email import charset
-            charset.add_charset('utf-8', charset.QP, charset.QP, 'utf-8')
+
+            charset.add_charset("utf-8", charset.QP, charset.QP, "utf-8")
 
 
 class TemplatedMail(TunableAction):
@@ -238,18 +256,27 @@ class TemplatedMail(TunableAction):
 
     Do not use directly !
     """
-    def __init__(self, kind='templatedmail', service='templatedmail', active=True,
-                 catalog=None, inputs_charset=None):
-        super().__init__(configuration=None, kind=kind, active=active,
-                         service=service)
-        self.catalog = catalog or GenericConfigParser('@{:s}-inventory.ini'.format(kind),
-                                                      encoding=inputs_charset)
+
+    def __init__(
+        self,
+        kind="templatedmail",
+        service="templatedmail",
+        active=True,
+        catalog=None,
+        inputs_charset=None,
+    ):
+        super().__init__(
+            configuration=None, kind=kind, active=active, service=service
+        )
+        self.catalog = catalog or GenericConfigParser(
+            "@{:s}-inventory.ini".format(kind), encoding=inputs_charset
+        )
         self.inputs_charset = inputs_charset
 
     def service_info(self, **kw):
         """Kindly propose the permanent directory and catalog to the final service"""
-        kw.setdefault('catalog', self.catalog)
-        kw.setdefault('inputs_charset', self.inputs_charset)
+        kw.setdefault("catalog", self.catalog)
+        kw.setdefault("inputs_charset", self.inputs_charset)
         return super().service_info(**kw)
 
     def execute(self, *args, **kw):
@@ -261,7 +288,11 @@ class TemplatedMail(TunableAction):
         rc = None
         service = self.get_active_service(**kw)
         if service:
-            options = {k: v for k, v in kw.items() if k not in service.footprint_attributes}
+            options = {
+                k: v
+                for k, v in kw.items()
+                if k not in service.footprint_attributes
+            }
             rc = service(options)
         return rc
 
@@ -271,7 +302,7 @@ class Report(TunableAction):
     Class responsible for sending reports.
     """
 
-    def __init__(self, kind='report', service='sendreport', active=True):
+    def __init__(self, kind="report", service="sendreport", active=True):
         super().__init__(kind=kind, active=active, service=service)
 
 
@@ -280,7 +311,7 @@ class SSH(Action):
     Class responsible for sending commands to an SSH proxy.
     """
 
-    def __init__(self, kind='ssh', service='ssh', active=True):
+    def __init__(self, kind="ssh", service="ssh", active=True):
         super().__init__(kind=kind, active=active, service=service)
 
 
@@ -289,17 +320,23 @@ class AskJeeves(TunableAction):
     Class responsible for posting requests to Jeeves daemon.
     """
 
-    def __init__(self, kind='jeeves', service='askjeeves', active=True):
-        super().__init__(configuration=None, kind=kind, active=active, service=service)
+    def __init__(self, kind="jeeves", service="askjeeves", active=True):
+        super().__init__(
+            configuration=None, kind=kind, active=active, service=service
+        )
 
     def execute(self, *args, **kw):
         """Generic method to perform the action through a service."""
         rc = None
-        if 'kind' in kw:
-            kw['fwd_kind'] = kw.pop('kind')
+        if "kind" in kw:
+            kw["fwd_kind"] = kw.pop("kind")
         service = self.get_active_service(**kw)
         if service:
-            talk = {k: v for k, v in kw.items() if k not in service.footprint_attributes}
+            talk = {
+                k: v
+                for k, v in kw.items()
+                if k not in service.footprint_attributes
+            }
             rc = service(talk)
         return rc
 
@@ -309,23 +346,27 @@ class Prompt(Action):
     Fake action that could be used for any real action.
     """
 
-    def __init__(self, kind='prompt', service='prompt', active=True):
+    def __init__(self, kind="prompt", service="prompt", active=True):
         super().__init__(kind=kind, active=active, service=service)
 
     def execute(self, *args, **kw):
         """Do nothing but prompt the actual arguments."""
         # kind could be unintentionally given, force it back
-        kw['kind'] = self.kind
+        kw["kind"] = self.kind
         service = self.get_active_service(**kw)
         rc = False
         if service:
-            options = {k: v for k, v in kw.items() if k not in service.footprint_attributes}
+            options = {
+                k: v
+                for k, v in kw.items()
+                if k not in service.footprint_attributes
+            }
             rc = service(options)
         return rc
 
     def foo(self, *args, **kw):
         """Yet an other foo method."""
-        print('#FOO', self.kind, '/ args:', args, '/ kw:', kw)
+        print("#FOO", self.kind, "/ args:", args, "/ kw:", kw)
         return True
 
 
@@ -334,32 +375,55 @@ class FlowSchedulerGateway(Action):
     Send a child command to any ECMWF's workfow scheduler.
     """
 
-    _KNOWN_CMD = dict(sms=['abort', 'complete', 'event', 'init', 'label', 'meter', 'msg', 'variable', 'fix'],
-                      ecflow=['abort', 'complete', 'event', 'init', 'label', 'meter', 'msg'])
+    _KNOWN_CMD = dict(
+        sms=[
+            "abort",
+            "complete",
+            "event",
+            "init",
+            "label",
+            "meter",
+            "msg",
+            "variable",
+            "fix",
+        ],
+        ecflow=["abort", "complete", "event", "init", "label", "meter", "msg"],
+    )
 
-    def __init__(self, kind='flow', service=None, active=True, permanent=True):
+    def __init__(self, kind="flow", service=None, active=True, permanent=True):
         """
         The `service` attribute must be specified (it can be either sms or ecflow).
         """
         if service is None:
-            raise ValueError('The service name must be provided')
-        super().__init__(kind=kind, active=active, service=service, permanent=permanent)
+            raise ValueError("The service name must be provided")
+        super().__init__(
+            kind=kind, active=active, service=service, permanent=permanent
+        )
 
     def gateway(self, *args, **kw):
         """Ask the Scheduler to run any (but known) command."""
         rc = None
         service = self.get_active_service(**kw)
         if service and self._schedcmd is not None:
-            kwbis = {k: v for k, v in kw.items() if k in ('critical',)}
+            kwbis = {k: v for k, v in kw.items() if k in ("critical",)}
             rc = getattr(service, self._schedcmd)(*args, **kwbis)
         self._schedcmd = None
         return rc
 
     def __getattr__(self, attr):
-        if attr.startswith('_'):
+        if attr.startswith("_"):
             raise AttributeError
-        if attr in (['conf', 'info', 'clear', 'mute', 'play', 'path', ] +
-                    self._KNOWN_CMD[self.service]):
+        if attr in (
+            [
+                "conf",
+                "info",
+                "clear",
+                "mute",
+                "play",
+                "path",
+            ]
+            + self._KNOWN_CMD[self.service]
+        ):
             self._schedcmd = attr
             return self.gateway
         else:
@@ -370,15 +434,21 @@ class FlowSchedulerGateway(Action):
 class SmsGateway(FlowSchedulerGateway):
     """Send a child command to an SMS server."""
 
-    def __init__(self, kind='sms', service='sms', active=True, permanent=True):
-        super().__init__(kind=kind, active=active, service=service, permanent=permanent)
+    def __init__(self, kind="sms", service="sms", active=True, permanent=True):
+        super().__init__(
+            kind=kind, active=active, service=service, permanent=permanent
+        )
 
 
 class EcflowGateway(FlowSchedulerGateway):
     """Send a child command to an Ecflow server."""
 
-    def __init__(self, kind='ecflow', service='ecflow', active=True, permanent=True):
-        super().__init__(kind=kind, active=active, service=service, permanent=permanent)
+    def __init__(
+        self, kind="ecflow", service="ecflow", active=True, permanent=True
+    ):
+        super().__init__(
+            kind=kind, active=active, service=service, permanent=permanent
+        )
 
 
 class SpooledActions:
@@ -425,7 +495,7 @@ class Dispatcher(bronx.stdtypes.catalog.Catalog):
     """
 
     def __init__(self, **kw):
-        logger.debug('Action dispatcher init %s', self)
+        logger.debug("Action dispatcher init %s", self)
         super().__init__(**kw)
 
     @property
@@ -444,11 +514,11 @@ class Dispatcher(bronx.stdtypes.catalog.Catalog):
                 self.discard(item)
 
     def __getattr__(self, attr):
-        if attr.startswith('_'):
+        if attr.startswith("_"):
             raise AttributeError
-        a_kind, u_sep, a_method = attr.partition('_')
+        a_kind, u_sep, a_method = attr.partition("_")
         if not a_method:
-            a_method = 'execute'
+            a_method = "execute"
         return SpooledActions(a_kind, a_method, self.candidates(a_kind))
 
 

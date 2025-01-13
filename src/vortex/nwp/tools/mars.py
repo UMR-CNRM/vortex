@@ -14,16 +14,19 @@ logger = loggers.getLogger(__name__)
 
 class MarsError(Exception):
     """General Mars error."""
+
     pass
 
 
 class MarsConfigurationError(MarsError):
     """Specific Mars configuration error."""
+
     pass
 
 
 class MarsGetError(MarsError):
     """Generic Mars get error."""
+
     pass
 
 
@@ -35,7 +38,9 @@ def findMarsExtractCommand(sh, inifile=None, command=None):
             actual_command = sh.default_target.get("mars:command", None)
         else:
             actual_config = GenericConfigParser(inifile=actual_inifile)
-            if actual_config.has_section('mars') and actual_config.has_option('mars', 'command'):
+            if actual_config.has_section("mars") and actual_config.has_option(
+                "mars", "command"
+            ):
                 actual_command = actual_config.get("mars", "command")
         if actual_command is None:
             raise MarsConfigurationError("Could not find a proper command.")
@@ -53,4 +58,11 @@ def callMarsExtract(sh, query_file, command=None, fatal=True):
     :return: The return code of the Mars extraction.
     """
     command_line = " ".join([command, query_file])
-    return sh.spawn([command_line, ], shell=True, output=False, fatal=fatal)
+    return sh.spawn(
+        [
+            command_line,
+        ],
+        shell=True,
+        output=False,
+        fatal=fatal,
+    )

@@ -18,7 +18,9 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-@namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
+@namebuilding_insert(
+    "geo", lambda s: s._geo2basename_info(add_stretching=False)
+)
 class _BackgroundErrorInfo(GeoFlowResource):
     """
     A generic class for data in grib format related to the background error.
@@ -29,25 +31,20 @@ class _BackgroundErrorInfo(GeoFlowResource):
         term_deco,
         gvar,
         dict(
-            info='Background standard deviation',
+            info="Background standard deviation",
             attr=dict(
-                term=dict(
-                    optional=True,
-                    default=3
-                ),
+                term=dict(optional=True, default=3),
                 nativefmt=dict(
-                    default='grib',
+                    default="grib",
                 ),
-                gvar = dict(
-                    default = 'errgrib_t[geometry:truncation]'
-                ),
+                gvar=dict(default="errgrib_t[geometry:truncation]"),
             ),
-        )
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'bgstdinfo'
+        return "bgstdinfo"
 
 
 class BackgroundStdError(_BackgroundErrorInfo):
@@ -66,77 +63,73 @@ class BackgroundStdError(_BackgroundErrorInfo):
     """
 
     _footprint = dict(
-        info='Background error standard deviation',
+        info="Background error standard deviation",
         attr=dict(
             kind=dict(
-                values=['bgstderr', 'bg_stderr', 'bgerrstd'],
-                remap=dict(autoremap='first'),
+                values=["bgstderr", "bg_stderr", "bgerrstd"],
+                remap=dict(autoremap="first"),
             ),
             stage=dict(
                 optional=True,
-                default='unbal',
-                values=['scr', 'vor', 'full', 'unbal', 'profile'],
-                remap=dict(vor='unbal'),
+                default="unbal",
+                values=["scr", "vor", "full", "unbal", "profile"],
+                remap=dict(vor="unbal"),
             ),
             origin=dict(
                 optional=True,
-                values=['ens', 'diag'],
-                default = 'ens',
+                values=["ens", "diag"],
+                default="ens",
             ),
-            gvar = dict(
-                default = 'errgrib_vor_monthly'
-            ),
+            gvar=dict(default="errgrib_vor_monthly"),
             nativefmt=dict(
-                values=['grib', 'ascii'],
-                default='grib',
+                values=["grib", "ascii"],
+                default="grib",
             ),
         ),
     )
 
     @property
     def realkind(self):
-        return 'bgstderr'
+        return "bgstderr"
 
     def namebuilding_info(self):
         """Generic information for names fabric, with radical = ``bcor``."""
         infos = super().namebuilding_info()
-        infos['src'].append(self.stage)
-        if self.stage != 'scr':
-            infos['src'].append(self.origin)
+        infos["src"].append(self.stage)
+        if self.stage != "scr":
+            infos["src"].append(self.origin)
         return infos
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        if self.stage in ('unbal',):
-            return '(errgribfix:igakey)'
+        if self.stage in ("unbal",):
+            return "(errgribfix:igakey)"
         else:
-            return 'errgrib_' + self.stage
+            return "errgrib_" + self.stage
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        if self.stage in ('unbal',):
-            return 'errgribvor'
+        if self.stage in ("unbal",):
+            return "errgribvor"
         else:
-            return 'sigma_b'
+            return "sigma_b"
 
     def gget_basename(self):
         """GGET specific naming convention."""
-        return dict(suffix='.m{:02d}'.format(self.date.month))
+        return dict(suffix=".m{:02d}".format(self.date.month))
 
 
-@namebuilding_append('src', lambda s: s.variable)
+@namebuilding_append("src", lambda s: s.variable)
 class SplitBackgroundStdError(BackgroundStdError):
     """Background error standard deviation, for a given variable."""
 
     _footprint = dict(
-        info='Background error standard deviation',
+        info="Background error standard deviation",
         attr=dict(
             variable=dict(
-                info = "Variable contained in this resource.",
+                info="Variable contained in this resource.",
             ),
-            gvar = dict(
-                default = 'errgrib_vor_[variable]_monthly'
-            ),
+            gvar=dict(default="errgrib_vor_[variable]_monthly"),
         ),
     )
 
@@ -146,30 +139,28 @@ class BackgroundErrorNorm(_BackgroundErrorInfo):
 
     _footprint = [
         dict(
-            info='Background error normalisation data for wavelet covariances',
+            info="Background error normalisation data for wavelet covariances",
             attr=dict(
                 kind=dict(
-                    values=['bgstdrenorm', 'bgerrnorm'],
-                    remap=dict(autoremap='first'),
+                    values=["bgstdrenorm", "bgerrnorm"],
+                    remap=dict(autoremap="first"),
                 ),
-                gvar = dict(
-                    default = 'srenorm_t[geometry:truncation]'
-                ),
+                gvar=dict(default="srenorm_t[geometry:truncation]"),
             ),
         )
     ]
 
     @property
     def realkind(self):
-        return 'bgstdrenorm'
+        return "bgstdrenorm"
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'srenorm.{!s}'.format(self.geometry.truncation)
+        return "srenorm.{!s}".format(self.geometry.truncation)
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'srenorm.t{!s}'.format(self.geometry.truncation)
+        return "srenorm.t{!s}".format(self.geometry.truncation)
 
     def archive_pathinfo(self):
         """Op Archive specific pathname needs."""
@@ -178,11 +169,13 @@ class BackgroundErrorNorm(_BackgroundErrorInfo):
             model=self.model,
             date=self.date,
             cutoff=self.cutoff,
-            arpege_aearp_directory='wavelet',
+            arpege_aearp_directory="wavelet",
         )
 
 
-@namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
+@namebuilding_insert(
+    "geo", lambda s: s._geo2basename_info(add_stretching=False)
+)
 class Wavelet(GeoFlowResource):
     """Background error wavelet covariances."""
 
@@ -190,34 +183,29 @@ class Wavelet(GeoFlowResource):
         term_deco,
         gvar,
         dict(
-            info = 'Background error wavelet covariances',
-            attr = dict(
-                kind = dict(
-                    values   = ['wavelet', 'waveletcv'],
-                    remap    = dict(autoremap = 'first'),
+            info="Background error wavelet covariances",
+            attr=dict(
+                kind=dict(
+                    values=["wavelet", "waveletcv"],
+                    remap=dict(autoremap="first"),
                 ),
-                gvar = dict(
-                    default = 'wavelet_cv_t[geometry:truncation]'
-                ),
-                term=dict(
-                    optional=True,
-                    default=3
-                ),
-            )
-        )
+                gvar=dict(default="wavelet_cv_t[geometry:truncation]"),
+                term=dict(optional=True, default=3),
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'wavelet'
+        return "wavelet"
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'wavelet.cv.{!s}'.format(self.geometry.truncation)
+        return "wavelet.cv.{!s}".format(self.geometry.truncation)
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'wavelet.cv.t{!s}'.format(self.geometry.truncation)
+        return "wavelet.cv.t{!s}".format(self.geometry.truncation)
 
     def archive_pathinfo(self):
         """Op Archive specific pathname needs."""
@@ -230,139 +218,143 @@ class Wavelet(GeoFlowResource):
         )
 
 
-@namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
+@namebuilding_insert(
+    "geo", lambda s: s._geo2basename_info(add_stretching=False)
+)
 class RawControlVector(GeoFlowResource):
     """Raw Control Vector as issued by minimisation, playing the role of an Increment."""
 
     _footprint = dict(
-        info = 'Raw Control Vector',
-        attr = dict(
-            kind = dict(
-                values   = ['rawcv', 'rcv', 'increment', 'minimcv'],
-                remap    = dict(autoremap = 'first'),
+        info="Raw Control Vector",
+        attr=dict(
+            kind=dict(
+                values=["rawcv", "rcv", "increment", "minimcv"],
+                remap=dict(autoremap="first"),
             ),
-        )
+        ),
     )
 
     @property
     def realkind(self):
-        return 'rawcv'
+        return "rawcv"
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'MININCR'
+        return "MININCR"
 
 
-@namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
+@namebuilding_insert(
+    "geo", lambda s: s._geo2basename_info(add_stretching=False)
+)
 class InternalMinim(GeoFlowResource):
     """Generic class for resources internal to minimisation."""
 
     _abstract = True
     _footprint = dict(
-        attr = dict(
-            nativefmt = dict(
-                values  = ['fa', 'lfi', 'grib'],
-                default = 'fa',
+        attr=dict(
+            nativefmt=dict(
+                values=["fa", "lfi", "grib"],
+                default="fa",
             ),
-            term = dict(
-                type     = Time,
-                optional = True,
-                default  = Time(-3),
+            term=dict(
+                type=Time,
+                optional=True,
+                default=Time(-3),
             ),
         )
     )
 
     def olive_suffixtr(self):
         """Return BR or HR specific OLIVE suffix according to geo streching."""
-        return 'HR' if self.geometry.stretching > 1 else 'BR'
+        return "HR" if self.geometry.stretching > 1 else "BR"
 
 
 class StartingPointMinim(InternalMinim):
     """Guess as reprocessed by the minimisation."""
 
     _footprint = dict(
-        info = 'Starting Point Output Minim',
-        attr = dict(
-            kind = dict(
-                values  = ['stpmin'],
+        info="Starting Point Output Minim",
+        attr=dict(
+            kind=dict(
+                values=["stpmin"],
             ),
-        )
+        ),
     )
 
     @property
     def realkind(self):
-        return 'stpmin'
+        return "stpmin"
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'STPMIN' + self.olive_suffixtr()
+        return "STPMIN" + self.olive_suffixtr()
 
 
 class AnalysedStateMinim(InternalMinim):
     """Analysed state as produced by the minimisation."""
 
     _footprint = dict(
-        info = 'Analysed Output Minim',
-        attr = dict(
-            kind = dict(
-                values  = ['anamin'],
+        info="Analysed Output Minim",
+        attr=dict(
+            kind=dict(
+                values=["anamin"],
             ),
-        )
+        ),
     )
 
     @property
     def realkind(self):
-        return 'anamin'
+        return "anamin"
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'ANAMIN' + self.olive_suffixtr()
+        return "ANAMIN" + self.olive_suffixtr()
 
 
 class PrecevMap(FlowResource):
     """Map of the precondionning eigenvectors as produced by minimisation."""
 
     _footprint = dict(
-        info = 'Prec EV Map',
-        attr = dict(
-            kind = dict(
-                values   = ['precevmap'],
+        info="Prec EV Map",
+        attr=dict(
+            kind=dict(
+                values=["precevmap"],
             ),
-            clscontents = dict(
-                default = JsonDictContent,
+            clscontents=dict(
+                default=JsonDictContent,
             ),
-            nativefmt   = dict(
-                values  = ['json'],
-                default = 'json',
+            nativefmt=dict(
+                values=["json"],
+                default="json",
             ),
-        )
+        ),
     )
 
     @property
     def realkind(self):
-        return 'precevmap'
+        return "precevmap"
 
 
-@namebuilding_append('src', lambda s: str(s.evnum))
+@namebuilding_append("src", lambda s: str(s.evnum))
 class Precev(FlowResource):
     """Precondionning eigenvectors as produced by minimisation."""
 
     _footprint = dict(
-        info = 'Starting Point Output Minim',
-        attr = dict(
-            kind = dict(
-                values   = ['precev'],
+        info="Starting Point Output Minim",
+        attr=dict(
+            kind=dict(
+                values=["precev"],
             ),
-            evnum = dict(
-                type    = FmtInt,
-                args    = dict(fmt = '03'),
+            evnum=dict(
+                type=FmtInt,
+                args=dict(fmt="03"),
             ),
-        )
+        ),
     )
 
     @property
     def realkind(self):
-        return 'precev'
+        return "precev"
 
 
 class IOassignScript(Script):
@@ -371,22 +363,18 @@ class IOassignScript(Script):
     _footprint = [
         gvar,
         dict(
-            info = 'Script for IOASSIGN',
-            attr = dict(
-                kind = dict(
-                    values = ['ioassign_script']
-                ),
-                gvar = dict(
-                    default = 'ioassign_script_[purpose]'
-                ),
+            info="Script for IOASSIGN",
+            attr=dict(
+                kind=dict(values=["ioassign_script"]),
+                gvar=dict(default="ioassign_script_[purpose]"),
                 purpose=dict(
-                    info = "The purpose of the script",
-                    values = ['merge', 'create']
+                    info="The purpose of the script",
+                    values=["merge", "create"],
                 ),
-            )
-        )
+            ),
+        ),
     ]
 
     @property
     def realkind(self):
-        return 'ioassign_script'
+        return "ioassign_script"

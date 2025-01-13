@@ -6,4 +6,4 @@ capabilities.
 #: No automatic export
 __all__ = []
 
-__tocinfoline__ = 'VORTEX generic utility classes and methods'
+__tocinfoline__ = "VORTEX generic utility classes and methods"

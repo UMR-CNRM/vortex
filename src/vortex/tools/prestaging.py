@@ -20,7 +20,9 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 #: Definition of a named tuple PrestagingPriorityTuple
-PrestagingPriorityTuple = namedtuple('PrestagingPriorityTuple', ['urgent', 'normal', 'low'])
+PrestagingPriorityTuple = namedtuple(
+    "PrestagingPriorityTuple", ["urgent", "normal", "low"]
+)
 
 #: Predefined PrestagingPriorities values for urgent, normal and low
 prestaging_p = PrestagingPriorityTuple(urgent=99, normal=50, low=0)
@@ -36,23 +38,20 @@ class PrestagingTool(footprints.FootprintBase, Catalog):
     """Abstract class that deal with pre-staging for a given storage target."""
 
     _abstract = True
-    _collector = ('prestagingtool',)
+    _collector = ("prestagingtool",)
     _footprint = dict(
-        info = "Abstract class that deal with pre-staging for a given storage target.",
-        attr = dict(
-            system = dict(
-                info = "The current system object",
-                type = OSExtended
+        info="Abstract class that deal with pre-staging for a given storage target.",
+        attr=dict(
+            system=dict(info="The current system object", type=OSExtended),
+            issuerkind=dict(
+                info="The kind of store issuing the prestaging request"
             ),
-            issuerkind = dict(
-                info = 'The kind of store issuing the prestaging request'
+            priority=dict(
+                info="The prestaging request priority",
+                type=int,
+                values=list(prestaging_p),
             ),
-            priority = dict(
-                info = 'The prestaging request priority',
-                type = int,
-                values = list(prestaging_p)
-            )
-        )
+        ),
     )
 
     def __init__(self, *kargs, **kwargs):
@@ -66,12 +65,14 @@ class PrestagingTool(footprints.FootprintBase, Catalog):
 
     def describe(self, fulldump=False):
         """Print the object's characteristics and content."""
-        res = 'PrestagingTool object of class: {!s}\n'.format(self.__class__)
+        res = "PrestagingTool object of class: {!s}\n".format(self.__class__)
         for k, v in self.footprint_as_shallow_dict().items():
-            res += '  * {:s}: {!s}\n'.format(k, v)
+            res += "  * {:s}: {!s}\n".format(k, v)
         if fulldump:
-            res += '\n  * Todo list:\n'
-            res += '\n'.join(['    - {:s}'.format(item) for item in sorted(self.items())])
+            res += "\n  * Todo list:\n"
+            res += "\n".join(
+                ["    - {:s}".format(item) for item in sorted(self.items())]
+            )
         return res
 
     def flush(self, email=None):
@@ -113,24 +114,35 @@ class PrivatePrestagingHub:
         # Prestaging tool descriptions
         myptool_desc = self.prestagingtools_default_opts.copy()
         myptool_desc.update(kwargs)
-        myptool_desc['priority'] = priority
-        myptool_desc['system'] = self._sh
+        myptool_desc["priority"] = priority
+        myptool_desc["system"] = self._sh
         myptool = None
         # Scan pre-existing prestaging tools to find a suitable one
         for ptool in self._prestagingtools:
-            if ptool.footprint_reusable() and ptool.footprint_compatible(myptool_desc):
-                logger.debug("Re-usable prestaging tool found: %s", lightdump(myptool_desc))
+            if ptool.footprint_reusable() and ptool.footprint_compatible(
+                myptool_desc
+            ):
+                logger.debug(
+                    "Re-usable prestaging tool found: %s",
+                    lightdump(myptool_desc),
+                )
                 myptool = ptool
                 break
         # If necessary, create a new one
         if myptool is None:
             myptool = fpx.prestagingtool(_emptywarning=False, **myptool_desc)
             if myptool is not None:
-                logger.debug("Fresh prestaging tool created: %s", lightdump(myptool_desc))
+                logger.debug(
+                    "Fresh prestaging tool created: %s",
+                    lightdump(myptool_desc),
+                )
                 self._prestagingtools.add(myptool)
         # Let's role
         if myptool is None:
-            logger.debug("Unable to perform prestaging with: %s", lightdump(myptool_desc))
+            logger.debug(
+                "Unable to perform prestaging with: %s",
+                lightdump(myptool_desc),
+            )
         else:
             logger.debug("Prestaging requested accepted for: %s", location)
             myptool.add(location)
@@ -143,13 +155,21 @@ class PrivatePrestagingHub:
         return todo
 
     def __repr__(self, *args, **kwargs):
-        return ('{:s} | n_prestagingtools={:d}>'
-                .format(super().__repr__().rstrip('>'),
-                        len(self._prestagingtools)))
+        return "{:s} | n_prestagingtools={:d}>".format(
+            super().__repr__().rstrip(">"), len(self._prestagingtools)
+        )
 
     def __str__(self):
-        return (repr(self) + "\n\n" +
-                "\n\n".join([ptool.describe(fulldump=True) for ptool in self._prestagingtools]))
+        return (
+            repr(self)
+            + "\n\n"
+            + "\n\n".join(
+                [
+                    ptool.describe(fulldump=True)
+                    for ptool in self._prestagingtools
+                ]
+            )
+        )
 
     def flush(self, priority_threshold=prestaging_p.low):
         """Actually send the pre-staging request to the appropriate location.
@@ -163,7 +183,10 @@ class PrivatePrestagingHub:
             if rc:
                 self._prestagingtools.discard(ptool)
             else:
-                logger.error("Something went wrong when flushing the %s prestaging tool", ptool)
+                logger.error(
+                    "Something went wrong when flushing the %s prestaging tool",
+                    ptool,
+                )
 
     def clear(self, priority_threshold=prestaging_p.low):
         """Erase the pre-staging requests list.
@@ -183,4 +206,5 @@ class PrestagingHub(PrivatePrestagingHub, getbytag.GetByTag):
     Therefore, a *tag* attribute needs to be specified when building/retrieving
     an object of this class.
     """
+
     pass
