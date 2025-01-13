@@ -108,7 +108,6 @@ def is_defined(section, key=None):
 
 
 def get_from_config_w_default(section, key, default):
-    logger.info(f"Reading config value {section}.{key}")
     try:
         return from_config(section, key)
     except KeyError:
