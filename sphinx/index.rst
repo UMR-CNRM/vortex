@@ -17,6 +17,16 @@ It provides functions to
 Vortex also provides ways of tracking fetched and generated data,
 making it easy to implement pre or post-processing operations.
 
+Installation
+------------
+
+*vortex* is available on `pypi.org <https://pypi.org/project/vortex-nwp>`.
+It can be installed using ``pip`` or similar tools:
+
+```
+pip install vortex-nwp
+```
+
 Contents
 --------
 
