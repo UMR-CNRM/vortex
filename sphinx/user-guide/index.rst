@@ -15,3 +15,4 @@ Contents
    oper-dble-data-trees
    explicit-paths
    configuration
+   plugins
