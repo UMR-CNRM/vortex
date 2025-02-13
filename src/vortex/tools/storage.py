@@ -304,10 +304,10 @@ class Cache(Storage):
     _footprint = dict(
         info="Default cache description",
         attr=dict(
-            headdir=dict(
-                info="The cache's subdirectory (within **rootdir**).",
-                optional=True,
-                default="cache",
+            location=dict(
+                optional=False,
+                type=str,
+                info="The absolute path to the cache space",
             ),
             # TODO is 'storage' used in any way?
             storage=dict(

@@ -984,9 +984,6 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
                     for s in ("", "stacked-")
                 ]
             ),
-            strategy=dict(
-                default="mtool",
-            ),
         ),
     )
 
@@ -1002,7 +999,6 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
         self.location = cachepath
 
 
-# TODO Not sure this class is needed anymore
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
     """The DSI/OP VORTEX cache where researchers can get the freshest data."""
 
@@ -1015,19 +1011,12 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
                     for s in ("", "stacked-")
                 ],
             ),
-            strategy=dict(
-                default="op2r",
-            ),
             readonly=dict(
                 default=True,
             ),
         ),
     )
 
-    @property
-    def underlying_cache_kind(self):
-        """The kind of cache that will be used."""
-        return self.strategy
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         try:
