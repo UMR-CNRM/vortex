@@ -1853,7 +1853,7 @@ class OSExtended(System):
                 section="data-tree",
                 key="rootdir",
             )
-        except KeyError:
+        except config.ConfigurationError as e:
             cachepath = os.path.join(os.environ["HOME"], ".vortex.d")
         location = os.path.join(cachepath, "ftspool")
         self._ftspool_cache = footprints.proxy.cache(location=location)

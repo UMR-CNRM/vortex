@@ -994,7 +994,7 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
                 section="data-tree",
                 key="rootdir",
             )
-        except KeyError:
+        except config.ConfigurationError:
             cachepath = os.path.join(os.environ["HOME"], ".vortex.d")
         self.location = cachepath
 
@@ -1024,8 +1024,13 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
                 section="data-tree",
                 key="op_rootdir",
             )
-        except KeyError:
-            raise ValueError
+        except config.ConfigurationError as e:
+            logger.error(
+                "Cannot use special experiment cache without providing",
+                "cache location",
+            )
+            raise e
+
         self.location = os.path.join(cachepath, "vortex")
 
 
