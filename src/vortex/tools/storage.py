@@ -115,10 +115,6 @@ class Storage(footprints.FootprintBase):
     _footprint = dict(
         info="Default/Abstract storage place description.",
         attr=dict(
-            kind=dict(
-                info="The storage place's kind.",
-                values=["std"],
-            ),
             storage=dict(
                 info="The storage target.",
             ),
@@ -400,7 +396,7 @@ class Cache(Storage):
     def _actual_prestageinfo(self, item, **kwargs):
         """Returns pre-staging informations."""
         return dict(
-            strategy=self.kind, location=self.fullpath(item, **kwargs)
+            strategy="std", location=self.fullpath(item, **kwargs)
         ), dict()
 
     def _actual_check(self, item, **kwargs):
@@ -557,7 +553,7 @@ class AbstractArchive(Storage):
     @property
     def tag(self):
         """The identifier of this cache place."""
-        return "{:s}_{:s}_{:s}".format(self.realkind, self.storage, self.kind)
+        return "{:s}_{:s}".format(self.realkind, self.storage)
 
     @property
     def realkind(self):
