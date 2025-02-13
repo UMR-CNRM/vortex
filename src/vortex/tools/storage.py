@@ -304,7 +304,7 @@ class Cache(Storage):
     _footprint = dict(
         info="Default cache description",
         attr=dict(
-            location=dict(
+            entry=dict(
                 optional=False,
                 type=str,
                 info="The absolute path to the cache space",
