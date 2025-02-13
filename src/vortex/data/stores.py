@@ -8,6 +8,7 @@ Store objects use the :mod:`footprints` mechanism.
 import copy
 import ftplib
 import io
+import os
 import re
 
 from bronx.fancies import loggers
@@ -989,6 +990,17 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
         ),
     )
 
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        try:
+            cachepath = config.from_config(
+                section="data-tree",
+                key="rootdir",
+            )
+        except KeyError:
+            cachepath = os.path.join(os.environ["HOME"], ".vortex.d")
+        self.location = cachepath
+
 
 # TODO Not sure this class is needed anymore
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
@@ -1016,6 +1028,16 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
     def underlying_cache_kind(self):
         """The kind of cache that will be used."""
         return self.strategy
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        try:
+            cachepath = config.from_config(
+                section="data-tree",
+                key="op_rootdir",
+            )
+        except KeyError:
+            raise ValueError
+        self.location = os.path.join(cachepath, "vortex")
 
 
 class _AbstractVortexCacheMultiStore(MultiStore):
