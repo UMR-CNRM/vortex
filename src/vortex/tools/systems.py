@@ -1846,8 +1846,17 @@ class OSExtended(System):
 
     def ftspool_cache(self):
         """Return a cache object for the FtSpool."""
-        if self._ftspool_cache is None:
-            self._ftspool_cache = footprints.proxy.cache(kind="ftstash")
+        if self._ftspool_cache is not None:
+            return self._ftspool_cache
+        try:
+            cachepath = config.from_config(
+                section="data-tree",
+                key="rootdir",
+            )
+        except KeyError:
+            cachepath = os.path.join(os.environ["HOME"], ".vortex.d")
+        location = os.path.join(cachepath, "ftspool")
+        self._ftspool_cache = footprints.proxy.cache(location=location)
         return self._ftspool_cache
 
     def copy2ftspool(self, source, nest=False, **kwargs):
