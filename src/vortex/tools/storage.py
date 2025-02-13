@@ -428,6 +428,8 @@ class Cache(Storage):
         fmt = kwargs.get("fmt", "foo")
         # Insert the element
         tpath = self._formatted_path(item)
+        if not self.sh.path.exists(self.entry):
+            self.sh.mkdit(self.entry)
         if tpath is not None:
             rc = self.sh.cp(
                 local,
