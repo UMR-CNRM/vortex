@@ -67,6 +67,7 @@ from vortex.tools.compression import CompressionPipeline
 from vortex.tools.env import Environment
 from vortex.tools.net import AssistedSsh, AutoRetriesFtp, DEFAULT_FTP_PORT
 from vortex.tools.net import FtpConnectionPool, LinuxNetstats, StdFtp
+import vortex.tools.storage
 
 #: No automatic export
 __all__ = []
@@ -1848,15 +1849,10 @@ class OSExtended(System):
         """Return a cache object for the FtSpool."""
         if self._ftspool_cache is not None:
             return self._ftspool_cache
-        try:
-            cachepath = config.from_config(
-                section="data-tree",
-                key="rootdir",
-            )
-        except config.ConfigurationError as e:
-            cachepath = os.path.join(os.environ["HOME"], ".vortex.d")
-        location = os.path.join(cachepath, "ftspool")
-        self._ftspool_cache = footprints.proxy.cache(entry=location)
+        self._ftspool_cache = footprints.proxy.cache(
+            entry=os.path.join(
+                vortex.data.stores.get_cache_location(), "ftspool"),
+        )
         return self._ftspool_cache
 
     def copy2ftspool(self, source, nest=False, **kwargs):

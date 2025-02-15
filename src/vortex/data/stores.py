@@ -36,6 +36,17 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
+def get_cache_location():
+    try:
+        cacheloc = config.from_config(
+            section="data-tree",
+            key="rootdir",
+        )
+    except config.ConfigurationError:
+        cacheloc = os.path.join(os.environ["HOME"], ".vortex.d")
+    return cacheloc
+
+
 class MagicPlace(Store):
     """Somewhere, over the rainbow!"""
 
@@ -989,14 +1000,7 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
-        try:
-            cachepath = config.from_config(
-                section="data-tree",
-                key="rootdir",
-            )
-        except config.ConfigurationError:
-            cachepath = os.path.join(os.environ["HOME"], ".vortex.d")
-        self.location = cachepath
+        self.location = get_cache_location()
 
 
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
