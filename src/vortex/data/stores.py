@@ -742,9 +742,6 @@ class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
             )
             logger.error(msg)
             raise e
-        xpath = remote["path"].split("/")
-        xpath[3:4] = list(xpath[3])
-        remote["path"] = self.system.path.join(*xpath)
         return remote
 
 
