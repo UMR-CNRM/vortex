@@ -515,7 +515,7 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
 
     def remap_read(self, remote, options):
         """Remap actual remote path to distant store path for intrusive actions."""
-        return copy.copy(remote)
+        raise NotImplementedError
 
     def remap_list(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
