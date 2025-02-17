@@ -769,65 +769,6 @@ class VortexStdStackedArchiveStore(VortexStdBaseArchiveStore):
     ]
 
 
-class VortexFreeStdBaseArchiveStore(
-    _VortexBaseArchiveStore, ConfigurableArchiveStore
-):
-    """Archive for casual VORTEX experiments: Support for Free XPIDs.
-
-    This 'archive-legacy' store looks into the resource 'main' location not
-    into a potential stack.
-    """
-
-    #: Path to the vortex-free Store configuration file
-    _store_global_config = "@store-vortex-free.ini"
-    _datastore_id = "store-vortex-free-conf"
-
-    _footprint = dict(
-        info="VORTEX archive access for casual experiments",
-        attr=dict(
-            netloc=dict(
-                values=["vortex-free.archive-legacy.fr"],
-            ),
-        ),
-    )
-
-    def remap_read(self, remote, options):
-        """Reformulates the remote path to compatible vortex namespace."""
-        remote = copy.copy(remote)
-        xpath = remote["path"].strip("/").split("/")
-        f_xpid = FreeXPid(xpath[2])
-        xpath[2] = f_xpid.id
-        if "root" not in remote:
-            remote["root"] = self._actual_storeroot(f_xpid)
-        remote["path"] = self.system.path.join(*xpath)
-        return remote
-
-    remap_write = remap_read
-
-
-class VortexFreeStdStackedArchiveStore(VortexFreeStdBaseArchiveStore):
-    """Archive for casual VORTEX experiments: Support for Free XPIDs.
-
-    This 'stacked-archive-legacy' or 'stacked-archive-smart' store looks into
-    the stack associated to the resource. The '-smart' variant, has the ability
-    to refill the whole stack into local cache (to be faster in the future).
-    """
-
-    _footprint = [
-        _vortex_readonly_store,
-        dict(
-            attr=dict(
-                netloc=dict(
-                    values=[
-                        "vortex-free.stacked-archive-legacy.fr",
-                        "vortex-free.stacked-archive-smart.fr",
-                    ],
-                ),
-            )
-        ),
-    ]
-
-
 class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
     """Archive for op VORTEX experiments.
 
