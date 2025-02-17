@@ -726,22 +726,24 @@ class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
         ),
     )
 
-    @property
-    def _actual_mappingroot(self):
-        """Read the get entry point form configuration."""
-        return config.from_config(
-            section="storage",
-            key="rootdir",
-        )
-
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
+        try:
+            remote["root"] = config.from_config(
+                section="storage", key="rootdir",
+            )
+        except config.ConfigurationError as e:
+            msg = (
+                "Trying to write to archive but location is not configured.\n"
+                "Make sure key \"rootdir\" is defined in storage section of "
+                "the configuration.\n"
+                "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
+            )
+            logger.error(msg)
+            raise e
         xpath = remote["path"].split("/")
-        actual_mappingroot = self._actual_mappingroot
-        if not self.storeroot and actual_mappingroot:
-            remote["root"] = actual_mappingroot
-            xpath[3:4] = list(xpath[3])
+        xpath[3:4] = list(xpath[3])
         remote["path"] = self.system.path.join(*xpath)
         return remote
 
@@ -788,18 +790,23 @@ class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
         ),
     )
 
-    @property
-    def _actual_storeroot(self):
-        return self.storeroot or config.from_config(
-            section="storage",
-            key="op_rootdir",
-        )
-
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
+        try:
+            remote["root"] = config.from_config(
+                section="storage", key="op_rootdir",
+            )
+        except config.ConfigurationError as e:
+            msg = (
+                "Trying to write to operational data archive but location"
+                "is not configured.\nMake sure key \"rootdir\" is defined in "
+                "the storage section of the configuration.\n"
+                "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
+            )
+            logger.error(msg)
+            raise e
         xpath = remote["path"].split("/")
-        remote["root"] = self._actual_storeroot
         if len(xpath) >= 5 and re.match(r"^\d{8}T\d{2,4}", xpath[4]):
             # If a date is detected
             vxdate = list(xpath[4])
