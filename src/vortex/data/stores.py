@@ -19,7 +19,6 @@ from vortex import config
 from vortex.data.abstractstores import (
     Store,
     ArchiveStore,
-    ConfigurableArchiveStore,
     CacheStore,
 )
 from vortex.data.abstractstores import MultiStore, PromiseStore
