@@ -33,7 +33,6 @@ import ftplib
 import re
 import time
 from datetime import datetime
-import os
 
 import footprints
 from bronx.fancies import loggers
