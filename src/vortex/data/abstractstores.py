@@ -862,8 +862,8 @@ class ArchiveStore(Store):
                 msg = (
                     "Trying to access storage archive but no "
                     "storage location configured.\n"
-                    "Make sure configuration section \"section\" and key "
-                    "\"address\" exist.\n"
+                    'Make sure configuration section "section" and key '
+                    '"address" exist.\n'
                     "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
                 )
                 logger.error(msg)
