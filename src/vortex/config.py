@@ -65,7 +65,7 @@ def from_config(section, key=None):
     """
     try:
         subconfig = VORTEX_CONFIG[section]
-    except KeyError as e:
+    except KeyError:
         raise ConfigurationError(
             f"Missing configuration section {section}",
         )
@@ -74,7 +74,7 @@ def from_config(section, key=None):
 
     try:
         value = subconfig[key]
-    except KeyError as e:
+    except KeyError:
         raise ConfigurationError(
             f"Missing configuration key {key} in section {section}",
         )
@@ -108,5 +108,5 @@ def is_defined(section, key=None):
 def get_from_config_w_default(section, key, default):
     try:
         return from_config(section, key)
-    except KeyError:
+    except ConfigurationError:
         return default

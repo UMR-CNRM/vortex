@@ -1851,7 +1851,8 @@ class OSExtended(System):
             return self._ftspool_cache
         self._ftspool_cache = footprints.proxy.cache(
             entry=os.path.join(
-                vortex.data.stores.get_cache_location(), "ftspool"),
+                vortex.data.stores.get_cache_location(), "ftspool"
+            ),
         )
         return self._ftspool_cache
 

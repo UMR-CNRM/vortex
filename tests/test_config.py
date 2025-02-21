@@ -14,7 +14,7 @@ config.VORTEX_CONFIG = {
 }
 
 def test_section_from_config():
-    with pytest.raises(KeyError):
+    with pytest.raises(config.ConfigurationError):
         config_section = config.from_config("nonexist")
 
     config_section = config.from_config("data-tree")
@@ -23,7 +23,7 @@ def test_section_from_config():
 
 
 def test_key_from_config():
-    with pytest.raises(KeyError):
+    with pytest.raises(config.ConfigurationError):
         config_value = config.from_config("data-tree", "nonexist")
 
     config_value = config.from_config("data-tree", "rootdir")
