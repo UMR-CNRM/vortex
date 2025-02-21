@@ -18,14 +18,12 @@ from vortex import config
 from vortex.data.abstractstores import (
     Store,
     ArchiveStore,
-    ConfigurableArchiveStore,
     CacheStore,
 )
 from vortex.data.abstractstores import MultiStore, PromiseStore
 from vortex.data.abstractstores import ARCHIVE_GET_INTENT_DEFAULT
 from vortex.layout import dataflow
 from vortex.syntax.stdattrs import hashalgo_avail_list
-from vortex.syntax.stdattrs import FreeXPid
 from vortex.syntax.stdattrs import DelayedEnvValue
 from vortex.tools.systems import ExecutionError
 
@@ -515,7 +513,7 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
 
     def remap_read(self, remote, options):
         """Remap actual remote path to distant store path for intrusive actions."""
-        return copy.copy(remote)
+        raise NotImplementedError
 
     def remap_list(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
@@ -726,23 +724,23 @@ class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
         ),
     )
 
-    @property
-    def _actual_mappingroot(self):
-        """Read the get entry point form configuration."""
-        return config.from_config(
-            section="storage",
-            key="rootdir",
-        )
-
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
-        xpath = remote["path"].split("/")
-        actual_mappingroot = self._actual_mappingroot
-        if not self.storeroot and actual_mappingroot:
-            remote["root"] = actual_mappingroot
-            xpath[3:4] = list(xpath[3])
-        remote["path"] = self.system.path.join(*xpath)
+        try:
+            remote["root"] = config.from_config(
+                section="storage",
+                key="rootdir",
+            )
+        except config.ConfigurationError as e:
+            msg = (
+                "Trying to write to archive but location is not configured.\n"
+                'Make sure key "rootdir" is defined in storage section of '
+                "the configuration.\n"
+                "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
+            )
+            logger.error(msg)
+            raise e
         return remote
 
 
@@ -769,65 +767,6 @@ class VortexStdStackedArchiveStore(VortexStdBaseArchiveStore):
     ]
 
 
-class VortexFreeStdBaseArchiveStore(
-    _VortexBaseArchiveStore, ConfigurableArchiveStore
-):
-    """Archive for casual VORTEX experiments: Support for Free XPIDs.
-
-    This 'archive-legacy' store looks into the resource 'main' location not
-    into a potential stack.
-    """
-
-    #: Path to the vortex-free Store configuration file
-    _store_global_config = "@store-vortex-free.ini"
-    _datastore_id = "store-vortex-free-conf"
-
-    _footprint = dict(
-        info="VORTEX archive access for casual experiments",
-        attr=dict(
-            netloc=dict(
-                values=["vortex-free.archive-legacy.fr"],
-            ),
-        ),
-    )
-
-    def remap_read(self, remote, options):
-        """Reformulates the remote path to compatible vortex namespace."""
-        remote = copy.copy(remote)
-        xpath = remote["path"].strip("/").split("/")
-        f_xpid = FreeXPid(xpath[2])
-        xpath[2] = f_xpid.id
-        if "root" not in remote:
-            remote["root"] = self._actual_storeroot(f_xpid)
-        remote["path"] = self.system.path.join(*xpath)
-        return remote
-
-    remap_write = remap_read
-
-
-class VortexFreeStdStackedArchiveStore(VortexFreeStdBaseArchiveStore):
-    """Archive for casual VORTEX experiments: Support for Free XPIDs.
-
-    This 'stacked-archive-legacy' or 'stacked-archive-smart' store looks into
-    the stack associated to the resource. The '-smart' variant, has the ability
-    to refill the whole stack into local cache (to be faster in the future).
-    """
-
-    _footprint = [
-        _vortex_readonly_store,
-        dict(
-            attr=dict(
-                netloc=dict(
-                    values=[
-                        "vortex-free.stacked-archive-legacy.fr",
-                        "vortex-free.stacked-archive-smart.fr",
-                    ],
-                ),
-            )
-        ),
-    ]
-
-
 class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
     """Archive for op VORTEX experiments.
 
@@ -847,18 +786,24 @@ class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
         ),
     )
 
-    @property
-    def _actual_storeroot(self):
-        return self.storeroot or config.from_config(
-            section="storage",
-            key="op_rootdir",
-        )
-
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
+        try:
+            remote["root"] = config.from_config(
+                section="storage",
+                key="op_rootdir",
+            )
+        except config.ConfigurationError as e:
+            msg = (
+                "Trying to write to operational data archive but location"
+                'is not configured.\nMake sure key "rootdir" is defined in '
+                "the storage section of the configuration.\n"
+                "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
+            )
+            logger.error(msg)
+            raise e
         xpath = remote["path"].split("/")
-        remote["root"] = self._actual_storeroot
         if len(xpath) >= 5 and re.match(r"^\d{8}T\d{2,4}", xpath[4]):
             # If a date is detected
             vxdate = list(xpath[4])
