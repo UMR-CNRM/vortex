@@ -731,12 +731,13 @@ class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
         remote = copy.copy(remote)
         try:
             remote["root"] = config.from_config(
-                section="storage", key="rootdir",
+                section="storage",
+                key="rootdir",
             )
         except config.ConfigurationError as e:
             msg = (
                 "Trying to write to archive but location is not configured.\n"
-                "Make sure key \"rootdir\" is defined in storage section of "
+                'Make sure key "rootdir" is defined in storage section of '
                 "the configuration.\n"
                 "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
             )
@@ -792,12 +793,13 @@ class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
         remote = copy.copy(remote)
         try:
             remote["root"] = config.from_config(
-                section="storage", key="op_rootdir",
+                section="storage",
+                key="op_rootdir",
             )
         except config.ConfigurationError as e:
             msg = (
                 "Trying to write to operational data archive but location"
-                "is not configured.\nMake sure key \"rootdir\" is defined in "
+                'is not configured.\nMake sure key "rootdir" is defined in '
                 "the storage section of the configuration.\n"
                 "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
             )
