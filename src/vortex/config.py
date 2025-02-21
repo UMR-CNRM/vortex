@@ -108,5 +108,5 @@ def is_defined(section, key=None):
 def get_from_config_w_default(section, key, default):
     try:
         return from_config(section, key)
-    except KeyError:
+    except ConfigurationError:
         return default
