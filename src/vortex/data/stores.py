@@ -8,6 +8,7 @@ Store objects use the :mod:`footprints` mechanism.
 import copy
 import ftplib
 import io
+import os
 import re
 
 from bronx.fancies import loggers
@@ -31,6 +32,17 @@ from vortex.tools.systems import ExecutionError
 __all__ = []
 
 logger = loggers.getLogger(__name__)
+
+
+def get_cache_location():
+    try:
+        cacheloc = config.from_config(
+            section="data-tree",
+            key="rootdir",
+        )
+    except config.ConfigurationError:
+        cacheloc = os.path.join(os.environ["HOME"], ".vortex.d")
+    return cacheloc
 
 
 class MagicPlace(Store):
@@ -983,14 +995,14 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
                     for s in ("", "stacked-")
                 ]
             ),
-            strategy=dict(
-                default="mtool",
-            ),
         ),
     )
 
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        self.location = get_cache_location()
 
-# TODO Not sure this class is needed anymore
+
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
     """The DSI/OP VORTEX cache where researchers can get the freshest data."""
 
@@ -1003,19 +1015,27 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
                     for s in ("", "stacked-")
                 ],
             ),
-            strategy=dict(
-                default="op2r",
-            ),
             readonly=dict(
                 default=True,
             ),
         ),
     )
 
-    @property
-    def underlying_cache_kind(self):
-        """The kind of cache that will be used."""
-        return self.strategy
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        try:
+            cachepath = config.from_config(
+                section="data-tree",
+                key="op_rootdir",
+            )
+        except config.ConfigurationError as e:
+            logger.error(
+                "Cannot use special experiment cache without providing",
+                "cache location",
+            )
+            raise e
+
+        self.location = os.path.join(cachepath, "vortex")
 
 
 class _AbstractVortexCacheMultiStore(MultiStore):

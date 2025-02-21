@@ -17,7 +17,7 @@ from bronx.system import hash as hashutils
 import footprints
 
 from vortex import sessions
-from vortex.config import from_config
+from vortex.config import from_config, ConfigurationError
 from vortex.util import config
 from vortex.syntax.stdattrs import (
     hashalgo,
@@ -852,11 +852,22 @@ class ArchiveStore(Store):
     def actual_storage(self):
         """This archive network name (potentially read form the configuration file)."""
         if self._actual_storage is None:
-            self._actual_storage = (
-                self.system.env.VORTEX_DEFAULT_STORAGE
-                or self.system.glove.default_fthost
-                or from_config(section="storage", key="address")
-            )
+            try:
+                self._actual_storage = (
+                    self.system.env.VORTEX_DEFAULT_STORAGE
+                    or self.system.glove.default_fthost
+                    or from_config(section="storage", key="address")
+                )
+            except ConfigurationError as e:
+                msg = (
+                    "Trying to access storage archive but no "
+                    "storage location configured.\n"
+                    'Make sure configuration section "section" and key '
+                    '"address" exist.\n'
+                    "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
+                )
+                logger.error(msg)
+                raise e
             if self._actual_storage is None:
                 raise ValueError("Unable to find the archive network name.")
         return self._actual_storage
@@ -1439,8 +1450,7 @@ class CacheStore(Store):
     def _get_cache(self):
         if not self._cache:
             self._cache = footprints.proxy.caches.default(
-                kind=self.underlying_cache_kind,
-                headdir=self.headdir,
+                entry=self.location,
                 rtouch=self.rtouch,
                 rtouchskip=self.rtouchskip,
                 readonly=self.readonly,

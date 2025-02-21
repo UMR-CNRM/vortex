@@ -33,7 +33,6 @@ import ftplib
 import re
 import time
 from datetime import datetime
-import os
 
 import footprints
 from bronx.fancies import loggers
@@ -115,10 +114,6 @@ class Storage(footprints.FootprintBase):
     _footprint = dict(
         info="Default/Abstract storage place description.",
         attr=dict(
-            kind=dict(
-                info="The storage place's kind.",
-                values=["std"],
-            ),
             storage=dict(
                 info="The storage target.",
             ),
@@ -300,15 +295,14 @@ class Storage(footprints.FootprintBase):
 class Cache(Storage):
     """Root class for any :class:Cache subclasses."""
 
-    _abstract = True
     _collector = ("cache",)
     _footprint = dict(
         info="Default cache description",
         attr=dict(
-            headdir=dict(
-                info="The cache's subdirectory (within **rootdir**).",
-                optional=True,
-                default="cache",
+            entry=dict(
+                optional=False,
+                type=str,
+                info="The absolute path to the cache space",
             ),
             # TODO is 'storage' used in any way?
             storage=dict(
@@ -350,17 +344,19 @@ class Cache(Storage):
     @property
     def tag(self):
         """The identifier of this cache place."""
-        return "{:s}_{:s}_{:s}".format(self.realkind, self.kind, self.headdir)
+        return "{:s}_{:s}".format(self.realkind, self.entry)
 
     def _formatted_path(self, subpath, **kwargs):  # @UnusedVariable
-        raise NotImplementedError()
+        return self.sh.path.join(self.entry, subpath.lstrip("/"))
 
     def catalog(self):
         """List all files present in this cache.
 
         :note: It might be quite slow...
         """
-        raise NotImplementedError()
+        entry = self.sh.path.expanduser(self.entry)
+        files = self.sh.ffind(entry)
+        return [f[len(entry) :] for f in files]
 
     def _xtouch(self, path):
         """
@@ -399,7 +395,7 @@ class Cache(Storage):
     def _actual_prestageinfo(self, item, **kwargs):
         """Returns pre-staging informations."""
         return dict(
-            strategy=self.kind, location=self.fullpath(item, **kwargs)
+            strategy="std", location=self.fullpath(item, **kwargs)
         ), dict()
 
     def _actual_check(self, item, **kwargs):
@@ -431,6 +427,8 @@ class Cache(Storage):
         fmt = kwargs.get("fmt", "foo")
         # Insert the element
         tpath = self._formatted_path(item)
+        if not self.sh.path.exists(self.entry):
+            self.sh.mkdit(self.entry)
         if tpath is not None:
             rc = self.sh.cp(
                 local,
@@ -523,6 +521,21 @@ class Cache(Storage):
             rc = False
         return rc, dict(fmt=fmt)
 
+    def flush(self, dumpfile=None):
+        """Flush actual history to the specified ``dumpfile`` if record is on."""
+        if dumpfile is None:
+            logfile = ".".join(
+                (
+                    "HISTORY",
+                    datetime.now().strftime("%Y%m%d%H%M%S.%f"),
+                    "P{:06d}".format(self.sh.getpid()),
+                    self.sh.getlogname(),
+                )
+            )
+            dumpfile = self.sh.path.join(self.entry, ".history", logfile)
+        if self.record:
+            self.sh.pickle_dump(self.history, dumpfile)
+
 
 class AbstractArchive(Storage):
     """The default class to handle storage to some kind if Archive."""
@@ -541,7 +554,7 @@ class AbstractArchive(Storage):
     @property
     def tag(self):
         """The identifier of this cache place."""
-        return "{:s}_{:s}_{:s}".format(self.realkind, self.storage, self.kind)
+        return "{:s}_{:s}".format(self.realkind, self.storage)
 
     @property
     def realkind(self):
@@ -981,176 +994,3 @@ class LocalArchive(AbstractLocalArchive):
         if self.auto_self_expand and not self.sh.path.isabs(rawpath):
             rawpath = self.sh.path.expanduser(self.sh.path.join("~", rawpath))
         return super()._formatted_path(rawpath, **kwargs)
-
-
-# Concrete cache implementations
-# ------------------------------
-
-
-class FixedEntryCache(Cache):
-    _abstract = True
-    _footprint = dict(
-        info="Default cache description (with a fixed entry point)",
-        attr=dict(
-            rootdir=dict(
-                info="The cache's location (usually on a filesystem).",
-                optional=True,
-                default=None,
-            ),
-        ),
-    )
-
-    @property
-    def entry(self):
-        """Tries to figure out what could be the actual entry point for storage space."""
-        if not self.rootdir:
-            self.rootdir = "/tmp"
-        return self.sh.path.join(self.rootdir, self.kind, self.headdir)
-
-    @property
-    def tag(self):
-        """The identifier of this cache place."""
-        return "{:s}_{:s}".format(self.realkind, self.entry)
-
-    def _formatted_path(self, subpath, **kwargs):  # @UnusedVariable
-        return self.sh.path.join(self.entry, subpath.lstrip("/"))
-
-    def catalog(self):
-        """List all files present in this cache.
-
-        :note: It might be quite slow...
-        """
-        entry = self.sh.path.expanduser(self.entry)
-        files = self.sh.ffind(entry)
-        return [f[len(entry) :] for f in files]
-
-    def flush(self, dumpfile=None):
-        """Flush actual history to the specified ``dumpfile`` if record is on."""
-        if dumpfile is None:
-            logfile = ".".join(
-                (
-                    "HISTORY",
-                    datetime.now().strftime("%Y%m%d%H%M%S.%f"),
-                    "P{:06d}".format(self.sh.getpid()),
-                    self.sh.getlogname(),
-                )
-            )
-            dumpfile = self.sh.path.join(self.entry, ".history", logfile)
-        if self.record:
-            self.sh.pickle_dump(self.history, dumpfile)
-
-
-class MtoolCache(FixedEntryCache):
-    """Cache items for the MTOOL jobs (or any job that acts like it)."""
-
-    _footprint = dict(
-        info="MTOOL like Cache",
-        attr=dict(
-            kind=dict(
-                values=["mtool", "swapp"],
-                remap=dict(swapp="mtool"),
-            ),
-            headdir=dict(
-                optional=True,
-                default="",
-            ),
-        ),
-    )
-
-    @property
-    def entry(self):
-        """Tries to figure out what could be the actual entry point
-        for cache space.
-
-        """
-        if self.rootdir:
-            return os.path.join(self.rootdir, self.headdir)
-
-        if config.is_defined(section="data-tree", key="rootdir"):
-            rootdir = config.from_config(
-                section="data-tree",
-                key="rootdir",
-            )
-        else:
-            rootdir = self.sh.path.join(os.environ["HOME"], ".vortex.d")
-
-        return self.sh.path.join(rootdir, self.headdir)
-
-
-class FtStashCache(MtoolCache):
-    """A place to store file to be sent with ftserv."""
-
-    _footprint = dict(
-        info="A place to store file to be sent with ftserv",
-        attr=dict(
-            kind=dict(
-                values=[
-                    "ftstash",
-                ],
-            ),
-            headdir=dict(
-                optional=True,
-                default="ftspool",
-            ),
-        ),
-    )
-
-
-class Op2ResearchCache(FixedEntryCache):
-    """Cache of the operational suite (read-only)."""
-
-    _footprint = dict(
-        info="MTOOL like Operations Cache (read-only)",
-        attr=dict(
-            kind=dict(
-                values=["op2r"],
-            ),
-            headdir=dict(
-                optional=True,
-                default="vortex",
-            ),
-            readonly=dict(
-                values=[
-                    True,
-                ],
-                default=True,
-            ),
-        ),
-    )
-
-    @property
-    def entry(self):
-        cache = self.rootdir or config.from_config(
-            section="data-tree", key="op_rootdir"
-        )
-        return self.sh.path.join(cache, self.headdir)
-
-
-class HackerCache(FixedEntryCache):
-    """A dirty cache where users can hack things."""
-
-    _footprint = dict(
-        info="A place to hack things...",
-        attr=dict(
-            kind=dict(
-                values=["hack"],
-            ),
-            rootdir=dict(optional=True, default="auto"),
-            readonly=dict(
-                default=True,
-            ),
-        ),
-    )
-
-    @property
-    def entry(self):
-        """Tries to figure out what could be the actual entry point for cache space."""
-        sh = self.sh
-        if self.rootdir == "auto":
-            gl = sessions.current().glove
-            sweethome = sh.path.join(gl.configrc, "hack")
-            sh.mkdir(sweethome)
-            logger.debug("Using %s hack cache: %s", self.__class__, sweethome)
-        else:
-            sweethome = self.rootdir
-        return sh.path.join(sweethome, self.headdir)

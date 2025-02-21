@@ -20,6 +20,10 @@ VORTEX_CONFIG = {}
 logger = loggers.getLogger(__name__)
 
 
+class ConfigurationError(Exception):
+    """Something is wrong with the provided configuration"""
+
+
 def load_config(configpath="vortex.toml"):
     """Load configuration from a TOML configuration file
 
@@ -61,20 +65,19 @@ def from_config(section, key=None):
     """
     try:
         subconfig = VORTEX_CONFIG[section]
-    except KeyError as e:
-        print(f"Could not find section {section} in configuration")
-        raise (e)
-
+    except KeyError:
+        raise ConfigurationError(
+            f"Missing configuration section {section}",
+        )
     if not key:
         return subconfig
 
     try:
         value = subconfig[key]
-    except KeyError as e:
-        print(
-            f"Could not find key {key} in section {section} of configuration"
+    except KeyError:
+        raise ConfigurationError(
+            f"Missing configuration key {key} in section {section}",
         )
-        raise (e)
     return value
 
 
@@ -105,5 +108,5 @@ def is_defined(section, key=None):
 def get_from_config_w_default(section, key, default):
     try:
         return from_config(section, key)
-    except KeyError:
+    except ConfigurationError:
         return default
