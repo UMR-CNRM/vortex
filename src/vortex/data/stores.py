@@ -18,14 +18,12 @@ from vortex import config
 from vortex.data.abstractstores import (
     Store,
     ArchiveStore,
-    ConfigurableArchiveStore,
     CacheStore,
 )
 from vortex.data.abstractstores import MultiStore, PromiseStore
 from vortex.data.abstractstores import ARCHIVE_GET_INTENT_DEFAULT
 from vortex.layout import dataflow
 from vortex.syntax.stdattrs import hashalgo_avail_list
-from vortex.syntax.stdattrs import FreeXPid
 from vortex.syntax.stdattrs import DelayedEnvValue
 from vortex.tools.systems import ExecutionError
 
