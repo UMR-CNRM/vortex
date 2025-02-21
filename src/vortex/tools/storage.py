@@ -428,7 +428,7 @@ class Cache(Storage):
         # Insert the element
         tpath = self._formatted_path(item)
         if not self.sh.path.exists(self.entry):
-            self.sh.mkdit(self.entry)
+            self.sh.mkdir(self.entry)
         if tpath is not None:
             rc = self.sh.cp(
                 local,
