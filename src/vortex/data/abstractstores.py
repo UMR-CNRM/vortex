@@ -5,10 +5,7 @@ This module handles store objects in charge of physically accessing resources.
 Store objects use the :mod:`footprints` mechanism.
 """
 
-from collections import defaultdict
 import copy
-import functools
-import re
 
 from bronx.fancies import loggers
 from bronx.patterns import observer
@@ -25,7 +22,6 @@ from vortex.syntax.stdattrs import (
 )
 from vortex.tools import storage
 from vortex.tools import compression
-from vortex.tools import net
 from vortex.tools.systems import ExecutionError
 from vortex.syntax.stdattrs import Namespace
 
