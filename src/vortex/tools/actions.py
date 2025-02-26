@@ -12,7 +12,6 @@ import footprints
 from bronx.fancies import loggers
 from bronx.fancies.display import dict_as_str
 from vortex import sessions
-from vortex.util.config import GenericConfigParser
 
 #: Export nothing
 __all__ = []
