@@ -259,17 +259,14 @@ class TemplatedMail(TunableAction):
 
     def __init__(
         self,
+        catalog,
         kind="templatedmail",
         service="templatedmail",
         active=True,
-        catalog=None,
         inputs_charset=None,
     ):
         super().__init__(
             configuration=None, kind=kind, active=active, service=service
-        )
-        self.catalog = catalog or GenericConfigParser(
-            "@{:s}-inventory.ini".format(kind), encoding=inputs_charset
         )
         self.inputs_charset = inputs_charset
 
