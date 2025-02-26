@@ -5,7 +5,7 @@ With the abstract class Service (inheritating from FootprintBase)
 a default Mail Service is provided.
 """
 
-from configparser import NoOptionError, NoSectionError
+import configparser
 import contextlib
 import hashlib
 import pprint
@@ -566,7 +566,7 @@ class Directory:
         config = GenericConfigParser(inifile, encoding=encoding)
         try:
             self.domain = config.get("general", "default_domain")
-        except NoOptionError:
+        except configparser.NoOptionError:
             self.domain = domain
         self.aliases = {
             k.lower(): set(v.lower().replace(",", " ").split())
@@ -699,7 +699,7 @@ class TemplatedMailService(MailService):
                 default=None,
             ),
             catalog=dict(
-                type=GenericConfigParser,
+                type=configparser.ConfigParser,
             ),
             dryrun=dict(
                 info="Do not actually send the email. Just render the template.",
@@ -734,11 +734,10 @@ class TemplatedMailService(MailService):
         """Read section <id> (a dict-like) from the catalog."""
         try:
             section = dict(self.catalog.items(self.id))
-        except NoSectionError:
+        except configparser.NoSectionError:
             logger.error(
-                "Section <%s> is missing in catalog <%s>",
+                "Section <%s> is missing in catalog",
                 self.id,
-                self.catalog.file,
             )
             section = None
         return section
