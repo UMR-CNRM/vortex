@@ -12,6 +12,7 @@ from configparser import ConfigParser
 import contextlib
 import importlib
 import itertools
+import pathlib
 import re
 import string
 
@@ -185,9 +186,7 @@ class Jinja2TemplatingAdapter(AbstractTemplatingAdapter):
             return self._tpl_obj.render(kwargs)
 
 
-def load_template(
-    t, tplfile, encoding=None, version=None, default_templating="legacy"
-):
+def find_template_path(tplfile, tpldir):
     """Load a template according to *tplfile*.
 
 
@@ -226,41 +225,40 @@ def load_template(
     * ``twopasslegacy``: see :class:`TwoPassLegacyTemplatingAdapter`
     * ``jinja2``: see :class:`Jinja2TemplatingAdapter`
     """
-    persodir = t.sh.path.join(t.glove.configrc, "templates")
-    sitedir = t.sh.path.join(t.glove.siteroot, "templates")
     with importlib.resources.as_file(
         importlib.resources.files("vortex.algo")
     ) as path:
         pkgdir = path / "mpitools_templates"
-    searchdirs = list()
     autofile = _RE_AUTO_TPL.match(tplfile)
     if not autofile:
-        if not t.sh.path.exists(tplfile):
-            raise FileNotFoundError(
-                "Template file not found: <{}>".format(tplfile)
-            )
-        return t.sh.path.abspath(tplfile)
-    searchdirs = (persodir, pkgdir, sitedir)
+        if not isinstance(tplfile, pathlib.Path):
+            tplfile = pathlib.Path(tplfile)
+        if not tplfile.exists():
+            raise FileNotFoundError(f"Template file not found: <{tplfile}>")
+        return tplfile.absolute()
+
     autofile = autofile.group(1)
-    for dirname in searchdirs:
-        filename = t.sh.path.join(dirname, autofile)
-        if t.sh.path.exists(filename):
-            return filename
-    raise ValueError(
-        "Template file not found: <{}> with version >= {!s}.".format(
-            tplfile, version
-        )
-    )
+    if not isinstance(tpldir, pathlib.Path):
+        tpldir = pathlib.Path(tpldir)
+        assert tpldir.is_dir()
+
+    homedir = pathlib.Path.home() / ".config" / "mkjob" / "templates"
+    for dirname in (homedir, tpldir):
+        tplfile = dirname / autofile
+        if tplfile.exists():
+            return tplfile
+    raise FileNotFoundError(f"Template file not found: <{tplfile}>")
 
 
-def process_template(tplfile, encoding=None, default_templating="legacy"):
+def load_template(tplfile, tpldir, encoding=None, default_templating="legacy"):
+    tplpath = find_template_path(tplfile, tpldir)
     try:
         ignored_lines = set()
         actual_encoding = None if encoding == "script" else encoding
         actual_templating = default_templating
         # To determine the encoding & templating open the file with the default
         # encoding (ignoring decoding errors) and look for comments
-        with open(tplfile, errors="replace") as tpfld_tmp:
+        with open(tplpath, errors="replace") as tpfld_tmp:
             if encoding is None:
                 actual_encoding = tpfld_tmp.encoding
             # Only inspect the first 10 lines
@@ -278,9 +276,9 @@ def process_template(tplfile, encoding=None, default_templating="legacy"):
                     actual_templating = templating_match.group(1)
         # Read the template and delete the encoding line if present
         logger.debug(
-            "Opening %s with encoding %s", tplfile, str(actual_encoding)
+            "Opening %s with encoding %s", tplpath, str(actual_encoding)
         )
-        with open(tplfile, encoding=actual_encoding) as tpfld:
+        with open(tplpath, encoding=actual_encoding) as tpfld:
             tpl_txt = "".join(
                 [l for (i, l) in enumerate(tpfld) if i not in ignored_lines]
             )
