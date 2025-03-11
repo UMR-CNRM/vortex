@@ -234,51 +234,54 @@ def load_template(
         pkgdir = path / "mpitools_templates"
     searchdirs = list()
     autofile = _RE_AUTO_TPL.match(tplfile)
-    if autofile is None:
-        if t.sh.path.exists(tplfile):
-            tplfile = t.sh.path.abspath(tplfile)
-        else:
-            raise ValueError("Template file not found: <{}>".format(tplfile))
-    else:
-        searchdirs = (persodir, pkgdir, sitedir)
-        new_tplfile = None
-        if version is None:
-            autofile = autofile.group(1)
-            for dirname in searchdirs:
-                filename = t.sh.path.join(dirname, autofile)
-                if t.sh.path.exists(filename):
-                    new_tplfile = filename
-                    break
-        else:
-            autofile = autofile.group(2)
-            autodir = t.sh.path.dirname(autofile)
-            if autodir:
-                persodir = t.sh.path.join(persodir, autodir)
-                sitedir = t.sh.path.join(sitedir, sitedir)
-                autofile = t.sh.path.basename(autofile)
-            allowedre = re.compile(autofile + r"-v(\d+).tpl")
-            alloweditems = dict()
-            for inputdir in (sitedir, persodir):
-                if not t.sh.path.exists(inputdir):
-                    continue
-                for fs_item in t.sh.listdir(inputdir):
-                    fs_match = allowedre.match(fs_item)
-                    if fs_match:
-                        alloweditems[int(fs_match.group(1))] = t.sh.path.join(
-                            inputdir, fs_item
-                        )
-            for item_version in sorted(alloweditems.keys(), reverse=True):
-                if item_version <= version:
-                    new_tplfile = alloweditems[item_version]
-                    break
-        if not new_tplfile:
-            raise ValueError(
-                "Template file not found: <{}> with version >= {!s}.".format(
-                    tplfile, version
-                )
+    if not autofile:
+        if not t.sh.path.exists(tplfile):
+            raise FileNotFoundError(
+                "Template file not found: <{}>".format(tplfile)
             )
-        else:
-            tplfile = new_tplfile
+        return t.sh.path.abspath(tplfile)
+
+    searchdirs = (persodir, pkgdir, sitedir)
+    if version:
+        autofile = autofile.group(2)
+        autodir = t.sh.path.dirname(autofile)
+        if autodir:
+            persodir = t.sh.path.join(persodir, autodir)
+            sitedir = t.sh.path.join(sitedir, sitedir)
+            autofile = t.sh.path.basename(autofile)
+        allowedre = re.compile(autofile + r"-v(\d+).tpl")
+        alloweditems = dict()
+        for inputdir in (sitedir, persodir):
+            if not t.sh.path.exists(inputdir):
+                continue
+            for fs_item in t.sh.listdir(inputdir):
+                fs_match = allowedre.match(fs_item)
+                if fs_match:
+                    alloweditems[int(fs_match.group(1))] = t.sh.path.join(
+                        inputdir, fs_item
+                    )
+        for item_version in sorted(alloweditems.keys(), reverse=True):
+            if (item_version <= version) and alloweditems[item_version]:
+                return alloweditems[item_version]
+        raise ValueError(
+            "Template file not found: <{}> with version >= {!s}.".format(
+                tplfile, version
+            )
+        )
+    # Happy path: autofile and no version specification
+    autofile = autofile.group(1)
+    for dirname in searchdirs:
+        filename = t.sh.path.join(dirname, autofile)
+        if t.sh.path.exists(filename):
+            return filename
+    raise ValueError(
+        "Template file not found: <{}> with version >= {!s}.".format(
+            tplfile, version
+        )
+    )
+
+
+def process_template(tplfile, encoding=None, default_templating="legacy"):
     try:
         ignored_lines = set()
         actual_encoding = None if encoding == "script" else encoding
