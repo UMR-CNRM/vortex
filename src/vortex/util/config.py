@@ -216,63 +216,60 @@ def load_template(tplpath, encoding=None, default_templating="legacy"):
     * ``twopasslegacy``: see :class:`TwoPassLegacyTemplatingAdapter`
     * ``jinja2``: see :class:`Jinja2TemplatingAdapter`
     """
-    try:
-        ignored_lines = set()
-        actual_encoding = None if encoding == "script" else encoding
-        actual_templating = default_templating
-        # To determine the encoding & templating open the file with the default
-        # encoding (ignoring decoding errors) and look for comments
-        with open(tplpath, errors="replace") as tpfld_tmp:
-            if encoding is None:
-                actual_encoding = tpfld_tmp.encoding
-            # Only inspect the first 10 lines
-            for iline, line in enumerate(itertools.islice(tpfld_tmp, 10)):
-                # Encoding
-                if encoding == "script":
-                    encoding_match = _RE_ENCODING.match(line)
-                    if encoding_match:
-                        ignored_lines.add(iline)
-                        actual_encoding = encoding_match.group(1)
-                # Templating
-                templating_match = _RE_TEMPLATING.match(line)
-                if templating_match:
+    tplpath = Path(tplpath).absolute()
+    if not tplpath.exists():
+        raise FileNotFoundError
+    ignored_lines = set()
+    actual_encoding = None if encoding == "script" else encoding
+    actual_templating = default_templating
+    # To determine the encoding & templating open the file with the default
+    # encoding (ignoring decoding errors) and look for comments
+    with open(tplpath, errors="replace") as tpfld_tmp:
+        if encoding is None:
+            actual_encoding = tpfld_tmp.encoding
+        # Only inspect the first 10 lines
+        for iline, line in enumerate(itertools.islice(tpfld_tmp, 10)):
+            # Encoding
+            if encoding == "script":
+                encoding_match = _RE_ENCODING.match(line)
+                if encoding_match:
                     ignored_lines.add(iline)
-                    actual_templating = templating_match.group(1)
-        # Read the template and delete the encoding line if present
-        logger.debug(
-            "Opening %s with encoding %s", tplpath, str(actual_encoding)
+                    actual_encoding = encoding_match.group(1)
+            # Templating
+            templating_match = _RE_TEMPLATING.match(line)
+            if templating_match:
+                ignored_lines.add(iline)
+                actual_templating = templating_match.group(1)
+    # Read the template and delete the encoding line if present
+    logger.debug("Opening %s with encoding %s", tplpath, str(actual_encoding))
+    with open(tplpath, encoding=actual_encoding) as tpfld:
+        tpl_txt = "".join(
+            [l for (i, l) in enumerate(tpfld) if i not in ignored_lines]
         )
-        with open(tplpath, encoding=actual_encoding) as tpfld:
-            tpl_txt = "".join(
-                [l for (i, l) in enumerate(tpfld) if i not in ignored_lines]
-            )
 
-        template_rendering_classes = {
-            cls.KIND: cls
-            for cls in globals().values()
-            if (
-                isinstance(cls, type)
-                and issubclass(cls, AbstractTemplatingAdapter)
-                and cls.KIND
-            )
-        }
-        try:
-            template_rendering_cls = template_rendering_classes[
-                actual_templating
-            ]
-        except KeyError:
-            raise ValueError(
-                "Unknown templating system < {:s} >".format(actual_templating)
-            )
-        tpl = template_rendering_cls(
-            tpl_txt,
-            tplpath,
-            actual_encoding,
+    template_rendering_classes = {
+        cls.KIND: cls
+        for cls in globals().values()
+        if (
+            isinstance(cls, type)
+            and issubclass(cls, AbstractTemplatingAdapter)
+            and cls.KIND
         )
-    except Exception as pb:
-        logger.error("Could not read template <%s>", str(pb))
-        raise
-    return tpl
+    }
+    try:
+        template_rendering_cls = template_rendering_classes[actual_templating]
+    except KeyError:
+        msg = (
+            f"Unknown templating systes < {actual_templating} >"
+            f"when trying to load template {tplpath}"
+        )
+        logger.error(msg)
+
+    return template_rendering_cls(
+        tpl_txt,
+        tplpath,
+        actual_encoding,
+    )
 
 
 class GenericReadOnlyConfigParser:
