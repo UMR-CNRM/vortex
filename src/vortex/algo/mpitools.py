@@ -70,6 +70,7 @@ Note: Namelists and environment changes are orchestrated as follows:
 
 import collections
 import collections.abc
+import importlib
 import itertools
 import locale
 import re
@@ -699,9 +700,11 @@ class MpiTool(footprints.FootprintBase):
         if not self.mpiwrapstd:
             return None
         # Create the launchwrapper
-        wtpl = config.load_template(
-            self.ticket, self._wrapstd_wrapper_tpl, encoding="utf-8"
-        )
+        with importlib.resources.as_file(
+            importlib.resources.files("vortex.algo")
+        ) as path:
+            tplpath = path / "mpitools_templates" / self._wrapstd_wrapper_tpl
+        wtpl = config.load_template(tplpath, encoding="utf-8")
         with open(self._wrapstd_wrapper_name, "w", encoding="utf-8") as fhw:
             fhw.write(
                 wtpl.substitute(
@@ -908,9 +911,11 @@ class MpiTool(footprints.FootprintBase):
             "Here are the envelope details:\n%s", "\n".join(binding_str)
         )
         # Create the launchwrapper
-        wtpl = config.load_template(
-            self.ticket, self._envelope_wrapper_tpl, encoding="utf-8"
-        )
+        with importlib.resources.as_file(
+            importlib.resources.files("vortex.algo")
+        ) as path:
+            tplpath = path / "mpitools_templates" / self._envelope_wrapper_tpl
+        wtpl = config.load_template(tplpath, encoding="utf-8")
         with open(self._envelope_wrapper_name, "w", encoding="utf-8") as fhw:
             fhw.write(
                 wtpl.substitute(
