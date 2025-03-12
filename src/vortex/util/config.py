@@ -10,7 +10,6 @@ import abc
 from configparser import NoOptionError, NoSectionError, InterpolationDepthError
 from configparser import ConfigParser
 import contextlib
-import importlib
 import itertools
 import pathlib
 import re
@@ -186,38 +185,34 @@ class Jinja2TemplatingAdapter(AbstractTemplatingAdapter):
             return self._tpl_obj.render(kwargs)
 
 
-def find_template_path(tplfile, tpldir):
+def load_template(tplpath, encoding=None, default_templating="legacy"):
     """Load a template according to *tplfile*.
 
-
-    :param vortex.sessions.Ticket t: The Vortex' session to be used
-    :param str tplfile: The name of the desired template file
+    :param str tplpath: path-like object for the template file
     :param str encoding: The characters encoding of the template file
     :param int version: Find a template file with version >= to version
-    :param str default_templating: The default templating engine that will be used.
-                                   The content of the template file is always searched
-                                   in order to detect a "# vortex-templating:" comment
-                                   that will override this default.
+    :param str default_templating: The default templating engine that will
+      be used. The content of the template file is always searched in
+      order to detect a "# vortex-templating:" comment that will overrid
+      this default.
     :return: A :class:`AbstractTemplatingAdapter` object
 
-    *tplfile* can be a relative or absolute filename. However, most of the time,
-    it is a string like ``@foo.tpl``. In such a case, a file named ``foo.tpl`` will
-    be looked for in the ``~/.vortexrc/templates`` and in the ``templates``
-    sub-directory of the Vortex source code distribution.
+    The characters encoding of the template file may be specified. If
+    *encoding* equals ``script``, a line looking like ``#
+    encoding:special-encoding`` will be searched for in the first ten
+    lines of the template file. If it exists, the ``special-encoding``
+    will be used as an encoding and the ``#
+    encoding:special-encoding`` line will be stripped from the
+    template.
 
-    The characters encoding of the template file may be specified. If *encoding*
-    equals ``script``, a line looking like ``# encoding:special-encoding`` will be
-    searched for in the first ten lines of the template file. If it exists, the
-    ``special-encoding`` will be used as an encoding and the
-    ``# encoding:special-encoding`` line will be stripped from the template.
-
-    Different templating engine may be used to render the template file. It
-    defaults to ``legacy`` that is compatible with Python's :class:`string.Template`
-    class. However, another default may be provided using the
-    *default_templating* argument. In any case, a line looking like
-    ``# vortex-templating:kind`` will be searched for in the first ten lines
-    of the template file. If it exists, the ``kind`` templating engine will be
-    used and the ``# vortex-templating:kind`` line will be stripped.
+    Different templating engine may be used to render the template
+    file. It defaults to ``legacy`` that is compatible with Python's
+    :class:`string.Template` class. However, another default may be
+    provided using the *default_templating* argument. In any case, a
+    line looking like ``# vortex-templating:kind`` will be searched
+    for in the first ten lines of the template file. If it exists, the
+    ``kind`` templating engine will be used and the ``#
+    vortex-templating:kind`` line will be stripped.
 
     Currently, only few templating engines are supported:
 
@@ -225,33 +220,6 @@ def find_template_path(tplfile, tpldir):
     * ``twopasslegacy``: see :class:`TwoPassLegacyTemplatingAdapter`
     * ``jinja2``: see :class:`Jinja2TemplatingAdapter`
     """
-    with importlib.resources.as_file(
-        importlib.resources.files("vortex.algo")
-    ) as path:
-        pkgdir = path / "mpitools_templates"
-    autofile = _RE_AUTO_TPL.match(tplfile)
-    if not autofile:
-        if not isinstance(tplfile, pathlib.Path):
-            tplfile = pathlib.Path(tplfile)
-        if not tplfile.exists():
-            raise FileNotFoundError(f"Template file not found: <{tplfile}>")
-        return tplfile.absolute()
-
-    autofile = autofile.group(1)
-    if not isinstance(tpldir, pathlib.Path):
-        tpldir = pathlib.Path(tpldir)
-        assert tpldir.is_dir()
-
-    homedir = pathlib.Path.home() / ".config" / "mkjob" / "templates"
-    for dirname in (homedir, tpldir):
-        tplfile = dirname / autofile
-        if tplfile.exists():
-            return tplfile
-    raise FileNotFoundError(f"Template file not found: <{tplfile}>")
-
-
-def load_template(tplfile, tpldir, encoding=None, default_templating="legacy"):
-    tplpath = find_template_path(tplfile, tpldir)
     try:
         ignored_lines = set()
         actual_encoding = None if encoding == "script" else encoding
