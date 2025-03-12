@@ -11,7 +11,7 @@ from configparser import NoOptionError, NoSectionError, InterpolationDepthError
 from configparser import ConfigParser
 import contextlib
 import itertools
-import pathlib
+from pathlib import Path
 import re
 import string
 
@@ -19,6 +19,7 @@ import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes import date as bdate
 from bronx.syntax.parsing import StringDecoder, StringDecoderSyntaxError
+import jinja2
 from vortex import sessions
 
 __all__ = []
@@ -43,22 +44,20 @@ class AbstractTemplatingAdapter(metaclass=abc.ABCMeta):
 
     KIND = None
 
-    def __init__(self, tpl_str, tpl_file, tpl_encoding, tpl_dirs):
+    def __init__(self, tpl_str, tpl_file, tpl_encoding):
         """
         :param tpl_str: The template (as a string)
-        :param tpl_file: The template filename (when read from disk)
+        :param tpl_file: The template filename (path object)
         :param tpl_encoding: The template encoding (when read from disk)
-        :param tpl_dirs: The lookup directories for additional templates
         """
         self._tpl_file = tpl_file
         self._tpl_encoding = tpl_encoding
-        self._tpl_dirs = tpl_dirs
         self._tpl_obj = self._rendering_tool_init(tpl_str)
 
     @property
     def srcfile(self):
         """The template filename (when read from disk)."""
-        return self._tpl_file
+        return str(self._tpl_file)
 
     @abc.abstractmethod
     def _rendering_tool_init(self, tpl_str):
@@ -165,19 +164,16 @@ class Jinja2TemplatingAdapter(AbstractTemplatingAdapter):
                 )
             raise
 
-    def _rendering_tool_init(self, tpl_str):
-        import jinja2
-
-        loader = (
-            jinja2.FileSystemLoader(
-                self._tpl_dirs, encoding=self._tpl_encoding, followlinks=True
-            )
-            if self._tpl_dirs
-            else None
+    def _rendering_tool_init(self, tpl: Path) -> jinja2.Template:
+        tpl = Path(tpl)
+        loader = jinja2.FileSystemLoader(
+            searchpath=tpl.parent,
+            encoding=self._tpl_encoding,
+            followlinks=True,
         )
         j_env = jinja2.Environment(loader=loader, autoescape=False)
         with self._elaborate_on_jinja2_error():
-            return j_env.from_string(tpl_str)
+            return j_env.from_string(str(tpl))
 
     def __call__(self, **kwargs):
         """Render the template using the kwargs dictionary."""
@@ -269,7 +265,9 @@ def load_template(tplpath, encoding=None, default_templating="legacy"):
                 "Unknown templating system < {:s} >".format(actual_templating)
             )
         tpl = template_rendering_cls(
-            tpl_txt, tplfile, actual_encoding, searchdirs
+            tpl_txt,
+            tplpath,
+            actual_encoding,
         )
     except Exception as pb:
         logger.error("Could not read template <%s>", str(pb))
