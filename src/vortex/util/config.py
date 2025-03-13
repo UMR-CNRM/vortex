@@ -40,8 +40,6 @@ class AbstractTemplatingAdapter(metaclass=abc.ABCMeta):
     that should be used during template rendering.
     """
 
-    KIND = None
-
     def __init__(self, tpl_str, tpl_file, tpl_encoding):
         """
         :param tpl_str: The template (as a string)
@@ -83,8 +81,6 @@ class LegacyTemplatingAdapter(AbstractTemplatingAdapter):
     See :class:`AbstractTemplatingAdapter` for more details on this class usage.
     """
 
-    KIND = "legacy"
-
     def _rendering_tool_init(self, tpl_str):
         return string.Template(tpl_str)
 
@@ -105,8 +101,6 @@ class TwoPassLegacyTemplatingAdapter(AbstractTemplatingAdapter):
     See :class:`AbstractTemplatingAdapter` for more details on this class usage.
     """
 
-    KIND = "twopasslegacy"
-
     def _rendering_tool_init(self, tpl_str):
         return string.Template(tpl_str)
 
@@ -123,8 +117,14 @@ class TwoPassLegacyTemplatingAdapter(AbstractTemplatingAdapter):
         )
 
 
+_TEMPLATE_RENDERING_CLASSES = {
+    "legacy": LegacyTemplatingAdapter,
+    "twopasslegacy": TwoPassLegacyTemplatingAdapter,
+}
 
 
+def register_template_renderer(key, cls):
+    _TEMPLATE_RENDERING_CLASSES[key] = cls
 
 
 def load_template(tplpath, encoding=None, default_templating="legacy"):
@@ -193,17 +193,8 @@ def load_template(tplpath, encoding=None, default_templating="legacy"):
             [l for (i, l) in enumerate(tpfld) if i not in ignored_lines]
         )
 
-    template_rendering_classes = {
-        cls.KIND: cls
-        for cls in globals().values()
-        if (
-            isinstance(cls, type)
-            and issubclass(cls, AbstractTemplatingAdapter)
-            and cls.KIND
-        )
-    }
     try:
-        template_rendering_cls = template_rendering_classes[actual_templating]
+        template_rendering_cls = _TEMPLATE_RENDERING_CLASSES[actual_templating]
     except KeyError:
         msg = (
             f"Unknown templating systes < {actual_templating} >"
