@@ -9,7 +9,6 @@ It returns an object compliant with the interface defined in
 import abc
 from configparser import NoOptionError, NoSectionError, InterpolationDepthError
 from configparser import ConfigParser
-import contextlib
 import itertools
 from pathlib import Path
 import re
@@ -19,7 +18,6 @@ import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes import date as bdate
 from bronx.syntax.parsing import StringDecoder, StringDecoderSyntaxError
-import jinja2
 from vortex import sessions
 
 __all__ = []
@@ -125,60 +123,8 @@ class TwoPassLegacyTemplatingAdapter(AbstractTemplatingAdapter):
         )
 
 
-class Jinja2TemplatingAdapter(AbstractTemplatingAdapter):
-    """Use the jinja2 templating engine to render the template.
 
-    It requires the, external, :mod:`jinja2` package. Please refer to the
-    jinja2 documentation for more details on the jinja2 templating language.
 
-    See :class:`AbstractTemplatingAdapter` for more details on this class usage.
-    """
-
-    KIND = "jinja2"
-
-    @contextlib.contextmanager
-    def _elaborate_on_jinja2_error(self):
-        import jinja2
-
-        try:
-            yield
-        except jinja2.exceptions.TemplateError as e:
-            if isinstance(e, jinja2.exceptions.TemplateSyntaxError):
-                logger.error(
-                    "%s exception while processing Jinja2 templates:\n"
-                    + "  Toplevel template file: %s\n"
-                    "  Jinja2 template info  : %s (line %d)\n"
-                    + "  Jinja2 error message  : %s",
-                    e.__class__,
-                    self._tpl_file,
-                    e.name,
-                    e.lineno,
-                    e.message,
-                )
-            else:
-                logger.error(
-                    "%s exception while processing Jinja2 templates:\n"
-                    + "  Toplevel template file: %s",
-                    e.__class__,
-                    self._tpl_file,
-                )
-            raise
-
-    def _rendering_tool_init(self, tpl: Path) -> jinja2.Template:
-        tpl = Path(tpl)
-        loader = jinja2.FileSystemLoader(
-            searchpath=tpl.parent,
-            encoding=self._tpl_encoding,
-            followlinks=True,
-        )
-        j_env = jinja2.Environment(loader=loader, autoescape=False)
-        with self._elaborate_on_jinja2_error():
-            return j_env.from_string(str(tpl))
-
-    def __call__(self, **kwargs):
-        """Render the template using the kwargs dictionary."""
-        with self._elaborate_on_jinja2_error():
-            return self._tpl_obj.render(kwargs)
 
 
 def load_template(tplpath, encoding=None, default_templating="legacy"):
