@@ -42,10 +42,10 @@ from .toolbox import algo as task
 
 from . import nwp as nwp  # footprints import
 
-__version__ = "2.0.0b1"
+__version__ = "2.0.0b2"
 __prompt__ = "Vortex v-" + __version__ + ":"
 
-__nextversion__ = "2.0.0b2"
+__nextversion__ = "2.0.0b3"
 __tocinfoline__ = "VORTEX core package"
 
 __all__ = [
