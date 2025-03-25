@@ -1105,16 +1105,10 @@ class VortexCacheStore(_AbstractVortexCacheMultiStore):
 
     def alternates_netloc(self):
         """For Non-Op users, Op caches may be accessed in read-only mode."""
-        netloc_m = re.match(
-            r"(?P<base>vortex.*)\.cache\.(?P<country>\w+)", self.netloc
-        )
-        mt_netloc = "{base:s}.cache-mt.{country:s}".format(
-            **netloc_m.groupdict()
-        )
-        s_mt_netloc = "{base:s}.stacked-cache-mt.{country:s}".format(
-            **netloc_m.groupdict()
-        )
-        return [mt_netloc, s_mt_netloc]
+        return [
+            f"{self.netloc.firstname}.cache-mt.fr",
+            f"{self.netloc.firstname}.stacked-cache-mt.fr",
+        ]
 
 
 class VortexVsopCacheStore(_AbstractVortexCacheMultiStore):
