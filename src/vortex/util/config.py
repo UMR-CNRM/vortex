@@ -164,7 +164,8 @@ def load_template(tplpath, encoding=None, default_templating="legacy"):
     """
     tplpath = Path(tplpath).absolute()
     if not tplpath.exists():
-        raise FileNotFoundError
+        msg = f"Template file {tplpath} not found"
+        raise FileNotFoundError(msg)
     ignored_lines = set()
     actual_encoding = None if encoding == "script" else encoding
     actual_templating = default_templating
