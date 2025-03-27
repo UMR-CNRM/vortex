@@ -1213,13 +1213,7 @@ class VortexStackStore(_AbstractVortexStackMultiStore):
 
     def alternates_netloc(self):
         """Go through the various stacked stores."""
-        netloc_m = re.match(
-            r"(?P<base>vortex.*)\.stack\.(?P<country>\w+)", self.netloc
-        )
-        s_mt_netloc = "{base:s}.stacked-cache-mt.{country:s}".format(
-            **netloc_m.groupdict()
-        )
-        return [s_mt_netloc]
+        return [f"{self.netloc.firstname}.stacked-cache-mt.fr"]
 
 
 class VortexVsopStackStore(_AbstractVortexStackMultiStore):
