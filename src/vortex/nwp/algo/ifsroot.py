@@ -120,6 +120,10 @@ class IFSParallel(
         """Extend default tag with ``kind`` value."""
         return super().fstag() + "." + self.kind
 
+    def _mpitool_attributes(self, opts):
+        conf_dict = super()._mpitool_attributes(opts)
+        return conf_dict | {"mplbased": True}
+
     def valid_executable(self, rh):
         """Be sure that the specifed executable is ifsmodel compatible."""
         valid = super().valid_executable(rh)

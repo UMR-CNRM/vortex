@@ -57,6 +57,10 @@ class OdbMonitoring(
         )
     )
 
+    def _mpitool_attributes(self, opts):
+        conf_dict = super()._mpitool_attributes(opts)
+        return conf_dict | {"mplbased": True}
+
     def _fix_nam_macro(self, rh, macro, value):
         """Set a given namelist macro and issue a log message."""
         rh.contents.setmacro(macro, value)
