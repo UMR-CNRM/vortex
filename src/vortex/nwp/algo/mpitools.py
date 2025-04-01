@@ -62,6 +62,13 @@ class MpiAuto(mpitools.MpiTool):
                     False,
                 ],
             ),
+            bindingmethod=dict(
+                info="How to bind the MPI processes",
+                values=["vortex", "arch", "launcherspecific"],
+                optional=True,
+                doc_visibility=footprints.doc.visibility.ADVANCED,
+                doc_zorder=-90,
+            ),
             mplbased=dict(
                 info="Is the executable based on MPL?",
                 type=bool,
