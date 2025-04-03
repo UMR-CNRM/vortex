@@ -21,7 +21,14 @@ strongly advised.
 """
 
 import atexit
-import importlib.metadata
+# importlib.metadata included in stdlib from 3.8 onwards.
+# For older versions, import third-party importlib_metadata
+if sys.version_info < (3, 8):
+    import importlib_metadata
+    import importlib
+    importlib.metadata = importlib_metadata
+else:
+    import importlib.metadata
 
 from bronx.fancies import loggers as bloggers
 import bronx.stdtypes.date
