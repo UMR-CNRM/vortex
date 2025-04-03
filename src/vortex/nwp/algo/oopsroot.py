@@ -619,6 +619,11 @@ class OOPSParallel(
             logger.error("The binary < %s > has no cycle attribute", repr(rh))
             return False
 
+    def _mpitool_attributes(self, opts):
+        conf_dict = super()._mpitool_attributes(opts)
+        conf_dict.update({"mplbased": True})
+        return conf_dict
+
     def prepare(self, rh, opts):
         """Preliminary setups."""
         super().prepare(rh, opts)
