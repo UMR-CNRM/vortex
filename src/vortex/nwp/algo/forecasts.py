@@ -332,10 +332,11 @@ class LAMForecast(Forecast):
             )
             sh.softlink(thisbound, lbcnc(number=i))
             if self.mksync:
-                thistool = self.synctool + ".{:03d}".format(i)
-                bound.mkgetpr(pr_getter=thistool, tplfetch=self.synctpl)
+                bound.mkgetpr(
+                    pr_getter=self.synctool + ".{:03d}".format(i),
+                )
                 if firstsync is None:
-                    firstsync = thistool
+                    firstsync = self.synctool + ".{:03d}".format(i)
 
         # Set up the first synchronization step
         if firstsync is not None:

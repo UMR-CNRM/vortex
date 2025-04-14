@@ -5,6 +5,7 @@ the various caches or archives".
 """
 
 import functools
+import importlib
 import re
 import sys
 
@@ -1116,18 +1117,23 @@ class Handler:
         self,
         pr_getter=None,
         tplfile=None,
-        tplskip="@sync-skip.tpl",
-        tplfetch="@sync-fetch.tpl",
         py_exec=sys.executable,
         py_opts="",
     ):
         """Build a getter for the expected resource."""
         if tplfile is None:
-            tplfile = tplfetch if self.is_expected() else tplskip
+            tplfile = (
+                "sync-" + ("fetch" if self.is_expected() else "skip") + ".tpl"
+            )
+        with importlib.resources.path(
+            "vortex.data.sync_templates",
+            tplfile,
+        ) as tplpath:
+            tpl = config.load_template(tplpath)
         if pr_getter is None:
             pr_getter = self.container.localpath() + ".getpr"
         t = self._cur_session
-        tpl = config.load_template(t, tplfile)
+
         with open(pr_getter, "w", encoding="utf-8") as fd:
             fd.write(
                 tpl.substitute(
