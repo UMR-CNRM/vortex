@@ -283,20 +283,11 @@ class LAMForecast(Forecast):
                 values=["lamfc", "lamforecast"],
                 remap=dict(lamforecast="lamfc"),
             ),
-            synctool=dict(
-                info="The name of the script called when waiting for coupling files",
-                optional=True,
-                default="atcp.alad",
-                doc_visibility=footprints.doc.visibility.ADVANCED,
-            ),
-            synctpl=dict(
-                info="The template used to generate the *synctool* script",
-                optional=True,
-                default="@sync-fetch.tpl",
-                doc_visibility=footprints.doc.visibility.ADVANCED,
-            ),
         ),
     )
+
+    synctool = "atcp.alad"
+    synctpl = "sync-fetch.tpl"
 
     def spawn_command_options(self):
         """Dictionary provided for command line factory."""
