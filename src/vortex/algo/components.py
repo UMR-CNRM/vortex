@@ -50,7 +50,7 @@ from bronx.syntax.decorators import nicedeco
 import footprints
 from taylorism import Boss
 import vortex
-from vortex.config import from_config
+import vortex.config as config
 from vortex.algo import mpitools
 from vortex.syntax.stdattrs import DelayedEnvValue
 from vortex.tools.parallelism import ParallelResultParser
@@ -704,15 +704,15 @@ class AlgoComponent(footprints.FootprintBase, metaclass=AlgoComponentMeta):
 
     def export(self, packenv):
         """Export environment variables in given pack."""
-        for k, v in from_config(section=packenv).items():
+        for k, v in config.from_config(section=packenv).items():
             if k not in self.env:
                 logger.info("Setting %s env %s = %s", packenv.upper(), k, v)
                 self.env[k] = v
 
     def prepare(self, rh, opts):
         """Set some defaults env values."""
-        if opts.get("fortran", True):
-            self.export("fortran")
+        if config.is_defined(section="env"):
+            self.export("env")
 
     def absexcutable(self, xfile):
         """Retuns the absolute pathname of the ``xfile`` executable."""
@@ -1841,7 +1841,7 @@ class Parallel(xExecutableAlgoComponent):
     def _mpitool_attributes(self, opts):
         """Return the dictionary of attributes needed to create the mpitool object."""
         # Read the appropriate configuration in the target file
-        conf_dict = from_config(section="mpitool")
+        conf_dict = config.from_config(section="mpitool")
         if self.mpiname:
             conf_dict["mpiname"] = self.mpiname
         # Make "mpirun" the default mpi command name

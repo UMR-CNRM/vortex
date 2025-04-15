@@ -13,7 +13,7 @@ build:
     - zip
   jobs:
     pre_build:
-      - zip -r $READTHEDOCS_REPOSITORY_PATH/sphinx/tutorial/vortex-tutorial-data.zip $READTHEDOCS_REPOSITORY_PATH/sphinx/tutorial/vortex-tutorial-data
+      - cd $READTHEDOCS_REPOSITORY_PATH/sphinx/tutorial && zip -r vortex-tutorial-data.zip vortex-tutorial-data
 
 sphinx:
   configuration: sphinx/conf.py
