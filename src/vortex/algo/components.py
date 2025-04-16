@@ -1850,7 +1850,7 @@ class Parallel(xExecutableAlgoComponent):
         possible_attrs = functools.reduce(
             lambda s, t: s | t,
             [
-                set(cls._footprint.attr.keys())
+                set(cls.footprint_retrieve().attr.keys())
                 for cls in footprints.proxy.mpitools
             ],
         )

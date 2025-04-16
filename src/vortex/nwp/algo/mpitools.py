@@ -64,10 +64,16 @@ class MpiAuto(mpitools.MpiTool):
             ),
             bindingmethod=dict(
                 info="How to bind the MPI processes",
-                values=["arch", "launcherspecific", "vortex"],
+                values=["vortex", "arch", "launcherspecific"],
                 optional=True,
                 doc_visibility=footprints.doc.visibility.ADVANCED,
                 doc_zorder=-90,
+            ),
+            mplbased=dict(
+                info="Is the executable based on MPL?",
+                type=bool,
+                optional=True,
+                default=False,
             ),
         )
     )
@@ -75,6 +81,10 @@ class MpiAuto(mpitools.MpiTool):
     _envelope_wrapper_tpl = "envelope_wrapper_mpiauto.tpl"
     _envelope_rank_var = "MPIAUTORANK"
     _needs_mpilib_specific_mpienv = False
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.bindingmethod = "arch" if self.mplbased else "vortex"
 
     def _reshaped_mpiopts(self):
         """Raw list of mpi tool command line options."""

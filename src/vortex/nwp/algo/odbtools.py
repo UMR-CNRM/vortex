@@ -850,6 +850,10 @@ class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         )
     )
 
+    def _mpitool_attributes(self, opts):
+        conf_dict = super()._mpitool_attributes(opts)
+        return conf_dict | {"mplbased": True}
+
     def prepare(self, rh, opts):
         """Find any ODB candidate in input files."""
 
@@ -962,6 +966,10 @@ class OdbCompress(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         )
     )
 
+    def _mpitool_attributes(self, opts):
+        conf_dict = super()._mpitool_attributes(opts)
+        return conf_dict | {"mplbased": True}
+
     def prepare(self, rh, opts):
         """Find any ODB candidate in input files and fox ODB env accordingly."""
 
@@ -1026,6 +1034,10 @@ class OdbMatchup(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
             ),
         )
     )
+
+    def _mpitool_attributes(self, opts):
+        conf_dict = super()._mpitool_attributes(opts)
+        return conf_dict | {"mplbased": True}
 
     def prepare(self, rh, opts):
         """Find ODB candidates in input files."""
@@ -1115,6 +1127,10 @@ class OdbReshuffle(
 
     _OUT_DIRECTORY = "reshuffled"
     _BARE_OUT_LAYOUT = "ccma"
+
+    def _mpitool_attributes(self, opts):
+        conf_dict = super()._mpitool_attributes(opts)
+        return conf_dict | {"mplbased": True}
 
     def prepare(self, rh, opts):
         """Find ODB candidates in input files."""
