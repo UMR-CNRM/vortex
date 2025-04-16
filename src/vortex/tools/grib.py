@@ -10,6 +10,7 @@ It also provdes an AlgoComponent's Mixin to properly setup the environment
 when using the grib_api or ecCodes libraries.
 """
 
+from pathlib import Path
 from urllib import parse as urlparse
 
 import re
@@ -563,37 +564,41 @@ class EcGribDecoMixin(AlgoComponentDecoMixin):
                 "After gribapi_setup %s = %s", a_var, self.env.getvar(a_var)
             )
 
-    def _eccodes_envsetup(self, eccodes_lib):
-        """Setup environment variables for ecCodes."""
-        dep_warn = (
-            "%s is left unconfigured because the old grib_api's variable is defined."
-            + "Please remove that !"
+    def _eccodes_envsetup(
+        self,
+        eccodes_lib,
+        envvar="ECCODES_DEFINITIONS_PATH",
+        tgt_path="definitions",
+    ):
+        """Export envirionment variables required by ECCODES
+
+        Value is
+
+        /path/to/eccodes-X.Y.Z/share/eccodes/<target_path>
+
+        eccodes_lib: Absolute path to the eccodes so file
+        envvar: Name of the environment variable to export
+        tgt_path: Name of the eccodes install subdirectory to appear
+          in the value
+        """
+        if envvar in self.env:
+            return envvar
+        if envvar.replace("ECCODES", "GRIB") in self.env:
+            logger.warning(
+                (
+                    "%s is left unconfigured because the old grib_api's"
+                    "variable is defined. ",
+                    "Please remove that!",
+                ),
+                envvar,
+            )
+            return envvar.replace("ECCODES", "GRIB")
+        eccodes_root = Path(eccodes_lib).parent.parent
+        self.env.setgenericpath(
+            envvar,
+            str(eccodes_root / "share" / "eccodes" / tgt_path),
         )
-        eccodes_root = self.system.path.dirname(eccodes_lib)
-        eccodes_root = self.system.path.split(eccodes_root)[0]
-        eccodes_share = self.system.path.join(eccodes_root, "share", "eccodes")
-        defvar = "ECCODES_DEFINITION_PATH"
-        if defvar not in self.env:
-            if "GRIB_DEFINITION_PATH" in self.env:
-                logger.warning(dep_warn, defvar)
-                defvar = "GRIB_DEFINITION_PATH"
-            else:
-                self.env.setgenericpath(
-                    defvar, self.system.path.join(eccodes_share, "definitions")
-                )
-        samplevar = "ECCODES_SAMPLES_PATH"
-        if samplevar not in self.env:
-            if "GRIB_SAMPLES_PATH" in self.env:
-                logger.warning(dep_warn, samplevar)
-                samplevar = "GRIB_SAMPLES_PATH"
-            else:
-                self.env.setgenericpath(
-                    samplevar,
-                    self.system.path.join(
-                        eccodes_share, "ifs_samples", "grib1"
-                    ),
-                )
-        return defvar, samplevar
+        return envvar
 
     def eccodes_setup(self, rh, opts, compat=False, fatal=True):
         """Setup the grib_api related stuff.
@@ -605,7 +610,19 @@ class EcGribDecoMixin(AlgoComponentDecoMixin):
         # Detect the library's path and setup appropriate variables
         eccodes_lib, gribapi_lib = self._ecgrib_libs_detext(rh)
         if eccodes_lib is not None:
-            defvar, samplevar = self._eccodes_envsetup(eccodes_lib)
+            defvar = self._eccodes_envsetup(
+                eccodes_lib,
+                envvar="ECCODES_DEFINITIONS_PATH",
+                tgt_path="definitions",
+            )
+            subdir = Path("ifs_samples") / (
+                "grib1" if rh.resource.cycle < "cy49" else "grib1_mlgrib2"
+            )
+            samplevar = self._eccodes_envsetup(
+                eccodes_lib,
+                envvar="ECCODES_SAMPLES_PATH",
+                tgt_path=subdir,
+            )
         elif compat:
             defvar, samplevar = self._gribapi_envsetup(gribapi_lib)
         else:
