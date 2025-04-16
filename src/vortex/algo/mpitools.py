@@ -700,11 +700,11 @@ class MpiTool(footprints.FootprintBase):
         if not self.mpiwrapstd:
             return None
         # Create the launchwrapper
-        with importlib.resources.as_file(
-            importlib.resources.files("vortex.algo")
-        ) as path:
-            tplpath = path / "mpitools_templates" / self._wrapstd_wrapper_tpl
-        wtpl = config.load_template(tplpath, encoding="utf-8")
+        with importlib.resources.path(
+            "vortex.algo.mpitools_templates",
+            self._wrapstd_wrapper_tpl,
+        ) as tplpath:
+            wtpl = config.load_template(tplpath, encoding="utf-8")
         with open(self._wrapstd_wrapper_name, "w", encoding="utf-8") as fhw:
             fhw.write(
                 wtpl.substitute(
@@ -911,11 +911,11 @@ class MpiTool(footprints.FootprintBase):
             "Here are the envelope details:\n%s", "\n".join(binding_str)
         )
         # Create the launchwrapper
-        with importlib.resources.as_file(
-            importlib.resources.files("vortex.algo")
-        ) as path:
-            tplpath = path / "mpitools_templates" / self._envelope_wrapper_tpl
-        wtpl = config.load_template(tplpath, encoding="utf-8")
+        with importlib.resources.path(
+            "vortex.algo.mpitools_templates",
+            self._envelope_wrapper_tpl,
+        ) as tplpath:
+            wtpl = config.load_template(tplpath, encoding="utf-8")
         with open(self._envelope_wrapper_name, "w", encoding="utf-8") as fhw:
             fhw.write(
                 wtpl.substitute(

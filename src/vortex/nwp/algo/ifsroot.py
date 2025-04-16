@@ -122,7 +122,8 @@ class IFSParallel(
 
     def _mpitool_attributes(self, opts):
         conf_dict = super()._mpitool_attributes(opts)
-        return conf_dict | {"mplbased": True}
+        conf_dict.update({"mplbased": True})
+        return conf_dict
 
     def valid_executable(self, rh):
         """Be sure that the specifed executable is ifsmodel compatible."""
