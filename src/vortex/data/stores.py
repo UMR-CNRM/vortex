@@ -537,8 +537,6 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
             )
             return None
 
-    remap_write = remap_read
-
     @property
     def stacks_autorefill(self):
         """Where to refill a stack retrieved from the archive."""
@@ -754,6 +752,8 @@ class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
             logger.error(msg)
             raise e
         return remote
+
+    remap_write = remap_read
 
 
 class VortexStdStackedArchiveStore(VortexStdBaseArchiveStore):
