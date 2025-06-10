@@ -20,7 +20,6 @@ from bronx.stdtypes.dictionaries import UpperCaseDict
 from bronx.syntax.pretty import EncodedPrettyPrinter
 from vortex import sessions
 from vortex.util.config import (
-    GenericConfigParser,
     load_template,
     LegacyTemplatingAdapter,
 )
@@ -563,7 +562,8 @@ class Directory:
 
     def __init__(self, inifile, domain="meteo.fr", encoding=None):
         """Keep aliases in memory, as a dict of sets."""
-        config = GenericConfigParser(inifile, encoding=encoding)
+        config = configparser.ConfigParser()
+        config.read(inifile, encoding=encoding)
         try:
             self.domain = config.get("general", "default_domain")
         except configparser.NoOptionError:
