@@ -293,7 +293,7 @@ class TemplatedMail(TunableAction):
         return rc
 
 
-class Report(TunableAction):
+class Report(Action):
     """
     Class responsible for sending reports.
     """
