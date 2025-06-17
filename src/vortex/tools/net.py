@@ -26,6 +26,8 @@ from bronx.fancies import loggers
 from bronx.net.netrc import netrc
 from bronx.syntax.decorators import nicedeco, secure_getattr
 
+from vortex.config import get_from_config_w_default, ConfigurationError
+
 #: No automatic export
 __all__ = []
 
@@ -1192,15 +1194,31 @@ class Ssh:
         self._logname = logname
         self._remote = hostname
 
-        target = sh.default_target
-        self._sshcmd = target.get(key="services:sshcmd", default="ssh")
-        self._scpcmd = target.get(key="services:scpcmd", default="scp")
+        def _get_ssh_config(key, default):
+            config = get_from_config_w_default(
+                section="ssh", key=key, default=default
+            )
+            try:
+                val = config.pop("default")
+            except AttributeError:
+                assert isinstance(config, str)
+                return config
+            except KeyError:
+                raise ConfigurationError("")
+
+            for k, v in config.items():
+                if re.match(k, socket.gethostname()):
+                    val = v
+            return val
+
+        self._sshcmd = _get_ssh_config(key="sshcmd", default="ssh")
+        self._scpcmd = _get_ssh_config(key="scpcmd", default="scp")
         self._sshopts = (
-            target.get(key="services:sshopts", default="-x").split()
+            _get_ssh_config(key="sshopts", default="").split()
             + (sshopts or "").split()
         )
         self._scpopts = (
-            target.get(key="services:scpopts", default="-Bp").split()
+            _get_ssh_config(key="scpopts", default="").split()
             + (scpopts or "").split()
         )
 
