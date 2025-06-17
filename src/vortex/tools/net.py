@@ -1204,7 +1204,11 @@ class Ssh:
                 assert isinstance(config, str)
                 return config
             except KeyError:
-                raise ConfigurationError("")
+                msg = (
+                    "A default value must be specified for configuration option"
+                    f" {key}. See vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#ssh"
+                )
+                raise ConfigurationError(msg)
 
             for k, v in config.items():
                 if re.match(k, socket.gethostname()):
