@@ -207,3 +207,67 @@ correspond to the value to give the environment variable.
 .. attention::
 
    All values are **strings**.
+
+``ssh``
+^^^^^^^
+
+Some operations carried out by vortex require establishing a SSH
+connection with a remote machine. A common example is sending a
+request to a remote server from a compute node without network
+access. In such a case the request would be sent from another machine,
+through SSH.
+
+``sshcmd``
+
+Name of the SSH client executable.
+
+**Type**: string
+
+**Default value**: ``ssh``
+
+``scp``
+
+Name of the SSH copy client executable.
+
+**Type**: string
+
+**Default value**: ``scp``
+
+``sshopts``
+
+Options to pass the SSH client executable
+
+**Type**: string
+
+**Default value**: ``""`` (empty string)
+
+``scpopts``
+
+Options to pass the SSH copy client executable
+
+**Type**: string
+
+**Default value**: ``""`` (empty string)
+
+Value for the above configuration options can be set for specific
+machine by specifying the configuration key as the option name
+(e.g. ``sshopts``) followed by a regular expression matching the
+machine's hostname, separated by a dot. When specifying options for
+one or more hostname pattern, a defaut configuration value *must* be
+declared using the ``default`` keyword (e.g. ``sshopts.default``).
+
+.. topic:: Example
+
+   .. code:: toml
+
+      [ssh]
+      sshcmd = "/usr/bin/ssh"
+      scpcmd = "/usr/bin/scp"
+      sshopts.default = "-x -o NoHostAuthenticationForLocalhost=true -o PasswordAuthentication=false -o ConnectTimeout=6"
+      sshopts."sotrtm\\d\\d-sidev" = "-x -o PasswordAuthentication=false"
+
+.. attention::
+
+   According to the `TOML specification
+   <https://toml.io/en/v1.0.0#string>`_ , special characters used in
+   regular expressions, such as backslashes, must be escaped.
