@@ -68,6 +68,7 @@ from vortex.tools.env import Environment
 from vortex.tools.net import AssistedSsh, AutoRetriesFtp, DEFAULT_FTP_PORT
 from vortex.tools.net import FtpConnectionPool, LinuxNetstats, StdFtp
 import vortex.tools.storage
+from vortex import config
 
 #: No automatic export
 __all__ = []
@@ -841,7 +842,7 @@ class OSExtended(System):
     def ftraw(self):
         """Use the system's FTP service (e.g. ftserv)."""
         if self._ftraw is None:
-            return self.default_target.ftraw_default
+            return self._use_ftserv()
         else:
             return self._ftraw
 
@@ -854,6 +855,16 @@ class OSExtended(System):
     def ftraw(self):
         """Use the system's FTP service (e.g. ftserv)."""
         self._ftraw = None
+
+    def _use_ftserv(self):
+        if not config.is_defined(section="ftserv"):
+            return False
+        for rgxp in config.from_config(
+            section="ftserv", key="hostname_patterns"
+        ):
+            if re.match(rgxp, self.hostname):
+                return True
+        return False
 
     def target(self, **kw):
         """
