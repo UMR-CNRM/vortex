@@ -68,6 +68,7 @@ from vortex.tools.env import Environment
 from vortex.tools.net import AssistedSsh, AutoRetriesFtp, DEFAULT_FTP_PORT
 from vortex.tools.net import FtpConnectionPool, LinuxNetstats, StdFtp
 import vortex.tools.storage
+from vortex import config
 
 #: No automatic export
 __all__ = []
@@ -800,7 +801,7 @@ class OSExtended(System):
 
             * **rmtreemin** - as the minimal depth needed for a :meth:`rmsafe`.
             * **cmpaftercp** - as a boolean for activating full comparison after plain cp (default: *True*).
-            * **ftraw** - allows ``smartft*`` methods to use the raw FTP commands
+            * **ftserv** - allows ``smartft*`` methods to use the raw FTP commands
               (e.g. ftget, ftput) instead of the internal Vortex's FTP client
               (default: *False*).
             * **ftputcmd** - The name of the raw FTP command for the "put" action
@@ -815,7 +816,7 @@ class OSExtended(System):
         self._rmtreemin = kw.pop("rmtreemin", 3)
         self._cmpaftercp = kw.pop("cmpaftercp", True)
         # Switches for rawft* methods
-        self._ftraw = kw.pop("ftraw", None)
+        self._ftserv = kw.pop("ftserv", None)
         self.ftputcmd = kw.pop("ftputcmd", None)
         self.ftgetcmd = kw.pop("ftgetcmd", None)
         # FTP stuff again
@@ -838,22 +839,32 @@ class OSExtended(System):
         self._signal_intercept_init()
 
     @property
-    def ftraw(self):
+    def ftserv(self):
         """Use the system's FTP service (e.g. ftserv)."""
-        if self._ftraw is None:
-            return self.default_target.ftraw_default
+        if self._ftserv is None:
+            return self._use_ftserv()
         else:
-            return self._ftraw
+            return self._ftserv
 
-    @ftraw.setter
-    def ftraw(self, value):
+    @ftserv.setter
+    def ftserv(self, value):
         """Use the system's FTP service (e.g. ftserv)."""
         self._ftraw = bool(value)
 
-    @ftraw.deleter
-    def ftraw(self):
+    @ftserv.deleter
+    def ftserv(self):
         """Use the system's FTP service (e.g. ftserv)."""
         self._ftraw = None
+
+    def _use_ftserv(self):
+        if not config.is_defined(section="ftserv"):
+            return False
+        for rgxp in config.from_config(
+            section="ftserv", key="hostname_patterns"
+        ):
+            if re.match(rgxp, self.hostname):
+                return True
+        return False
 
     def target(self, **kw):
         """
@@ -2064,7 +2075,7 @@ class OSExtended(System):
 
     def rawftput_worthy(self, source, destination):
         """Is it allowed to use FtServ given **source** and **destination**."""
-        return self.ftraw and self.ftserv_allowed(source, destination)
+        return self.ftserv and self.ftserv_allowed(source, destination)
 
     @fmtshcmd
     def rawftput(
@@ -2145,7 +2156,7 @@ class OSExtended(System):
 
         ``rawftput`` will be used if all of the following conditions are met:
 
-            * ``self.ftraw`` is *True*
+            * ``self.ftserv`` is *True*
             * **source** is a string (as opposed to a File like object)
             * **destination** is a string (as opposed to a File like object)
         """
@@ -2177,7 +2188,7 @@ class OSExtended(System):
     def rawftget_worthy(self, source, destination, cpipeline=None):
         """Is it allowed to use FtServ given **source** and **destination**."""
         return (
-            self.ftraw
+            self.ftserv
             and cpipeline is None
             and self.ftserv_allowed(source, destination)
         )
@@ -2259,7 +2270,7 @@ class OSExtended(System):
 
         ``rawftget`` will be used if all of the following conditions are met:
 
-            * ``self.ftraw`` is *True*
+            * ``self.ftserv`` is *True*
             * **cpipeline** is None
             * **source** is a string (as opposed to a File like object)
             * **destination** is a string (as opposed to a File like object)
