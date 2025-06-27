@@ -10,8 +10,6 @@ to be processed: e.g. mail, routing, alarm.
 import bronx.stdtypes.catalog
 import footprints
 from bronx.fancies import loggers
-from bronx.fancies.display import dict_as_str
-from vortex import sessions
 
 #: Export nothing
 __all__ = []
@@ -134,105 +132,30 @@ class Action:
 class TunableAction(Action):
     """An Action that may be tuned
 
-    - may have it's own section in the target configuration files
-    - accepts the syntax `ad.action_tune(key=value)` (which has priority)
+    accepts the syntax `ad.action_tune(key=value)` (which has priority)
     """
 
     def __init__(self, configuration=None, **kwargs):
         super().__init__(**kwargs)
         self._tuning = dict()
-        self._conf_section = configuration
-        self._conf_dict = None
-
-    @property
-    def _shtarget(self):
-        """Warning: this may be a `vortex.syntax.stdattrs.DelayedInit` object
-        during Vortex initialization and may not have a `sections()` method
-        nor a `config` property.
-        """
-        return sessions.current().sh.default_target
-
-    @property
-    def _conf_items(self):
-        """Check and return the configuration: a section in the target-xxx.ini file.
-
-        If the configuration is None, an attempt is made to use the Action's kind.
-        Don't use before Vortex initialization is done (see `_shtarget`).
-        """
-        if self._conf_dict is None:
-            if self._conf_section is None:
-                if self.kind in self._shtarget.sections():
-                    self._conf_section = self.kind
-            else:
-                if self._conf_section not in self._shtarget.sections():
-                    raise KeyError(
-                        'No section "{}" in "{}"'.format(
-                            self._conf_section, self._shtarget.config.file
-                        )
-                    )
-            if self._conf_section is None:
-                self._conf_dict = dict()
-            else:
-                self._conf_dict = self._shtarget.items(self._conf_section)
-        return self._conf_dict
 
     def service_info(self, **kw):
-        for k, v in self._get_config_dict().items():
+        for k, v in self._tuning.items():
             kw.setdefault(k, v)
         return super().service_info(**kw)
 
-    def tune(self, section=None, **kw):
-        """Add options to override the .ini file configuration.
-
-        ``section`` is a specific section name, or ``None`` for all.
-        """
-        if section is None or section == self._conf_section:
-            self._tuning.update(kw)
-
-    def _get_config_dict(self):
-        final_dict = dict()
-        final_dict.update(self._conf_items)
-        final_dict.update(self._tuning)
-        return final_dict
-
-    def info(self):
-        """Informative string (may serve debugging purposes)."""
-        s = super().info() + " - tunable\n"
-        mix = dict()
-        mix.update(self._conf_items)
-        mix.update(self._tuning)
-        prt = dict()
-        for k, v in mix.items():
-            if k in self._tuning:
-                prt["++ " + k] = "{} (was: {})".format(
-                    v,
-                    str(self._conf_items[k])
-                    if k in self._conf_items
-                    else "<not set>",
-                )
-            else:
-                prt["   " + k] = v
-        if self._conf_section is not None:
-            s += " " * 4 + "configuration: " + self._conf_section + "\n"
-        s += dict_as_str(prt, prefix=4)
-        return s.strip()
+    def tune(self, **kw):
+        self._tuning.update(kw)
 
     def getx(self, key, *args, **kw):
         """Shortcut to access the configuration overridden by the tuning."""
         if key in self._tuning:
             return self._tuning[key]
 
-        if self._conf_section is not None:
-            return self._shtarget.getx(
-                key=self._conf_section + ":" + key, *args, **kw
-            )
-
         if "default" in kw:
             return kw["default"]
 
-        raise KeyError(
-            'The "{:s}" entry was not found in any configuration'.format(key)
-        )
+        raise KeyError('The "{:s}" entry was not found'.format(key))
 
 
 class SendMail(Action):
