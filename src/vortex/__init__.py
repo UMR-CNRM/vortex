@@ -53,10 +53,10 @@ from .toolbox import algo as task
 
 from . import nwp as nwp  # footprints import
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 __prompt__ = "Vortex v-" + __version__ + ":"
 
-__nextversion__ = "2.0.1"
+__nextversion__ = "2.1.1"
 __tocinfoline__ = "VORTEX core package"
 
 __all__ = [
