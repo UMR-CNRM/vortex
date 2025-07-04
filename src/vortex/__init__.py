@@ -53,7 +53,7 @@ from .toolbox import algo as task
 
 from . import nwp as nwp  # footprints import
 
-__version__ = "2.1.0"
+__version__ = "2.1.1"
 __prompt__ = "Vortex v-" + __version__ + ":"
 
 __nextversion__ = "2.1.1"
