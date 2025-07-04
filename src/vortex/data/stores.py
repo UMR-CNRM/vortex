@@ -748,13 +748,12 @@ class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
             )
         except config.ConfigurationError as e:
             msg = (
-                "Trying to write to archive but location is not configured.\n"
+                "Trying to write to archive but location is not configured. "
                 'Make sure key "rootdir" is defined in storage section of '
                 "the configuration.\n"
                 "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
             )
-            logger.error(msg)
-            raise e
+            raise config.ConfigurationError(msg) from e
         return remote
 
     remap_write = remap_read
@@ -813,12 +812,11 @@ class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
         except config.ConfigurationError as e:
             msg = (
                 "Trying to write to operational data archive but location"
-                'is not configured.\nMake sure key "rootdir" is defined in '
+                ' is not configured. Make sure key "op_rootdir" is defined in '
                 "the storage section of the configuration.\n"
                 "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
             )
-            logger.error(msg)
-            raise e
+            raise config.ConfigurationError(msg) from e
         xpath = remote["path"].split("/")
         if len(xpath) >= 5 and re.match(r"^\d{8}T\d{2,4}", xpath[4]):
             # If a date is detected
