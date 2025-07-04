@@ -23,7 +23,6 @@ strongly advised.
 import atexit
 from pathlib import Path
 import sys
-import os
 
 # importlib.metadata included in stdlib from 3.8 onwards.
 # For older versions, import third-party importlib_metadata
