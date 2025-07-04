@@ -485,15 +485,39 @@ def add_section(section, args, kw):
 
 # noinspection PyShadowingBuiltins
 def input(*args, **kw):  # @ReservedAssignment
-    """Add input :class:`~vortex.layout.dataflow.Section` objects to the current sequence.
+    r"""Declare one or more input resources.
 
-    Relies on the :func:`add_section` function (see its documentation), with:
+    This function takes an abitrary of keyword arguments forming the resource
+    description.
 
-        * It's ``section`` attribute is automatically set to 'input';
-        * The ``kw``'s *insitu* item is set to :data:`active_insitu` by default.
+    :return: A list of :py:class:`Handler <vortex.data.handlers.Handler>` objects.
 
-    :return: A list of :class:`vortex.data.handlers.Handler` objects (associated
-        with the newly created class:`~vortex.layout.dataflow.Section` objects).
+    **Example:**
+
+    The following call to ``input`` returns a list of 6
+    :py:class:`Handler <vortex.data.handlers.Handler>` objects, one
+    for each date and member:
+
+    .. code:: python
+
+       rhandlers = vortex.input(
+           kind='gridpoint',
+           term=1,
+           geometry='eurw1s40',
+           nativefmt='grib',
+           model='arome',
+           cutoff='production',
+           date=['2024060121', '2024060122'],
+           origin='historic',
+           vapp='arome',
+           vconf='pefrance',
+           member=[1,2,5],
+           experiment='myexp',
+           block='forecast',
+           local='gribfile_[member].grib',
+           format='grib',
+       )
+
     """
     kw.setdefault("insitu", active_insitu)
     kw.setdefault("batch", active_batchinputs)
@@ -532,14 +556,39 @@ def show_inputs(context=None):
 
 
 def output(*args, **kw):
-    """Add output :class:`~vortex.layout.dataflow.Section` objects to the current sequence.
+    r"""Declare one or more output resources.
 
-    Relies on the :func:`add_section` function (see its documentation), with:
+    This function takes an abitrary of keyword arguments forming the resource
+    description.
 
-        * It's ``section`` attribute is automatically set to 'output';
+    :return: A list of :py:class:`Handler <vortex.data.handlers.Handler>` objects.
 
-    :return: A list of :class:`vortex.data.handlers.Handler` objects (associated
-        with the newly created class:`~vortex.layout.dataflow.Section` objects).
+    **Example:**
+
+    The following call to ``output`` returns a list of 6
+    :py:class:`Handler <vortex.data.handlers.Handler>` objects, one
+    for each date and member:
+
+    .. code:: python
+
+       rhandlers = vortex.output(
+           kind='gridpoint',
+           term=1,
+           geometry='eurw1s40',
+           nativefmt='grib',
+           model='arome',
+           cutoff='production',
+           date=['2024060121', '2024060122'],
+           origin='historic',
+           vapp='arome',
+           vconf='pefrance',
+           member=[1,2,5],
+           experiment='myexp',
+           block='forecast',
+           local='gribfile_[member].grib',
+           format='grib',
+       )
+
     """
     # Strip the metadatacheck option depending on active_metadatacheck
     if not active_promise:
@@ -607,15 +656,26 @@ def promise(*args, **kw):
 
 
 def executable(*args, **kw):
-    """Add executable :class:`~vortex.layout.dataflow.Section` objects to the current sequence.
+    r"""Declare one or more executable resources.
 
-    Relies on the :func:`add_section` function (see its documentation), with:
+    This function takes an abitrary of keyword arguments forming the
+    executable resource description.
 
-        * It's ``section`` attribute is automatically set to 'executable';
-        * The ``kw``'s *insitu* item is set to :data:`active_insitu` by default.
+    :return: A list of :py:class:`Handler <vortex.data.handlers.Handler>` objects.
 
-    :return: A list of :class:`vortex.data.handlers.Handler` objects (associated
-        with the newly created class:`~vortex.layout.dataflow.Section` objects).
+    **Example:**
+
+    The following call to ``input`` returns a list of one
+    :py:class:`Handler <vortex.data.handlers.Handler>` object:
+
+    .. code:: python
+
+       rhandlers = vortex.executable(
+           kind="mfmodel",
+           local="ARPEGE",
+           remote="/path/to/binaries/ARPEGE.EX",
+       )
+
     """
     kw.setdefault("insitu", active_insitu)
     return add_section("executable", args, kw)

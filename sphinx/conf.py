@@ -234,5 +234,6 @@ autoclass_content = 'both'
 html_theme = "sphinx_book_theme"
 
 exclude_patterns = ['library/libindex.rst', 'library/**/*.rst']
+html_theme_options = {"show_toc_level": 2}
 
 highlight_language = "none"

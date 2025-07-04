@@ -134,7 +134,26 @@ class Handler:
         return str(self.__dict__)
 
     def _get_resource(self):
-        """Getter for ``resource`` property."""
+        """Getter for ``resource`` property.
+
+        **Example**
+
+        >>> rh = vortex.input(
+        ...     vapp="arpege",
+        ...     vconf="4dvarfr",
+        ...     cutoff="production",
+        ...     date="202506160000",
+        ...     term=1,
+        ...     geometry="global1798",
+        ...     model="arpege",
+        ...     block="forecast",
+        ...     kind="modelstate",
+        ...     experiment="oper",
+        ...     local="myfile",
+        ... )
+        >>> print(rh.resource)
+        <vortex.nwp.data.modelstates.Historic object at 0x7b430874a620 | model='arpege' date='2025-06-16T00:00:00Z' cutoff='production' geometry='<vortex.data.geometries.GaussGeometry | tag='global1798' id='ARPEGE TL1798c2.2 stretched-rotated geometry' tl=1798 c=2.2>' term='01:00' subset='None'>
+        """
         return self._resource
 
     def _set_resource(self, value):
@@ -534,7 +553,29 @@ class Handler:
         return rst
 
     def locate(self, **extras):
-        """Try to figure out what would be the physical location of the resource."""
+        r"""
+        Try to figure out what would be the physical location of the resource.
+
+        :returns: A semiclon separated string listing the various locations where the resource can be found.
+
+        >>> rh = vortex.input(
+        ...     vapp="arpege",
+        ...     vconf="4dvarfr",
+        ...     cutoff="production",
+        ...     date="202506160000",
+        ...     term=1,
+        ...     geometry="global1798",
+        ...     model="arpege",
+        ...     block="forecast",
+        ...     kind="modelstate",
+        ...     experiment="oper",
+        ...     local="myfile",
+        ... )
+        >>> print("\n".join(rh.locate().split(";")))
+        /home/user/.vortex.d/arpege/4dvarfr/OPER/20250616T0000P/forecast/historic.arpege.tl1798-c22+0001:00.fa
+        user@archive:/data/archive/arpege/4dvarfr/OPER/2025/06/16/T0000P/forecast/historic.arpege.tl1798-c22+0001:00.fa
+
+        """
         rst = None
         if self.resource and self.provider:
             store = self.store
@@ -825,6 +866,32 @@ class Handler:
         * When **insitu** is False, an attempt to get the resource is systematically
           made except if **alternate** is defined and the local container already
           exists.
+
+        **Example**
+
+        .. code:: python
+
+           rhandlers = vortex.input(
+               kind='gridpoint',
+               term=1,
+               geometry='eurw1s40',
+               nativefmt='grib',
+               model='arome',
+               cutoff='production',
+               date=['2024060121', '2024060122'],
+               origin='historic',
+               vapp='arome',
+               vconf='pefrance',
+               member=[1,2,5],
+               experiment='myexp',
+               block='forecast',
+               local='gribfile_[member].grib',
+               format='grib',
+           )
+
+           for rh in rhandlers:
+               rh.get()
+
         """
         return self._get_proxy(self._actual_get, alternate=alternate, **extras)
 
@@ -1010,6 +1077,29 @@ class Handler:
 
         Conversely, the low-level stores are made aware of the previous successful
         put. That way, a local container is not put twice to the same destination.
+
+        .. code:: python
+
+           rhandlers = vortex.output(
+               kind='gridpoint',
+               term=1,
+               geometry='eurw1s40',
+               nativefmt='grib',
+               model='arome',
+               cutoff='production',
+               date=['2024060121', '2024060122'],
+               origin='historic',
+               vapp='arome',
+               vconf='pefrance',
+               member=[1,2,5],
+               experiment='myexp',
+               block='forecast',
+               local='gribfile_[member].grib',
+               format='grib',
+           )
+
+           for rh in rhandlers:
+               rh.put()
         """
         rst = False
         if self.complete:
