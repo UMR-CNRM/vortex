@@ -3,6 +3,7 @@ the value of configuration options, respectively.
 
 """
 
+from pathlib import Path
 import tomli
 
 from bronx.fancies import loggers
@@ -24,7 +25,7 @@ class ConfigurationError(Exception):
     """Something is wrong with the provided configuration"""
 
 
-def load_config(configpath="vortex.toml"):
+def load_config(configpath=Path("vortex.toml")):
     """Load configuration from a TOML configuration file
 
     Existing configuration values are overriden. The configuration
@@ -41,19 +42,22 @@ def load_config(configpath="vortex.toml"):
        # ...
     """
     global VORTEX_CONFIG
+    configpath = Path(configpath)
     try:
-        with open(configpath, "rb") as f:
+        with configpath.open(mode="rb") as f:
             VORTEX_CONFIG = tomli.load(f)
-        print(f"Successfully read configuration file {configpath}")
+        print(f"Successfully read configuration file {configpath.absolute()}")
     except FileNotFoundError:
-        print(f"Could not read configuration file {configpath} (not found).")
+        print(
+            f"Could not read configuration file {configpath.absolute()} (not found)."
+        )
         print("Use load_config(/path/to/config) to update the configuration")
 
 
 def print_config():
     """Print configuration (key, value) pairs"""
     if VORTEX_CONFIG:
-        for k, v in VORTEX_CONFIG:
+        for k, v in VORTEX_CONFIG.items():
             print(k.upper(), v)
 
 

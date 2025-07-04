@@ -21,8 +21,8 @@ strongly advised.
 """
 
 import atexit
+from pathlib import Path
 import sys
-import os
 
 # importlib.metadata included in stdlib from 3.8 onwards.
 # For older versions, import third-party importlib_metadata
@@ -111,11 +111,13 @@ footprints.setup.callback = vortexfpdefaults
 ticket = sessions.get
 sh = sessions.system
 
-# If a config file can be found in current dir, load it else load .vortex.d/vortex.toml
-if os.path.isfile("vortex.toml"):
-    config.load_config("vortex.toml")
+# If a config file can be found in current dir, load it else load
+# .vortex.d/vortex.toml
+confname = Path("vortex.toml")
+if confname.exists():
+    config.load_config(confname)
 else:
-    config.load_config(os.environ["HOME"] + "/.vortex.d/vortex.toml")
+    config.load_config(Path.home() / ".vortex.d" / confname)
 
 # Load some superstars sub-packages
 
