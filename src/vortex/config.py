@@ -65,10 +65,10 @@ def from_config(section, key=None):
     """
     try:
         subconfig = VORTEX_CONFIG[section]
-    except KeyError:
+    except KeyError as e:
         raise ConfigurationError(
             f"Missing configuration section {section}",
-        )
+        ) from e
     if not key:
         return subconfig
 
