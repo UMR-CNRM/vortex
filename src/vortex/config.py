@@ -57,7 +57,7 @@ def load_config(configpath=Path("vortex.toml")):
 def print_config():
     """Print configuration (key, value) pairs"""
     if VORTEX_CONFIG:
-        for k, v in VORTEX_CONFIG:
+        for k, v in VORTEX_CONFIG.items():
             print(k.upper(), v)
 
 
