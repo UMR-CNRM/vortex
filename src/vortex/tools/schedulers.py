@@ -4,12 +4,14 @@ Interface to SMS commands.
 
 import contextlib
 import functools
+import re
+import socket
 
 from bronx.fancies import loggers
 import footprints
 
 from vortex import config
-from .services import Service
+from .services import Service, get_cluster_name
 
 __all__ = []
 
@@ -376,7 +378,14 @@ class EcFlow(EcmwfLikeScheduler):
     def child_session_setup(self):
         """Setup a SSH tunnel if necessary."""
         with super().child_session_setup() as setup_rc:
-            if setup_rc and not self.sh.default_target.isnetworknode:
+            name = get_cluster_name(socket.gethostname())
+            #  If the current node is a compute node, it cannot reach
+            #  the EcFlow server.  In this case, the request is made
+            #  through a SSH tunnel on taranisoper-int
+            is_compute_node = re.match(
+                rf"{name}\d+\.{name}hpc\.meteo\.fr", socket.gethostname()
+            )
+            if setup_rc and is_compute_node:
                 tunnel = None
                 # wait and retries from config
                 ssh_settings = {
@@ -398,8 +407,7 @@ class EcFlow(EcmwfLikeScheduler):
                     setup_rc = False
                 else:
                     sshobj = self.sh.ssh(
-                        "network",
-                        virtualnode=True,
+                        hostname=f"{name}oper-int",
                         mandatory_hostcheck=False,
                         maxtries=ssh_settings["sshproxy_retries"],
                         triesdelay=ssh_settings["sshproxy_retrydelay"],
