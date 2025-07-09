@@ -363,30 +363,17 @@ class EcFlow(EcmwfLikeScheduler):
     def __init__(self, *args, **kw):
         logger.debug("EcFlow scheduler client init %s", self)
         super().__init__(*args, **kw)
-        self._actual_clientpath = self.clientpath
-
-    def path(self):
-        """Return the actual binary path to the EcFlow client."""
-        if self._actual_clientpath is None:
-            thistarget = self.sh.default_target
-            guesspath = self.env.ECF_CLIENT_PATH or thistarget.get(
-                "ecflow:clientpath"
-            )
-            ecfversion = self.env.get("ECF_VERSION", "default")
-            guesspath = guesspath.format(version=ecfversion)
-            if guesspath is None:
-                logger.warning(
-                    "ecFlow service could not guess the install location [%s]",
-                    str(guesspath),
+m        if not self.clientpath:
+            if not config.is_defined(section="ecflow", key="clientpath"):
+                raise config.ConfigurationError(
+                    "Initialisating EcFlow scheduler interface but client "
+                    "path is not defined. See "
+                    "https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#ecflow"
                 )
-            else:
-                self._actual_clientpath = guesspath
-        if not self.sh.path.exists(self._actual_clientpath):
-            logger.warning(
-                "No ecFlow client found at init time [path:%s]>",
-                self._actual_clientpath,
+            self.clientpath = config.from_config(
+                section="ecflow",
+                key="clientpath",
             )
-        return self._actual_clientpath
 
     @contextlib.contextmanager
     def child_session_setup(self):
@@ -458,9 +445,7 @@ class EcFlow(EcmwfLikeScheduler):
 
     def _actual_child(self, cmd, options, critical=True):
         """Miscellaneous ecFlow sub-command."""
-        args = [
-            self.path(),
-        ]
+        args = [self.clientpath]
         if options:
             args.append("--{:s}={!s}".format(cmd, options[0]))
             if len(options) > 1:
