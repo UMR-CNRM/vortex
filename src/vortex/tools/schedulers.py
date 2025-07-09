@@ -382,14 +382,17 @@ m        if not self.clientpath:
             if setup_rc and not self.sh.default_target.isnetworknode:
                 tunnel = None
                 # wait and retries from config
-                thistarget = self.sh.default_target
-                sshwait = float(thistarget.get("ecflow:sshproxy_wait", 6))
-                sshretries = float(
-                    thistarget.get("ecflow:sshproxy_retries", 2)
-                )
-                sshretrydelay = float(
-                    thistarget.get("ecflow:sshproxy_retrydelay", 1)
-                )
+                ssh_settings = {
+                    conf_key: default
+                    if not config.is_defined("ecflow", conf_key)
+                    else config.from_config("ecflow", conf_key)
+                    for conf_key, default in (
+                        ("sshproxy_wait", 6),
+                        ("sshproxy_retries", 2),
+                        ("sshproxy_retrydelay", 1),
+                    )
+                }
+
                 # Build up an SSH tunnel to convey the EcFlow command
                 ecconf = self.conf(dict())
                 echost = ecconf.get("{:s}HOST".format(self.env_pattern), None)
@@ -401,11 +404,13 @@ m        if not self.clientpath:
                         "network",
                         virtualnode=True,
                         mandatory_hostcheck=False,
-                        maxtries=sshretries,
-                        triesdelay=sshretrydelay,
+                        maxtries=ssh_settings["sshproxy_retries"],
+                        triesdelay=ssh_settings["sshproxy_retrydelay"],
                     )
                     tunnel = sshobj.tunnel(
-                        echost, int(ecport), maxwait=sshwait
+                        echost,
+                        int(ecport),
+                        maxwait=ssh_settings["sshproxy_sshwait"],
                     )
                     if not tunnel:
                         setup_rc = False
