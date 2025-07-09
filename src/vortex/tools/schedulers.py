@@ -363,17 +363,14 @@ class EcFlow(EcmwfLikeScheduler):
     def __init__(self, *args, **kw):
         logger.debug("EcFlow scheduler client init %s", self)
         super().__init__(*args, **kw)
-m        if not self.clientpath:
+        if not self.clientpath:
             if not config.is_defined(section="ecflow", key="clientpath"):
-                raise config.ConfigurationError(
-                    "Initialisating EcFlow scheduler interface but client "
-                    "path is not defined. See "
-                    "https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#ecflow"
+                self.clientpath = "ecflow_client"
+            else:
+                self.clientpath = config.from_config(
+                    section="ecflow",
+                    key="clientpath",
                 )
-            self.clientpath = config.from_config(
-                section="ecflow",
-                key="clientpath",
-            )
 
     @contextlib.contextmanager
     def child_session_setup(self):
