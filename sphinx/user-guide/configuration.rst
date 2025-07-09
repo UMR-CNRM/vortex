@@ -271,3 +271,34 @@ declared using the ``default`` keyword (e.g. ``sshopts.default``).
    According to the `TOML specification
    <https://toml.io/en/v1.0.0#string>`_ , special characters used in
    regular expressions, such as backslashes, must be escaped.
+
+``ecflow``
+^^^^^^^^^^
+
+``clientpath``
+
+Path to the EcFlow client executable.
+
+**Type**: string
+
+**Default value**: ``ecflow_client``
+
+``sshproxy_wait``
+
+**Default value**: 6
+
+``sshproxy_wait``
+
+**Default value**: 2
+
+``sshproxy_retrydelay``
+
+**Default value**: 1
+
+``services``
+^^^^^^^^^^^^
+
+``cluster_names``
+
+A list of allowed cluster names, e.g ``["belenos", "taranis"]``
+
