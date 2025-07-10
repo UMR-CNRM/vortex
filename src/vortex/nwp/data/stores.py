@@ -12,6 +12,7 @@ from bronx.fancies import loggers
 from bronx.stdtypes import date
 from vortex.data.abstractstores import Store
 from vortex.syntax.stdattrs import compressionpipeline
+from vortex import config
 
 #: No automatic export
 __all__ = []
@@ -109,14 +110,17 @@ class BdpeStore(Store):
         if s_archive == "True":
             extraenv["BDPE_LECTURE_ARCHIVE_AUTORISEE"] = "oui"
 
-        wsinterpreter = self.system.default_target.get(
-            "bdpe:wsclient_interpreter", None
-        )
-        wscommand = self.system.default_target.get("bdpe:wsclient_path", None)
-        if wscommand is None:
-            raise RuntimeError(
-                "bdpe:wsclient_path has to be set in the target config"
+        try:
+            wsinterpreter = config.from_config(
+                section="bdpe", key="wsclient_interpreter"
             )
+        except config.ConfigurationError:
+            wsinterpreter = "bash"
+
+        try:
+            wscommand = config.from_config(section="bdpe", key="wsclient_path")
+        except config.ConfigurationError:
+            wscommand = "/opt/softs/sopra/bin/lirepe.sh"
 
         args.insert(0, wscommand)
         if wsinterpreter is not None:
