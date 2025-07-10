@@ -1025,18 +1025,16 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
-        try:
-            cachepath = config.from_config(
-                section="data-tree",
-                key="op_rootdir",
+        if not config.is_defined(section="data-tree", key="op_rootdir"):
+            raise config.ConfigurationError(
+                "Using special experiment but corresponding cache location "
+                'is not configured. Bet sure to set "op_rootdir" in configuration. '
+                "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/oper-dble-data-trees"
             )
-        except config.ConfigurationError as e:
-            logger.error(
-                "Cannot use special experiment cache without providing",
-                "cache location",
-            )
-            raise e
-
+        cachepath = config.from_config(
+            section="data-tree",
+            key="op_rootdir",
+        )
         self.location = os.path.join(cachepath, "vortex")
 
 
