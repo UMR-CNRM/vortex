@@ -84,6 +84,7 @@ from vortex.tools import env
 from vortex.tools.arm import ArmForgeTool
 from vortex.tools.systems import ExecutionError
 from vortex.util import config
+from vortex.config import is_defined, ConfigurationError
 
 #: No automatic export
 __all__ = []
@@ -1431,12 +1432,15 @@ class SRun(MpiTool):
     @property
     def _actual_slurmversion(self):
         """Return the slurm major version number."""
-        slurmversion = self.slurmversion or from_config(
-            section="mpitool", key="slurmversion"
-        )
-        if not slurmversion:
-            raise ValueError("No slurm version specified")
-        return slurmversion
+        if self.slurmversion:
+            return self.slurmversion
+
+        if not is_defined(section="mpitool", key="slurmversion"):
+            raise ConfigurationError(
+                "Using 'srun' MPI tool but slurm version is not configured. See "
+                "https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#mpitool"
+            )
+        return from_config(section="mpitool", key="slurmversion")
 
     def _set_binaries_hack(self, binaries):
         """Set the list of :class:`MpiBinaryDescription` objects associated with this instance."""
