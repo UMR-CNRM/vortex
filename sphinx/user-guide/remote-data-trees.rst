@@ -4,13 +4,13 @@ Remote data trees
 
 
 By default, vortex fetches and write data from and from a *local* data
-tree, see <todolink>.  It is however possible to configure access to a
+tree, see :doc:`data-layout`.  It is however possible to configure access to a
 remote data tree usinf the FTP protocol, for instance acting as a data archive.
 
 Remote data tree configuration
 ------------------------------
 
-In the vortex configuration file (see <todolink>), specify a section
+In the vortex configuration file (:doc:`configuration`), specify a section
 ``storage`` defining the following key/value pairs:
 
 
@@ -18,13 +18,15 @@ In the vortex configuration file (see <todolink>), specify a section
 
     [storage]
     address = "example.meteo.fr"
+    protocol = "ftp"
     rootdir = "/path/to/data/tree/root"
     op_rootdir = "/path/to/oper/data/tree/root"
-    export_mapping = false
 
 ``address``
-    the network address of a reachable filserver using
-    the FTP protocol.
+    the network address of the server hosting the remote data tree.
+
+``protocol``
+   the protocol with which to communicate with the server hosting the remote data tree.
 
 ``rootdir``
     Path to the root of the vortex data tree on the remote

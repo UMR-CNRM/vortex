@@ -45,13 +45,20 @@ trees if they are specified.
 ``storage``
 ^^^^^^^^^^^
 
+The `storage` section of the configuration is used to configure access
+to a remote data tree, see :doc:`remote-data-trees`.
+
 ``address``
 
 The address of the server hosting a remote data tree.
 
 **Type**: Arbitrary string.
 
-**Default value**: None
+```protocol``
+
+The protocol with which to communicate with the server hosting the remote data tree
+
+**Type**: Arbitrary string
 
 ``rootdir``
 
@@ -126,6 +133,12 @@ Option flags to pass the MPI launcher command.
 **Type**: Arbitrary string
 
 **Default value**: ``""``
+
+``slurmversion``
+
+Slurm version
+
+**Type**: Integer
 
 ``mpienv``
 ^^^^^^^^^^

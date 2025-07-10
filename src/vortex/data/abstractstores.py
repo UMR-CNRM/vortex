@@ -14,7 +14,7 @@ from bronx.system import hash as hashutils
 import footprints
 
 from vortex import sessions
-from vortex.config import from_config, ConfigurationError
+from vortex.config import from_config, ConfigurationError, is_defined
 from vortex.syntax.stdattrs import (
     hashalgo,
     hashalgo_avail_list,
@@ -870,6 +870,13 @@ class ArchiveStore(Store):
     @property
     def actual_storetube(self):
         """This archive network name (potentially read form the configuration file)."""
+        if self._actual_storetube:
+            return self._actual_storetube
+        if not is_defined(section="storage", key="protocol"):
+            raise ConfigurationError(
+                "Using remote data tree but protocol is not configured. See "
+                "https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
+            )
         if self._actual_storetube is None:
             self._actual_storetube = from_config(
                 section="storage",

@@ -1841,7 +1841,10 @@ class Parallel(xExecutableAlgoComponent):
     def _mpitool_attributes(self, opts):
         """Return the dictionary of attributes needed to create the mpitool object."""
         # Read the appropriate configuration in the target file
-        conf_dict = config.from_config(section="mpitool")
+        if not config.is_defined(section="mpitool"):
+            conf_dict = {}
+        else:
+            conf_dict = config.from_config(section="mpitool")
         if self.mpiname:
             conf_dict["mpiname"] = self.mpiname
         # Make "mpirun" the default mpi command name
