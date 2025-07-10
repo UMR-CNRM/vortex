@@ -4,12 +4,14 @@ Interface to SMS commands.
 
 import contextlib
 import functools
+import re
+import socket
 
 from bronx.fancies import loggers
 import footprints
 
 from vortex import config
-from .services import Service
+from .services import Service, get_cluster_name
 
 __all__ = []
 
@@ -363,46 +365,40 @@ class EcFlow(EcmwfLikeScheduler):
     def __init__(self, *args, **kw):
         logger.debug("EcFlow scheduler client init %s", self)
         super().__init__(*args, **kw)
-        self._actual_clientpath = self.clientpath
-
-    def path(self):
-        """Return the actual binary path to the EcFlow client."""
-        if self._actual_clientpath is None:
-            thistarget = self.sh.default_target
-            guesspath = self.env.ECF_CLIENT_PATH or thistarget.get(
-                "ecflow:clientpath"
-            )
-            ecfversion = self.env.get("ECF_VERSION", "default")
-            guesspath = guesspath.format(version=ecfversion)
-            if guesspath is None:
-                logger.warning(
-                    "ecFlow service could not guess the install location [%s]",
-                    str(guesspath),
-                )
+        if not self.clientpath:
+            if not config.is_defined(section="ecflow", key="clientpath"):
+                self.clientpath = "ecflow_client"
             else:
-                self._actual_clientpath = guesspath
-        if not self.sh.path.exists(self._actual_clientpath):
-            logger.warning(
-                "No ecFlow client found at init time [path:%s]>",
-                self._actual_clientpath,
-            )
-        return self._actual_clientpath
+                self.clientpath = config.from_config(
+                    section="ecflow",
+                    key="clientpath",
+                )
 
     @contextlib.contextmanager
     def child_session_setup(self):
         """Setup a SSH tunnel if necessary."""
         with super().child_session_setup() as setup_rc:
-            if setup_rc and not self.sh.default_target.isnetworknode:
+            name = get_cluster_name(socket.gethostname())
+            #  If the current node is a compute node, it cannot reach
+            #  the EcFlow server.  In this case, the request is made
+            #  through a SSH tunnel on taranisoper-int
+            is_compute_node = re.match(
+                rf"{name}\d+\.{name}hpc\.meteo\.fr", socket.gethostname()
+            )
+            if setup_rc and is_compute_node:
                 tunnel = None
                 # wait and retries from config
-                thistarget = self.sh.default_target
-                sshwait = float(thistarget.get("ecflow:sshproxy_wait", 6))
-                sshretries = float(
-                    thistarget.get("ecflow:sshproxy_retries", 2)
-                )
-                sshretrydelay = float(
-                    thistarget.get("ecflow:sshproxy_retrydelay", 1)
-                )
+                ssh_settings = {
+                    conf_key: default
+                    if not config.is_defined("ecflow", conf_key)
+                    else config.from_config("ecflow", conf_key)
+                    for conf_key, default in (
+                        ("sshproxy_wait", 6),
+                        ("sshproxy_retries", 2),
+                        ("sshproxy_retrydelay", 1),
+                    )
+                }
+
                 # Build up an SSH tunnel to convey the EcFlow command
                 ecconf = self.conf(dict())
                 echost = ecconf.get("{:s}HOST".format(self.env_pattern), None)
@@ -411,14 +407,15 @@ class EcFlow(EcmwfLikeScheduler):
                     setup_rc = False
                 else:
                     sshobj = self.sh.ssh(
-                        "network",
-                        virtualnode=True,
+                        hostname=f"{name}oper-int",
                         mandatory_hostcheck=False,
-                        maxtries=sshretries,
-                        triesdelay=sshretrydelay,
+                        maxtries=ssh_settings["sshproxy_retries"],
+                        triesdelay=ssh_settings["sshproxy_retrydelay"],
                     )
                     tunnel = sshobj.tunnel(
-                        echost, int(ecport), maxwait=sshwait
+                        echost,
+                        int(ecport),
+                        maxwait=ssh_settings["sshproxy_sshwait"],
                     )
                     if not tunnel:
                         setup_rc = False
@@ -458,9 +455,7 @@ class EcFlow(EcmwfLikeScheduler):
 
     def _actual_child(self, cmd, options, critical=True):
         """Miscellaneous ecFlow sub-command."""
-        args = [
-            self.path(),
-        ]
+        args = [self.clientpath]
         if options:
             args.append("--{:s}={!s}".format(cmd, options[0]))
             if len(options) > 1:

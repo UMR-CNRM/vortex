@@ -9,6 +9,7 @@ import configparser
 import contextlib
 import hashlib
 import pprint
+import re
 from string import Template
 
 
@@ -23,6 +24,7 @@ from vortex.util.config import (
     load_template,
     LegacyTemplatingAdapter,
 )
+from vortex import config
 
 #: No automatic export
 __all__ = []
@@ -938,3 +940,18 @@ class AbstractRdTemplatedMailService(TemplatedMailService):
         # The generic host/cluster name
         sdict["host"] = self.sh.default_target.inetname
         return sdict
+
+
+def get_cluster_name(hostname):
+    if not config.is_defined(section="services", key="cluster_names"):
+        raise config.ConfigurationError(
+            'Missing configuration key "cluster_names" in section "services". '
+            "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#services"
+        )
+    cluster_names = config.from_config(section="services", key="cluster_names")
+    m = re.match("^(" + "|".join(n for n in cluster_names) + ")", hostname)
+    if (m is None) or (m.group(0) not in cluster_names):
+        raise ValueError(
+            f"Current host should be either one of {cluster_names}"
+        )
+    return m.group(0)
