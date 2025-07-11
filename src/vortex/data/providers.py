@@ -279,6 +279,7 @@ class Vortex(Provider):
 
     _DEFAULT_NAME_BUILDER = names.VortexNameBuilder()
     _CUSTOM_NAME_BUILDERS = dict()
+    _SPECIAL_EXPS = ("oper", "dble", "test", "mirr")
 
     _footprint = [
         block,
@@ -365,8 +366,8 @@ class Vortex(Provider):
             self._namebuilder = self._CUSTOM_NAME_BUILDERS[self.namebuild]
         else:
             self._namebuilder = self._DEFAULT_NAME_BUILDER
-        if self.experiment in ("oper", "dble"):
-            self.experiment = self.experiment.upper()
+        if self.experiment in (n.upper() for n in self._SPECIAL_EXPS):
+            self.experiment = self.experiment.lower()
 
         # Ensure compatibility with deprecated namespace attribute
         # Under the hood the namespace attribute is still used to
@@ -426,7 +427,7 @@ class Vortex(Provider):
 
     def netloc(self, resource):
         """Returns the current ``namespace``."""
-        if self.experiment in ("OPER", "DBLE", "TEST", "MIRR"):
+        if self.experiment in self._SPECIAL_EXPS
             return "vsop." + self.namespace.domain
         return self.namespace.netloc
 
