@@ -427,7 +427,7 @@ class Vortex(Provider):
 
     def netloc(self, resource):
         """Returns the current ``namespace``."""
-        if self.experiment in self._SPECIAL_EXPS
+        if self.experiment in self._SPECIAL_EXPS:
             return "vsop." + self.namespace.domain
         return self.namespace.netloc
 
