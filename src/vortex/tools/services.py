@@ -795,12 +795,11 @@ class TemplatedMailService(MailService):
         """
         tpl = self.message
         if tpl == "":
-            tplfile = self.section.get("template", self.id)
-            tplfile = self._template_name_rewrite(tplfile)
+            tplpath = self._TEMPLATES_DIR / (
+                self.section.get("template", self.id) + ".tpl"
+            )
             try:
-                tpl = load_template(
-                    self.ticket, tplfile, encoding=self.inputs_charset
-                )
+                tpl = load_template(tplpath, encoding=self.inputs_charset)
             except ValueError as exc:
                 logger.error("%s", exc.message)
                 return None
