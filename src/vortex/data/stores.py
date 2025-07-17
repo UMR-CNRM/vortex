@@ -908,16 +908,9 @@ class VortexArchiveStore(MultiStore):
 
     def alternates_netloc(self):
         """Return netlocs describing both base and stacked archives."""
-        netloc_m = re.match(
-            r"(?P<base>v.*)\.archive\.(?P<country>\w+)", self.netloc
-        )
         return [
-            "{base:s}.archive-legacy.{country:s}".format(
-                **netloc_m.groupdict()
-            ),
-            "{base:s}.stacked-archive-legacy.{country:s}".format(
-                **netloc_m.groupdict()
-            ),
+            f"{self.netloc.firstname}.archive-legacy.fr",
+            f"{self.netloc.firstname}.stacked-archive-legacy.fr",
         ]
 
     def alternates_fpextras(self):
