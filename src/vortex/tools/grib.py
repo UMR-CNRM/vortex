@@ -567,7 +567,7 @@ class EcGribDecoMixin(AlgoComponentDecoMixin):
     def _eccodes_envsetup(
         self,
         eccodes_lib,
-        envvar="ECCODES_DEFINITIONS_PATH",
+        envvar="ECCODES_DEFINITION_PATH",
         tgt_path="definitions",
     ):
         """Export envirionment variables required by ECCODES
@@ -612,7 +612,7 @@ class EcGribDecoMixin(AlgoComponentDecoMixin):
         if eccodes_lib is not None:
             defvar = self._eccodes_envsetup(
                 eccodes_lib,
-                envvar="ECCODES_DEFINITIONS_PATH",
+                envvar="ECCODES_DEFINITION_PATH",
                 tgt_path="definitions",
             )
             subdir = Path("ifs_samples") / (

@@ -532,8 +532,6 @@ class HideService(Service):
         """Main action: hide a cheap copy of this file under a unique name."""
 
         rootdir = self.rootdir
-        if rootdir is None:
-            rootdir = self.sh.default_target.get("hidden_rootdir", None)
         if rootdir is not None:
             rootdir = self.sh.path.expanduser(rootdir)
 
@@ -797,12 +795,11 @@ class TemplatedMailService(MailService):
         """
         tpl = self.message
         if tpl == "":
-            tplfile = self.section.get("template", self.id)
-            tplfile = self._template_name_rewrite(tplfile)
+            tplpath = self._TEMPLATES_DIR / (
+                self.section.get("template", self.id) + ".tpl"
+            )
             try:
-                tpl = load_template(
-                    self.ticket, tplfile, encoding=self.inputs_charset
-                )
+                tpl = load_template(tplpath, encoding=self.inputs_charset)
             except ValueError as exc:
                 logger.error("%s", exc.message)
                 return None
