@@ -415,7 +415,7 @@ class EcFlow(EcmwfLikeScheduler):
                     tunnel = sshobj.tunnel(
                         echost,
                         int(ecport),
-                        maxwait=ssh_settings["sshproxy_sshwait"],
+                        maxwait=ssh_settings["sshproxy_wait"],
                     )
                     if not tunnel:
                         setup_rc = False
