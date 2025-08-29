@@ -343,6 +343,7 @@ class EcFlow(EcmwfLikeScheduler):
                 ),
                 optional=True,
                 default=None,
+                access = "rwx",
             ),
             env_pattern=dict(
                 default="ECF_",
