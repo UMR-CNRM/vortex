@@ -159,7 +159,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         ctxtag = contexts.Context.tag_focus()
         if ctxtag not in self._lfitools_path:
             self._lfitools_path[ctxtag] = self.sh.path.join(
-                self.actual_path, self.actual_cmd
+                self.actual_path, "lfitools"
             )
             self.sh.xperm(self._lfitools_path[ctxtag], force=True)
         return self._lfitools_path[ctxtag]
