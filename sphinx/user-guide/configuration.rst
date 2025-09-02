@@ -180,22 +180,6 @@ or ``lfi_merge``.  The path should be absolute.
 Path to a directory containing the ``create`` and ``merge`` "ioassign"
 commands. The path should be absolute.
 
-``iomerge_cmd``
-
-Name of the merge command.
-
-**Type**: string
-
-**Default value**: ``"merge_ioassign"``
-
-``iocreate_cmd``
-
-Name of the create command.
-
-**Type**: string
-
-**Default value**: ``"create_ioassign"``
-
 ``fortran``
 ^^^^^^^^^^^
 

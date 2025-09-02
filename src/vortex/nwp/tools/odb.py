@@ -235,11 +235,7 @@ class OdbDriver:
         """The location to the default create_ioassign utility."""
         return self.sh.path.join(
             config.from_config(section="nwp-tools", key="odb"),
-            config.get_from_config_w_default(
-                section="nwp-tools",
-                key="iocreate_cmd",
-                default="create_ioassign",
-            ),
+            "create_ioassign",
         )
 
     @property
@@ -247,11 +243,7 @@ class OdbDriver:
         """The location to the default merge_ioassign utility."""
         return self.sh.path.join(
             config.from_config(section="nwp-tools", key="odb"),
-            config.get_from_config_w_default(
-                section="nwp-tools",
-                key="iomerge_cmd",
-                default="merge_ioassign",
-            ),
+            "merge_ioassign",
         )
 
     def ioassign_create(
