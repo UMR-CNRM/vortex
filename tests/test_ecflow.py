@@ -3,6 +3,15 @@ import vortex
 from footprints import proxy as fp
 
 
+def test_create_ecflow_service():
+    vortex.config.set_config(
+        "ecflow", "clientpath", "ecflow_client",
+    )
+    ecf_service = fp.service(kind="ecflow")
+
+    assert ecf_service.clientpath == "ecflow_client"
+
+
 @patch("vortex.tools.systems.OSExtended.ssh")
 @patch("socket.gethostname")
 def test_child_session_setup(mocked_gethostname, mocked_ssh):
