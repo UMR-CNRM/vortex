@@ -884,6 +884,9 @@ class VortexArchiveStore(MultiStore):
             storehead=dict(
                 optional=True,
             ),
+            username=dict(
+                type=str,
+            ),
             storesync=dict(
                 alias=("archsync", "synchro"),
                 type=bool,
@@ -915,7 +918,11 @@ class VortexArchiveStore(MultiStore):
 
     def alternates_fpextras(self):
         """Deal with some ArchiveStores' specific attributes."""
-        return dict(storehead=self.storehead, storesync=self.storesync)
+        return dict(
+            username=self.username,
+            storehead=self.storehead,
+            storesync=self.storesync,
+        )
 
 
 class _VortexCacheBaseStore(CacheStore, _VortexStackedStorageMixin):

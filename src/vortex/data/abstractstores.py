@@ -14,7 +14,12 @@ from bronx.system import hash as hashutils
 import footprints
 
 from vortex import sessions
-from vortex.config import from_config, ConfigurationError, is_defined
+from vortex.config import (
+    from_config,
+    ConfigurationError,
+    is_defined,
+    get_from_config_w_default,
+)
 from vortex.syntax.stdattrs import (
     hashalgo,
     hashalgo_avail_list,
@@ -792,6 +797,9 @@ class ArchiveStore(Store):
                 netloc=dict(
                     values=["open.archive.fr"],
                 ),
+                username=dict(
+                    type=str,
+                ),
                 storehash=dict(
                     values=hashalgo_avail_list,
                 ),
@@ -888,12 +896,17 @@ class ArchiveStore(Store):
 
     def _get_archive(self):
         """Create a new Archive object only if needed."""
+        archive_entry_pattern = get_from_config_w_default(
+            section="storage", key="rootdir", default="~/%usr%/vortex"
+        )
+        entry = archive_entry_pattern.replace("%usr%", self.username)
         if not self._archive:
             self._archive = footprints.proxy.archives.default(
                 kind=self.underlying_archive_kind,
                 storage=self.actual_storage,
                 tube=self.actual_storetube,
                 readonly=self.readonly,
+                entry=entry,
             )
             self._archives_object_stack.add(self._archive)
         return self._archive
