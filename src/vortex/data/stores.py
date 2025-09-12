@@ -741,19 +741,6 @@ class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
-        try:
-            remote["root"] = config.from_config(
-                section="storage",
-                key="rootdir",
-            )
-        except config.ConfigurationError as e:
-            msg = (
-                "Trying to write to archive but location is not configured. "
-                'Make sure key "rootdir" is defined in storage section of '
-                "the configuration.\n"
-                "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
-            )
-            raise config.ConfigurationError(msg) from e
         return remote
 
     remap_write = remap_read
