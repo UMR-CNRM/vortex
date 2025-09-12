@@ -928,7 +928,6 @@ class ArchiveStore(Store):
         if self._hash_check_or_delete(self.inarchivecheck, remote, options):
             return self.archive.check(
                 remote["path"],
-                username=remote.get("username", None),
                 fmt=options.get("fmt", "foo"),
                 compressionpipeline=self._actual_cpipeline,
             )
@@ -939,7 +938,6 @@ class ArchiveStore(Store):
         """Use the archive object to obtain **remote** physical location."""
         return self.archive.fullpath(
             remote["path"],
-            username=remote.get("username", None),
             fmt=options.get("fmt", "foo"),
             compressionpipeline=self._actual_cpipeline,
         )
@@ -948,14 +946,12 @@ class ArchiveStore(Store):
         """Use the archive object to list available files."""
         return self.archive.list(
             remote["path"],
-            username=remote.get("username", None),
         )
 
     def inarchiveprestageinfo(self, remote, options):
         """Returns the prestaging informations"""
         return self.archive.prestageinfo(
             remote["path"],
-            username=remote.get("username", None),
             fmt=options.get("fmt", "foo"),
             compressionpipeline=self._actual_cpipeline,
         )
@@ -975,7 +971,6 @@ class ArchiveStore(Store):
             intent=options.get("intent", ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get("fmt", "foo"),
             info=options.get("rhandler", None),
-            username=remote["username"],
             compressionpipeline=self._actual_cpipeline,
         )
         return rc and self._hash_get_check(
@@ -997,7 +992,6 @@ class ArchiveStore(Store):
             intent=options.get("intent", ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get("fmt", "foo"),
             info=options.get("rhandler", None),
-            username=remote["username"],
             compressionpipeline=self._actual_cpipeline,
         )
         return rc
@@ -1018,7 +1012,6 @@ class ArchiveStore(Store):
             intent=options.get("intent", ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get("fmt", "foo"),
             info=options.get("rhandler", None),
-            username=remote["username"],
             compressionpipeline=self._actual_cpipeline,
         )
         return rc and self._hash_get_check(
@@ -1040,7 +1033,6 @@ class ArchiveStore(Store):
             intent=ARCHIVE_PUT_INTENT,
             fmt=options.get("fmt", "foo"),
             info=options.get("rhandler"),
-            username=remote["username"],
             compressionpipeline=self._actual_cpipeline,
             enforcesync=options.get("enforcesync", False),
             usejeeves=options.get("delayed", None),
@@ -1060,7 +1052,6 @@ class ArchiveStore(Store):
             remote["path"],
             fmt=options.get("fmt", "foo"),
             info=options.get("rhandler", None),
-            username=remote["username"],
             compressionpipeline=self._actual_cpipeline,
         )
 
