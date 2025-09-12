@@ -922,24 +922,12 @@ class ArchiveStore(Store):
 
     archive = property(_get_archive, _set_archive, _del_archive)
 
-    def _inarchiveformatpath(self, remote):
-        # Remove extra slashes
-        formatted = remote["path"].lstrip(self.system.path.sep)
-        # Store head ?
-        if self.storehead:
-            formatted = self.system.path.join(self.storehead, formatted)
-        # Store root (if specified)
-        pathroot = remote.get("root", self.storeroot)
-        if pathroot is not None:
-            formatted = self.system.path.join(pathroot, formatted)
-        return formatted
-
     def inarchivecheck(self, remote, options):
         """Use the archive object to check if **remote** exists."""
         # Try to delete the md5 file but ignore errors...
         if self._hash_check_or_delete(self.inarchivecheck, remote, options):
             return self.archive.check(
-                self._inarchiveformatpath(remote),
+                remote["path"],
                 username=remote.get("username", None),
                 fmt=options.get("fmt", "foo"),
                 compressionpipeline=self._actual_cpipeline,
@@ -950,7 +938,7 @@ class ArchiveStore(Store):
     def inarchivelocate(self, remote, options):
         """Use the archive object to obtain **remote** physical location."""
         return self.archive.fullpath(
-            self._inarchiveformatpath(remote),
+            remote["path"],
             username=remote.get("username", None),
             fmt=options.get("fmt", "foo"),
             compressionpipeline=self._actual_cpipeline,
@@ -959,14 +947,14 @@ class ArchiveStore(Store):
     def inarchivelist(self, remote, options):
         """Use the archive object to list available files."""
         return self.archive.list(
-            self._inarchiveformatpath(remote),
+            remote["path"],
             username=remote.get("username", None),
         )
 
     def inarchiveprestageinfo(self, remote, options):
         """Returns the prestaging informations"""
         return self.archive.prestageinfo(
-            self._inarchiveformatpath(remote),
+            remote["path"],
             username=remote.get("username", None),
             fmt=options.get("fmt", "foo"),
             compressionpipeline=self._actual_cpipeline,
@@ -978,11 +966,11 @@ class ArchiveStore(Store):
             "inarchiveget on %s://%s/%s (to: %s)",
             self.scheme,
             self.netloc,
-            self._inarchiveformatpath(remote),
+            remote["path"],
             local,
         )
         rc = self.archive.retrieve(
-            self._inarchiveformatpath(remote),
+            remote["path"],
             local,
             intent=options.get("intent", ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get("fmt", "foo"),
@@ -1000,11 +988,11 @@ class ArchiveStore(Store):
             "inarchiveearlyget on %s://%s/%s (to: %s)",
             self.scheme,
             self.netloc,
-            self._inarchiveformatpath(remote),
+            remote["path"],
             local,
         )
         rc = self.archive.earlyretrieve(
-            self._inarchiveformatpath(remote),
+            remote["path"],
             local,
             intent=options.get("intent", ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get("fmt", "foo"),
@@ -1020,12 +1008,12 @@ class ArchiveStore(Store):
             "inarchivefinaliseget on %s://%s/%s (to: %s)",
             self.scheme,
             self.netloc,
-            self._inarchiveformatpath(remote),
+            remote["path"],
             local,
         )
         rc = self.archive.finaliseretrieve(
             result_id,
-            self._inarchiveformatpath(remote),
+            remote["path"],
             local,
             intent=options.get("intent", ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get("fmt", "foo"),
@@ -1043,11 +1031,11 @@ class ArchiveStore(Store):
             "inarchiveput to %s://%s/%s (from: %s)",
             self.scheme,
             self.netloc,
-            self._inarchiveformatpath(remote),
+            remote["path"],
             local,
         )
         rc = self.archive.insert(
-            self._inarchiveformatpath(remote),
+            remote["path"],
             local,
             intent=ARCHIVE_PUT_INTENT,
             fmt=options.get("fmt", "foo"),
@@ -1064,12 +1052,12 @@ class ArchiveStore(Store):
             "inarchivedelete on %s://%s/%s",
             self.scheme,
             self.netloc,
-            self._inarchiveformatpath(remote),
+            remote["path"],
         )
         # Try to delete the md5 file but ignore errors...
         self._hash_check_or_delete(self.inarchivedelete, remote, options)
         return self.archive.delete(
-            self._inarchiveformatpath(remote),
+            remote["path"],
             fmt=options.get("fmt", "foo"),
             info=options.get("rhandler", None),
             username=remote["username"],

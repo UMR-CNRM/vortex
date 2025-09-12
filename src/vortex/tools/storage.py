@@ -548,6 +548,11 @@ class AbstractArchive(Storage):
             tube=dict(
                 info="How to communicate with the archive ?",
             ),
+            entry=dict(
+                optional=False,
+                type=str,
+                info="The absolute path to the cache space",
+            ),
         ),
     )
 
@@ -560,23 +565,20 @@ class AbstractArchive(Storage):
     def realkind(self):
         return "archive"
 
-    def _formatted_path(self, rawpath, **kwargs):
-        root = kwargs.get("root", None)
-        if root is not None:
-            rawpath = self.sh.path.join(root, rawpath.lstrip("/"))
+    def _formatted_path(self, subpath, **kwargs):
+        path = self.sh.path.join(self.entry, subpath.lstrip("/"))
+
         # Deal with compression
         compressionpipeline = kwargs.get("compressionpipeline", None)
         if compressionpipeline is not None:
-            rawpath += compressionpipeline.suffix
-        return self.sh.anyft_remote_rewrite(
-            rawpath, fmt=kwargs.get("fmt", "foo")
-        )
+            path += compressionpipeline.suffix
+        return self.sh.anyft_remote_rewrite(path, fmt=kwargs.get("fmt", "foo"))
 
     def _actual_proxy_method(self, pmethod):
         """Create a proxy method based on the **pmethod** actual method."""
 
-        def actual_proxy(item, *kargs, **kwargs):
-            path = self._formatted_path(item, **kwargs)
+        def actual_proxy(subpath, *kargs, **kwargs):
+            path = self._formatted_path(subpath, **kwargs)
             if path is None:
                 raise ValueError("The archive's path is void.")
             return pmethod(path, *kargs, **kwargs)
