@@ -551,7 +551,7 @@ class AbstractArchive(Storage):
             entry=dict(
                 optional=False,
                 type=str,
-                info="The absolute path to the cache space",
+                info="The absolute path to the archive space",
             ),
         ),
     )
