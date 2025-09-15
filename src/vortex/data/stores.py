@@ -791,19 +791,6 @@ class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
-        try:
-            remote["root"] = config.from_config(
-                section="storage",
-                key="op_rootdir",
-            )
-        except config.ConfigurationError as e:
-            msg = (
-                "Trying to write to operational data archive but location"
-                ' is not configured. Make sure key "op_rootdir" is defined in '
-                "the storage section of the configuration.\n"
-                "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
-            )
-            raise config.ConfigurationError(msg) from e
         xpath = remote["path"].split("/")
         if len(xpath) >= 5 and re.match(r"^\d{8}T\d{2,4}", xpath[4]):
             # If a date is detected
