@@ -19,8 +19,7 @@ In the vortex configuration file (:doc:`configuration`), specify a section
     [storage]
     address = "example.meteo.fr"
     protocol = "ftp"
-    rootdir = "/path/to/data/tree/root"
-    op_rootdir = "/path/to/oper/data/tree/root"
+    rootdir = "~/vortex"  # The default value
 
 ``address``
     the network address of the server hosting the remote data tree.
@@ -31,13 +30,6 @@ In the vortex configuration file (:doc:`configuration`), specify a section
 ``rootdir``
     Path to the root of the vortex data tree on the remote
     server's filesystem.
-
-``op_rootdir``
-    Path to the root of the operational vortex data tree
-    on the remote server's filesystem. See <todolink>.
-
-``export_mapping``
-    <TODO>
 
 Using remote data trees
 -----------------------
@@ -57,6 +49,52 @@ space with respect to the *remote* data tree.
 If a remote data tree is configured, a call to ``handlers.Handler.put``
 will both write to the local data tree and the remote data tree.
 
+Accessing another users' remote data tree
+-----------------------------------------
+
+The value for the ``rootdir`` configuration key can contain the
+substring ``"%usr%"``. This placeholder string will be replaced by
+whatever value is passed to the the ``vortex.input``'s function
+``username`` argument. This allows fetching data from another user's
+remote data tree.
+
+The following example will fetch the model state file from the FTP
+archive ``example.meteo.fr``, from the remote data tree located at
+"~samd/vortex":
+
+.. code:: toml
+
+    [storage]
+    address = "example.meteo.fr"
+    protocol = "ftp"
+    rootdir = "~%usr%/vortex"
+
+.. code:: python
+
+    rh = vortex.input(
+	kind="modelstate",
+	model="arpege",
+        date="202506160000",
+	archive=True,
+	cache=False, # Disable local data tree for the sake of this example
+	# ...
+        experiment="exp",
+        username="samd",
+    )[0]
+
+    rh.get()
+    # FTP request on e.g.
+    # ftp://example.meteo.fr/~samd/vortex/arpege/4dvarfr/exp/20250616T0000P/forecast/historic.arpege.tl1798-c22+0002:00.fa
+
+.. attention::
+
+   The ``username`` argument does *not* specify the username issuing
+   the FTP request: this is done by the user currently running the
+   Python program.
+
+If not specified, the value for ``username`` default the the current
+user's username.
+   
 Modifying local and remote data trees access patterns
 -----------------------------------------------------
 
