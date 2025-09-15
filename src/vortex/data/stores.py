@@ -788,6 +788,10 @@ class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
         ),
     )
 
+    @property
+    def archive_entry(self):
+        return config.from_config(section="storage", key="op_rootdir")
+
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)

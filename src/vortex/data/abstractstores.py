@@ -852,6 +852,13 @@ class ArchiveStore(Store):
         return "std"
 
     @property
+    def archive_entry(self):
+        pattern = get_from_config_w_default(
+            section="storage", key="rootdir", default="~%usr%/vortex"
+        )
+        return pattern.replace("%usr%", self.username)
+
+    @property
     def actual_storage(self):
         """This archive network name (potentially read form the configuration file)."""
         if self._actual_storage is None:
@@ -896,17 +903,13 @@ class ArchiveStore(Store):
 
     def _get_archive(self):
         """Create a new Archive object only if needed."""
-        archive_entry_pattern = get_from_config_w_default(
-            section="storage", key="rootdir", default="~/%usr%/vortex"
-        )
-        entry = archive_entry_pattern.replace("%usr%", self.username)
         if not self._archive:
             self._archive = footprints.proxy.archives.default(
                 kind=self.underlying_archive_kind,
                 storage=self.actual_storage,
                 tube=self.actual_storetube,
                 readonly=self.readonly,
-                entry=entry,
+                entry=self.archive_entry,
             )
             self._archives_object_stack.add(self._archive)
         return self._archive
