@@ -854,7 +854,7 @@ class ArchiveStore(Store):
     @property
     def archive_entry(self):
         pattern = get_from_config_w_default(
-            section="storage", key="rootdir", default="~%usr%/vortex"
+            section="storage", key="rootdir", default="~/vortex"
         )
         return pattern.replace("%usr%", self.username)
 
