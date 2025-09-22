@@ -1254,6 +1254,7 @@ class PromiseStore(footprints.FootprintBase):
         attr=dict(
             scheme=dict(alias=("protocol",)),
             netloc=dict(type=Namespace, alias=("domain", "namespace")),
+            username=dict(type=str),
             storetrack=dict(
                 type=bool,
                 default=True,
@@ -1281,12 +1282,14 @@ class PromiseStore(footprints.FootprintBase):
             scheme=self.proxyscheme,
             netloc=self.prstorename,
             storetrack=self.storetrack,
+            username=self.username,
         )
         if self.promise is None:
             logger.critical(
-                "Could not find store scheme <%s> netloc <%s>",
+                "Could not find store scheme <%s> netloc <%s> username <%s>",
                 self.proxyscheme,
                 self.prstorename,
+                self.username,
             )
             raise ValueError("Could not get a Promise Store")
 
@@ -1295,12 +1298,14 @@ class PromiseStore(footprints.FootprintBase):
             scheme=self.proxyscheme,
             netloc=self.netloc,
             storetrack=self.storetrack,
+            username=self.username,
         )
         if self.other is None:
             logger.critical(
-                "Could not find store scheme <%s> netloc <%s>",
+                "Could not find store scheme <%s> netloc <%s> username <%s>",
                 self.proxyscheme,
                 self.netloc,
+                self.username,
             )
             raise ValueError("Could not get an Other Store")
 

@@ -1333,9 +1333,9 @@ class PromiseCacheStore(VortexCacheMtStore):
         ),
     )
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
-        self.location = os.path.join(get_cache_location(), "promise")
+    @property
+    def cache_promise(self):
+        return os.path.join(super().cache_entry, "promise")
 
     @staticmethod
     def _add_default_options(options):
