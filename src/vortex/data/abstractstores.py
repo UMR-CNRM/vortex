@@ -1129,7 +1129,7 @@ class CacheStore(Store):
     def _get_cache(self):
         if not self._cache:
             self._cache = footprints.proxy.caches.default(
-                entry=self.location,
+                entry=self.cache_entry,
                 rtouch=self.rtouch,
                 rtouchskip=self.rtouchskip,
                 readonly=self.readonly,

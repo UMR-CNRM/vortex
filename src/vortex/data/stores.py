@@ -975,9 +975,20 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
         ),
     )
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
-        self.location = get_cache_location()
+    @property
+    def cache_entry(self):
+        try:
+            cacheloc = config.from_config(
+                section="data-tree",
+                key="rootdir",
+            )
+        except config.ConfigurationError:
+            cacheloc = os.path.join(os.environ["HOME"], ".vortex.d")
+
+        if self.username != self.system.glove.user:
+            return os.path.join(cacheloc, self.username)
+
+        return cacheloc
 
 
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
@@ -998,19 +1009,18 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
         ),
     )
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    @property
+    def cache_entry(self):
         if not config.is_defined(section="data-tree", key="op_rootdir"):
-            raise config.ConfigurationError(
+            msg = (
                 "Using special experiment but corresponding cache location "
                 'is not configured. Bet sure to set "op_rootdir" in configuration. '
                 "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/oper-dble-data-trees"
             )
-        cachepath = config.from_config(
-            section="data-tree",
-            key="op_rootdir",
-        )
-        self.location = os.path.join(cachepath, "vortex")
+            raise config.ConfigurationError(msg)
+
+        cache_path = config.from_config(section="data-tree", key="op_rootdir")
+        return os.join(cache_path, "vortex")
 
 
 class _AbstractVortexCacheMultiStore(MultiStore):
