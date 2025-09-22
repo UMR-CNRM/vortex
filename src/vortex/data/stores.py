@@ -1085,6 +1085,9 @@ class VortexCacheStore(_AbstractVortexCacheMultiStore):
             f"{self.netloc.firstname}.stacked-cache-mt.fr",
         ]
 
+    def alternates_fpextras(self):
+        return dict(username=self.username)
+
 
 class VortexVsopCacheStore(_AbstractVortexCacheMultiStore):
     """The go to store for data cached by VORTEX operational experiments.
@@ -1249,6 +1252,9 @@ class VortexStoreLegacy(MultiStore):
             for d in (".cache.fr", ".archive-legacy.fr")
         ]
 
+    def alternates_fpextras(self):
+        return dict(username=self.username)
+
 
 class VortexStore(MultiStore):
     """Combined cache and archive VORTEX stores.
@@ -1296,6 +1302,9 @@ class VortexStore(MultiStore):
                 ".stacked-archive-smart.fr",
             )
         ]
+
+    def alternates_fpextras(self):
+        return dict(username=self.username)
 
 
 class PromiseCacheStore(VortexCacheMtStore):
