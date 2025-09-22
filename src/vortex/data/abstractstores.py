@@ -443,6 +443,7 @@ class MultiStore(footprints.FootprintBase):
             attr=dict(
                 scheme=dict(alias=("protocol",)),
                 netloc=dict(type=Namespace, alias=("domain", "namespace")),
+                username=dict(type=str),
                 refillstore=dict(
                     type=bool,
                     optional=True,
@@ -1075,6 +1076,9 @@ class CacheStore(Store):
             ),
             netloc=dict(
                 values=["open.cache.fr"],
+            ),
+            username=dict(
+                type=str,
             ),
             storehash=dict(
                 values=hashalgo_avail_list,

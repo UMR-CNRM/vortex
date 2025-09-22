@@ -862,9 +862,6 @@ class VortexArchiveStore(MultiStore):
             storehead=dict(
                 optional=True,
             ),
-            username=dict(
-                type=str,
-            ),
             storesync=dict(
                 alias=("archsync", "synchro"),
                 type=bool,
