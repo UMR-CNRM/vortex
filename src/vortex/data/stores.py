@@ -862,9 +862,6 @@ class VortexArchiveStore(MultiStore):
             storehead=dict(
                 optional=True,
             ),
-            username=dict(
-                type=str,
-            ),
             storesync=dict(
                 alias=("archsync", "synchro"),
                 type=bool,
@@ -978,9 +975,20 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
         ),
     )
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
-        self.location = get_cache_location()
+    @property
+    def cache_entry(self):
+        try:
+            cacheloc = config.from_config(
+                section="data-tree",
+                key="rootdir",
+            )
+        except config.ConfigurationError:
+            cacheloc = os.path.join(os.environ["HOME"], ".vortex.d")
+
+        if self.username != self.system.glove.user:
+            return os.path.join(cacheloc, self.username)
+
+        return cacheloc
 
 
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
@@ -1001,19 +1009,17 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
         ),
     )
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+    @property
+    def cache_entry(self):
         if not config.is_defined(section="data-tree", key="op_rootdir"):
-            raise config.ConfigurationError(
+            msg = (
                 "Using special experiment but corresponding cache location "
                 'is not configured. Bet sure to set "op_rootdir" in configuration. '
                 "See https://vortex-nwp.readthedocs.io/en/latest/user-guide/oper-dble-data-trees"
             )
-        cachepath = config.from_config(
-            section="data-tree",
-            key="op_rootdir",
-        )
-        self.location = os.path.join(cachepath, "vortex")
+            raise config.ConfigurationError(msg)
+
+        return config.from_config(section="data-tree", key="op_rootdir")
 
 
 class _AbstractVortexCacheMultiStore(MultiStore):
@@ -1088,6 +1094,9 @@ class VortexCacheStore(_AbstractVortexCacheMultiStore):
             f"{self.netloc.firstname}.stacked-cache-mt.fr",
         ]
 
+    def alternates_fpextras(self):
+        return dict(username=self.username)
+
 
 class VortexVsopCacheStore(_AbstractVortexCacheMultiStore):
     """The go to store for data cached by VORTEX operational experiments.
@@ -1129,6 +1138,9 @@ class VortexVsopCacheStore(_AbstractVortexCacheMultiStore):
                 "vsop.stacked-cache-op2r.fr",
             ]
         return todo
+
+    def alternates_fpextras(self):
+        return dict(username=self.username)
 
 
 class _AbstractVortexStackMultiStore(MultiStore):
@@ -1252,6 +1264,9 @@ class VortexStoreLegacy(MultiStore):
             for d in (".cache.fr", ".archive-legacy.fr")
         ]
 
+    def alternates_fpextras(self):
+        return dict(username=self.username)
+
 
 class VortexStore(MultiStore):
     """Combined cache and archive VORTEX stores.
@@ -1300,6 +1315,9 @@ class VortexStore(MultiStore):
             )
         ]
 
+    def alternates_fpextras(self):
+        return dict(username=self.username)
+
 
 class PromiseCacheStore(VortexCacheMtStore):
     """Some kind of vortex cache for EXPECTED resources."""
@@ -1317,9 +1335,9 @@ class PromiseCacheStore(VortexCacheMtStore):
         ),
     )
 
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
-        self.location = os.path.join(get_cache_location(), "promise")
+    @property
+    def cache_promise(self):
+        return os.path.join(super().cache_entry, "promise")
 
     @staticmethod
     def _add_default_options(options):
