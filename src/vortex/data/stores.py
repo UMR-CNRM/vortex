@@ -1140,6 +1140,9 @@ class VortexVsopCacheStore(_AbstractVortexCacheMultiStore):
             ]
         return todo
 
+    def alternates_fpextras(self):
+        return dict(username=self.username)
+
 
 class _AbstractVortexStackMultiStore(MultiStore):
     """Any Cache based Vortex multi store."""
