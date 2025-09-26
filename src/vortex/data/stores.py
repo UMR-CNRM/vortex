@@ -1019,8 +1019,7 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
             )
             raise config.ConfigurationError(msg)
 
-        cache_path = config.from_config(section="data-tree", key="op_rootdir")
-        return os.join(cache_path, "vortex")
+        return config.from_config(section="data-tree", key="op_rootdir")
 
 
 class _AbstractVortexCacheMultiStore(MultiStore):
