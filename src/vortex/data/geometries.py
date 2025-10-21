@@ -764,12 +764,25 @@ def load(inifile="@geometries.ini", refresh=False, verbose=True):
 
     The class that will be instantiated depends on the "kind" keyword..
     """
+    from vortex import sessions
+
     iniconf = configparser.ConfigParser()
+
+    # Load from vortex distribution
     with importlib.resources.open_text(
         "vortex.data",
         "geometries.ini",
     ) as fh:
         iniconf.read_file(fh)
+
+    # Load from user's config directory if it exists
+    glove = sessions.current().glove
+    local = sessions.system()
+    user_geometries = glove.configrc + "/geometries.ini"
+    if local.path.exists(user_geometries):
+        with open(user_geometries, encoding="utf-8") as fh:
+            iniconf.read_file(fh)
+
     for item in iniconf.sections():
         gdesc = dict(iniconf.items(item))
         gkind = gdesc.get("kind")
