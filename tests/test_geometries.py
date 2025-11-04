@@ -1,9 +1,7 @@
 """Tests for geometry loading from distribution and user configuration."""
 
-import os
 import tempfile
 from pathlib import Path
-from unittest.mock import PropertyMock, patch
 
 import pytest
 
@@ -33,12 +31,7 @@ resolution = 5.0
 runit      = km
 """)
 
-        # Patch the configrc property to return our temp directory
-        with patch(
-            "vortex.gloves.Glove.configrc", new_callable=PropertyMock
-        ) as mock_configrc:
-            mock_configrc.return_value = str(user_config_dir)
-            yield geometries_file
+        yield geometries_file
 
 
 @pytest.fixture
@@ -58,11 +51,7 @@ truncation = 798
 stretching = 5.0
 """)
 
-        with patch(
-            "vortex.gloves.Glove.configrc", new_callable=PropertyMock
-        ) as mock_configrc:
-            mock_configrc.return_value = str(user_config_dir)
-            yield geometries_file
+        yield geometries_file
 
 
 def test_load_standard_geometries():
@@ -85,14 +74,10 @@ def test_load_standard_geometries():
 
 def test_load_user_geometries(user_geometries_file):
     """Test that user geometries are loaded from ~/.vortexrc/geometries.ini."""
-    # Import geometries module - this will trigger load() with our patched configrc
-    # need to reload to pick up the new configrc path
-    import importlib
-    from vortex.data import geometries as geom_module
-
-    importlib.reload(geom_module)
-
     from vortex.data import geometries
+
+    # Reload geometries with the test config directory
+    geometries.load(refresh=True, verbose=False, _user_config_dir=user_geometries_file.parent)
 
     # User geometries should be present
     assert "test_user_geo" in geometries.keys()
@@ -114,12 +99,10 @@ def test_load_user_geometries(user_geometries_file):
 
 def test_user_geometry_override(user_override_file):
     """Test that user geometries override standard ones with the same tag."""
-    import importlib
-    from vortex.data import geometries as geom_module
-
-    importlib.reload(geom_module)
-
     from vortex.data import geometries
+
+    # Reload geometries with the test config directory
+    geometries.load(refresh=True, verbose=False, _user_config_dir=user_override_file.parent)
 
     # The global798 geometry should have user values, not standard ones
     geo = geometries.get(tag="global798")
