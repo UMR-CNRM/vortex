@@ -85,8 +85,9 @@ def exit():
     """Ask all inactive sessions to close, then close the active one."""
     tags = keys()
     xtag = Ticket.tag_focus()
-    tags.remove(xtag)
-    tags.append(xtag)
+    if xtag in tags:
+        tags.remove(xtag)
+        tags.append(xtag)
     ok = True
     for s in [get(tag=x) for x in tags]:
         ok = s.exit() and ok

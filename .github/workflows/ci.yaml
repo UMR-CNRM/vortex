@@ -45,4 +45,5 @@ jobs:
 
       # Most tests in the tests/ directory date back to vortex 1.* and need
       # to be ported to vortex 2.*. This is ongoing work.
-      run: python -m pytest tests/test_config.py tests/tests_algo/test_basics.py tests/test_ecflow.py tests/test_user_remote_dtree.py
+      run: python -m pytest tests/test_config.py tests/tests_algo/test_basics.py tests/test_ecflow.py tests/test_geometries.py tests/test_user_remote_dtree.py
+

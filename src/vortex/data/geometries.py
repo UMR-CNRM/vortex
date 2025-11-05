@@ -759,17 +759,47 @@ hgeometry_deco = footprints.DecorativeFootprint(
 # Load default geometries when the module is first imported
 
 
-def load(inifile="@geometries.ini", refresh=False, verbose=True):
+def _get_user_config_dir():
+    """Get the user's vortex configuration directory.
+
+    This function is separated out to make it easier to mock in tests.
+    """
+    from pathlib import Path
+    from vortex.tools.env import Environment
+
+    env = Environment(active=False)
+    return Path(env.HOME) / ".vortexrc"
+
+
+def load(
+    inifile="@geometries.ini",
+    refresh=False,
+    verbose=True,
+    _user_config_dir=None,
+):
     """Load a set of pre-defined geometries from a configuration file.
 
     The class that will be instantiated depends on the "kind" keyword..
+
+    :param _user_config_dir: Override user config directory (for testing)
     """
     iniconf = configparser.ConfigParser()
+
+    # Load from vortex distribution
     with importlib.resources.open_text(
         "vortex.data",
         "geometries.ini",
     ) as fh:
         iniconf.read_file(fh)
+
+    # Load from user's config directory if it exists
+    if _user_config_dir is None:
+        _user_config_dir = _get_user_config_dir()
+    user_geometries = _user_config_dir / "geometries.ini"
+    if user_geometries.exists():
+        with open(user_geometries, encoding="utf-8") as fh:
+            iniconf.read_file(fh)
+
     for item in iniconf.sections():
         gdesc = dict(iniconf.items(item))
         gkind = gdesc.get("kind")
