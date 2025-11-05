@@ -14,6 +14,7 @@ from bronx.fancies import loggers
 import footprints
 from footprints import proxy as fpx
 
+import vortex
 from vortex import config
 from vortex.syntax.stdattrs import (
     xpid,
@@ -56,6 +57,7 @@ class Provider(footprints.FootprintBase):
                 info="The username that will be used whenever necessary.",
                 optional=True,
                 default=None,
+                access="rwx",
                 alias=("user", "logname"),
             ),
         ),
@@ -65,6 +67,9 @@ class Provider(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         logger.debug("Abstract provider init %s", self.__class__)
         super().__init__(*args, **kw)
+
+        if not self.username:
+            self.username = vortex.ticket().glove.user
 
     def _str_more(self):
         """Additional information to print representation."""

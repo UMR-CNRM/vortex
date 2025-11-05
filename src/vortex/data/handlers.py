@@ -485,6 +485,7 @@ class Handler:
             return footprints.proxy.store(
                 scheme=self._uridata.pop("scheme"),
                 netloc=self._uridata.pop("netloc"),
+                username=self._uridata.pop("username"),
                 **stopts,
             )
         else:
