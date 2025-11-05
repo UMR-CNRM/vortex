@@ -284,7 +284,7 @@ class Vortex(Provider):
 
     _DEFAULT_NAME_BUILDER = names.VortexNameBuilder()
     _CUSTOM_NAME_BUILDERS = dict()
-    _SPECIAL_EXPS = ("oper", "dble", "test", "mirr")
+    _SPECIAL_EXPS = ("OPER", "DBLE", "TEST", "MIRR")
 
     _footprint = [
         block,
@@ -371,8 +371,8 @@ class Vortex(Provider):
             self._namebuilder = self._CUSTOM_NAME_BUILDERS[self.namebuild]
         else:
             self._namebuilder = self._DEFAULT_NAME_BUILDER
-        if self.experiment in (n.upper() for n in self._SPECIAL_EXPS):
-            self.experiment = self.experiment.lower()
+        if self.experiment in (n.lower() for n in self._SPECIAL_EXPS):
+            self.experiment = self.experiment.upper()
 
         # Ensure compatibility with deprecated namespace attribute
         # Under the hood the namespace attribute is still used to
