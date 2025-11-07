@@ -8,11 +8,15 @@ Store objects use the :mod:`footprints` mechanism.
 import copy
 import ftplib
 import io
+from pathlib import Path
 import os
 import re
+import shutil
+import subprocess
 
 from bronx.fancies import loggers
 import footprints
+import pygit2
 
 from vortex import sessions
 from vortex import config
@@ -420,6 +424,94 @@ class Finder(Store):
                 "Try to remove a non-existing resource <%s>", actualpath
             )
         return rc
+
+
+class GitStore(Store):
+    _footprint = dict(
+        info="A store to access Git repositories",
+        attr=dict(
+            scheme=dict(
+                values=["git"],
+            ),
+        ),
+    )
+
+    def gitget(self, remote, local, options):
+        annex_cache_path = Path(remote["query"]["repo"][0])
+
+        # If no git reference is provided, only make a copy of the
+        # worktree
+        if "ref" not in remote["query"]:
+            shutil.copy(
+                src=Path(annex_cache_path) / remote["path"].lstrip("/"),
+                dst=local,
+            )
+            return local
+
+        assert "ref" in remote["query"]
+        path = remote["path"].lstrip("/")
+        repo = pygit2.Repository(annex_cache_path)
+        oid = repo.revparse_single(remote["query"]["ref"][0])
+        obj = oid.peel(pygit2.Tree) / path
+        if obj.filemode == pygit2.enums.FileMode.LINK:
+            # Here we need to discriminate between links that point
+            # to git-annex managed files and all other symlinks.
+
+            # If the file is a git-annex link, work out the location
+            # of the data within the .git/annex dir and copy this
+            # file into the cwd with the right name
+            if ".git/annex/objects" in obj.data.decode("ASCII"):
+                gitannex_key = Path(obj.data.decode("ASCII")).name
+                subprocess.run(
+                    args=["git-annex", "get", "--key", gitannex_key],
+                    cwd=str(annex_cache_path),
+                )
+                gitannex_content_location = subprocess.run(
+                    args=["git-annex", "contentlocation", gitannex_key],
+                    cwd=str(annex_cache_path),
+                    capture_output=True,
+                    encoding="ASCII",
+                ).stdout
+                shutil.copy(
+                    src=annex_cache_path / Path(gitannex_content_location),
+                    dst=local,
+                    follow_symlinks=True,
+                )
+                return local
+            os.symlink(
+                src=obj.data.decode("ASCII"),
+                dst=local,
+            )
+            return local
+
+        if obj.filemode == pygit2.enums.FileMode.BLOB:
+            with open(local, "wb") as dst:
+                # Could also use pygit2.BlobIO to stream content
+                # without having to load the entire blob data in
+                # memory:
+                #
+                # with pygit2.BlobIO(obj) as src:
+                #     shutil.copyfileobj(fsrc=src, fdst=dst)
+                dst.write(obj.data)
+            return local
+
+        if obj.filemode == pygit2.enums.FileMode.TREE:
+            if local.endswith("/"):
+                localpath = "."
+            else:
+                localpath = local
+            os.mkdir(local)
+            for subobj in obj:
+                r = {
+                    "query": {"ref": remote["query"]["ref"]},
+                    "path": str(Path(path) / subobj.name),
+                }
+                self.gitget(
+                    remote=r,
+                    local=str(Path(localpath) / subobj.name),
+                    options=None,
+                )
+            return local
 
 
 class _VortexStackedStorageMixin:
