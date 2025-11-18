@@ -1307,6 +1307,9 @@ class VortexStackStore(_AbstractVortexStackMultiStore):
         """Go through the various stacked stores."""
         return [f"{self.netloc.firstname}.stacked-cache-mt.fr"]
 
+    def alternates_fpextras(self):
+        return dict(username=self.username)
+
 
 class VortexVsopStackStore(_AbstractVortexStackMultiStore):
     """Store intended to read and write data into VORTEX R&D stacks."""
