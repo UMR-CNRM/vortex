@@ -279,6 +279,44 @@ def set_namespace_from_cache_settings(usecache, usearchive):
     return ".".join(("vortex", domain, "fr"))
 
 
+class Git(Provider):
+    _footprint = dict(
+        info="Git provider",
+        attr=dict(
+            ref=dict(
+                type=str,
+                optional=True,
+                default=None,
+                info="The reference's SHA-1 hash id",
+            ),
+            repo=dict(
+                type=str,
+                info="Path to the Git repository",
+            ),
+            path=dict(
+                type=str,
+                info="File path within the repository",
+            ),
+        ),
+    )
+
+    def scheme(self, resource):
+        return "git"
+
+    def urlquery(self, resource):
+        return (
+            f"repo={self.repo}&ref={self.ref}"
+            if self.ref
+            else f"repo={self.repo}"
+        )
+
+    def basename(self, resource):
+        return self.path
+
+    def pathname(sef, resource):
+        return "."
+
+
 class Vortex(Provider):
     """Main provider of the toolbox, using a fix-size path and a dedicated name factory."""
 
