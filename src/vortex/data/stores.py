@@ -16,7 +16,6 @@ import subprocess
 
 from bronx.fancies import loggers
 import footprints
-import pygit2
 
 from vortex import sessions
 from vortex import config
@@ -36,6 +35,13 @@ from vortex.tools.systems import ExecutionError
 __all__ = []
 
 logger = loggers.getLogger(__name__)
+
+try:
+    import pygit2
+
+    NO_PYGIT2 = False
+except ImportError:
+    NO_PYGIT2 = True
 
 
 def get_cache_location():
@@ -437,6 +443,10 @@ class GitStore(Store):
     )
 
     def gitget(self, remote, local, options):
+        if NO_PYGIT2:
+            raise ModuleNotFoundError(
+                "pygit2 is not installed in the current environment"
+            )
         annex_cache_path = Path(remote["query"]["repo"][0])
 
         # If no git reference is provided, only make a copy of the
