@@ -1087,7 +1087,10 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
         except config.ConfigurationError:
             cacheloc = os.path.join(os.environ["HOME"], ".vortex.d")
 
-        if self.username != self.system.glove.user:
+        current_vortex_user = self.system.glove.user
+        cacheloc = cacheloc.replace("%usr%", current_vortex_user)
+
+        if self.username != current_vortex_user:
             return os.path.join(cacheloc, self.username)
 
         return cacheloc
