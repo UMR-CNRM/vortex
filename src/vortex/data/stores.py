@@ -1444,7 +1444,7 @@ class PromiseCacheStore(VortexCacheMtStore):
     )
 
     @property
-    def cache_promise(self):
+    def cache_entry(self):
         return os.path.join(super().cache_entry, "promise")
 
     @staticmethod
