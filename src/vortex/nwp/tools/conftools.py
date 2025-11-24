@@ -1045,11 +1045,11 @@ class ArpIfsForecastTermConfTool(ConfTool):
     The forecast term can be retrieved:
 
       >>> print(ct.fcterm('assim', 6))
-      6
+      6.0
       >>> print(ct.fcterm('production', 0))
-      102
+      102.0
       >>> print(ct.fcterm('production', 12))
-      24
+      24.0
 
     If nothing is defined it crashes:
 
