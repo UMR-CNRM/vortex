@@ -544,10 +544,6 @@ class MpiTool(footprints.FootprintBase):
         """When group are defined, associate each MPI rank with a "real" slot."""
         if self._ranks_map_cache is None:
             self._complex_ranks_map = False
-            if not self.envelope:
-                raise RuntimeError(
-                    "Ranks mapping should always be used within an envelope."
-                )
             # First deal with bingroups
             ranks_map = dict()
             has_bin_groups = not all([b.group is None for b in self.binaries])
@@ -624,7 +620,7 @@ class MpiTool(footprints.FootprintBase):
             if self._complex_ranks_map or do_bin_distribution:
                 if not self.envelope:
                     raise RuntimeError(
-                        "Ranks mapping shoudl always be used within an envelope."
+                        "Ranks mapping should always be used within an envelope."
                     )
             if do_bin_distribution:
                 if not self._supports_manual_ranks_mapping:
