@@ -346,24 +346,6 @@ class IFSParallel(
         # be done by an extra class ... and it could be generalized to mpi
         # setup by the way !
         nam_updated = False
-        # For cy41 onward, replace some namelist macros with the command line
-        # arguments
-        if rh.resource.cycle >= "cy41":
-            if "NAMARG" in namcontents:
-                opts_arg = self.spawn_command_options()
-                self._set_nam_macro(
-                    namcontents, namlocal, "CEXP", opts_arg["name"]
-                )
-                self._set_nam_macro(
-                    namcontents, namlocal, "TIMESTEP", opts_arg["timestep"]
-                )
-                fcstop = "{:s}{:d}".format(
-                    opts_arg["fcunit"], opts_arg["fcterm"]
-                )
-                self._set_nam_macro(namcontents, namlocal, "FCSTOP", fcstop)
-                nam_updated = True
-            else:
-                logger.info("No NAMARG block in %s", namlocal)
 
         if self.member is not None:
             for macro_name in ("MEMBER", "PERTURB"):
@@ -371,7 +353,29 @@ class IFSParallel(
                     namcontents, namlocal, macro_name, self.member
                 )
             nam_updated = True
-        return nam_updated
+
+        if rh.resource.cycle < "cy41":
+            return nam_updated
+
+        if "NAMARG" not in namcontents:
+            logger.info("No NAMARG block in %s", namlocal)
+            return nam_updated
+
+        # For cy41 onward, replace some namelist macros with the command line
+        # arguments
+        opts_arg = self.spawn_command_options()
+        self._set_nam_macro(
+            namcontents, namlocal, "CEXP", opts_arg["name"]
+        )
+        self._set_nam_macro(
+            namcontents, namlocal, "TIMESTEP", opts_arg["timestep"]
+        )
+        fcstop = "{:s}{:d}".format(
+            opts_arg["fcunit"], opts_arg["fcterm"]
+        )
+        self._set_nam_macro(namcontents, namlocal, "FCSTOP", fcstop)
+
+        return True
 
     def prepare_namelists(self, rh, opts=None):
         """Update each of the namelists."""
