@@ -1333,10 +1333,8 @@ class ArpIfsForecastTermConfTool(ConfTool):
         return value
 
     def _cast_unique_value(self, value):
-        if self.fcterm_unit == "hour":
-            return Time(value)
-        else:
-            return int(value)
+        #  Currently do't handle strings like "01:30"
+        return float(value)
 
     @staticmethod
     def _cast_timerangex(value):
