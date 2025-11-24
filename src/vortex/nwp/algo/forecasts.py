@@ -112,6 +112,8 @@ class Forecast(IFSParallel):
             # Possibly fix post-processing clim files
             self.all_localclim_fixer(rh, thismonth)
 
+            self.grab(analysis, comment="analysis")
+
             # File linking for IAU increments
             #
             # In the case of a forecast with IAU, the IFS executable
