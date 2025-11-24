@@ -886,3 +886,29 @@ class OfflineSurfex(Parallel, DrHookDecoMixin):
             if namsec.rh.contents.dumps_needs_update:
                 namsec.rh.save()
             logger.info("Namelist dump: \n%s", namsec.rh.container.read())
+
+
+class MUSCForecast(Forecast):
+    """Forecast for MUSC single-column model."""
+
+    _footprint = dict(
+        info="Run a forecast with a MUSC single-column model.",
+        attr=dict(
+            kind=dict(
+                values=["musc"],
+            ),
+        ),
+    )
+
+    def postfix(self, rh, opts):
+        """Post forecast information and cleaning."""
+        sh = self.system
+        # rename specific output files with hours term on 4 digits for compatibility for fmth formatting
+        fmt = re.compile(r"Out\.(?P<termh>\d{3})\.\d{4}\.lfa$")
+        for f in [
+            fmt.match(f)
+            for f in sh.listdir()
+            if f.startswith("Out.") and f.endswith(".lfa")
+        ]:
+            sh.rename(f.string, "Out.{:>04}.0000.lfa".format(int(f.group("termh"))))
+        super().postfix(rh, opts)

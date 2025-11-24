@@ -1161,6 +1161,7 @@ class OSExtended(System):
                     logger.warning(
                         "Bad return code [%d] for %s", p.returncode, str(args)
                     )
+                    self.dump_spawn_to_script(args)
                     if isinstance(output, bool) and output:
                         sys.stderr.write(p_err.decode(plocale, "replace"))
                 if fatal:
@@ -1182,6 +1183,31 @@ class OSExtended(System):
             del p
 
         return rc
+
+    def dump_spawn_to_script(self, args):
+        """Dump spawn environment to a script that can be executed 'out-of-vortex'."""
+        script = [
+            "#!/bin/bash",
+            "",
+            'SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )',
+            "cd $SCRIPT_DIR",
+            "",
+            "ulimit -s unlimited",
+            "",
+        ]
+        # env vars
+        for k in sorted(self.env.keys()):
+            if not (k.startswith("SLURM") or k.startswith("MTOOL")):
+                script.append('export {}="{}"'.format(k, self.env[k]))
+        # command line
+        script.append("\n" + " ".join(args))
+        # replace any MTOOL dirs from spool to abort
+        for i, line in enumerate(script):
+            script[i] = line.replace("spool/spool_", "abort/dump_")
+        # write to file
+        with open("spawn_dump.sh", "w") as o:
+            for l in script:
+                o.write(l + "\n")
 
     def getlogname(self):
         """Be sure to get the actual login name."""
