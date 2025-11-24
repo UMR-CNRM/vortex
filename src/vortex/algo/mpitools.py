@@ -1400,7 +1400,10 @@ class SRun(MpiTool):
             ),
             optmap=dict(
                 default=footprints.FPDict(
-                    nn="nodes", nnp="ntasks-per-node", np="ntasks"
+                    nn="nodes",
+                    nnp="ntasks-per-node",
+                    np="ntasks",
+                    openmp="cpus-per-task",
                 )
             ),
             slurmversion=dict(type=int, optional=True),
