@@ -2,12 +2,15 @@
 Various Resources for constant files used in NWP.
 """
 
+import random
+
 import footprints
+from footprints import FPList
 from ..syntax.stdattrs import gvar
 from vortex.data.contents import DataRaw, JsonDictContent, TextContent
 from vortex.data.geometries import GaussGeometry, LonlatGeometry
 from vortex.data.outflow import ModelGeoResource, ModelResource, StaticResource
-from vortex.syntax.stdattrs import month_deco
+from vortex.syntax.stdattrs import date_deco, member, month_deco
 from vortex.syntax.stddeco import (
     namebuilding_append,
     namebuilding_delete,
@@ -174,6 +177,63 @@ class RtCoef(GenvModelResource):
             gvar=dict(default="[kind]_tgz"),
         ),
     )
+
+    @property
+    def realkind(self):
+        return "rtcoef"
+
+
+class RtCoefMulti(GenvModelResource):
+    """
+    RtCoeff Satellite coefficients, randomly chosen depending on the member of an ensemble.
+
+    Reproducibility is ensured by the stability of the random generation for a given date (ymdh) and member.
+    With member=0 or None, or with choices=0, the choice is always 0, even if 0 is excluded.
+    """
+
+    _footprint = [
+        date_deco,
+        member,
+        dict(
+            info="Set of satellite coefficients",
+            attr=dict(
+                kind=dict(
+                    values=["rtcoef_multi", "mwave_rtcoef_multi"],
+                ),
+                choices=dict(
+                    info="Number of choices to choose from (0..choices-1)",
+                    type=int,
+                    optional=True,
+                ),
+                excluded=dict(
+                    info="List of values excluded from choice",
+                    type=footprints.stdtypes.FPList,
+                    optional=True,
+                    default=FPList([]),
+                ),
+                gvar=dict(
+                    info="Will be modified by the random choice",
+                    default="[kind]_0",
+                    access="rwx",
+                ),
+            ),
+        ),
+    ]
+
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+        if self.member is None or self.member == 0 or self.choices == 0:
+            choice = 0
+        else:
+            # a random generator entirely determined by the date
+            rgen = random.Random(int(self.date.ymdh))
+            # drawing must be reproducible for a given member:
+            # generate 'member' values, but only keep the last
+            choice = rgen.choices(
+                [n for n in range(self.choices) if n not in self.excluded],
+                k=self.member,
+            )[-1]
+        self.gvar = self.gvar[:-1] + str(choice)
 
     @property
     def realkind(self):
