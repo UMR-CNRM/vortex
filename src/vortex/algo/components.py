@@ -1562,6 +1562,11 @@ class Expresso(ExecutableAlgoComponent):
                 info="The interpreter command.",
                 optional=True,
             ),
+            interpreter_args=dict(
+                info="Some options to pass to the expresso",
+                optional=True,
+                default="",
+            ),
             engine=dict(values=["exec", "launch"]),
         ),
     )
@@ -1589,13 +1594,16 @@ class Expresso(ExecutableAlgoComponent):
                     )
 
     def _interpreter_args_fix(self, rh, opts):
+        cmd_opts = shlex.split(self.interpreter_args)
+
         absexec = self.absexcutable(rh.container.localpath())
         if self.interpreter == "awk":
-            return ["-f", absexec]
+            return [*cmd_opts, "-f", absexec]
         if self.interpreter == "singularity":
-            return ["run", absexec]
+            return ["run", *cmd_opts, absexec]
         else:
             return [
+                *cmd_opts,
                 absexec,
             ]
 
