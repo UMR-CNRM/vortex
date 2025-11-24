@@ -106,6 +106,34 @@ class Script(Executable):
             return self.rawopts
 
 
+class SingularityImage(Executable):
+    """Singularity container image executable."""
+
+    _footprint = dict(
+        attr=dict(
+            kind=dict(
+                values=["image"],
+            ),
+            cmd=dict(
+                info="Command to run inside the container",
+                optional=True,
+                default="",
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return "image"
+
+    # Called by AlgoComponent.spawn_command_line
+    def command_line(self, **opts):
+        return " ".join(
+            ["--{:s} {:s}".format(opt, val) for opt, val in opts.items()]
+            + [self.cmd]
+        )
+
+
 class GnuScript(Executable):
     """Basic interpreted executable with standard command line arguments."""
 

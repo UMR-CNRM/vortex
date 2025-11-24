@@ -1548,7 +1548,15 @@ class Expresso(ExecutableAlgoComponent):
         attr=dict(
             interpreter=dict(
                 info="The interpreter needed to run the script.",
-                values=["current", "awk", "ksh", "bash", "perl", "python"],
+                values=[
+                    "current",
+                    "awk",
+                    "ksh",
+                    "bash",
+                    "perl",
+                    "python",
+                    "singularity",
+                ],
             ),
             interpreter_path=dict(
                 info="The interpreter command.",
@@ -1584,6 +1592,8 @@ class Expresso(ExecutableAlgoComponent):
         absexec = self.absexcutable(rh.container.localpath())
         if self.interpreter == "awk":
             return ["-f", absexec]
+        if self.interpreter == "singularity":
+            return ["run", absexec]
         else:
             return [
                 absexec,
