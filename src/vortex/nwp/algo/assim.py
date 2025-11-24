@@ -16,36 +16,6 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class MergeVarBC(BlindRun):
-    """Merge two VarBC files.
-
-    The VarBC file resulting from the MergeVarBC contains all the items of the
-    first VarBC file plus any new item that would be present in the second file.
-    """
-
-    _footprint = dict(
-        attr=dict(
-            kind=dict(
-                values=["mergevarbc"],
-            ),
-            varbcout=dict(
-                optional=True,
-                default="VARBC.cycle_out",
-            ),
-        )
-    )
-
-    def prepare(self, rh, opts):
-        """Find any ODB candidate in input files."""
-
-        sh = self.system
-
-        sh.touch(self.varbcout)
-
-        # Let ancesters doing real stuff
-        super().prepare(rh, opts)
-
-
 class Anamix(IFSParallel):
     """Merge the surface and atmospheric analyses into a single file"""
 
