@@ -5,7 +5,7 @@ AlgoComponents dedicated to computations related to Data Assimilation systems.
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
 
-from vortex.algo.components import BlindRun, Parallel
+from vortex.algo.components import BlindRun
 from vortex.syntax.stdattrs import a_date
 from .ifsroot import IFSParallel
 from ..tools import odb, drhook
@@ -16,7 +16,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class MergeVarBC(Parallel):
+class MergeVarBC(BlindRun):
     """Merge two VarBC files.
 
     The VarBC file resulting from the MergeVarBC contains all the items of the
