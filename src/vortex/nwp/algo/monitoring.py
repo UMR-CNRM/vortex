@@ -4,7 +4,7 @@ AlgoComponents dedicated to computations related to observations monitoring.
 
 from bronx.fancies import loggers
 
-from vortex.algo.components import Parallel
+from vortex.algo.components import BlindRun
 from vortex.syntax.stdattrs import a_date, a_model, a_cutoff
 from ..tools import odb, drhook
 
@@ -15,7 +15,7 @@ logger = loggers.getLogger(__name__)
 
 
 class OdbMonitoring(
-    Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin
+    BlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin
 ):
     """Compute monitoring statistics."""
 
