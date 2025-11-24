@@ -91,7 +91,7 @@ class IFSParallel(
                 ),
                 fcterm=dict(
                     info="The forecast term of the Arpege/IFS model.",
-                    type=int,
+                    type=float,
                     optional=True,
                     default=0,
                 ),
@@ -370,11 +370,23 @@ class IFSParallel(
         self._set_nam_macro(
             namcontents, namlocal, "TIMESTEP", opts_arg["timestep"]
         )
-        fcstop = "{:s}{:d}".format(
-            opts_arg["fcunit"], opts_arg["fcterm"]
-        )
-        self._set_nam_macro(namcontents, namlocal, "FCSTOP", fcstop)
 
+        if self.fcunit == "t":
+            fcstop = "t{:d}".format(int(self.fcterm))
+        elif self.fcterm.is_integer():
+            # Round number of hours
+            fcstop = "h{:d}".format(int(self.fcterm))
+        else:
+            # IFS expects the forecast term to be given as an integer,
+            # whether this integer represents hours or timesteps. This
+            # means terms that are not round hours (e.g. 01:45) can only
+            # be expressed as a number of timesteps.
+            # See http://gitlab.meteo.fr/cnrm-gmap/vortex/-/issues/9
+            nsteps = int(self.fcterm * 3600 // self.timestep)
+            fcstop = "t{:d}".format(nsteps)
+            logger.info(f"Converting {self.fcterm} hours into {nsteps}")
+
+        self._set_nam_macro(namcontents, namlocal, "FCSTOP", fcstop)
         return True
 
     def prepare_namelists(self, rh, opts=None):
