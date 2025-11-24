@@ -185,6 +185,7 @@ class ObjTrack(GeoFlowResource):
                 values=[
                     "json",
                     "hdf5",
+                    "tar",
                     "foo",
                 ],
                 default="foo",
