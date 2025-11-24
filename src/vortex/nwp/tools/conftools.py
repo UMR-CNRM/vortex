@@ -1333,8 +1333,10 @@ class ArpIfsForecastTermConfTool(ConfTool):
         return value
 
     def _cast_unique_value(self, value):
-        #  Currently do't handle strings like "01:30"
-        return float(value)
+        if self.fcterm_unit == "hour":
+            return Time(value)
+        else:
+            return int(value)
 
     @staticmethod
     def _cast_timerangex(value):
@@ -1449,11 +1451,12 @@ class ArpIfsForecastTermConfTool(ConfTool):
         return self._lookup_rangex_cache[(what_desc, cutoff, hh)]
 
     def fcterm(self, cutoff, hh):
-        """The forecast term for **cutoff** and **hh**."""
+        """The forecast term for **cutoff** and **hh** as a float or int."""
         fcterm = self._cutoff_hh_lookup("fcterm", cutoff, hh)
-        if isinstance(fcterm, Time) and fcterm.minute == 0:
-            return fcterm.hour
+        if isinstance(fcterm, Time):
+            return fcterm.hour + (fcterm.minute / 60)
         else:
+            # fcterm is an int representing nb of timesteps
             return fcterm
 
     def hist_terms(self, cutoff, hh):
