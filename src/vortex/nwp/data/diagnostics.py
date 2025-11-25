@@ -145,10 +145,7 @@ _surfex_diag_decofp = footprints.DecorativeFootprint(
             ]
         ),
         nativefmt=dict(
-            values=[
-                "netcdf",
-                "grib",
-            ],
+            values=["netcdf", "grib", "fa"],
             default="netcdf",
             optional=True,
         ),
