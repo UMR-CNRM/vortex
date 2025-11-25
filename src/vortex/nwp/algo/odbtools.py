@@ -16,7 +16,7 @@ from taylorism import Boss
 
 from vortex.tools.systems import ExecutionError
 
-from vortex.algo.components import Parallel, ParaBlindRun
+from vortex.algo.components import Parallel, ParaBlindRun, BlindRun
 from vortex.tools.parallelism import VortexWorkerBlindRun
 
 from ..syntax.stdattrs import arpifs_cycle
@@ -1217,7 +1217,7 @@ class OdbReshuffle(
 
 
 class FlagsCompute(
-    Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin
+    BlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin
 ):
     """Compute observations flags."""
 

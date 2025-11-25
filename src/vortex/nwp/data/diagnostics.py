@@ -145,10 +145,7 @@ _surfex_diag_decofp = footprints.DecorativeFootprint(
             ]
         ),
         nativefmt=dict(
-            values=[
-                "netcdf",
-                "grib",
-            ],
+            values=["netcdf", "grib", "fa"],
             default="netcdf",
             optional=True,
         ),
@@ -185,6 +182,7 @@ class ObjTrack(GeoFlowResource):
                 values=[
                     "json",
                     "hdf5",
+                    "tar",
                     "foo",
                 ],
                 default="foo",

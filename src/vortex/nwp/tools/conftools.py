@@ -1045,11 +1045,11 @@ class ArpIfsForecastTermConfTool(ConfTool):
     The forecast term can be retrieved:
 
       >>> print(ct.fcterm('assim', 6))
-      6
+      6.0
       >>> print(ct.fcterm('production', 0))
-      102
+      102.0
       >>> print(ct.fcterm('production', 12))
-      24
+      24.0
 
     If nothing is defined it crashes:
 
@@ -1451,11 +1451,12 @@ class ArpIfsForecastTermConfTool(ConfTool):
         return self._lookup_rangex_cache[(what_desc, cutoff, hh)]
 
     def fcterm(self, cutoff, hh):
-        """The forecast term for **cutoff** and **hh**."""
+        """The forecast term for **cutoff** and **hh** as a float or int."""
         fcterm = self._cutoff_hh_lookup("fcterm", cutoff, hh)
-        if isinstance(fcterm, Time) and fcterm.minute == 0:
-            return fcterm.hour
+        if isinstance(fcterm, Time):
+            return fcterm.hour + (fcterm.minute / 60)
         else:
+            # fcterm is an int representing nb of timesteps
             return fcterm
 
     def hist_terms(self, cutoff, hh):
