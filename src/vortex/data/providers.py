@@ -64,13 +64,6 @@ class Provider(footprints.FootprintBase):
         fastkeys={"namespace"},
     )
 
-    def __init__(self, *args, **kw):
-        logger.debug("Abstract provider init %s", self.__class__)
-        super().__init__(*args, **kw)
-
-        if not self.username:
-            self.username = vortex.ticket().glove.user
-
     def _str_more(self):
         """Additional information to print representation."""
         try:
@@ -92,7 +85,9 @@ class Provider(footprints.FootprintBase):
 
     def netuser_name(self, resource):  # @UnusedVariable
         """Abstract method."""
-        return self.username
+        if self.username is not None:
+            return self.username
+        return vortex.ticket().glove.user
 
     def pathname(self, resource):
         """Abstract method."""
