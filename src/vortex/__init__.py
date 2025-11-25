@@ -50,6 +50,7 @@ from .toolbox import promise as promise
 from .toolbox import diff as diff
 from .toolbox import defaults as defaults
 from .toolbox import algo as task
+from .toolbox import VortexForceComplete as VortexForceComplete
 
 from . import nwp as nwp  # footprints import
 

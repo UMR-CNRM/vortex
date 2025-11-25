@@ -124,10 +124,11 @@ class Provider(footprints.FootprintBase):
         The different operations of the algorithm can be redefined by subclasses.
         """
         username = self.netuser_name(resource)
+        netloc = self.netloc(resource)
         fullnetloc = (
             "{:s}@{:s}".format(username, self.netloc(resource))
-            if username
-            else self.netloc(resource)
+            if (username and netloc)
+            else netloc
         )
         logger.debug(
             "scheme %s netloc %s normpath %s urlquery %s",

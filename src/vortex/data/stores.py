@@ -1087,7 +1087,10 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
         except config.ConfigurationError:
             cacheloc = os.path.join(os.environ["HOME"], ".vortex.d")
 
-        if self.username != self.system.glove.user:
+        current_vortex_user = self.system.glove.user
+        cacheloc = cacheloc.replace("%usr%", current_vortex_user)
+
+        if self.username != current_vortex_user:
             return os.path.join(cacheloc, self.username)
 
         return cacheloc
@@ -1307,6 +1310,9 @@ class VortexStackStore(_AbstractVortexStackMultiStore):
         """Go through the various stacked stores."""
         return [f"{self.netloc.firstname}.stacked-cache-mt.fr"]
 
+    def alternates_fpextras(self):
+        return dict(username=self.username)
+
 
 class VortexVsopStackStore(_AbstractVortexStackMultiStore):
     """Store intended to read and write data into VORTEX R&D stacks."""
@@ -1438,7 +1444,7 @@ class PromiseCacheStore(VortexCacheMtStore):
     )
 
     @property
-    def cache_promise(self):
+    def cache_entry(self):
         return os.path.join(super().cache_entry, "promise")
 
     @staticmethod
