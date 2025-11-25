@@ -910,5 +910,7 @@ class MUSCForecast(Forecast):
             for f in sh.listdir()
             if f.startswith("Out.") and f.endswith(".lfa")
         ]:
-            sh.rename(f.string, "Out.{:>04}.0000.lfa".format(int(f.group("termh"))))
+            sh.rename(
+                f.string, "Out.{:>04}.0000.lfa".format(int(f.group("termh")))
+            )
         super().postfix(rh, opts)

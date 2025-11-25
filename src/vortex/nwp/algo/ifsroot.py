@@ -364,9 +364,7 @@ class IFSParallel(
         # For cy41 onward, replace some namelist macros with the command line
         # arguments
         opts_arg = self.spawn_command_options()
-        self._set_nam_macro(
-            namcontents, namlocal, "CEXP", opts_arg["name"]
-        )
+        self._set_nam_macro(namcontents, namlocal, "CEXP", opts_arg["name"])
         self._set_nam_macro(
             namcontents, namlocal, "TIMESTEP", opts_arg["timestep"]
         )
