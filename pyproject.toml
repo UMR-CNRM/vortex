@@ -18,7 +18,12 @@ classifiers = [
     "License :: CeCILL-C Free Software License Agreement (CECILL-C)",
 ]
 dependencies = [
-    "bronx", "footprints", "taylorism", "tomli", "arpifs_listings",
+    "bronx",
+    "footprints",
+    "taylorism",
+    "tomli",
+    "arpifs_listings",
+    "importlib_metadata; python_version < '3.8'",
 ]
 
 [project.optional-dependencies]
