@@ -345,7 +345,6 @@ class Finder(Store):
     def _ftpinfos(self, remote, **kwargs):
         args = kwargs.copy()
         args["hostname"] = self.hostname()
-        args["logname"] = remote["username"]
         port = self.hostname().netport
         if port is not None:
             args["port"] = port
