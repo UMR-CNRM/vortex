@@ -54,10 +54,10 @@ from .toolbox import VortexForceComplete as VortexForceComplete
 
 from . import nwp as nwp  # footprints import
 
-__version__ = "2.2.0"
+__version__ = "2.3.0"
 __prompt__ = "Vortex v-" + __version__ + ":"
 
-__nextversion__ = "2.2.1"
+__nextversion__ = "2.3.1"
 __tocinfoline__ = "VORTEX core package"
 
 __all__ = [
