@@ -259,8 +259,13 @@ def set_namespace_from_cache_settings(usecache, usearchive):
 
     # Default usearchive to False is no storage section is defined in
     # the configuration file
-    if not config.is_defined(section="storage"):
-        usearchive = False
+    if usearchive and not config.is_defined(section="storage"):
+        msg = (
+            "Error in provider specification. Remote data tree is activated but "
+            "not configured. See "
+            "https://vortex-nwp.readthedocs.io/en/latest/user-guide/configuration.html#storage"
+        )
+        raise ValueError(msg)
 
     if not (usecache or usearchive):
         # Let caller raise appropriate exception
