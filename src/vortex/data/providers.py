@@ -268,8 +268,11 @@ def set_namespace_from_cache_settings(usecache, usearchive):
         raise ValueError(msg)
 
     if not (usecache or usearchive):
-        # Let caller raise appropriate exception
-        return None
+        msg = (
+            'Error in provider specification. At least one of "cache" or '
+            '"archive" must be set to "True"'
+        )
+        raise ValueError(msg)
 
     if usecache and usearchive:
         domain = "multi"
