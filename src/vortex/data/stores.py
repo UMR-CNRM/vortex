@@ -675,7 +675,9 @@ class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
                 rc = self._vortexget(remote, target, targetopts)
         if rc and self.stacks_autorefill:
             rstore = footprints.proxy.store(
-                scheme=self.scheme, netloc=self.stacks_autorefill
+                scheme=self.scheme,
+                netloc=self.stacks_autorefill,
+                username=self.username,
             )
             logger.info("Refilling the stack egg to [%s]", rstore)
             try:
