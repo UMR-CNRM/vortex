@@ -24,11 +24,11 @@ def main() -> None:
     ..code:: yaml
 
         ---
-        section: ...  # (input, output or rload)
+        section: ...  # (input or output)
         args: ... # the section's arguments
         addons: ... # a list of addons to load.
 
-    Only ``args`` is required. ``section`` will be ``rload`` by default, or can be
+    Only ``args`` is required. ``section`` will be ``input`` by default, or can be
     overriden using the ``--section`` argument to the script.
 
     ``addons`` is a list of addon arguments to pass to ``footprints.proxy.addon``.
@@ -44,7 +44,6 @@ def main() -> None:
           local: "file.txt"
           tube: "ftp"
           hostname: "hendrix.meteo.fr"
-          now: true
           unknown: true
         addons:
           - kind: grib
@@ -68,8 +67,8 @@ def main() -> None:
         "-s",
         type=str,
         default=None,
-        choices=["input", "rload", "output"],
-        help="Section to use (input, rload or output).",
+        choices=["input", "output"],
+        help="Section to use (input or output).",
     )
     parser.add_argument(
         "--addon",
@@ -94,7 +93,7 @@ def main() -> None:
         documents = yaml.safe_load_all(yaml_str.strip())
 
     for document in documents:
-        section = document.get("section", "rload")
+        section = document.get("section", "input")
         addons = document.get("addons", [])
         if args.section is not None:
             section = args.section
@@ -104,7 +103,7 @@ def main() -> None:
 
 
 def vortex_cli(
-    section: Literal["input", "rload", "output"],
+    section: Literal["input", "output"],
     args: dict[str, Any],
     addons: list[dict[str, Any]] | None = None,
 ) -> None:
@@ -126,8 +125,6 @@ def vortex_cli(
         footprints.proxy.addon(**addon, shell=t.sh)
 
     if section == "input":
-        toolbox.input(**args)
-    elif section == "rload":
-        toolbox.rload(**args)
+        toolbox.input(now=True, **args)
     elif section == "output":
-        toolbox.output(**args)
+        toolbox.output(now=True, **args)
