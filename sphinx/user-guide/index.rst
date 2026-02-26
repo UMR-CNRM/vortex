@@ -16,3 +16,4 @@ Contents
    explicit-paths
    configuration
    plugins
+   cli

@@ -31,6 +31,9 @@ docs = ["sphinx", "sphinx-book-theme", "sphinx-copybutton"]
 dev = ["ruff==0.9.1", "pytest"]
 git = ["pygit2"]
 
+[project.scripts]
+vtx = "vortex.cli:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
