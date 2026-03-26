@@ -24,7 +24,6 @@ def main() -> None:
     ..code:: yaml
 
         ---
-        section: ...  # (input or output)
         args: ... # the section's arguments
         addons: ... # a list of addons to load.
 
@@ -38,7 +37,6 @@ def main() -> None:
     ..code:: yaml
 
         ---
-        section: input
         args:
           remote: "path/to/my/file.txt"
           local: "file.txt"
@@ -66,7 +64,7 @@ def main() -> None:
         "--section",
         "-s",
         type=str,
-        default=None,
+        required=True,
         choices=["input", "output"],
         help="Section to use (input or output).",
     )
@@ -93,10 +91,8 @@ def main() -> None:
         documents = yaml.safe_load_all(yaml_str.strip())
 
     for document in documents:
-        section = document.get("section", "input")
+        section = args.section
         addons = document.get("addons", [])
-        if args.section is not None:
-            section = args.section
         for addon in args.addon or []:
             addons.append({"kind": addon})
         vortex_cli(section, document.get("args", {}), addons)
