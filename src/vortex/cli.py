@@ -77,7 +77,7 @@ def main() -> None:
         help="Addon to load. Multiple addons can be provided.",
     )
     parser.add_argument(
-        "--log-level", type=str, default="NOTSET", help="Log level."
+        "--log-level", type=str, default="INFO", help="Log level."
     )
     args = parser.parse_args()
 
