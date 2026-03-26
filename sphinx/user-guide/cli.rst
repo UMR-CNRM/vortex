@@ -1,6 +1,8 @@
-=================
-The `vtx` command
-=================
+.. _vtx-command:
+
+===================
+The ``vtx`` command
+===================
 
 Vortex comes with a command line program ``vtx`` that fetches or
 stores files from/into the local and/or remote data tree.

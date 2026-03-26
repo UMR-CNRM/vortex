@@ -3,9 +3,15 @@ Fetching and writing data files
 ===============================
 
 
-VORTEX facilitates the transfer of data files between an arbitrary
+*vortex* facilitates the transfer of data files between an arbitrary
 location and the current working directory. This location can either
 be a leaf of the :doc:`data tree <data-layout>` or a specific path.
+
+.. seealso::
+
+    This chapter describes how to fetch and write data files
+    programmatically, using *vortex* as a library. This can also be done
+    directly from the command line using :ref:`the vtx command <vtx-command>`.
 
 Fetching files from the data tree
 ---------------------------------
