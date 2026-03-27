@@ -21,6 +21,7 @@ strongly advised.
 """
 
 import atexit
+import copy
 from pathlib import Path
 import sys
 
@@ -127,9 +128,15 @@ else:
 # will typically depend on objects defined in 'vortex'
 # and 'vortex.nwp', these must be imported /before/
 # loading plugins.
+_LOADED_PLUGINS = set()
 for plugin in importlib.metadata.entry_points(group="vtx"):
     plugin.load()
-    print(f"Loaded plugin {plugin.name}")
+    _LOADED_PLUGINS.add(plugin.name)
+
+
+def loaded_plugins() -> set[str]:
+    """Return the set of names for loaded plugins"""
+    return copy.copy(_LOADED_PLUGINS)
 
 
 # Register proper vortex exit before the end of interpreter session
