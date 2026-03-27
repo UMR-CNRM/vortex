@@ -35,7 +35,6 @@ else:
     import importlib.metadata
 
 from bronx.fancies import loggers as bloggers
-import bronx.stdtypes.date
 
 import footprints
 
@@ -141,26 +140,9 @@ def complete():
     for kid in multiprocessing.active_children():
         logger.warning("Terminate active kid %s", str(kid))
         kid.terminate()
-    print(
-        "Vortex",
-        __version__,
-        "completed",
-        "(",
-        bronx.stdtypes.date.at_second().reallynice(),
-        ")",
-    )
 
 
 atexit.register(complete)
 del atexit, complete
-
-print(
-    "Vortex",
-    __version__,
-    "loaded",
-    "(",
-    bronx.stdtypes.date.at_second().reallynice(),
-    ")",
-)
 
 del footprints
