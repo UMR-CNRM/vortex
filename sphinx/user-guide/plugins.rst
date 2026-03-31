@@ -20,6 +20,9 @@ or :py:func:`vortex.task`, the corresponding Python modules must be
 installed as part of a package that declares the ``vtx`` entry point
 in its metadata.
 
+The :py:func:`vortex.loaded_plugins` can be used to list currently
+loaded plugin packages.
+
 Example
 -------
 

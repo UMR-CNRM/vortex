@@ -21,6 +21,7 @@ strongly advised.
 """
 
 import atexit
+import copy
 from pathlib import Path
 import sys
 
@@ -35,7 +36,6 @@ else:
     import importlib.metadata
 
 from bronx.fancies import loggers as bloggers
-import bronx.stdtypes.date
 
 import footprints
 
@@ -67,6 +67,7 @@ __all__ = [
     "task",
     "promise",
     "diff",
+    "loaded_plugins",
 ]
 
 # Set vortex specific priorities for footprints usage
@@ -128,9 +129,24 @@ else:
 # will typically depend on objects defined in 'vortex'
 # and 'vortex.nwp', these must be imported /before/
 # loading plugins.
+_LOADED_PLUGINS = set()
 for plugin in importlib.metadata.entry_points(group="vtx"):
     plugin.load()
-    print(f"Loaded plugin {plugin.name}")
+    _LOADED_PLUGINS.add(plugin.name)
+
+
+def loaded_plugins() -> set[str]:
+    """Return the set of names for loaded plugins
+
+    **Example:**
+
+    .. code:: python
+
+        >>> import vortex
+        >>> vortex.loaded_plugins()
+            {"gco", "cen"}
+    """
+    return copy.copy(_LOADED_PLUGINS)
 
 
 # Register proper vortex exit before the end of interpreter session
@@ -141,26 +157,9 @@ def complete():
     for kid in multiprocessing.active_children():
         logger.warning("Terminate active kid %s", str(kid))
         kid.terminate()
-    print(
-        "Vortex",
-        __version__,
-        "completed",
-        "(",
-        bronx.stdtypes.date.at_second().reallynice(),
-        ")",
-    )
 
 
 atexit.register(complete)
 del atexit, complete
-
-print(
-    "Vortex",
-    __version__,
-    "loaded",
-    "(",
-    bronx.stdtypes.date.at_second().reallynice(),
-    ")",
-)
 
 del footprints
