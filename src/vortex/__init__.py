@@ -67,6 +67,7 @@ __all__ = [
     "task",
     "promise",
     "diff",
+    "loaded_plugins",
 ]
 
 # Set vortex specific priorities for footprints usage
@@ -135,7 +136,16 @@ for plugin in importlib.metadata.entry_points(group="vtx"):
 
 
 def loaded_plugins() -> set[str]:
-    """Return the set of names for loaded plugins"""
+    """Return the set of names for loaded plugins
+
+    **Example:**
+
+    .. code:: python
+
+        >>> import vortex
+        >>> vortex.loaded_plugins()
+            {"gco", "cen"}
+    """
     return copy.copy(_LOADED_PLUGINS)
 
 
