@@ -16,21 +16,27 @@ LOG.addHandler(logging.StreamHandler())
 
 def main() -> None:
     """
-    Run a vortex section via CLI.
-    The argument of the section is provided via a yaml config file or via stdin.
+    Fetch/store a vortex resource from the command line.
 
-    The config is a valid yaml document can contain the following keys:
+    Files are fetched with the ``get`` subcommand and stored with the ``put``
+    subcommand. The vortex resource description is provided via a yaml config
+    file or via stdin.
+
+    Example:
+
+    ..code:: bash
+
+        vtx get desc.yaml
+
+    The config is a valid YAML document can contain the following keys:
 
     ..code:: yaml
 
         ---
-        section: ...  # (input or output)
-        args: ... # the section's arguments
+        args: ... # the resource descrition
         addons: ... # a list of addons to load.
 
-    Only ``args`` is required. ``section`` will be ``input`` by default, or can be
-    overriden using the ``--section`` argument to the script.
-
+    Only ``args`` is required.
     ``addons`` is a list of addon arguments to pass to ``footprints.proxy.addon``.
 
     For example:
@@ -38,7 +44,6 @@ def main() -> None:
     ..code:: yaml
 
         ---
-        section: input
         args:
           remote: "path/to/my/file.txt"
           local: "file.txt"
@@ -49,26 +54,10 @@ def main() -> None:
           - kind: grib
 
     :note: You can provide multiple yaml document separated via ``---``
-    to execute multiple sections.
+    to execute multiple resources.
     """
-    parser = argparse.ArgumentParser(description="Save resource using vortex.")
-    parser.add_argument(
-        "path",
-        type=str,
-        nargs="?",
-        default=None,
-        help=(
-            "Path to the config file to run. "
-            "If not provided, will get the file from stdin."
-        ),
-    )
-    parser.add_argument(
-        "--section",
-        "-s",
-        type=str,
-        default=None,
-        choices=["input", "output"],
-        help="Section to use (input or output).",
+    parser = argparse.ArgumentParser(
+        description="Fetch and store resources using vortex."
     )
     parser.add_argument(
         "--addon",
@@ -77,8 +66,27 @@ def main() -> None:
         help="Addon to load. Multiple addons can be provided.",
     )
     parser.add_argument(
-        "--log-level", type=str, default="NOTSET", help="Log level."
+        "--log-level", type=str, default="INFO", help="Log level."
     )
+
+    subparsers = parser.add_subparsers(dest="subcommand", required=True)
+
+    for name, help_text in [
+        ("get", "Fetch data from data tree(s)"),
+        ("put", "Store data from data tree(s)"),
+    ]:
+        sub = subparsers.add_parser(name, help=help_text)
+        sub.add_argument(
+            "path",
+            type=str,
+            nargs="?",
+            default=None,
+            help=(
+                "Path to the config file to run. "
+                "If not provided, will get the file from stdin."
+            ),
+        )
+
     args = parser.parse_args()
 
     LOG.setLevel(args.log_level)
@@ -92,23 +100,21 @@ def main() -> None:
     if yaml_str:
         documents = yaml.safe_load_all(yaml_str.strip())
 
+    action = "input" if args.subcommand == "get" else "output"
     for document in documents:
-        section = document.get("section", "input")
         addons = document.get("addons", [])
-        if args.section is not None:
-            section = args.section
         for addon in args.addon or []:
             addons.append({"kind": addon})
-        vortex_cli(section, document.get("args", {}), addons)
+        vortex_cli(action, document.get("args", {}), addons)
 
 
 def vortex_cli(
-    section: Literal["input", "output"],
+    action: Literal["input", "output"],
     args: dict[str, Any],
     addons: list[dict[str, Any]] | None = None,
 ) -> None:
     """
-    Execute a section and loads specified addons.
+    Execute a vortex section and loads specified addons.
 
     :param section: The section to load.
     :param args: The section's arguments.
@@ -124,7 +130,7 @@ def vortex_cli(
 
         footprints.proxy.addon(**addon, shell=t.sh)
 
-    if section == "input":
+    if action == "input":
         toolbox.input(now=True, **args)
-    elif section == "output":
+    elif action == "output":
         toolbox.output(now=True, **args)
