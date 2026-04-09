@@ -3,8 +3,6 @@ Data assimilation
 
 .. automodule:: vortex.nwp.algo.assim
 
-.. autoclass:: vortex.nwp.algo.assim.MergeVarBC
-
 .. autoclass:: vortex.nwp.algo.assim.Anamix
 
 .. autoclass:: vortex.nwp.algo.assim.SstAnalysis
