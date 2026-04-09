@@ -60,9 +60,12 @@ def load_config(configpath=Path("vortex.toml")):
 
 def print_config():
     """Print configuration (key, value) pairs"""
-    if VORTEX_CONFIG:
-        for k, v in VORTEX_CONFIG.items():
-            print(k.upper(), v)
+    if not VORTEX_CONFIG:
+        return None
+    for section_name, section in VORTEX_CONFIG.items():
+        print(f"Section: {section_name.upper()}")
+        for k, v in section.items():
+            print(f"    {k.upper()}: {v}")
 
 
 def from_config(section, key=None):
