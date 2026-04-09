@@ -11,13 +11,51 @@ The configuration can be modified using two functions:
 - :py:func:`config.load_config <vortex.config.load_config>`: Set multiple keys from a TOML file.
 
 The value of a specific key can be queried using
-:py:func:`config.from_confi <vortex.config.from_config>`.  It is also
+:py:func:`config.from_config <vortex.config.from_config>`.  It is also
 possible to print the entire configuration using
-:py:func:`config.print_config <vortex.config.print_config>`.
+:py:func:`config.print_config <vortex.config.print_config>`. If the
+current configuration was read from a file, the corresponding path can
+be read from the value of ``config.file``.
+
+.. code:: toml
+
+   [storage]
+   address = "ftp.domain.com"
+
+
+.. code:: python
+
+   >>> from vortex import config
+   >>> config.load_config("~/.vortex.d/vortex.toml")  # The default
+   >>> config.file
+   PosixPath('/home/user/.vortex.d/vortex.toml')
+   >>> config.from_config("storage", "address")
+   "ftp.domain.com"
+   >>> from_config("storage", "protocol")
+   ConfigurationError: Missing configuration key protocol in section storage
+   >>> config.set_config("storage", "protocol", value="ftp")
+   >>> config.print_config()
+   Section: storage
+    ADDRESS: hendrix.meteo.fr
+    PROTOCOL: ftp
 
 .. seealso::
 
    :doc:`../reference/configuration`
+
+
+Default configuration
+^^^^^^^^^^^^^^^^^^^^^
+
+At import time, ``vortex`` tries to read configuration from a file
+``vortex.toml`` in the current working directory.
+
+If not found, ``vortex`` reads configuration from
+``~/.vortex.d/vortex.toml``.
+
+If the default configuration is not found, *vortex* is left
+unconfigured.
+
 
 ``data-tree``
 ^^^^^^^^^^^^^
