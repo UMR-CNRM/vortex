@@ -3,6 +3,8 @@ the value of configuration options, respectively.
 
 """
 
+import sys
+import types
 from pathlib import Path
 import tomli
 
@@ -17,6 +19,7 @@ __all__ = [
 ]
 
 VORTEX_CONFIG = {}
+_PATH = None
 
 logger = loggers.getLogger(__name__)
 
@@ -42,11 +45,12 @@ def load_config(configpath=Path("vortex.toml")):
        # ...
     """
     global VORTEX_CONFIG
+    global _PATH
     configpath = Path(configpath)
     try:
         with configpath.open(mode="rb") as f:
             VORTEX_CONFIG = tomli.load(f)
-        print(f"Successfully read configuration file {configpath.absolute()}")
+            _PATH = configpath.absolute()
     except FileNotFoundError:
         print(
             f"Could not read configuration file {configpath.absolute()} (not found)."
@@ -114,3 +118,16 @@ def get_from_config_w_default(section, key, default):
         return from_config(section, key)
     except ConfigurationError:
         return default
+
+
+class _ConfigModule(types.ModuleType):
+    @property
+    def file(self):
+        return _PATH
+
+    @file.setter
+    def file(self, value):
+        raise AttributeError("config.file is read-only")
+
+
+sys.modules[__name__].__class__ = _ConfigModule
