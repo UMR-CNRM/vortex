@@ -24,6 +24,7 @@ dependencies = [
     "tomli",
     "arpifs_listings",
     "importlib_metadata; python_version < '3.8'",
+    "pyyaml",
 ]
 
 [project.optional-dependencies]
