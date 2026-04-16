@@ -6,11 +6,13 @@ This provider should work both on Soprano servers and on HPC, be it experimental
 certain parameters combinations.
 """
 
+import configparser
+
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Time
 from vortex.data.providers import Provider
 from vortex.syntax.stdattrs import DelayedEnvValue, Namespace, namespacefp
-from vortex.util.config import GenericConfigParser
+from vortex.config import from_config
 
 #: No automatic export
 __all__ = []
@@ -140,9 +142,9 @@ class BdpeProvider(Provider):
     def __init__(self, *args, **kw):
         logger.debug("BDPE provider init %s", self.__class__)
         super().__init__(*args, **kw)
-        self._actual_config = self.config
-        if self._actual_config is None:
-            self._actual_config = GenericConfigParser(inifile=self.inifile)
+        inifile = from_config(section="bdpe", key="map_resources")
+        self._actual_config = configparser.ConfigParser()
+        self._actual_config.read(inifile)
 
     @property
     def realkind(self):
