@@ -8,7 +8,11 @@ from bronx.fancies import loggers
 from bronx.syntax.decorators import nicedeco
 import footprints
 
-from vortex.config import get_from_config_w_default
+from vortex.config import (
+    get_from_config_w_default,
+    from_config,
+    ConfigurationError,
+)
 from vortex.layout import contexts
 from vortex.tools.env import Environment
 from vortex.tools.systems import OSExtended
@@ -206,11 +210,11 @@ class FtrawEnableAddon(Addon):
         super().__init__(*args, **kw)
         # If needed, look in the config file for the rawftshell
         if self.rawftshell is None:
-            self.rawftshell = get_from_config_w_default(
-                section="rawftshell",
-                key=self.kind,
-                default=None,
-            )
+            try:
+                shell = from_config(section="ftserv", key="shell")
+                self.rawftshell = f"/usr/local/bin/ft_regroupement_concat_{shell[self.kind]}.sh"
+            except (ConfigurationError, KeyError):
+                self.rawftshell = None
 
 
 class AddonGroup(footprints.FootprintBase):
