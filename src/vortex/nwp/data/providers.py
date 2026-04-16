@@ -120,20 +120,6 @@ class BdpeProvider(Provider):
                     type=int,
                     default=3,
                 ),
-                config=dict(
-                    info="A ready to use configuration file object for this storage place.",
-                    type=GenericConfigParser,
-                    optional=True,
-                    default=None,
-                ),
-                inifile=dict(
-                    info=(
-                        "The name of the configuration file that will be used (if "
-                        + "**config** is not provided."
-                    ),
-                    optional=True,
-                    default="@bdpe-map-resources.ini",
-                ),
             ),
             fastkeys={"bdpeid"},
         ),
