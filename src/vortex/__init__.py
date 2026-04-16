@@ -24,6 +24,7 @@ import atexit
 import copy
 from pathlib import Path
 import sys
+from typing import Set  # Python 3.7 compat
 
 # importlib.metadata included in stdlib from 3.8 onwards.
 # For older versions, import third-party importlib_metadata
@@ -135,7 +136,7 @@ for plugin in importlib.metadata.entry_points(group="vtx"):
     _LOADED_PLUGINS.add(plugin.name)
 
 
-def loaded_plugins() -> set[str]:
+def loaded_plugins() -> Set[str]:
     """Return the set of names for loaded plugins
 
     **Example:**
