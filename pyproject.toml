@@ -23,7 +23,8 @@ dependencies = [
     "taylorism",
     "tomli",
     "arpifs_listings",
-    "importlib_metadata; python_version < '3.8'",
+    # Selectable entrypoints from importlib_metadata 3.6
+    "importlib_metadata>=3.6; python_version < '3.8'",
     "pyyaml",
 ]
 
