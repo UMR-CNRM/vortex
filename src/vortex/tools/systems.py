@@ -67,7 +67,8 @@ from vortex.tools.compression import CompressionPipeline
 from vortex.tools.env import Environment
 from vortex.tools.net import AssistedSsh, AutoRetriesFtp, DEFAULT_FTP_PORT
 from vortex.tools.net import FtpConnectionPool, LinuxNetstats, StdFtp
-from vortex import config
+from vortex import config, proxy
+
 
 #: No automatic export
 __all__ = []
@@ -1914,9 +1915,7 @@ class OSExtended(System):
         else:
             return False
 
-    def ftserv_allowed(self, source, destination):
-        """Given **source** and **destination**, is FtServ usable ?"""
-        return isinstance(source, str) and isinstance(destination, str)
+
 
     def ftserv_put(
         self,
@@ -2305,29 +2304,20 @@ class OSExtended(System):
             * **source** is a string (as opposed to a File like object)
             * **destination** is a string (as opposed to a File like object)
         """
-        if self.rawftget_worthy(source, destination, cpipeline):
-            # FtServ is uninteresting when dealing with compression
-            return self.rawftget(
-                source,
-                destination,
-                hostname=hostname,
-                logname=logname,
-                port=port,
-                cpipeline=cpipeline,
-                fmt=fmt,
+        
+        ftp = proxy.ftp_client(server = self.hostname)
+        #ftp = proxy.ftp_client(server = "toto") # test ftplib
+        
+        ftp.get(
+            source,
+            destination,
+            hostname=hostname,
+            logname=logname,
+            port=port,
+            cpipeline=cpipeline,
+            fmt=fmt,
             )
-        else:
-            if port is None:
-                port = DEFAULT_FTP_PORT
-            return self.ftget(
-                source,
-                destination,
-                hostname=hostname,
-                logname=logname,
-                port=port,
-                cpipeline=cpipeline,
-                fmt=fmt,
-            )
+        
 
     def smartbatchftget(
         self,
@@ -4015,3 +4005,134 @@ class Macosx34p(Macosx, Python34):
             info="Apple Mac computer under Macosx with a blazing Python version"
         ),
     ]
+
+
+
+
+class FtpClient(OSExtended):
+    """
+    Root class for any :class:`Ftp` subclasses.
+    """
+    _abstract  = True
+    _collector = ("ftp_client",)
+    _footprint = dict(
+        info = "FTP client handling",
+        attr = dict(
+            server = dict(),
+        ),
+    )
+
+class PythonFtp(FtpClient):
+    """
+    FTP client that relies on the standard library ``ftplib``.
+    """
+
+    _footprint = dict(
+        info = "FTP client that relies on the standard library ``ftplib``",
+        attr = dict(
+            server = dict(
+                values = []),
+        ),
+    )
+    def get(self,
+            source,
+            destination,
+            hostname=None,
+            logname=None,
+            port=None,
+            cpipeline=None,
+            fmt=None):
+        
+        if port is None:
+            port = DEFAULT_FTP_PORT
+            
+        return self.ftget(
+            source,
+            destination,
+            hostname=hostname,
+            logname=logname,
+            port=port,
+            cpipeline=cpipeline,
+            fmt=fmt,
+        )
+
+class MeteoFranceFtp(FtpClient):
+    """
+    Meteo-France FTP client ``FTServ``.
+    """
+
+    _footprint = dict(
+        info = "Meteo-France FTP client ``FTServ``",
+        attr = dict(
+            server = dict(
+                values = ["belenos", "taranis", "sxcoope1"]),
+        ),
+    )
+
+    @fmtshcmd
+    def get(
+        self,
+        source,
+        destination,
+        hostname=None,
+        logname=None,
+        port=None,
+        cpipeline=None,
+    ):
+        """Proceed with some external ftget command on the specified target.
+
+        :param str source: the remote path to get data
+        :param str destination: path to the filename where to put the data.
+        :param str hostname: the target hostname  (default: *None*).
+        :param str logname: the target logname  (default: *None*).
+        :param int port: the port number on the remote host.
+        :param CompressionPipeline cpipeline: unused (kept for compatibility)
+        """
+        if cpipeline is not None:
+            raise OSError("cpipeline is not supported by this method.")
+        return self.ftserv_get(
+            source, destination, hostname, logname, port=port
+        )
+
+
+    def ftserv_get(
+        self, source, destination, hostname=None, logname=None, port=None
+    ):
+        """Get a file using FtServ."""
+        if self.ftserv_allowed(source, destination):
+            if self.filecocoon(destination):
+                hostname = self.fix_fthostname(hostname, fatal=False)
+                logname = self.fix_ftuser(hostname, logname, fatal=False)
+                destination = self.path.expanduser(destination)
+                extras = list()
+                if hostname:
+                    if port is not None:
+                        hostname += ":{:s}".format(str(port))
+                    extras.extend(["-h", hostname])
+                if logname:
+                    extras.extend(["-u", logname])
+                ftcmd = self.ftgetcmd or "ftget"
+                try:
+                    rc = self.spawn(
+                        [
+                            ftcmd,
+                        ]
+                        + extras
+                        + [source, destination],
+                        output=False,
+                    )
+                except ExecutionError:
+                    rc = False
+            else:
+                raise OSError("Could not cocoon: {!s}".format(destination))
+        else:
+            raise OSError(
+                "Source or destination is not a plain file path: {!r}".format(
+                    source
+                )
+            )
+        return rc
+    
+    def ftserv_allowed(self, source, destination):
+        """Given **source** and **destination**, is FtServ usable ?"""
+        return isinstance(source, str) and isinstance(destination, str)
