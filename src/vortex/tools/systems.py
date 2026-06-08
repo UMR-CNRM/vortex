@@ -2282,7 +2282,7 @@ class OSExtended(System):
         cpipeline=None,
         fmt=None,
     ):
-        """Select the best alternative between ``ftget`` and ``rawftget``.
+        """“Retrieve a file from a remote FTP server.
 
         :param str source: the remote path to get data
         :param destination: The destination of data (either a path to file or a
@@ -2297,16 +2297,8 @@ class OSExtended(System):
             uncompress the data during the file transfer.
         :param str fmt: The format of data.
 
-        ``rawftget`` will be used if all of the following conditions are met:
-
-            * ``self.ftserv`` is *True*
-            * **cpipeline** is None
-            * **source** is a string (as opposed to a File like object)
-            * **destination** is a string (as opposed to a File like object)
         """
-        
-        ftp = proxy.ftp_client(server = self.hostname)
-        #ftp = proxy.ftp_client(server = "toto") # test ftplib
+        ftp = self.get_ftp_client()
         
         ftp.get(
             source,
@@ -2316,8 +2308,7 @@ class OSExtended(System):
             port=port,
             cpipeline=cpipeline,
             fmt=fmt,
-            )
-        
+            )        
 
     def smartbatchftget(
         self,
@@ -3717,6 +3708,34 @@ class OSExtended(System):
         ldir = self._appwide_lockdir_path(label)
         self._lockdir_destroy(ldir)
 
+    def get_ftp_client(self):
+        """Returns an instance of a FTP client.
+        
+        The footprint's mechanism collects all ftp clients that inherit from 
+        the ``FtpClient`` class.
+        
+        A specific FTP client defined in a plugin module will be selected 
+        if its footprint attribute ``name`` matches the value of
+        ``VORTEX_CONFIG["ftp_client"]["name"].``
+        
+        If the instantiation of the specified FTP client fails 
+        (for example, if the corresponding module is not available), 
+        a default client based on the ``ftplib`` library is returned.
+        
+
+        Returns
+        -------
+        An instantiated FTP client.
+        """
+        if config.is_defined("ftp_client"):
+            client_name = config.VORTEX_CONFIG["ftp_client"]["name"]
+            try:
+                return proxy.ftp_client(name = client_name)
+            except Exception as e:
+                logger.warning("Can't find FTP client %s: %s. \
+                           \nLoad default FTP client.", client_name, e)
+        return proxy.ftp_client(name="default")
+    
 
 class Python34:
     """Python features starting from version 3.4."""
@@ -4006,9 +4025,6 @@ class Macosx34p(Macosx, Python34):
         ),
     ]
 
-
-
-
 class FtpClient(OSExtended):
     """
     Root class for any :class:`Ftp` subclasses.
@@ -4018,9 +4034,9 @@ class FtpClient(OSExtended):
     _footprint = dict(
         info = "FTP client handling",
         attr = dict(
-            server = dict(),
-        ),
+            ),
     )
+    
 
 class PythonFtp(FtpClient):
     """
@@ -4030,10 +4046,10 @@ class PythonFtp(FtpClient):
     _footprint = dict(
         info = "FTP client that relies on the standard library ``ftplib``",
         attr = dict(
-            server = dict(
-                values = []),
+            name=dict(values=["default"])
         ),
     )
+    
     def get(self,
             source,
             destination,
@@ -4055,84 +4071,3 @@ class PythonFtp(FtpClient):
             cpipeline=cpipeline,
             fmt=fmt,
         )
-
-class MeteoFranceFtp(FtpClient):
-    """
-    Meteo-France FTP client ``FTServ``.
-    """
-
-    _footprint = dict(
-        info = "Meteo-France FTP client ``FTServ``",
-        attr = dict(
-            server = dict(
-                values = ["belenos", "taranis", "sxcoope1"]),
-        ),
-    )
-
-    @fmtshcmd
-    def get(
-        self,
-        source,
-        destination,
-        hostname=None,
-        logname=None,
-        port=None,
-        cpipeline=None,
-    ):
-        """Proceed with some external ftget command on the specified target.
-
-        :param str source: the remote path to get data
-        :param str destination: path to the filename where to put the data.
-        :param str hostname: the target hostname  (default: *None*).
-        :param str logname: the target logname  (default: *None*).
-        :param int port: the port number on the remote host.
-        :param CompressionPipeline cpipeline: unused (kept for compatibility)
-        """
-        if cpipeline is not None:
-            raise OSError("cpipeline is not supported by this method.")
-        return self.ftserv_get(
-            source, destination, hostname, logname, port=port
-        )
-
-
-    def ftserv_get(
-        self, source, destination, hostname=None, logname=None, port=None
-    ):
-        """Get a file using FtServ."""
-        if self.ftserv_allowed(source, destination):
-            if self.filecocoon(destination):
-                hostname = self.fix_fthostname(hostname, fatal=False)
-                logname = self.fix_ftuser(hostname, logname, fatal=False)
-                destination = self.path.expanduser(destination)
-                extras = list()
-                if hostname:
-                    if port is not None:
-                        hostname += ":{:s}".format(str(port))
-                    extras.extend(["-h", hostname])
-                if logname:
-                    extras.extend(["-u", logname])
-                ftcmd = self.ftgetcmd or "ftget"
-                try:
-                    rc = self.spawn(
-                        [
-                            ftcmd,
-                        ]
-                        + extras
-                        + [source, destination],
-                        output=False,
-                    )
-                except ExecutionError:
-                    rc = False
-            else:
-                raise OSError("Could not cocoon: {!s}".format(destination))
-        else:
-            raise OSError(
-                "Source or destination is not a plain file path: {!r}".format(
-                    source
-                )
-            )
-        return rc
-    
-    def ftserv_allowed(self, source, destination):
-        """Given **source** and **destination**, is FtServ usable ?"""
-        return isinstance(source, str) and isinstance(destination, str)
