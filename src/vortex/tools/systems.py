@@ -3711,31 +3711,24 @@ class OSExtended(System):
     def get_ftp_client(self):
         """Returns an instance of a FTP client.
         
-        The footprint's mechanism collects all ftp clients that inherit from 
-        the ``FtpClient`` class.
+        The footprint mechanism collects all FTP clients inheriting from
+        ``FtpClient``.
         
-        A specific FTP client defined in a plugin module will be selected 
-        if its footprint attribute ``name`` matches the value of
-        ``VORTEX_CONFIG["ftp_client"]["name"].``
+        When requesting a client with ``name="ftp"``, several implementations may
+        match. If a plugin-defined implementation has a higher footprint 
+        priority than ``PythonFtp``, it is selected first.
         
-        If the instantiation of the specified FTP client fails 
-        (for example, if the corresponding module is not available), 
-        a default client based on the ``ftplib`` library is returned.
+        The selected client is used only if its ``_use_me(hostname)`` method returns
+        ``True``. Otherwise, the default ``PythonFtp`` implementation is returned by
+        requesting ``name="default"``.
         
-
-        Returns
-        -------
-        An instantiated FTP client.
+        :return: An FTP client instance.
         """
-        if config.is_defined("ftp_client"):
-            client_name = config.VORTEX_CONFIG["ftp_client"]["name"]
-            try:
-                return proxy.ftp_client(name = client_name)
-            except Exception as e:
-                logger.warning("Can't find FTP client %s: %s. \
-                           \nLoad default FTP client.", client_name, e)
+        client = proxy.ftp_client(name="ftp")
+        if client._use_me(self.hostname):
+            return client
+
         return proxy.ftp_client(name="default")
-    
 
 class Python34:
     """Python features starting from version 3.4."""
@@ -4033,11 +4026,8 @@ class FtpClient(OSExtended):
     _collector = ("ftp_client",)
     _footprint = dict(
         info = "FTP client handling",
-        attr = dict(
-            ),
     )
     
-
 class PythonFtp(FtpClient):
     """
     FTP client that relies on the standard library ``ftplib``.
@@ -4045,11 +4035,27 @@ class PythonFtp(FtpClient):
 
     _footprint = dict(
         info = "FTP client that relies on the standard library ``ftplib``",
+        priority = dict(
+            level = footprints.priorities.top.DEFAULT
+            ),
         attr = dict(
-            name=dict(values=["default"])
-        ),
-    )
+            name = dict(values=["default", "ftp"]),
+                ),
+        )
     
+    def _use_me(*args):
+        """
+        Determine whether this FTP client can be used.
+    
+        By default this client is always usable. Any supplied arguments are
+        ignored.
+        
+        :param args: Positional arguments (ignored).
+        :return: ``True``.
+        :rtype: bool
+        """
+        return True
+        
     def get(self,
             source,
             destination,
@@ -4071,3 +4077,49 @@ class PythonFtp(FtpClient):
             cpipeline=cpipeline,
             fmt=fmt,
         )
+
+    @fmtshcmd
+    def ftget(
+        self,
+        source,
+        destination,
+        hostname=None,
+        logname=None,
+        port=DEFAULT_FTP_PORT,
+        cpipeline=None,
+    ):
+        """Proceed to a direct ftp get on the specified target (using Vortex's FTP client).
+
+        :param str source: the remote path to get data
+        :param destination: The destination of data (either a path to file or a
+            File-like object)
+        :type destination: str or File-like object
+        :param str hostname: The target hostname (default: *None*, see the
+            :class:`~vortex.tools.net.StdFtp` class to get the effective default)
+        :param str logname: the target logname (default: *None*, see the
+            :class:`~vortex.tools.net.StdFtp` class to get the effective default)
+        :param int port: the port number on the remote host.
+        :param CompressionPipeline cpipeline: If not *None*, the object used to
+            uncompress the data during the file transfer (default: *None*).
+        """
+        if isinstance(destination, str):  # destination may be Virtual
+            self.rm(destination)
+        hostname = self.fix_fthostname(hostname)
+        ftp = self.ftp(hostname, logname, port=port)
+        if ftp:
+            try:
+                if cpipeline is None:
+                    rc = ftp.get(source, destination)
+                else:
+                    with cpipeline.stream2uncompress(
+                        destination
+                    ) as cdestination:
+                        rc = ftp.get(source, cdestination)
+            except ftplib.all_errors as e:
+                logger.warning("An FTP error occured: %s", str(e))
+                rc = False
+            finally:
+                ftp.close()
+            return rc
+        else:
+            return False
