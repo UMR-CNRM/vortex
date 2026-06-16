@@ -800,6 +800,10 @@ def load(
         with open(user_geometries, encoding="utf-8") as fh:
             iniconf.read_file(fh)
 
+    add_geometries(iniconf, refresh, verbose)
+
+
+def add_geometries(iniconf, refresh, verbose):
     for item in iniconf.sections():
         gdesc = dict(iniconf.items(item))
         gkind = gdesc.get("kind")
