@@ -105,6 +105,8 @@ FtpFlavourTuple = namedtuple(
 #: Predefined FTP_FLAVOUR values IN, OUT and INOUT.
 FTP_FLAVOUR = FtpFlavourTuple(STD=0, RETRIES=1, CONNECTION_POOLS=2)
 
+# Bundles the get, put callables and booleans that indicate whether each operation is usable.
+FtpMethod = namedtuple("FtpMethod", ["get", "put", "get_condition", "put_condition"])
 
 @nicedeco_plusdoc(_fmtshcmd_docbonus)
 def fmtshcmd(func):
@@ -800,7 +802,6 @@ class OSExtended(System):
 
             * **rmtreemin** - as the minimal depth needed for a :meth:`rmsafe`.
             * **cmpaftercp** - as a boolean for activating full comparison after plain cp (default: *True*).
-            * **ftserv** - allows ``smartft*`` methods to use the raw FTP commands
               (e.g. ftget, ftput) instead of the internal Vortex's FTP client
               (default: *False*).
             * **ftputcmd** - The name of the raw FTP command for the "put" action
@@ -815,12 +816,16 @@ class OSExtended(System):
         self._rmtreemin = kw.pop("rmtreemin", 3)
         self._cmpaftercp = kw.pop("cmpaftercp", True)
         # Switches for rawft* methods
-        self._ftserv = kw.pop("ftserv", None)
         self.ftputcmd = kw.pop("ftputcmd", None)
         self.ftgetcmd = kw.pop("ftgetcmd", None)
         # FTP stuff again
         self.ftpflavour = kw.pop("ftpflavour", FTP_FLAVOUR.CONNECTION_POOLS)
         self._current_ftppool = None
+        self.ftp_methods = [FtpMethod(get=self.ftget, 
+                                      put=self.ftput,
+                                      put_condition=self._use_ftplib,
+                                      get_condition=self._use_ftplib,
+                                      )]
         # Some internal variables used by particular methods
         self._ftspool_cache = None
         self._frozen_target = None
@@ -837,33 +842,17 @@ class OSExtended(System):
         # Initialise the signal handler object
         self._signal_intercept_init()
 
-    @property
-    def ftserv(self):
-        """Use the system's FTP service (e.g. ftserv)."""
-        if self._ftserv is None:
-            return self._use_ftserv()
-        else:
-            return self._ftserv
+    def _use_ftplib(*args, **kwargs):
+        """Determine whether the FTP transfer implementation based on *ftplib* 
+        should be used for getting a file.
+        
+        This implementation is always considered suitable.
+        Any provided arguments are ignored.
 
-    @ftserv.setter
-    def ftserv(self, value):
-        """Use the system's FTP service (e.g. ftserv)."""
-        self._ftraw = bool(value)
-
-    @ftserv.deleter
-    def ftserv(self):
-        """Use the system's FTP service (e.g. ftserv)."""
-        self._ftraw = None
-
-    def _use_ftserv(self):
-        if not config.is_defined(section="ftserv"):
-            return False
-        for rgxp in config.from_config(
-            section="ftserv", key="hostname_patterns"
-        ):
-            if re.match(rgxp, self.hostname):
-                return True
-        return False
+        :return: ``True``.
+        :rtype: bool
+        """
+        return True
 
     def target(self, **kw):
         """
@@ -1807,6 +1796,8 @@ class OSExtended(System):
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             uncompress the data during the file transfer (default: *None*).
         """
+        if port is None:
+            port = DEFAULT_FTP_PORT
         if isinstance(destination, str):  # destination may be Virtual
             self.rm(destination)
         hostname = self.fix_fthostname(hostname)
@@ -1856,6 +1847,8 @@ class OSExtended(System):
         :param bool sync: If False, allow asynchronous transfers (currently not
             used: transfers are always synchronous).
         """
+        # if port is None:
+        #     port = DEFAULT_FTP_PORT
         rc = False
         if self.is_iofile(source):
             hostname = self.fix_fthostname(hostname)
@@ -1913,108 +1906,6 @@ class OSExtended(System):
             return self.ftspool_cache().fullpath(outputname)
         else:
             return False
-
-    def ftserv_allowed(self, source, destination):
-        """Given **source** and **destination**, is FtServ usable ?"""
-        return isinstance(source, str) and isinstance(destination, str)
-
-    def ftserv_put(
-        self,
-        source,
-        destination,
-        hostname=None,
-        logname=None,
-        port=None,
-        specialshell=None,
-        sync=False,
-    ):
-        """Asynchronous put of a file using FtServ."""
-        if self.ftserv_allowed(source, destination):
-            if self.path.exists(source):
-                ftcmd = self.ftputcmd or "ftput"
-                hostname = self.fix_fthostname(hostname, fatal=False)
-                logname = self.fix_ftuser(hostname, logname, fatal=False)
-                extras = list()
-                if not sync:
-                    extras.extend(
-                        [
-                            "-q",
-                        ]
-                    )
-                if hostname:
-                    if port is not None:
-                        hostname += ":{:s}".format(port)
-                    extras.extend(["-h", hostname])
-                if logname:
-                    extras.extend(["-u", logname])
-                if specialshell:
-                    extras.extend(["-s", specialshell])
-                # Remove ~/ and ~logname/ from the destinations' path
-                actual_dest = re.sub("^~/+", "", destination)
-                if logname:
-                    actual_dest = re.sub(
-                        "^~{:s}/+".format(logname), "", actual_dest
-                    )
-                try:
-                    rc = self.spawn(
-                        [
-                            ftcmd,
-                            "-o",
-                            "mkdir",
-                        ]  # Automatically create subdirectories
-                        + extras
-                        + [source, actual_dest],
-                        output=False,
-                    )
-                except ExecutionError:
-                    rc = False
-            else:
-                raise OSError("No such file or directory: {!s}".format(source))
-        else:
-            raise OSError(
-                "Source or destination is not a plain file path: {!r}".format(
-                    source
-                )
-            )
-        return rc
-
-    def ftserv_get(
-        self, source, destination, hostname=None, logname=None, port=None
-    ):
-        """Get a file using FtServ."""
-        if self.ftserv_allowed(source, destination):
-            if self.filecocoon(destination):
-                hostname = self.fix_fthostname(hostname, fatal=False)
-                logname = self.fix_ftuser(hostname, logname, fatal=False)
-                destination = self.path.expanduser(destination)
-                extras = list()
-                if hostname:
-                    if port is not None:
-                        hostname += ":{:s}".format(port)
-                    extras.extend(["-h", hostname])
-                if logname:
-                    extras.extend(["-u", logname])
-                ftcmd = self.ftgetcmd or "ftget"
-                try:
-                    rc = self.spawn(
-                        [
-                            ftcmd,
-                        ]
-                        + extras
-                        + [source, destination],
-                        output=False,
-                    )
-                except ExecutionError:
-                    rc = False
-            else:
-                raise OSError("Could not cocoon: {!s}".format(destination))
-        else:
-            raise OSError(
-                "Source or destination is not a plain file path: {!r}".format(
-                    source
-                )
-            )
-        return rc
 
     def ftserv_batchget(
         self, source, destination, hostname=None, logname=None, port=None
@@ -2103,151 +1994,6 @@ class OSExtended(System):
             )
         return x_rc
 
-    def rawftput_worthy(self, source, destination):
-        """Is it allowed to use FtServ given **source** and **destination**."""
-        return self.ftserv and self.ftserv_allowed(source, destination)
-
-    @fmtshcmd
-    def rawftput(
-        self,
-        source,
-        destination,
-        hostname=None,
-        logname=None,
-        port=None,
-        cpipeline=None,
-        sync=False,
-    ):
-        """Proceed with some external ftput command on the specified target.
-
-        :param str source: Path to the source filename
-        :param str destination: The path where to upload the data.
-        :param str hostname: The target hostname  (default: *None*).
-        :param str logname: the target logname  (default: *None*).
-        :param int port: the port number on the remote host.
-        :param CompressionPipeline cpipeline: If not *None*, the object used to
-            compress the data during the file transfer (default: *None*).
-        :param bool sync: If False, allow asynchronous transfers.
-        """
-        if cpipeline is not None:
-            if cpipeline.compress2rawftp(source):
-                return self.ftserv_put(
-                    source,
-                    destination,
-                    hostname,
-                    logname=logname,
-                    port=port,
-                    specialshell=cpipeline.compress2rawftp(source),
-                    sync=sync,
-                )
-            else:
-                if port is None:
-                    port = DEFAULT_FTP_PORT
-                return self.ftput(
-                    source,
-                    destination,
-                    hostname,
-                    logname=logname,
-                    port=port,
-                    cpipeline=cpipeline,
-                    sync=sync,
-                )
-        else:
-            return self.ftserv_put(
-                source, destination, hostname, logname, port=port, sync=sync
-            )
-
-    def smartftput(
-        self,
-        source,
-        destination,
-        hostname=None,
-        logname=None,
-        port=None,
-        cpipeline=None,
-        sync=False,
-        fmt=None,
-    ):
-        """Select the best alternative between ``ftput`` and ``rawftput``.
-
-        :param source: The source of data (either a path to file or a
-            File-like object)
-        :type source: str or File-like object
-        :param str destination: The path where to upload the data.
-        :param str hostname: The target hostname (see :class:`~vortex.tools.net.StdFtp`
-            for the default)
-        :param str logname: the target logname (see :class:`~vortex.tools.net.StdFtp`
-            for the default)
-        :param int port: the port number on the remote host.
-        :param CompressionPipeline cpipeline: If not *None*, the object used to
-            compress the data during the file transfer.
-        :param bool sync: If False, allow asynchronous transfers.
-        :param str fmt: The format of data.
-
-        ``rawftput`` will be used if all of the following conditions are met:
-
-            * ``self.ftserv`` is *True*
-            * **source** is a string (as opposed to a File like object)
-            * **destination** is a string (as opposed to a File like object)
-        """
-        if self.rawftput_worthy(source, destination):
-            return self.rawftput(
-                source,
-                destination,
-                hostname=hostname,
-                logname=logname,
-                port=port,
-                cpipeline=cpipeline,
-                sync=sync,
-                fmt=fmt,
-            )
-        else:
-            if port is None:
-                port = DEFAULT_FTP_PORT
-            return self.ftput(
-                source,
-                destination,
-                hostname=hostname,
-                logname=logname,
-                port=port,
-                cpipeline=cpipeline,
-                sync=sync,
-                fmt=fmt,
-            )
-
-    def rawftget_worthy(self, source, destination, cpipeline=None):
-        """Is it allowed to use FtServ given **source** and **destination**."""
-        return (
-            self.ftserv
-            and cpipeline is None
-            and self.ftserv_allowed(source, destination)
-        )
-
-    @fmtshcmd
-    def rawftget(
-        self,
-        source,
-        destination,
-        hostname=None,
-        logname=None,
-        port=None,
-        cpipeline=None,
-    ):
-        """Proceed with some external ftget command on the specified target.
-
-        :param str source: the remote path to get data
-        :param str destination: path to the filename where to put the data.
-        :param str hostname: the target hostname  (default: *None*).
-        :param str logname: the target logname  (default: *None*).
-        :param int port: the port number on the remote host.
-        :param CompressionPipeline cpipeline: unused (kept for compatibility)
-        """
-        if cpipeline is not None:
-            raise OSError("cpipeline is not supported by this method.")
-        return self.ftserv_get(
-            source, destination, hostname, logname, port=port
-        )
-
     @fmtshcmd
     def batchrawftget(
         self,
@@ -2274,60 +2020,39 @@ class OSExtended(System):
         )
 
     def smartftget(
-        self,
-        source,
-        destination,
-        hostname=None,
-        logname=None,
-        port=None,
-        cpipeline=None,
-        fmt=None,
-    ):
-        """Select the best alternative between ``ftget`` and ``rawftget``.
+         self,
+         source,
+         destination,
+         hostname=None,
+         logname=None,
+         port=None,
+         cpipeline=None,
+         fmt=None,
+     ):
+        """Get a file using the first suitable FTP transfer method.
+        
+        The hostname and login name are normalised before the transfer. Each
+        registered FTP method is tested through its condition function. The first
+        method whose condition returns ``True`` is used.
 
-        :param str source: the remote path to get data
-        :param destination: The destination of data (either a path to file or a
-            File-like object)
-        :type destination: str or File-like object
-        :param str hostname: The target hostname (see :class:`~vortex.tools.net.StdFtp`
-            for the default)
-        :param str logname: the target logname (see :class:`~vortex.tools.net.StdFtp`
-            for the default)
-        :param int port: the port number on the remote host.
-        :param CompressionPipeline cpipeline: If not *None*, the object used to
-            uncompress the data during the file transfer.
-        :param str fmt: The format of data.
-
-        ``rawftget`` will be used if all of the following conditions are met:
-
-            * ``self.ftserv`` is *True*
-            * **cpipeline** is None
-            * **source** is a string (as opposed to a File like object)
-            * **destination** is a string (as opposed to a File like object)
+        :param str source: The remote path to retrieve.
+        :param str destination: The local destination path.
+        :param str hostname: The target hostname.
+        :param str logname: The target login name.
+        :param int port: The target FTP port.
+        :param CompressionPipeline cpipeline: Optional compression pipeline.
+        :param str fmt: The format of data (unused).
+        :return: The return value of the selected FTP ``get`` method.
         """
-        if self.rawftget_worthy(source, destination, cpipeline):
-            # FtServ is uninteresting when dealing with compression
-            return self.rawftget(
-                source,
-                destination,
-                hostname=hostname,
-                logname=logname,
-                port=port,
-                cpipeline=cpipeline,
-                fmt=fmt,
-            )
-        else:
-            if port is None:
-                port = DEFAULT_FTP_PORT
-            return self.ftget(
-                source,
-                destination,
-                hostname=hostname,
-                logname=logname,
-                port=port,
-                cpipeline=cpipeline,
-                fmt=fmt,
-            )
+        hostname = self.fix_fthostname(hostname, fatal=False)
+        logname = self.fix_ftuser(hostname, logname)
+        for method in self.ftp_methods:
+            if method.get_condition(hostname=self.hostname, cpipeline=cpipeline):
+                return method.get(source, 
+                                  destination,
+                                  hostname=hostname, 
+                                  logname=logname,
+                                  port=port)
 
     def smartbatchftget(
         self,
@@ -3727,6 +3452,56 @@ class OSExtended(System):
         ldir = self._appwide_lockdir_path(label)
         self._lockdir_destroy(ldir)
 
+    def register_ftp_method(self, getfunc, putfunc, getcond, putcond):
+        """Register a new FTP method.
+
+        The method creates a :class:`~FtpMethod` instance from the supplied
+        callables and inserts it at the front of the ``ftp_methods`` list.
+        Because the list is traversed from left‑to‑right when looking up a
+        FTP method, the newly‑registered method gets the highest priority."""
+        self.ftp_methods.insert(
+            0, FtpMethod(getfunc, putfunc, getcond, putcond)
+        )
+
+    def smartftput(
+         self,
+         source,
+         destination,
+         hostname=None,
+         logname=None,
+         port=None,
+         cpipeline=None,
+         fmt=None,
+         sync=False,
+     ):
+        """Put a file using the first suitable FTP transfer method.
+        
+        The hostname and login name are normalised before the transfer. Each
+        registered FTP method is tested through its condition function. The first
+        method whose condition returns ``True`` is used.
+
+        :param str source: The local file to store.
+        :param str destination: The remote destination path.
+        :param str hostname: The target hostname.
+        :param str logname: The target login name.
+        :param int port: The target FTP port.
+        :param CompressionPipeline cpipeline: Optional compression pipeline.
+        :param str fmt: The format of data (unused). 
+        :param bool sync: If ``False``, asynchronous transfers may be used.
+        :return: The return value of the selected FTP ``put`` method.
+        """
+        hostname = self.fix_fthostname(hostname, fatal=False)
+        logname = self.fix_ftuser(hostname, logname)
+        for method in self.ftp_methods:
+            if method.put_condition(source=source, hostname=self.hostname, cpipeline=cpipeline):
+                return method.put(source,                                                                  
+                                  destination,
+                                  hostname=hostname,
+                                  logname=logname,
+                                  port=port,
+                                  cpipeline=cpipeline,
+                                  sync=sync,
+                                  )
 
 class Python34:
     """Python features starting from version 3.4."""
