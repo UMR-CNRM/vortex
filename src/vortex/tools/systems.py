@@ -106,7 +106,10 @@ FtpFlavourTuple = namedtuple(
 FTP_FLAVOUR = FtpFlavourTuple(STD=0, RETRIES=1, CONNECTION_POOLS=2)
 
 # Bundles the get, put callables and booleans that indicate whether each operation is usable.
-FtpMethod = namedtuple("FtpMethod", ["get", "put", "get_condition", "put_condition"])
+FtpMethod = namedtuple(
+    "FtpMethod", ["get", "put", "get_condition", "put_condition"]
+)
+
 
 @nicedeco_plusdoc(_fmtshcmd_docbonus)
 def fmtshcmd(func):
@@ -821,11 +824,14 @@ class OSExtended(System):
         # FTP stuff again
         self.ftpflavour = kw.pop("ftpflavour", FTP_FLAVOUR.CONNECTION_POOLS)
         self._current_ftppool = None
-        self.ftp_methods = [FtpMethod(get=self.ftget, 
-                                      put=self.ftput,
-                                      put_condition=self._use_ftplib,
-                                      get_condition=self._use_ftplib,
-                                      )]
+        self.ftp_methods = [
+            FtpMethod(
+                get=self.ftget,
+                put=self.ftput,
+                put_condition=self._use_ftplib,
+                get_condition=self._use_ftplib,
+            )
+        ]
         # Some internal variables used by particular methods
         self._ftspool_cache = None
         self._frozen_target = None
@@ -843,9 +849,9 @@ class OSExtended(System):
         self._signal_intercept_init()
 
     def _use_ftplib(*args, **kwargs):
-        """Determine whether the FTP transfer implementation based on *ftplib* 
+        """Determine whether the FTP transfer implementation based on *ftplib*
         should be used for getting a file.
-        
+
         This implementation is always considered suitable.
         Any provided arguments are ignored.
 
@@ -2020,17 +2026,17 @@ class OSExtended(System):
         )
 
     def smartftget(
-         self,
-         source,
-         destination,
-         hostname=None,
-         logname=None,
-         port=None,
-         cpipeline=None,
-         fmt=None,
-     ):
+        self,
+        source,
+        destination,
+        hostname=None,
+        logname=None,
+        port=None,
+        cpipeline=None,
+        fmt=None,
+    ):
         """Get a file using the first suitable FTP transfer method.
-        
+
         The hostname and login name are normalised before the transfer. Each
         registered FTP method is tested through its condition function. The first
         method whose condition returns ``True`` is used.
@@ -2047,12 +2053,16 @@ class OSExtended(System):
         hostname = self.fix_fthostname(hostname, fatal=False)
         logname = self.fix_ftuser(hostname, logname)
         for method in self.ftp_methods:
-            if method.get_condition(hostname=self.hostname, cpipeline=cpipeline):
-                return method.get(source, 
-                                  destination,
-                                  hostname=hostname, 
-                                  logname=logname,
-                                  port=port)
+            if method.get_condition(
+                hostname=self.hostname, cpipeline=cpipeline
+            ):
+                return method.get(
+                    source,
+                    destination,
+                    hostname=hostname,
+                    logname=logname,
+                    port=port,
+                )
 
     def smartbatchftget(
         self,
@@ -3464,18 +3474,18 @@ class OSExtended(System):
         )
 
     def smartftput(
-         self,
-         source,
-         destination,
-         hostname=None,
-         logname=None,
-         port=None,
-         cpipeline=None,
-         fmt=None,
-         sync=False,
-     ):
+        self,
+        source,
+        destination,
+        hostname=None,
+        logname=None,
+        port=None,
+        cpipeline=None,
+        fmt=None,
+        sync=False,
+    ):
         """Put a file using the first suitable FTP transfer method.
-        
+
         The hostname and login name are normalised before the transfer. Each
         registered FTP method is tested through its condition function. The first
         method whose condition returns ``True`` is used.
@@ -3486,22 +3496,26 @@ class OSExtended(System):
         :param str logname: The target login name.
         :param int port: The target FTP port.
         :param CompressionPipeline cpipeline: Optional compression pipeline.
-        :param str fmt: The format of data (unused). 
+        :param str fmt: The format of data (unused).
         :param bool sync: If ``False``, asynchronous transfers may be used.
         :return: The return value of the selected FTP ``put`` method.
         """
         hostname = self.fix_fthostname(hostname, fatal=False)
         logname = self.fix_ftuser(hostname, logname)
         for method in self.ftp_methods:
-            if method.put_condition(source=source, hostname=self.hostname, cpipeline=cpipeline):
-                return method.put(source,                                                                  
-                                  destination,
-                                  hostname=hostname,
-                                  logname=logname,
-                                  port=port,
-                                  cpipeline=cpipeline,
-                                  sync=sync,
-                                  )
+            if method.put_condition(
+                source=source, hostname=self.hostname, cpipeline=cpipeline
+            ):
+                return method.put(
+                    source,
+                    destination,
+                    hostname=hostname,
+                    logname=logname,
+                    port=port,
+                    cpipeline=cpipeline,
+                    sync=sync,
+                )
+
 
 class Python34:
     """Python features starting from version 3.4."""
