@@ -1983,6 +1983,7 @@ class OSExtended(System):
                     hostname=hostname,
                     logname=logname,
                     port=port,
+                    fmt=fmt,
                 )
 
     def smartbatchftget(
@@ -3428,6 +3429,7 @@ class OSExtended(System):
                     port=port,
                     cpipeline=cpipeline,
                     sync=sync,
+                    fmt=fmt,
                 )
 
 
