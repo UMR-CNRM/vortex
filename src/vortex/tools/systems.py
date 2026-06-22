@@ -829,8 +829,8 @@ class OSExtended(System):
                 get=self.ftget,
                 put=self.ftput,
                 batchget=self.batchftget,
-                put_condition=lambda *args, **kwargs:True,
-                get_condition=lambda *args, **kwargs:True,
+                put_condition=lambda *args, **kwargs: True,
+                get_condition=lambda *args, **kwargs: True,
             )
         ]
         # Some internal variables used by particular methods
