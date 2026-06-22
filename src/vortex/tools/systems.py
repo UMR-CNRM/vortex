@@ -3742,7 +3742,8 @@ class Python34:
 
         # Optional, netcdf comparison tool
         b_netcdf_checker = ExternalCodeImportChecker("netdcf")
-        from bronx.datagrip import netcdf as b_netcdf
+        with b_netcdf_checker:
+            from bronx.datagrip import netcdf as b_netcdf
 
         if b_netcdf_checker.is_available():
             # Unfortunately, the netCDF4 package seems to leak memory,
