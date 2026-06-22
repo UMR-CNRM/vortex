@@ -1894,7 +1894,7 @@ class OSExtended(System):
         fmt=None,
     ):
         """Proceed to multiple direct ftp get on the specified targets.
-        
+
         :param source: A list of remote paths to get data
         :param destination: A list of destinations for the data (either a path to
             file or a File-like object)
@@ -1984,11 +1984,11 @@ class OSExtended(System):
         logname = self.fix_ftuser(hostname, logname)
         for method in self.ftp_methods:
             if method.get_condition(
-                    source=source, 
-                    destination=destination,
-                    hostname=self.hostname,
-                    cpipeline=cpipeline
-                ):
+                source=source,
+                destination=destination,
+                hostname=self.hostname,
+                cpipeline=cpipeline,
+            ):
                 return method.get(
                     source,
                     destination,
@@ -2025,14 +2025,16 @@ class OSExtended(System):
         """
         for method in self.ftp_methods:
             if all(
-                [method.get_condition(
-                    source=s, 
-                    destination=d,
-                    hostname=self.hostname,
-                    cpipeline=cpipeline
-                    ) for s, d in zip(source, destination)
-                    ]):
-        
+                [
+                    method.get_condition(
+                        source=s,
+                        destination=d,
+                        hostname=self.hostname,
+                        cpipeline=cpipeline,
+                    )
+                    for s, d in zip(source, destination)
+                ]
+            ):
                 return method.batchftget(
                     source,
                     destination,
@@ -3381,7 +3383,9 @@ class OSExtended(System):
         ldir = self._appwide_lockdir_path(label)
         self._lockdir_destroy(ldir)
 
-    def register_ftp_method(self, getfunc, putfunc, batchgetfunc, getcond, putcond):
+    def register_ftp_method(
+        self, getfunc, putfunc, batchgetfunc, getcond, putcond
+    ):
         """Register a new FTP method.
 
         The method creates a :class:`~FtpMethod` instance from the supplied
@@ -3426,7 +3430,7 @@ class OSExtended(System):
                 source=source,
                 destination=destination,
                 hostname=self.hostname,
-                cpipeline=cpipeline
+                cpipeline=cpipeline,
             ):
                 return method.put(
                     source,
