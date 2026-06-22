@@ -207,13 +207,11 @@ class StaticListing(Resource):
 
 @namebuilding_insert(
     "compute",
-    lambda s: (
-        None
-        if s.mpi is None
-        else [
-            {"mpi": s.mpi},
-        ]
-    ),
+    lambda s: None
+    if s.mpi is None
+    else [
+        {"mpi": s.mpi},
+    ],
     none_discard=True,
 )
 class DrHookListing(Listing):

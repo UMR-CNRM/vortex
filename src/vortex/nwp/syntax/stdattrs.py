@@ -131,9 +131,8 @@ def show():
     dmod = globals()
     for stda in sorted(
         filter(
-            lambda x: (
-                x.startswith("a_") or isinstance(dmod[x], footprints.Footprint)
-            ),
+            lambda x: x.startswith("a_")
+            or isinstance(dmod[x], footprints.Footprint),
             dmod.keys(),
         )
     ):
