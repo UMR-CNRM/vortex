@@ -829,8 +829,8 @@ class OSExtended(System):
                 get=self.ftget,
                 put=self.ftput,
                 batchget=self.batchftget,
-                put_condition=self._use_ftplib,
-                get_condition=self._use_ftplib,
+                put_condition=lambda *args, **kwargs:True,
+                get_condition=lambda *args, **kwargs:True,
             )
         ]
         # Some internal variables used by particular methods
@@ -848,18 +848,6 @@ class OSExtended(System):
 
         # Initialise the signal handler object
         self._signal_intercept_init()
-
-    def _use_ftplib(*args, **kwargs):
-        """Determine whether the FTP transfer implementation based on *ftplib*
-        should be used for getting a file.
-
-        This implementation is always considered suitable.
-        Any provided arguments are ignored.
-
-        :return: ``True``.
-        :rtype: bool
-        """
-        return True
 
     def target(self, **kw):
         """
