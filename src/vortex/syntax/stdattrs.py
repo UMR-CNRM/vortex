@@ -543,9 +543,9 @@ cutoff_deco = footprints.DecorativeFootprint(
     decorator=[
         namebuilding_append(
             "flow",
-            lambda self: (
-                None if self.cutoff is None else {"shortcutoff": self.cutoff}
-            ),
+            lambda self: None
+            if self.cutoff is None
+            else {"shortcutoff": self.cutoff},
             none_discard=True,
         ),
         generic_pathname_insert(
@@ -855,9 +855,8 @@ def show():
     dmod = globals()
     for stda in sorted(
         filter(
-            lambda x: (
-                x.startswith("a_") or isinstance(dmod[x], footprints.Footprint)
-            ),
+            lambda x: x.startswith("a_")
+            or isinstance(dmod[x], footprints.Footprint),
             dmod.keys(),
         )
     ):
