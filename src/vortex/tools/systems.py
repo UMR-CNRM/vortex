@@ -1959,11 +1959,13 @@ class OSExtended(System):
         registered FTP method is tested through its condition function. The first
         method whose condition returns ``True`` is used.
 
-        :param str source: The remote path to retrieve.
-        :param str destination: The local destination path.
+        :param source: The source of data (either a path to file or a
+            File-like object)
+        :type source: str or File-like object
+        :param str destination: The path where to upload the data.
         :param str hostname: The target hostname.
-        :param str logname: The target login name.
-        :param int port: The target FTP port.
+        :param str logname: The target logname
+        :param int port: The port number on the remote host.
         :param CompressionPipeline cpipeline: Optional compression pipeline.
         :param str fmt: The format of data (unused).
         :return: The return value of the selected FTP ``get`` method.
@@ -1971,12 +1973,7 @@ class OSExtended(System):
         hostname = self.fix_fthostname(hostname, fatal=False)
         logname = self.fix_ftuser(hostname, logname)
         for method in self.ftp_methods:
-            if method.get_condition(
-                source=source,
-                destination=destination,
-                hostname=self.hostname,
-                cpipeline=cpipeline,
-            ):
+            if method.get_condition(cpipeline=cpipeline):
                 return method.get(
                     source,
                     destination,
@@ -2029,7 +2026,7 @@ class OSExtended(System):
                     destination,
                     hostname=hostname,
                     logname=logname,
-                    port=None,
+                    port=port,
                     cpipeline=cpipeline,
                     fmt=fmt,
                 )
@@ -3402,11 +3399,13 @@ class OSExtended(System):
         registered FTP method is tested through its condition function. The first
         method whose condition returns ``True`` is used.
 
-        :param str source: The local file to store.
-        :param str destination: The remote destination path.
+        :param source: The source of data (either a path to file or a
+            File-like object)
+        :type source: str or File-like object
+        :param str destination: The path where to upload the data.
         :param str hostname: The target hostname.
-        :param str logname: The target login name.
-        :param int port: The target FTP port.
+        :param str logname: The target logname.
+        :param int port: The port number on the remote host.
         :param CompressionPipeline cpipeline: Optional compression pipeline.
         :param str fmt: The format of data (unused).
         :param bool sync: If ``False``, asynchronous transfers may be used.
@@ -3415,12 +3414,7 @@ class OSExtended(System):
         hostname = self.fix_fthostname(hostname, fatal=False)
         logname = self.fix_ftuser(hostname, logname)
         for method in self.ftp_methods:
-            if method.put_condition(
-                source=source,
-                destination=destination,
-                hostname=self.hostname,
-                cpipeline=cpipeline,
-            ):
+            if method.put_condition(cpipeline=cpipeline):
                 return method.put(
                     source,
                     destination,
