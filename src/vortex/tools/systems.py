@@ -1795,7 +1795,6 @@ class OSExtended(System):
             port = DEFAULT_FTP_PORT
         if isinstance(destination, str):  # destination may be Virtual
             self.rm(destination)
-        hostname = self.fix_fthostname(hostname)
         ftp = self.ftp(hostname, logname, port=port)
         if ftp:
             try:
@@ -1846,7 +1845,6 @@ class OSExtended(System):
             port = DEFAULT_FTP_PORT
         rc = False
         if self.is_iofile(source):
-            hostname = self.fix_fthostname(hostname)
             ftp = self.ftp(hostname, logname, port=port)
             if ftp:
                 try:
