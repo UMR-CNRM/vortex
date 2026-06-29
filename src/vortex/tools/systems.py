@@ -3363,9 +3363,7 @@ class OSExtended(System):
         ldir = self._appwide_lockdir_path(label)
         self._lockdir_destroy(ldir)
 
-    def register_ftp_method(
-        self, getfunc, putfunc, getcond, putcond
-    ):
+    def register_ftp_method(self, getfunc, putfunc, getcond, putcond):
         """Register a new FTP method.
 
         The method creates a :class:`~FtpMethod` instance from the supplied
