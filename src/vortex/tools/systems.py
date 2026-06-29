@@ -828,7 +828,6 @@ class OSExtended(System):
             FtpMethod(
                 get=self.ftget,
                 put=self.ftput,
-                batchget=self.batchftget,
                 put_condition=lambda *args, **kwargs: True,
                 get_condition=lambda *args, **kwargs: True,
             )
@@ -2011,9 +2010,6 @@ class OSExtended(System):
             if all(
                 [
                     method.get_condition(
-                        source=s,
-                        destination=d,
-                        hostname=self.hostname,
                         cpipeline=cpipeline,
                     )
                     for s, d in zip(source, destination)
@@ -3368,7 +3364,7 @@ class OSExtended(System):
         self._lockdir_destroy(ldir)
 
     def register_ftp_method(
-        self, getfunc, putfunc, batchgetfunc, getcond, putcond
+        self, getfunc, putfunc, getcond, putcond
     ):
         """Register a new FTP method.
 
@@ -3377,7 +3373,7 @@ class OSExtended(System):
         Because the list is traversed from left‑to‑right when looking up a
         FTP method, the newly‑registered method gets the highest priority."""
         self.ftp_methods.insert(
-            0, FtpMethod(getfunc, putfunc, batchgetfunc, getcond, putcond)
+            0, FtpMethod(getfunc, putfunc, getcond, putcond)
         )
 
     def smartftput(
