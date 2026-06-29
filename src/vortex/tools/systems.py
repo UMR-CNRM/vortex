@@ -107,7 +107,7 @@ FTP_FLAVOUR = FtpFlavourTuple(STD=0, RETRIES=1, CONNECTION_POOLS=2)
 
 # Bundles the get, put callables and booleans that indicate whether each operation is usable.
 FtpMethod = namedtuple(
-    "FtpMethod", ["get", "put", "batchget", "get_condition", "put_condition"]
+    "FtpMethod", ["get", "put", "get_condition", "put_condition"]
 )
 
 
