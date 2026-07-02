@@ -10,6 +10,7 @@ import contextlib
 import hashlib
 import pprint
 import re
+import socket
 from string import Template
 
 
@@ -248,10 +249,17 @@ class MailService(Service):
         my_smtpport = self.actual_value(
             "smtpport", as_var="VORTEX_SMTPPORT", default=smtplib.SMTP_PORT
         )
-        if not self.sh.default_target.isnetworknode:
-            sshobj = self.sh.ssh(
-                "network", virtualnode=True, mandatory_hostcheck=False
-            )
+
+        name = get_cluster_name(socket.gethostname())
+        #  If the current node is a compute node, it cannot reach the
+        #  smtp server.  In this case, the request is made through a
+        #  SSH tunnel on a login or transfer node
+        is_compute_node = re.match(
+            rf"{name}\d+\.{name}hpc\.meteo\.fr", socket.gethostname()
+        )
+
+        if is_compute_node:
+            sshobj = self.sh.ssh(hostname=f"{name}oper-int")
             with sshobj.tunnel(my_smtpserver, my_smtpport) as tun:
                 yield "localhost", tun.entranceport
         else:
