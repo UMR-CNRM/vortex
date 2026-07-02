@@ -1113,7 +1113,7 @@ def rescue(*files, **opts):
         t.context.diff_history.show()
 
     # Force clearing of all promises
-    clear_promises(clear=True)
+    clear_promises(clear=True, storeoptions={"username": t.glove.user})
 
     sh.header("Rescuing current dir")
     sh.dir(output=False, fatal=False)
