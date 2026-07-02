@@ -2001,8 +2001,8 @@ class OSExtended(System):
         """
         for method in self.ftp_methods:
             if method.get_condition(
-                    cpipeline=cpipeline,
-                    ):
+                cpipeline=cpipeline,
+            ):
                 return method.batchftget(
                     source,
                     destination,
