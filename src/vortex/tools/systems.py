@@ -2000,14 +2000,9 @@ class OSExtended(System):
         :param str fmt: The format of data.
         """
         for method in self.ftp_methods:
-            if all(
-                [
-                    method.get_condition(
-                        cpipeline=cpipeline,
-                    )
-                    for s, d in zip(source, destination)
-                ]
-            ):
+            if method.get_condition(
+                    cpipeline=cpipeline,
+                    ):
                 return method.batchftget(
                     source,
                     destination,
