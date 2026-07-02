@@ -94,9 +94,7 @@ class Service(footprints.FootprintBase):
         if not value:
             value = self.env.get(as_var, None)
         if not value:
-            if as_conf is None:
-                as_conf = "services:" + key.lower()
-            value = self.sh.default_target.get(as_conf, default)
+            value = config.from_config(section="services", key=key)
         return value
 
     def __call__(self, *args):
