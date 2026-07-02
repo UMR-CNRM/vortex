@@ -807,10 +807,6 @@ class OSExtended(System):
             * **cmpaftercp** - as a boolean for activating full comparison after plain cp (default: *True*).
               (e.g. ftget, ftput) instead of the internal Vortex's FTP client
               (default: *False*).
-            * **ftputcmd** - The name of the raw FTP command for the "put" action
-              (default: ftput).
-            * **ftgetcmd** - The name of the raw FTP command for the "get" action
-              (default: ftget).
             * **ftpflavour** - The default Vortex's FTP client behaviour
               (default: `FTP_FLAVOUR.CONNECTION_POOLS`). See the :meth:`ftp` method
               for more details.
@@ -818,9 +814,6 @@ class OSExtended(System):
         logger.debug("Abstract System init %s", self.__class__)
         self._rmtreemin = kw.pop("rmtreemin", 3)
         self._cmpaftercp = kw.pop("cmpaftercp", True)
-        # Switches for rawft* methods
-        self.ftputcmd = kw.pop("ftputcmd", None)
-        self.ftgetcmd = kw.pop("ftgetcmd", None)
         # FTP stuff again
         self.ftpflavour = kw.pop("ftpflavour", FTP_FLAVOUR.CONNECTION_POOLS)
         self._current_ftppool = None
