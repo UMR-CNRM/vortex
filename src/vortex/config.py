@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 VORTEX_CONFIG = {}
-_PATH = None
+_PATH = []
 
 logger = loggers.getLogger(__name__)
 
@@ -31,8 +31,9 @@ class ConfigurationError(Exception):
 def load_config(configpath=Path("vortex.toml")):
     """Load configuration from a TOML configuration file
 
-    Existing configuration values are overriden. The configuration
-    is expected to have valid TOML syntax, e.g.
+    Existing configuration values are overriden. Current configuration
+    keys not present in the loaded configuration are discarded. The
+    configuration is expected to have valid TOML syntax, e.g.
 
     .. code:: toml
 
@@ -50,7 +51,27 @@ def load_config(configpath=Path("vortex.toml")):
     try:
         with configpath.open(mode="rb") as f:
             VORTEX_CONFIG = tomli.load(f)
-            _PATH = configpath.absolute()
+            _PATH.append(configpath.absolute())
+    except FileNotFoundError:
+        print(
+            f"Could not read configuration file {configpath.absolute()} (not found)."
+        )
+        print("Use load_config(/path/to/config) to update the configuration")
+
+
+def merge_config(configpath=Path("vortex.toml")):
+    """Merge TOML configuration file with current configuration
+
+    Similar to `load_config` except existing configuration keys are
+    not discarded. Existing configuration values are overriden.
+    """
+    global VORTEX_CONFIG
+    global _PATH
+    configpath = Path(configpath)
+    try:
+        with configpath.open(mode="rb") as f:
+            VORTEX_CONFIG |= tomli.load(f)
+            _PATH.append(configpath.absolute())
     except FileNotFoundError:
         print(
             f"Could not read configuration file {configpath.absolute()} (not found)."
