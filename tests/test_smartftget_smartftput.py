@@ -81,7 +81,10 @@ def test_smartftget_uses_new_method_when_getcond_is_true(mocked_ftget):
     mocked_rawftput = Mock()
 
     system = Linux34p()
-    system.register_ftp_method(mocked_rawftget, mocked_rawftput, true_getcond, true_putcond
+    system.register_ftp_method(mocked_rawftget,
+                               mocked_rawftput, 
+                               lambda cpipeline=None: True,
+                               lambda cpipeline=None: True,
                                )
     system.smartftget(
         SOURCE,
@@ -101,8 +104,6 @@ def test_smartftget_uses_new_method_when_getcond_is_true(mocked_ftget):
         port=DEFAULT_FTP_PORT,
         fmt=None,
     )
-    
-    del system
 
 
 # smartftput -> new method if putcond=True.
@@ -112,7 +113,10 @@ def test_smartftput_uses_new_method_when_putcond_is_true(mocked_ftput):
     mocked_rawftput = Mock()
     
     system = Linux34p()
-    system.register_ftp_method(mocked_rawftget, mocked_rawftput, true_getcond, true_putcond
+    system.register_ftp_method(mocked_rawftget,
+                               mocked_rawftput,
+                               lambda cpipeline=None: True,
+                               lambda cpipeline=None: True,
                                )
 
     system.smartftput(
@@ -144,7 +148,10 @@ def test_smartftget_uses_default_method_when_getcond_is_false(mocked_ftget):
     mocked_rawftput = Mock()
 
     system = Linux34p()
-    system.register_ftp_method(mocked_rawftget, mocked_rawftput, false_getcond, false_putcond
+    system.register_ftp_method(mocked_rawftget,
+                               mocked_rawftput,
+                               lambda cpipeline=None: False,
+                               lambda cpipeline=None: False,
                                )
 
     system.smartftget(
@@ -174,7 +181,10 @@ def test_smartftput_uses_default_method_when_putcond_is_false(mocked_ftput):
     mocked_rawftput = Mock()
     
     system = Linux34p()
-    system.register_ftp_method(mocked_rawftget, mocked_rawftput, false_getcond, false_putcond
+    system.register_ftp_method(mocked_rawftget,
+                               mocked_rawftput,
+                               lambda cpipeline=None: False,
+                               lambda cpipeline=None: False,
                                )
 
     system.smartftput(
