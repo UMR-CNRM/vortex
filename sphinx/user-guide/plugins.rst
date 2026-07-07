@@ -155,3 +155,58 @@ module will be automatically discovered and loaded when importing
 
 Note that importing the ``vortex_newresource.new`` explicitly was never
 required.
+
+providing plugin specific geometries
+------------------------------------
+
+It is also possible to extend the set of default vortex geometries in a
+plugin. Assuming these plugin geometries are in a ``geometries.ini`` file
+with the proper vortex geometries format, all you have to do is to
+implement a ``geometries.py`` module loading this ``geometries.ini``.
+
+Directory structure example :
+
+.. code::
+
+    new-resource-package/
+        pyproject.toml
+        src/
+            vortex_plugin/
+                 new.py
+                 __init__.py
+                data/
+                    geometries.ini
+                    geometries.py
+
+Example of ``geometries.py`` :
+
+.. code:: python
+
+   import configparser
+   import importlib.resources
+   from vortex.data import geometries
+
+   def load(
+       inifile="@geometries.ini",
+       refresh=False,
+       verbose=True,
+   ):
+       iniconf = configparser.ConfigParser()
+       with importlib.resources.open_text(
+           "vortex_plugin.data",
+           "geometries.ini",
+       ) as fh:
+           iniconf.read_file(fh)
+       geometries.add_geometries(iniconf, refresh, verbose)
+
+
+   # Load the plugin's geometries when this module is first imported
+   load(verbose=False)
+
+To make these plugin geometries available, "load" them at the plugin's import by adding the
+following line in the ``__init__.py`` file:
+
+.. code:: python
+
+   from vortex_plugin.data import geometries
+
