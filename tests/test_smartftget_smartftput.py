@@ -8,22 +8,6 @@ DESTINATION = "/path/to/destination"
 HOSTNAME = "hendrix.meteo.fr"
 LOGNAME = "username"
 
-def true_getcond(cpipeline=None):
-    return True
-
-
-def false_getcond(cpipeline=None):
-    return False
-
-
-def true_putcond(cpipeline=None):
-    return True
-
-
-def false_putcond(cpipeline=None):
-    return False
-
-
 # smartftget -> default method.
 @patch("vortex.tools.systems.OSExtended.ftget")
 def test_smartftget(mocked_ftget):
