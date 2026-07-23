@@ -901,4 +901,3 @@ class IO_Poll(addons.Addon):
     def polled(self):
         """List of files already polled."""
         return sorted(self._polled)
-
