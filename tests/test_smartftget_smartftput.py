@@ -3,15 +3,16 @@ from unittest.mock import Mock, patch
 from vortex.tools.systems import Linux34p
 from vortex.tools.net import DEFAULT_FTP_PORT
 
+
 SOURCE = "/path/to/data"
 DESTINATION = "/path/to/destination"
 HOSTNAME = "hendrix.meteo.fr"
 LOGNAME = "username"
 
+
 # smartftget -> default method.
 @patch("vortex.tools.systems.OSExtended.ftget")
 def test_smartftget(mocked_ftget):
-    
     system = Linux34p()
 
     system.smartftget(
@@ -35,7 +36,6 @@ def test_smartftget(mocked_ftget):
 # smartftput -> default method.
 @patch("vortex.tools.systems.OSExtended.ftput")
 def test_smartftput(mocked_ftput):
-    
     system = Linux34p()
 
     system.smartftput(
@@ -65,11 +65,12 @@ def test_smartftget_uses_new_method_when_getcond_is_true(mocked_ftget):
     mocked_rawftput = Mock()
 
     system = Linux34p()
-    system.register_ftp_method(mocked_rawftget,
-                               mocked_rawftput, 
-                               lambda cpipeline=None: True,
-                               lambda cpipeline=None: True,
-                               )
+    system.register_ftp_method(
+        mocked_rawftget,
+        mocked_rawftput,
+        lambda cpipeline=None: True,
+        lambda cpipeline=None, source=SOURCE: True,
+    )
     system.smartftget(
         SOURCE,
         DESTINATION,
@@ -95,13 +96,14 @@ def test_smartftget_uses_new_method_when_getcond_is_true(mocked_ftget):
 def test_smartftput_uses_new_method_when_putcond_is_true(mocked_ftput):
     mocked_rawftget = Mock()
     mocked_rawftput = Mock()
-    
+
     system = Linux34p()
-    system.register_ftp_method(mocked_rawftget,
-                               mocked_rawftput,
-                               lambda cpipeline=None: True,
-                               lambda cpipeline=None: True,
-                               )
+    system.register_ftp_method(
+        mocked_rawftget,
+        mocked_rawftput,
+        lambda cpipeline=None: True,
+        lambda cpipeline=None, source=SOURCE: True,
+    )
 
     system.smartftput(
         SOURCE,
@@ -132,11 +134,12 @@ def test_smartftget_uses_default_method_when_getcond_is_false(mocked_ftget):
     mocked_rawftput = Mock()
 
     system = Linux34p()
-    system.register_ftp_method(mocked_rawftget,
-                               mocked_rawftput,
-                               lambda cpipeline=None: False,
-                               lambda cpipeline=None: False,
-                               )
+    system.register_ftp_method(
+        mocked_rawftget,
+        mocked_rawftput,
+        lambda cpipeline=None: False,
+        lambda cpipeline=None, source=SOURCE: False,
+    )
 
     system.smartftget(
         SOURCE,
@@ -163,13 +166,14 @@ def test_smartftget_uses_default_method_when_getcond_is_false(mocked_ftget):
 def test_smartftput_uses_default_method_when_putcond_is_false(mocked_ftput):
     mocked_rawftget = Mock()
     mocked_rawftput = Mock()
-    
+
     system = Linux34p()
-    system.register_ftp_method(mocked_rawftget,
-                               mocked_rawftput,
-                               lambda cpipeline=None: False,
-                               lambda cpipeline=None: False,
-                               )
+    system.register_ftp_method(
+        mocked_rawftget,
+        mocked_rawftput,
+        lambda cpipeline=None: False,
+        lambda cpipeline=None, source=SOURCE: False,
+    )
 
     system.smartftput(
         SOURCE,
