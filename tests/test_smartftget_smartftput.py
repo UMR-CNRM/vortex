@@ -3,6 +3,8 @@ from unittest.mock import Mock, patch
 from vortex.tools.systems import Linux34p
 from vortex.tools.net import DEFAULT_FTP_PORT
 
+import vortex
+from vortex.tools.lfi import use_in_shell
 
 SOURCE = "/path/to/data"
 DESTINATION = "/path/to/destination"
@@ -192,6 +194,34 @@ def test_smartftput_uses_default_method_when_putcond_is_false(mocked_ftput):
         logname=LOGNAME,
         port=DEFAULT_FTP_PORT,
         fmt=None,
+        cpipeline=None,
+        sync=False,
+    )
+
+# fa_ftput is called when fmt='fa'
+@patch("vortex.tools.lfi.LFI_Tool_Raw.fa_ftput")
+def test_smartftput_uses_fa_ftput(mocked_fa_ftput):
+    
+    ticket = vortex.ticket()
+
+    # Extend the shell with the LFI interface.
+    use_in_shell(sh=ticket.sh, kind="lfi")
+
+    ticket.sh.smartftput(
+        SOURCE,
+        DESTINATION,
+        hostname=HOSTNAME,
+        logname=LOGNAME,
+        port=DEFAULT_FTP_PORT,
+        fmt='fa',
+    )
+    
+    mocked_fa_ftput.assert_called_once_with(
+        SOURCE,
+        DESTINATION,
+        hostname=HOSTNAME,
+        logname=LOGNAME,
+        port=DEFAULT_FTP_PORT,
         cpipeline=None,
         sync=False,
     )
