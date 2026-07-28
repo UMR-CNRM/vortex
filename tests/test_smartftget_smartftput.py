@@ -6,6 +6,9 @@ from vortex.tools.net import DEFAULT_FTP_PORT
 import vortex
 from vortex.tools.lfi import use_in_shell
 
+import pytest
+
+
 SOURCE = "/path/to/data"
 DESTINATION = "/path/to/destination"
 HOSTNAME = "hendrix.meteo.fr"
@@ -198,10 +201,10 @@ def test_smartftput_uses_default_method_when_putcond_is_false(mocked_ftput):
         sync=False,
     )
 
-# fa_ftput is called when fmt='fa'
+
+# With fmt="fa", @fmtshcmd dispatches the ftput call to fa_ftput.
 @patch("vortex.tools.lfi.LFI_Tool_Raw.fa_ftput")
-def test_smartftput_uses_fa_ftput(mocked_fa_ftput):
-    
+def test_smartftput_fa(mocked_fa_ftput):
     ticket = vortex.ticket()
 
     # Extend the shell with the LFI interface.
@@ -213,9 +216,9 @@ def test_smartftput_uses_fa_ftput(mocked_fa_ftput):
         hostname=HOSTNAME,
         logname=LOGNAME,
         port=DEFAULT_FTP_PORT,
-        fmt='fa',
+        fmt="fa",  # triggers the call to fa_ftput
     )
-    
+
     mocked_fa_ftput.assert_called_once_with(
         SOURCE,
         DESTINATION,
@@ -225,3 +228,32 @@ def test_smartftput_uses_fa_ftput(mocked_fa_ftput):
         cpipeline=None,
         sync=False,
     )
+
+
+# Check that XLFI files are detected by fa_ftput.
+def test_smartftput_fa_xlfi(tmp_path):
+    source = tmp_path / "source.fa"
+    source.write_bytes(b"LFI_ALTM")
+    source = str(source)
+
+    ticket = vortex.ticket()
+
+    use_in_shell(sh=ticket.sh, kind="lfi")
+
+    assert ticket.sh.is_xlfi(source)
+
+    cpipeline = object()  # not None, to stop before the FTP transfer.
+
+    with pytest.raises(
+        OSError,
+        match="It's not allowed to compress xlfi files.",
+    ):
+        ticket.sh.smartftput(
+            source,
+            DESTINATION,
+            hostname=HOSTNAME,
+            logname=LOGNAME,
+            port=DEFAULT_FTP_PORT,
+            fmt="fa",
+            cpipeline=cpipeline,
+        )
