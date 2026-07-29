@@ -68,10 +68,10 @@ def test_smartftget_uses_new_method_when_getcond_is_true(mocked_ftget):
 
     system = Linux34p()
     system.register_ftp_method(
-        mocked_rawftget,
-        mocked_rawftput,
-        lambda cpipeline=None: True,
-        lambda cpipeline=None, source=SOURCE: True,
+        getfunc=mocked_rawftget,
+        putfunc=mocked_rawftput,
+        getcond=lambda cpipeline=None: True,
+        putcond=lambda cpipeline=None, source=SOURCE: True,
     )
     system.smartftget(
         SOURCE,
@@ -101,10 +101,10 @@ def test_smartftput_uses_new_method_when_putcond_is_true(mocked_ftput):
 
     system = Linux34p()
     system.register_ftp_method(
-        mocked_rawftget,
-        mocked_rawftput,
-        lambda cpipeline=None: True,
-        lambda cpipeline=None, source=SOURCE: True,
+        getfunc=mocked_rawftget,
+        putfunc=mocked_rawftput,
+        getcond=lambda cpipeline=None: True,
+        putcond=lambda cpipeline=None, source=SOURCE: True,
     )
 
     system.smartftput(
@@ -137,10 +137,10 @@ def test_smartftget_uses_default_method_when_getcond_is_false(mocked_ftget):
 
     system = Linux34p()
     system.register_ftp_method(
-        mocked_rawftget,
-        mocked_rawftput,
-        lambda cpipeline=None: False,
-        lambda cpipeline=None, source=SOURCE: False,
+        getfunc=mocked_rawftget,
+        putfunc=mocked_rawftput,
+        getcond=lambda cpipeline=None: False,
+        putcond=lambda cpipeline=None, source=SOURCE: False,
     )
 
     system.smartftget(
@@ -171,10 +171,10 @@ def test_smartftput_uses_default_method_when_putcond_is_false(mocked_ftput):
 
     system = Linux34p()
     system.register_ftp_method(
-        mocked_rawftget,
-        mocked_rawftput,
-        lambda cpipeline=None: False,
-        lambda cpipeline=None, source=SOURCE: False,
+        getfunc=mocked_rawftget,
+        putfunc=mocked_rawftput,
+        getcond=lambda cpipeline=None: False,
+        putcond=lambda cpipeline=None, source=SOURCE: False,
     )
 
     system.smartftput(
@@ -198,10 +198,10 @@ def test_smartftput_uses_default_method_when_putcond_is_false(mocked_ftput):
         sync=False,
     )
 
+
 # fa_ftput is called when fmt='fa'
 @patch("vortex.tools.lfi.LFI_Tool_Raw.fa_ftput")
 def test_smartftput_uses_fa_ftput(mocked_fa_ftput):
-    
     ticket = vortex.ticket()
 
     # Extend the shell with the LFI interface.
@@ -213,9 +213,9 @@ def test_smartftput_uses_fa_ftput(mocked_fa_ftput):
         hostname=HOSTNAME,
         logname=LOGNAME,
         port=DEFAULT_FTP_PORT,
-        fmt='fa',
+        fmt="fa", # triggers the call to fa_ftput
     )
-    
+
     mocked_fa_ftput.assert_called_once_with(
         SOURCE,
         DESTINATION,
