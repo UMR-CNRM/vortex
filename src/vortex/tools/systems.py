@@ -3394,7 +3394,7 @@ class OSExtended(System):
         hostname = self.fix_fthostname(hostname, fatal=False)
         logname = self.fix_ftuser(hostname, logname)
         for method in self.ftp_methods:
-            if method.put_condition(cpipeline=cpipeline):
+            if method.put_condition(source=source, cpipeline=cpipeline):
                 return method.put(
                     source,
                     destination,
