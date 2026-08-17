@@ -574,7 +574,7 @@ class RawFtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
                         "Running the ftserv command for format=%s.", str(a_fmt)
                     )
                     hostname, port = self._ftp_hostinfos
-                    rc = self.system.batchrawftget(
+                    rc = self.system.ftp_methods[0].get_batch(
                         sources,
                         destinations,
                         hostname=hostname,

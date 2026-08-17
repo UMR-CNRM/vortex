@@ -765,7 +765,7 @@ class Archive(AbstractArchive):
         several files at once.
         """
         cpipeline = kwargs.get("compressionpipeline", None)
-        if self.sh.rawftget_worthy(item, local, cpipeline):
+        if self.sh.ftp_methods[0].get_batch_condition(cpipeline):
             return self.context.delayedactions_hub.register(
                 (item, kwargs.get("fmt", "foo")),
                 kind="archive",
