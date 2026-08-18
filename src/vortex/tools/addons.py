@@ -8,10 +8,8 @@ from bronx.fancies import loggers
 from bronx.syntax.decorators import nicedeco
 import footprints
 
-from vortex.config import (
-    get_from_config_w_default,
-    ConfigurationError,
-)
+from vortex.config import get_from_config_w_default
+
 from vortex.layout import contexts
 from vortex.tools.env import Environment
 from vortex.tools.systems import OSExtended
