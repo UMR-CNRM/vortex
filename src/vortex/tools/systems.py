@@ -107,7 +107,15 @@ FTP_FLAVOUR = FtpFlavourTuple(STD=0, RETRIES=1, CONNECTION_POOLS=2)
 
 # Bundles the get, put callables and booleans that indicate whether each operation is usable.
 FtpMethod = namedtuple(
-    "FtpMethod", ["get", "get_batch", "put", "get_condition", "get_batch_condition", "put_condition"]
+    "FtpMethod",
+    [
+        "get",
+        "get_batch",
+        "put",
+        "get_condition",
+        "get_batch_condition",
+        "put_condition",
+    ],
 )
 
 
@@ -3353,7 +3361,9 @@ class OSExtended(System):
         ldir = self._appwide_lockdir_path(label)
         self._lockdir_destroy(ldir)
 
-    def register_ftp_method(self, getfunc, putfunc, getfunc_batch, getcond, putcond, getcond_batch):
+    def register_ftp_method(
+        self, getfunc, putfunc, getfunc_batch, getcond, putcond, getcond_batch
+    ):
         """Register a new FTP method.
 
         The method creates a :class:`~FtpMethod` instance from the supplied
@@ -3361,13 +3371,15 @@ class OSExtended(System):
         Because the list is traversed from left‑to‑right when looking up a
         FTP method, the newly‑registered method gets the highest priority."""
         self.ftp_methods.insert(
-            0, FtpMethod(get=getfunc,
-                         get_batch=getfunc_batch,
-                         put=putfunc,
-                         get_condition=getcond,
-                         put_condition=putcond,
-                         get_batch_condition=getcond_batch,
-                         )
+            0,
+            FtpMethod(
+                get=getfunc,
+                get_batch=getfunc_batch,
+                put=putfunc,
+                get_condition=getcond,
+                put_condition=putcond,
+                get_batch_condition=getcond_batch,
+            ),
         )
 
     def smartftput(
