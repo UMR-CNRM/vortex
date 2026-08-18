@@ -10,7 +10,6 @@ import footprints
 
 from vortex.config import (
     get_from_config_w_default,
-    from_config,
     ConfigurationError,
 )
 from vortex.layout import contexts
