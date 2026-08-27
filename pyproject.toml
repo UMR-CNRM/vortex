@@ -40,7 +40,7 @@ vtx = "vortex.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-"vortex.data" = ["geometries.ini"]
+"vortex.data" = ["geometries.ini", "sync_templates/*.tpl"]
 "vortex.algo" = ["mpitools_templates/*.tpl", "servsync-simplesocket.tpl"]
 
 [tool.ruff]
