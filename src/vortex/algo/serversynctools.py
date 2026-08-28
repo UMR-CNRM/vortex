@@ -2,6 +2,7 @@
 Utility classes to interact with long running binaries.
 """
 
+import importlib
 import socket
 import sys
 
@@ -83,10 +84,6 @@ class ServerSyncSimpleSocket(ServerSyncTool):
             medium=dict(
                 optional=False,
             ),
-            tplname=dict(
-                optional=True,
-                default="@servsync-simplesocket.tpl",
-            ),
         ),
     )
 
@@ -103,8 +100,10 @@ class ServerSyncSimpleSocket(ServerSyncTool):
         # Current connection
         self._socket_conn = None
         # Create the script that will be called by the server
-        t = sessions.current()
-        tpl = config.load_template(t, self.tplname)
+        with importlib.resources.path(
+            "vortex.algo", "servsync-simplesocket.tpl"
+        ) as tplpath:
+            tpl = config.load_template(tplpath)
         with open(self.medium, "w") as fd:
             fd.write(
                 tpl.substitute(
@@ -112,7 +111,7 @@ class ServerSyncSimpleSocket(ServerSyncTool):
                     address=self._socket.getsockname(),
                 )
             )
-        t.sh.chmod(self.medium, 0o555)
+        sessions.current().sh.chmod(self.medium, 0o555)
 
     def __del__(self):
         self._socket.close()
