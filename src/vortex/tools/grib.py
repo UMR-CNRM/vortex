@@ -38,7 +38,7 @@ def use_in_shell(sh, **kw):
     return footprints.proxy.addon(**kw)
 
 
-class GRIB_Tool(addons.FtrawEnableAddon):
+class GRIB_Tool(addons.Addon):
     """
     Handle multipart-GRIB files properly.
     """
@@ -271,65 +271,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                 sync=sync,
             )
 
-    def _std_rawftput(
-        self,
-        source,
-        destination,
-        hostname=None,
-        logname=None,
-        port=None,
-        cpipeline=None,
-        sync=False,
-    ):
-        """Use ftserv as much as possible."""
-        if self.is_xgrib(source):
-            if cpipeline is not None:
-                raise OSError("It's not allowed to compress xgrib files.")
-            if self.sh.ftraw and self.rawftshell is not None:
-                # Copy the GRIB pieces individually
-                pieces = self.xgrib_index_get(source)
-                newsources = [
-                    str(self.sh.copy2ftspool(piece)) for piece in pieces
-                ]
-                request = newsources[0] + ".request"
-                with open(request, "w") as request_fh:
-                    request_fh.writelines("\n".join(newsources))
-                self.sh.readonly(request)
-                rc = self.sh.ftserv_put(
-                    request,
-                    destination,
-                    hostname=hostname,
-                    logname=logname,
-                    port=port,
-                    specialshell=self.rawftshell,
-                    sync=sync,
-                )
-                self.sh.rm(request)
-                return rc
-            else:
-                if port is None:
-                    port = DEFAULT_FTP_PORT
-                return self._std_ftput(
-                    source,
-                    destination,
-                    hostname=hostname,
-                    logname=logname,
-                    port=port,
-                    sync=sync,
-                )
-        else:
-            return self.sh.rawftput(
-                source,
-                destination,
-                hostname=hostname,
-                logname=logname,
-                port=port,
-                cpipeline=cpipeline,
-                sync=sync,
-            )
-
     grib_ftput = _std_ftput
-    grib_rawftput = _std_rawftput
 
     def _std_scpput(
         self, source, destination, hostname, logname=None, cpipeline=None
