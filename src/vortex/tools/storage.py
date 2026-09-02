@@ -761,11 +761,9 @@ class Archive(AbstractArchive):
 
     def _ftpearlyretrieve(self, item, local, **kwargs):
         """
-        If FtServ/ftraw is used, trigger a delayed action in order to fetch
-        several files at once.
+        Trigger a delayed action in order to fetch several files at once.
         """
-        cpipeline = kwargs.get("compressionpipeline", None)
-        if self.sh.rawftget_worthy(item, local, cpipeline):
+        if self.sh.batchget_ftp:
             return self.context.delayedactions_hub.register(
                 (item, kwargs.get("fmt", "foo")),
                 kind="archive",
@@ -775,8 +773,7 @@ class Archive(AbstractArchive):
                 raw=True,
                 logname=kwargs.get("username", None),
             )
-        else:
-            return None
+        return None
 
     def _ftpfinaliseretrieve(
         self, item, local, retrieve_id, **kwargs

@@ -521,10 +521,10 @@ class AbstractFtpArchiveDelayedGetHandler(
         return hostname, port
 
 
-class RawFtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
+class FtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
     """
-    When FtServ is used, accumulate "GET" requests for several files and fetch
-    them during a unique ``ftget`` system call.
+    Accumulate "GET" requests for several files and fetch them using the batch
+    get function provided by the selected FTP method.
 
     :note: The *request* needs to be a two-elements tuple where the first element
            is the path to the file that shoudl be fetched and the second element
@@ -534,7 +534,7 @@ class RawFtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
     """
 
     _footprint = dict(
-        info="Fetch multiple files using FtServ.",
+        info="Fetch multiple files.",
         attr=dict(
             raw=dict(
                 optional=False,
@@ -553,7 +553,8 @@ class RawFtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
                 a_fmt = (
                     v.request[1]
                     if self.system.fmtspecific_mtd(
-                        "batchrawftget", v.request[1]
+                        self.system.batchget_ftp.__name__,
+                        v.request[1],
                     )
                     else None
                 )
@@ -571,10 +572,10 @@ class RawFtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
                     destinations.append(self._resultsmap[k].result)
                 try:
                     logger.info(
-                        "Running the ftserv command for format=%s.", str(a_fmt)
+                        "Running the batch command for format=%s.", str(a_fmt)
                     )
                     hostname, port = self._ftp_hostinfos
-                    rc = self.system.batchrawftget(
+                    rc = self.system.batchget_ftp(
                         sources,
                         destinations,
                         hostname=hostname,

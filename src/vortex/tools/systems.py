@@ -107,7 +107,15 @@ FTP_FLAVOUR = FtpFlavourTuple(STD=0, RETRIES=1, CONNECTION_POOLS=2)
 
 # Bundles the get, put callables and booleans that indicate whether each operation is usable.
 FtpMethod = namedtuple(
-    "FtpMethod", ["get", "put", "get_condition", "put_condition"]
+    "FtpMethod",
+    [
+        "get",
+        "get_batch",
+        "put",
+        "get_condition",
+        "get_batch_condition",
+        "put_condition",
+    ],
 )
 
 
@@ -820,9 +828,11 @@ class OSExtended(System):
         self.ftp_methods = [
             FtpMethod(
                 get=self.ftget,
+                get_batch=lambda *args, **kwargs: None,
                 put=self.ftput,
-                put_condition=lambda *args, **kwargs: True,
                 get_condition=lambda *args, **kwargs: True,
+                get_batch_condition=lambda *args, **kwargs: False,
+                put_condition=lambda *args, **kwargs: True,
             )
         ]
         # Some internal variables used by particular methods
@@ -840,6 +850,13 @@ class OSExtended(System):
 
         # Initialise the signal handler object
         self._signal_intercept_init()
+
+    def batchget_ftp(self, *args, **kwargs):
+        """Select the highest-priority method suitable for batch FTP GET transfers."""
+        for ftp_method in self.ftp_methods:
+            if ftp_method.get_batch_condition():
+                return ftp_method.get_batch(*args, **kwargs)
+        return None
 
     def target(self, **kw):
         """
@@ -3351,7 +3368,9 @@ class OSExtended(System):
         ldir = self._appwide_lockdir_path(label)
         self._lockdir_destroy(ldir)
 
-    def register_ftp_method(self, getfunc, putfunc, getcond, putcond):
+    def register_ftp_method(
+        self, getfunc, putfunc, getfunc_batch, getcond, putcond, getcond_batch
+    ):
         """Register a new FTP method.
 
         The method creates a :class:`~FtpMethod` instance from the supplied
@@ -3359,7 +3378,15 @@ class OSExtended(System):
         Because the list is traversed from left‑to‑right when looking up a
         FTP method, the newly‑registered method gets the highest priority."""
         self.ftp_methods.insert(
-            0, FtpMethod(getfunc, putfunc, getcond, putcond)
+            0,
+            FtpMethod(
+                get=getfunc,
+                get_batch=getfunc_batch,
+                put=putfunc,
+                get_condition=getcond,
+                put_condition=putcond,
+                get_batch_condition=getcond_batch,
+            ),
         )
 
     def smartftput(
