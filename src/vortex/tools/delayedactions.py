@@ -553,7 +553,7 @@ class FtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
                 a_fmt = (
                     v.request[1]
                     if self.system.fmtspecific_mtd(
-                        self.system.ftp_methods[0].get_batch.__name__,
+                        self.system.batchget_ftp.__name__,
                         v.request[1],
                     )
                     else None
@@ -575,7 +575,7 @@ class FtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
                         "Running the batch command for format=%s.", str(a_fmt)
                     )
                     hostname, port = self._ftp_hostinfos
-                    rc = self.system.ftp_methods[0].get_batch(
+                    rc = self.system.batchget_ftp(
                         sources,
                         destinations,
                         hostname=hostname,

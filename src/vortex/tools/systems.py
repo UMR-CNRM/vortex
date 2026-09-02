@@ -851,6 +851,13 @@ class OSExtended(System):
         # Initialise the signal handler object
         self._signal_intercept_init()
 
+    def batchget_ftp(self, *args, **kwargs):
+        """Select the highest-priority method suitable for batch FTP GET transfers."""
+        for ftp_method in self.ftp_methods:
+            if ftp_method.get_batch_condition():
+                return ftp_method.get_batch(*args, **kwargs)
+        return None
+
     def target(self, **kw):
         """
         Provide a default :class:`~vortex.tools.targets.Target` according

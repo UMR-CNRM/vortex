@@ -763,8 +763,7 @@ class Archive(AbstractArchive):
         """
         Trigger a delayed action in order to fetch several files at once.
         """
-        cpipeline = kwargs.get("compressionpipeline", None)
-        if self.sh.ftp_methods[0].get_batch_condition(cpipeline):
+        if self.sh.batchget_ftp:
             return self.context.delayedactions_hub.register(
                 (item, kwargs.get("fmt", "foo")),
                 kind="archive",
@@ -774,8 +773,7 @@ class Archive(AbstractArchive):
                 raw=True,
                 logname=kwargs.get("username", None),
             )
-        else:
-            return None
+        return None
 
     def _ftpfinaliseretrieve(
         self, item, local, retrieve_id, **kwargs
