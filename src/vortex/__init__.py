@@ -131,7 +131,7 @@ else:
 # and 'vortex.nwp', these must be imported /before/
 # loading plugins.
 _LOADED_PLUGINS = set()
-for plugin in importlib.metadata.entry_points(group="vtx"):
+for plugin in importlib.metadata.entry_points()["vtx"]:
     plugin.load()
     _LOADED_PLUGINS.add(plugin.name)
 
