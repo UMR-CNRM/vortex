@@ -28,7 +28,10 @@ from typing import Set  # Python 3.7 compat
 
 # importlib.metadata included in stdlib from 3.8 onwards.
 # For older versions, import third-party importlib_metadata
-if sys.version_info < (3, 8):
+# Because entrypoint groups selection with EntryPoint.select is
+# only available from Python 3.10, also use backport library for
+# Python 3.8 and 3.9
+if sys.version_info < (3, 10):
     import importlib_metadata
     import importlib
 
@@ -131,7 +134,7 @@ else:
 # and 'vortex.nwp', these must be imported /before/
 # loading plugins.
 _LOADED_PLUGINS = set()
-for plugin in importlib.metadata.entry_points()["vtx"]:
+for plugin in importlib.metadata.entry_points().select(group="vtx"):
     plugin.load()
     _LOADED_PLUGINS.add(plugin.name)
 
