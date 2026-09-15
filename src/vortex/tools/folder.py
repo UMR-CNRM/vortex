@@ -29,7 +29,6 @@ _folder_exposed_methods = {
     "rawftget",
     "batchrawftget",
     "ftput",
-    "rawftput",
     "scpget",
     "scpput",
     "ecfsget",
@@ -444,45 +443,6 @@ class FolderShell(addons.FtrawEnableAddon):
                 return rc
             else:
                 return False
-
-    def _folder_rawftput(
-        self,
-        source,
-        destination,
-        hostname=None,
-        logname=None,
-        port=None,
-        cpipeline=None,
-        sync=False,
-    ):
-        """Use ftserv as much as possible."""
-        if cpipeline is not None:
-            raise OSError("It's not allowed to compress folder like data.")
-        if self.sh.ftraw and self.rawftshell is not None:
-            newsource = self.sh.copy2ftspool(
-                source, nest=True, fmt=self.supportedfmt
-            )
-            request = self.sh.path.dirname(newsource) + ".request"
-            with open(request, "w") as request_fh:
-                request_fh.write(str(self.sh.path.dirname(newsource)))
-            self.sh.readonly(request)
-            rc = self.sh.ftserv_put(
-                request,
-                destination,
-                hostname=hostname,
-                logname=logname,
-                port=port,
-                specialshell=self.rawftshell,
-                sync=sync,
-            )
-            self.sh.rm(request)
-            return rc
-        else:
-            if port is None:
-                port = DEFAULT_FTP_PORT
-            return self._folder_ftput(
-                source, destination, hostname, logname, port=port, sync=sync
-            )
 
     def _folder_scpget(
         self, source, destination, hostname, logname=None, cpipeline=None
