@@ -253,8 +253,18 @@ class Remote(Provider):
             return "relative=1"
 
 
-def set_namespace_from_cache_settings(usecache, usearchive):
+def _set_namespace_from_cache_settings(usecache, usearchive):
+    # If cache and/or archive are specified, values apply.
+    # If cache is not specified, it is set to True
+    # If archive is not specicied, it is set to True only if configured.
     usecache = True if (usecache is None) else usecache
+
+    if usearchive is None:
+        if config.is_defined(section="storage"):
+            usearchive = True
+        else:
+            usearchive = False
+
     usearchive = True if (usearchive is None) else usearchive
 
     # Default usearchive to False is no storage section is defined in
@@ -438,7 +448,7 @@ class Vortex(Provider):
                 category=DeprecationWarning,
             )
         else:
-            self.namespace = set_namespace_from_cache_settings(
+            self.namespace = _set_namespace_from_cache_settings(
                 self.cache,
                 self.archive,
             )
