@@ -26,7 +26,6 @@ _folder_exposed_methods = {
     "forceunpack",
     "anyft_remote_rewrite",
     "ftget",
-    "rawftget",
     "batchrawftget",
     "ftput",
     "scpget",
@@ -318,37 +317,6 @@ class FolderShell(addons.FtrawEnableAddon):
                 return rc
             else:
                 return False
-
-    def _folder_rawftget(
-        self,
-        source,
-        destination,
-        hostname=None,
-        logname=None,
-        port=None,
-        cpipeline=None,
-    ):
-        """Use ftserv as much as possible."""
-        if cpipeline is not None:
-            raise OSError("It's not allowed to compress folder like data.")
-        if self.sh.ftraw:
-            source, destination = self._folder_preftget(source, destination)
-            with self._folder_postftget_context(destination):
-                with self._folder_ftget_file_extract(source) as tmp_target:
-                    rc = self.sh.ftserv_get(
-                        source,
-                        tmp_target,
-                        hostname=hostname,
-                        logname=logname,
-                        port=port,
-                    )
-            return rc
-        else:
-            if port is None:
-                port = DEFAULT_FTP_PORT
-            return self._folder_ftget(
-                source, destination, hostname, logname, port=port
-            )
 
     def _folder_batchrawftget(
         self,
