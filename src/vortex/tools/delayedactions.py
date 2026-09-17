@@ -553,7 +553,7 @@ class FtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
                 a_fmt = (
                     v.request[1]
                     if self.system.fmtspecific_mtd(
-                        self.system.batchget_ftp.__name__,
+                        self.system.batchget_ftp_method.__name__,
                         v.request[1],
                     )
                     else None
