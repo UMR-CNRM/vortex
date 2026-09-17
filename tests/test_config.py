@@ -20,7 +20,7 @@ def clean_config():
     saved_cfg = config.VORTEX_CONFIG.copy()
     saved_path = config._PATH
     config.VORTEX_CONFIG = {}
-    config._PATH = None
+    config._PATH = []
     yield
     config.VORTEX_CONFIG = saved_cfg
     config._PATH = saved_path
@@ -90,7 +90,7 @@ def test_load_config_populates_config(clean_config, toml_config_file):
 def test_load_config_sets_file_property(clean_config, toml_config_file):
     config.load_config(toml_config_file)
 
-    assert config.file == toml_config_file.absolute()
+    assert config.file == [toml_config_file.absolute()]
 
 
 def test_load_config_overrides_existing(clean_config, tmp_path):
@@ -112,3 +112,22 @@ def test_load_config_file_not_found(clean_config, tmp_path, capsys):
     captured = capsys.readouterr()
     assert "not found" in captured.out
     assert config.VORTEX_CONFIG == {}
+
+
+def test_merge_config(clean_config, tmp_path):
+    first = tmp_path / "first.toml"
+    first.write_text("""[section-a]
+key = \"value-a\"
+otherkey = \"value-b\"
+""")
+    second = tmp_path / "second.toml"
+    second.write_text('[section-b]\nkey = "value-b"\n')
+
+    config.load_config(first)
+    config.merge_config(second)
+
+    assert "section-a" in config.VORTEX_CONFIG
+    assert config.VORTEX_CONFIG == {
+        "section-a": {"key": "value-a", "otherkey": "value-b"},
+        "section-b": {"key": "value-b"},
+    }

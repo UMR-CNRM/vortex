@@ -7,7 +7,6 @@ data are sent using FTP or SSH, a tar file is created on the fly.
 
 import contextlib
 import ftplib
-import tempfile
 
 from bronx.fancies import loggers
 from vortex.tools.net import DEFAULT_FTP_PORT
@@ -26,10 +25,7 @@ _folder_exposed_methods = {
     "forceunpack",
     "anyft_remote_rewrite",
     "ftget",
-    "rawftget",
-    "batchrawftget",
     "ftput",
-    "rawftput",
     "scpget",
     "scpput",
     "ecfsget",
@@ -320,100 +316,6 @@ class FolderShell(addons.FtrawEnableAddon):
             else:
                 return False
 
-    def _folder_rawftget(
-        self,
-        source,
-        destination,
-        hostname=None,
-        logname=None,
-        port=None,
-        cpipeline=None,
-    ):
-        """Use ftserv as much as possible."""
-        if cpipeline is not None:
-            raise OSError("It's not allowed to compress folder like data.")
-        if self.sh.ftraw:
-            source, destination = self._folder_preftget(source, destination)
-            with self._folder_postftget_context(destination):
-                with self._folder_ftget_file_extract(source) as tmp_target:
-                    rc = self.sh.ftserv_get(
-                        source,
-                        tmp_target,
-                        hostname=hostname,
-                        logname=logname,
-                        port=port,
-                    )
-            return rc
-        else:
-            if port is None:
-                port = DEFAULT_FTP_PORT
-            return self._folder_ftget(
-                source, destination, hostname, logname, port=port
-            )
-
-    def _folder_batchrawftget(
-        self,
-        source,
-        destination,
-        hostname=None,
-        logname=None,
-        port=None,
-        cpipeline=None,
-    ):
-        """Use ftserv to fetch several folder-like resources."""
-        if cpipeline is not None:
-            raise OSError("It's not allowed to compress folder like data.")
-        if self.sh.ftraw:
-            actualsources = list()
-            actualdestinations = list()
-            tmpdestinations = list()
-            try:
-                for s, d in zip(source, destination):
-                    actual_s, actual_d = self._folder_preftget(s, d)
-                    actualsources.append(actual_s)
-                    actualdestinations.append(actual_d)
-                    d_dirname = self.sh.path.dirname(actual_d)
-                    self.sh.mkdir(d_dirname)
-                    d_tmpdir = tempfile.mkdtemp(
-                        prefix="folder_", dir=d_dirname
-                    )
-                    d_extname = self.sh.tarname_splitext(actual_s)[1]
-                    tmpdestinations.append(
-                        self.sh.path.join(d_tmpdir, self.tmpname + d_extname)
-                    )
-
-                rc = self.sh.ftserv_batchget(
-                    actualsources,
-                    tmpdestinations,
-                    hostname,
-                    logname,
-                    port=port,
-                )
-
-                for i, (d, t) in enumerate(
-                    zip(actualdestinations, tmpdestinations)
-                ):
-                    if rc[i]:
-                        with self.sh.cdcontext(self.sh.path.dirname(t)):
-                            try:
-                                try:
-                                    rc[i] = rc[i] and bool(
-                                        self.sh.untar(
-                                            self.sh.path.basename(t),
-                                            autocompress=False,
-                                        )
-                                    )
-                                finally:
-                                    self.sh.rm(t)
-                            finally:
-                                self._folder_postftget(d)
-            finally:
-                for t in tmpdestinations:
-                    self.sh.rm(self.sh.path.dirname(t))
-            return rc
-        else:
-            raise RuntimeError("You are not supposed to land here !")
-
     def _folder_ftput(
         self,
         source,
@@ -444,45 +346,6 @@ class FolderShell(addons.FtrawEnableAddon):
                 return rc
             else:
                 return False
-
-    def _folder_rawftput(
-        self,
-        source,
-        destination,
-        hostname=None,
-        logname=None,
-        port=None,
-        cpipeline=None,
-        sync=False,
-    ):
-        """Use ftserv as much as possible."""
-        if cpipeline is not None:
-            raise OSError("It's not allowed to compress folder like data.")
-        if self.sh.ftraw and self.rawftshell is not None:
-            newsource = self.sh.copy2ftspool(
-                source, nest=True, fmt=self.supportedfmt
-            )
-            request = self.sh.path.dirname(newsource) + ".request"
-            with open(request, "w") as request_fh:
-                request_fh.write(str(self.sh.path.dirname(newsource)))
-            self.sh.readonly(request)
-            rc = self.sh.ftserv_put(
-                request,
-                destination,
-                hostname=hostname,
-                logname=logname,
-                port=port,
-                specialshell=self.rawftshell,
-                sync=sync,
-            )
-            self.sh.rm(request)
-            return rc
-        else:
-            if port is None:
-                port = DEFAULT_FTP_PORT
-            return self._folder_ftput(
-                source, destination, hostname, logname, port=port, sync=sync
-            )
 
     def _folder_scpget(
         self, source, destination, hostname, logname=None, cpipeline=None
