@@ -7,7 +7,6 @@ data are sent using FTP or SSH, a tar file is created on the fly.
 
 import contextlib
 import ftplib
-import tempfile
 
 from bronx.fancies import loggers
 from vortex.tools.net import DEFAULT_FTP_PORT
@@ -26,7 +25,6 @@ _folder_exposed_methods = {
     "forceunpack",
     "anyft_remote_rewrite",
     "ftget",
-    "batchrawftget",
     "ftput",
     "scpget",
     "scpput",
@@ -317,69 +315,6 @@ class FolderShell(addons.FtrawEnableAddon):
                 return rc
             else:
                 return False
-
-    def _folder_batchrawftget(
-        self,
-        source,
-        destination,
-        hostname=None,
-        logname=None,
-        port=None,
-        cpipeline=None,
-    ):
-        """Use ftserv to fetch several folder-like resources."""
-        if cpipeline is not None:
-            raise OSError("It's not allowed to compress folder like data.")
-        if self.sh.ftraw:
-            actualsources = list()
-            actualdestinations = list()
-            tmpdestinations = list()
-            try:
-                for s, d in zip(source, destination):
-                    actual_s, actual_d = self._folder_preftget(s, d)
-                    actualsources.append(actual_s)
-                    actualdestinations.append(actual_d)
-                    d_dirname = self.sh.path.dirname(actual_d)
-                    self.sh.mkdir(d_dirname)
-                    d_tmpdir = tempfile.mkdtemp(
-                        prefix="folder_", dir=d_dirname
-                    )
-                    d_extname = self.sh.tarname_splitext(actual_s)[1]
-                    tmpdestinations.append(
-                        self.sh.path.join(d_tmpdir, self.tmpname + d_extname)
-                    )
-
-                rc = self.sh.ftserv_batchget(
-                    actualsources,
-                    tmpdestinations,
-                    hostname,
-                    logname,
-                    port=port,
-                )
-
-                for i, (d, t) in enumerate(
-                    zip(actualdestinations, tmpdestinations)
-                ):
-                    if rc[i]:
-                        with self.sh.cdcontext(self.sh.path.dirname(t)):
-                            try:
-                                try:
-                                    rc[i] = rc[i] and bool(
-                                        self.sh.untar(
-                                            self.sh.path.basename(t),
-                                            autocompress=False,
-                                        )
-                                    )
-                                finally:
-                                    self.sh.rm(t)
-                            finally:
-                                self._folder_postftget(d)
-            finally:
-                for t in tmpdestinations:
-                    self.sh.rm(self.sh.path.dirname(t))
-            return rc
-        else:
-            raise RuntimeError("You are not supposed to land here !")
 
     def _folder_ftput(
         self,
