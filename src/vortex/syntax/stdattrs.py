@@ -65,6 +65,7 @@ models = {
     "mfwam",
     "pg1",
     "alpha",
+    "pprod",
     "eps",
     "postproc",
     "ww3",
