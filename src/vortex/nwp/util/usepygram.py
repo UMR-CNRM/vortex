@@ -517,8 +517,12 @@ def add_poles_to_GLOB_file(filename):
                 newgrid["input_position"][0],
                 newgrid["input_position"][1] + 1,
             )
-            newgeom = fpx.geometrys.almost_clone(
-                fld.geometry, dimensions=newdims, grid=newgrid
+            newgeom = epygram.geometries.RegLLGeometry(
+                name="regular_lonlat",
+                grid=newgrid,
+                dimensions=newdims,
+                vcoordinate=fld.geometry.vcoordinate,
+                position_on_horizontal_grid=fld.geometry.position_on_horizontal_grid,
             )
             # compute poles data value as mean of last latitude circle
             newdata = numpy.zeros((newdims["Y"], newdims["X"]))
@@ -605,8 +609,13 @@ def add_poles_to_reglonlat_file(filename):
             geom.gimme_corners_ll()["ll"][1], "degrees"
         )
         newgrid["input_position"] = (0, 0)
-    newgeom = fpx.geometrys.almost_clone(
-        geom, dimensions=newdims, grid=newgrid
+    # call directly RegLLGeometry constructor because geometry is not anymore a footprint class
+    newgeom = epygram.geometries.RegLLGeometry(
+        name="regular_lonlat",
+        grid=newgrid,
+        dimensions=newdims,
+        vcoordinate=geom.vcoordinate,
+        position_on_horizontal_grid=geom.position_on_horizontal_grid,
     )
     # loop on fields
     for f in rin.listfields():
