@@ -8,11 +8,8 @@ from bronx.fancies import loggers
 from bronx.syntax.decorators import nicedeco
 import footprints
 
-from vortex.config import (
-    get_from_config_w_default,
-    from_config,
-    ConfigurationError,
-)
+from vortex.config import get_from_config_w_default
+
 from vortex.layout import contexts
 from vortex.tools.env import Environment
 from vortex.tools.systems import OSExtended
@@ -185,36 +182,6 @@ class Addon(footprints.FootprintBase):
             cmd[0] = self.actual_path + "/" + cmd[0]
 
         return self._spawn_commons(cmd, **kw)
-
-
-class FtrawEnableAddon(Addon):
-    """Root class for any :class:`Addon` system subclasses that needs to override rawftput."""
-
-    _abstract = True
-    _footprint = dict(
-        info="Default add-on with rawftput support.",
-        attr=dict(
-            rawftshell=dict(
-                info="Path to ftserv's concatenation shell",
-                optional=True,
-                default=None,
-                access="rwx",
-                doc_visibility=footprints.doc.visibility.GURU,
-            ),
-        ),
-    )
-
-    def __init__(self, *args, **kw):
-        """Abstract Addon initialisation."""
-        logger.debug("Abstract Addon init %s", self.__class__)
-        super().__init__(*args, **kw)
-        # If needed, look in the config file for the rawftshell
-        if self.rawftshell is None:
-            try:
-                shell = from_config(section="ftserv", key="shell")
-                self.rawftshell = f"/usr/local/bin/ft_regroupement_concat_{shell[self.kind]}.sh"
-            except (ConfigurationError, KeyError):
-                self.rawftshell = None
 
 
 class AddonGroup(footprints.FootprintBase):

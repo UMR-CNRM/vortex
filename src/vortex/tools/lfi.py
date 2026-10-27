@@ -104,7 +104,7 @@ class LFI_Status:
         return bool(self.rc in self.ok)
 
 
-class LFI_Tool_Raw(addons.FtrawEnableAddon):
+class LFI_Tool_Raw(addons.Addon):
     """
     Interface to LFI commands through Perl wrappers.
     """

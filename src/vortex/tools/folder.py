@@ -55,7 +55,7 @@ def folderize(cls):
     return cls
 
 
-class FolderShell(addons.FtrawEnableAddon):
+class FolderShell(addons.Addon):
     """
     This abstract class defines methods to manipulate folders.
     """

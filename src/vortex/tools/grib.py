@@ -38,7 +38,7 @@ def use_in_shell(sh, **kw):
     return footprints.proxy.addon(**kw)
 
 
-class GRIB_Tool(addons.FtrawEnableAddon):
+class GRIB_Tool(addons.Addon):
     """
     Handle multipart-GRIB files properly.
     """
