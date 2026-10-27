@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vortex-nwp"
-version = "2.4.1"
+version = "2.4.2"
 description = "A Python library to write Numerical Weather Prediction pipelines components"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -40,8 +40,8 @@ vtx = "vortex.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-"vortex.data" = ["geometries.ini"]
-"vortex.algo" = ["mpitools_templates/*.tpl"]
+"vortex.data" = ["geometries.ini", "sync_templates/*.tpl"]
+"vortex.algo" = ["mpitools_templates/*.tpl", "servsync-simplesocket.tpl"]
 
 [tool.ruff]
 line-length = 79
